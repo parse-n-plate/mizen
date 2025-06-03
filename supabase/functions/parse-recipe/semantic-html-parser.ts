@@ -1,6 +1,6 @@
 
 import type { Recipe } from './types.ts';
-import { extractTitle, extractImage } from './html-utils.ts';
+import { extractTitle, extractImage, decodeHtmlEntities } from './html-utils.ts';
 
 export function parseSemanticHtml(htmlContent: string, url: string): Recipe | null {
   console.log('Trying semantic HTML parsing...');
@@ -15,7 +15,7 @@ export function parseSemanticHtml(htmlContent: string, url: string): Recipe | nu
   // Parse unordered lists (typically ingredients)
   for (const listMatch of listMatches) {
     const listItems = [...listMatch.matchAll(/<li[^>]*>([^<]+)<\/li>/gi)]
-      .map(match => match[1].trim())
+      .map(match => decodeHtmlEntities(match[1].trim()))
       .filter(text => text.length > 0);
     
     if (listItems.length >= 3 && isLikelyIngredientList(listItems)) {
@@ -27,7 +27,7 @@ export function parseSemanticHtml(htmlContent: string, url: string): Recipe | nu
   // Parse ordered lists (typically instructions)
   for (const listMatch of orderedListMatches) {
     const listItems = [...listMatch.matchAll(/<li[^>]*>([^<]+)<\/li>/gi)]
-      .map(match => match[1].trim())
+      .map(match => decodeHtmlEntities(match[1].trim()))
       .filter(text => text.length > 10);
     
     if (listItems.length >= 2 && isLikelyInstructionList(listItems)) {

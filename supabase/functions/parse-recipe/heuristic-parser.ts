@@ -1,13 +1,13 @@
 
 import type { Recipe } from './types.ts';
-import { extractTitle, extractImage } from './html-utils.ts';
+import { extractTitle, extractImage, decodeHtmlEntities } from './html-utils.ts';
 
 export function parseWithHeuristics(htmlContent: string, url: string): Recipe {
   console.log('Using content-based heuristics...');
   
   // Extract all text content and analyze it
   const textContent = htmlContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
-  const sentences = textContent.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 10);
+  const sentences = textContent.split(/[.!?]+/).map(s => decodeHtmlEntities(s.trim())).filter(s => s.length > 10);
   
   const ingredients: string[] = [];
   const instructions: string[] = [];

@@ -1,6 +1,6 @@
 
 import type { Recipe } from './types.ts';
-import { extractTitle, extractImage } from './html-utils.ts';
+import { extractTitle, extractImage, decodeHtmlEntities } from './html-utils.ts';
 
 export function parseWithEnhancedSelectors(htmlContent: string, url: string): Recipe | null {
   console.log('Trying enhanced CSS selectors...');
@@ -74,7 +74,7 @@ export function parseWithEnhancedSelectors(htmlContent: string, url: string): Re
     const pattern = new RegExp(`<[^>]*class="[^"]*${selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/g, '[^"]*')}[^"]*"[^>]*>([^<]+)</`, 'gi');
     const matches = [...htmlContent.matchAll(pattern)];
     if (matches.length > 0) {
-      ingredients = matches.map(match => match[1].trim()).filter(text => text.length > 0 && text.length < 200);
+      ingredients = matches.map(match => decodeHtmlEntities(match[1].trim())).filter(text => text.length > 0 && text.length < 200);
       if (ingredients.length >= 3) {
         console.log(`Found ${ingredients.length} ingredients using selector pattern`);
         break;
@@ -87,7 +87,7 @@ export function parseWithEnhancedSelectors(htmlContent: string, url: string): Re
     const pattern = new RegExp(`<[^>]*class="[^"]*${selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/g, '[^"]*')}[^"]*"[^>]*>([^<]+)</`, 'gi');
     const matches = [...htmlContent.matchAll(pattern)];
     if (matches.length > 0) {
-      instructions = matches.map(match => match[1].trim()).filter(text => text.length > 10 && text.length < 1000);
+      instructions = matches.map(match => decodeHtmlEntities(match[1].trim())).filter(text => text.length > 10 && text.length < 1000);
       if (instructions.length >= 2) {
         console.log(`Found ${instructions.length} instructions using selector pattern`);
         break;

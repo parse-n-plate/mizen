@@ -1,5 +1,6 @@
 
 import type { Recipe } from './types.ts';
+import { decodeHtmlEntities } from './html-utils.ts';
 
 export function parseStructuredData(htmlContent: string, url: string): Recipe | null {
   const jsonLdMatches = htmlContent.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
@@ -36,9 +37,9 @@ export function parseStructuredData(htmlContent: string, url: string): Recipe | 
 
 function parseRecipeFromStructuredItem(data: any, url: string): Recipe {
   const getTextContent = (item: any): string => {
-    if (typeof item === 'string') return item;
+    if (typeof item === 'string') return decodeHtmlEntities(item);
     if (item && typeof item === 'object') {
-      return item.text || item['@value'] || item.name || '';
+      return decodeHtmlEntities(item.text || item['@value'] || item.name || '');
     }
     return '';
   };
@@ -60,7 +61,7 @@ function parseRecipeFromStructuredItem(data: any, url: string): Recipe {
 
   const ingredients = (data.recipeIngredient || []).map((ing: any) => getTextContent(ing));
   const instructions = (data.recipeInstructions || []).map((instruction: any) => {
-    if (typeof instruction === 'string') return instruction;
+    if (typeof instruction === 'string') return decodeHtmlEntities(instruction);
     return getTextContent(instruction.text || instruction.name || instruction);
   });
 
