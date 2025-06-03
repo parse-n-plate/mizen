@@ -151,41 +151,80 @@ function parseHtmlContent(htmlContent: string, url: string): Recipe {
                     htmlContent.match(/<h1[^>]*>([^<]+)</i);
   const title = titleMatch ? titleMatch[1].trim() : 'Untitled Recipe';
 
-  // Look for ingredients using common patterns
+  // Enhanced ingredient patterns for modern recipe sites
   const ingredientPatterns = [
+    // AllRecipes and similar sites use spans with specific classes
+    /<span[^>]*class="[^"]*ingredients?-item-name[^"]*"[^>]*>([^<]+)</gi,
+    /<span[^>]*class="[^"]*recipe-summary__item[^"]*"[^>]*>([^<]+)</gi,
+    /<li[^>]*class="[^"]*mntl-structured-ingredients__list-item[^"]*"[^>]*>((?:[^<]|<(?!\/li>))*)<\/li>/gi,
+    /<li[^>]*data-ingredient[^>]*>([^<]+)</gi,
+    /<p[^>]*class="[^"]*ingredient[^"]*"[^>]*>([^<]+)</gi,
+    // Generic patterns
     /<li[^>]*class="[^"]*ingredient[^"]*"[^>]*>([^<]+)</gi,
     /<div[^>]*class="[^"]*ingredient[^"]*"[^>]*>([^<]+)</gi,
-    /<p[^>]*class="[^"]*ingredient[^"]*"[^>]*>([^<]+)</gi,
   ];
   
   let ingredients: string[] = [];
   for (const pattern of ingredientPatterns) {
     const matches = [...htmlContent.matchAll(pattern)];
     if (matches.length > 0) {
-      ingredients = matches.map(match => match[1].trim()).filter(text => text.length > 0);
-      break;
+      ingredients = matches.map(match => {
+        // Clean up HTML tags and extra whitespace
+        return match[1].replace(/<[^>]*>/g, '').trim();
+      }).filter(text => text.length > 0 && text.length < 200); // Filter out very long text that's likely not ingredients
+      if (ingredients.length > 0) {
+        console.log(`Found ${ingredients.length} ingredients using pattern`);
+        break;
+      }
     }
   }
 
-  // Look for instructions using common patterns
+  // Enhanced instruction patterns
   const instructionPatterns = [
+    // AllRecipes and modern sites
+    /<p[^>]*class="[^"]*mntl-sc-block-html[^"]*"[^>]*>((?:[^<]|<(?!\/p>))*)<\/p>/gi,
+    /<div[^>]*class="[^"]*recipe-summary__item[^"]*"[^>]*>([^<]+)</gi,
+    /<li[^>]*class="[^"]*mntl-sc-block-html[^"]*"[^>]*>((?:[^<]|<(?!\/li>))*)<\/li>/gi,
+    /<div[^>]*class="[^"]*recipe-instruction[^"]*"[^>]*>((?:[^<]|<(?!\/div>))*)<\/div>/gi,
+    // Generic patterns
     /<li[^>]*class="[^"]*instruction[^"]*"[^>]*>([^<]+)</gi,
     /<div[^>]*class="[^"]*instruction[^"]*"[^>]*>([^<]+)</gi,
     /<p[^>]*class="[^"]*step[^"]*"[^>]*>([^<]+)</gi,
+    /<ol[^>]*>[^<]*<li[^>]*>([^<]+)</gi,
   ];
   
   let instructions: string[] = [];
   for (const pattern of instructionPatterns) {
     const matches = [...htmlContent.matchAll(pattern)];
     if (matches.length > 0) {
-      instructions = matches.map(match => match[1].trim()).filter(text => text.length > 0);
+      instructions = matches.map(match => {
+        // Clean up HTML tags and extra whitespace
+        return match[1].replace(/<[^>]*>/g, '').trim();
+      }).filter(text => text.length > 10 && text.length < 1000); // Filter reasonable instruction lengths
+      if (instructions.length > 0) {
+        console.log(`Found ${instructions.length} instructions using pattern`);
+        break;
+      }
+    }
+  }
+
+  // Look for image with better patterns
+  const imagePatterns = [
+    /<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i,
+    /<img[^>]*class="[^"]*recipe[^"]*"[^>]*src=["']([^"']+)["']/i,
+    /<img[^>]*src=["']([^"']*recipe[^"']*)["']/i,
+  ];
+  
+  let image: string | undefined;
+  for (const pattern of imagePatterns) {
+    const match = htmlContent.match(pattern);
+    if (match) {
+      image = match[1];
       break;
     }
   }
 
-  // Look for image
-  const imageMatch = htmlContent.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
-  const image = imageMatch ? imageMatch[1] : undefined;
+  console.log(`Parsed ${ingredients.length} ingredients and ${instructions.length} instructions from HTML`);
 
   return {
     title,
