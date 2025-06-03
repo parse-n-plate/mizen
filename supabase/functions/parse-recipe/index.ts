@@ -117,49 +117,92 @@ serve(async (req) => {
 });
 
 function parseRecipeFromHtml(htmlContent: string, url: string): Recipe {
-  // Try to find JSON-LD structured data first (most reliable)
-  const jsonLdMatches = htmlContent.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+  console.log('Starting multi-stage parsing process...');
   
-  if (jsonLdMatches) {
-    for (const match of jsonLdMatches) {
-      try {
-        const jsonContent = match.replace(/<script[^>]*>/i, '').replace(/<\/script>/i, '');
-        const jsonData = JSON.parse(jsonContent);
-        const recipes = Array.isArray(jsonData) ? jsonData : [jsonData];
-        
-        for (const item of recipes) {
-          if (item['@type'] === 'Recipe' || (item['@graph'] && item['@graph'].some((g: any) => g['@type'] === 'Recipe'))) {
-            const recipeData = item['@type'] === 'Recipe' ? item : item['@graph'].find((g: any) => g['@type'] === 'Recipe');
-            if (recipeData) {
-              console.log('Found structured recipe data');
-              return parseStructuredData(recipeData, url);
-            }
-          }
-        }
-      } catch (e) {
-        console.log('Failed to parse JSON-LD:', e);
-        continue;
-      }
-    }
+  // Stage 1: Try JSON-LD structured data (most reliable)
+  console.log('Stage 1: Parsing JSON-LD structured data...');
+  const structuredRecipe = parseStructuredData(htmlContent, url);
+  if (structuredRecipe && structuredRecipe.ingredients.length > 0 && structuredRecipe.instructions.length > 0) {
+    console.log('✅ Successfully parsed using JSON-LD structured data');
+    return structuredRecipe;
   }
 
-  // Fallback to HTML parsing if no structured data found
-  console.log('No structured data found, parsing HTML');
-  return parseHtmlContent(htmlContent, url);
+  // Stage 2: Try Microdata parsing
+  console.log('Stage 2: Parsing Microdata...');
+  const microdataRecipe = parseMicrodata(htmlContent, url);
+  if (microdataRecipe && microdataRecipe.ingredients.length > 0 && microdataRecipe.instructions.length > 0) {
+    console.log('✅ Successfully parsed using Microdata');
+    return microdataRecipe;
+  }
+
+  // Stage 3: Enhanced CSS selector parsing
+  console.log('Stage 3: Enhanced CSS selector parsing...');
+  const cssRecipe = parseWithEnhancedSelectors(htmlContent, url);
+  if (cssRecipe && cssRecipe.ingredients.length > 0 && cssRecipe.instructions.length > 0) {
+    console.log('✅ Successfully parsed using CSS selectors');
+    return cssRecipe;
+  }
+
+  // Stage 4: Semantic HTML parsing
+  console.log('Stage 4: Semantic HTML parsing...');
+  const semanticRecipe = parseSemanticHtml(htmlContent, url);
+  if (semanticRecipe && semanticRecipe.ingredients.length > 0 && semanticRecipe.instructions.length > 0) {
+    console.log('✅ Successfully parsed using semantic HTML');
+    return semanticRecipe;
+  }
+
+  // Stage 5: Content-based heuristics (last resort)
+  console.log('Stage 5: Content-based heuristics...');
+  const heuristicRecipe = parseWithHeuristics(htmlContent, url);
+  console.log('⚠️ Using heuristic parsing results');
+  return heuristicRecipe;
 }
 
-function parseStructuredData(data: any, url: string): Recipe {
+function parseStructuredData(htmlContent: string, url: string): Recipe | null {
+  const jsonLdMatches = htmlContent.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+  
+  if (!jsonLdMatches) return null;
+
+  for (const match of jsonLdMatches) {
+    try {
+      const jsonContent = match.replace(/<script[^>]*>/i, '').replace(/<\/script>/i, '');
+      const jsonData = JSON.parse(jsonContent);
+      
+      // Handle different JSON-LD structures
+      const items = Array.isArray(jsonData) ? jsonData : 
+                   jsonData['@graph'] ? jsonData['@graph'] : [jsonData];
+      
+      for (const item of items) {
+        if (item['@type'] === 'Recipe' || 
+            (Array.isArray(item['@type']) && item['@type'].includes('Recipe'))) {
+          return parseRecipeFromStructuredItem(item, url);
+        }
+        
+        // Check for nested recipe in other schema types
+        if (item.mainEntity && item.mainEntity['@type'] === 'Recipe') {
+          return parseRecipeFromStructuredItem(item.mainEntity, url);
+        }
+      }
+    } catch (e) {
+      console.log('Failed to parse JSON-LD:', e);
+      continue;
+    }
+  }
+  return null;
+}
+
+function parseRecipeFromStructuredItem(data: any, url: string): Recipe {
   const getTextContent = (item: any): string => {
     if (typeof item === 'string') return item;
-    if (item && typeof item === 'object' && item.text) return item.text;
-    if (item && typeof item === 'object' && item['@value']) return item['@value'];
+    if (item && typeof item === 'object') {
+      return item.text || item['@value'] || item.name || '';
+    }
     return '';
   };
 
   const getDuration = (duration: any): string => {
     if (!duration) return '';
     if (typeof duration === 'string') {
-      // Parse ISO 8601 duration (PT15M = 15 minutes)
       const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
       if (match) {
         const hours = match[1] ? parseInt(match[1]) : 0;
@@ -172,7 +215,7 @@ function parseStructuredData(data: any, url: string): Recipe {
     return getTextContent(duration);
   };
 
-  const ingredients = data.recipeIngredient || [];
+  const ingredients = (data.recipeIngredient || []).map((ing: any) => getTextContent(ing));
   const instructions = (data.recipeInstructions || []).map((instruction: any) => {
     if (typeof instruction === 'string') return instruction;
     return getTextContent(instruction.text || instruction.name || instruction);
@@ -185,98 +228,265 @@ function parseStructuredData(data: any, url: string): Recipe {
     cookTime: getDuration(data.cookTime),
     totalTime: getDuration(data.totalTime),
     servings: data.recipeYield ? String(data.recipeYield) : undefined,
-    ingredients: ingredients.map((ing: any) => getTextContent(ing)),
+    ingredients: ingredients.filter((ing: string) => ing.trim().length > 0),
     instructions: instructions.filter((inst: string) => inst.trim().length > 0),
     source: url
   };
 }
 
-function parseHtmlContent(htmlContent: string, url: string): Recipe {
-  // Extract title
-  const titleMatch = htmlContent.match(/<title[^>]*>([^<]+)</i) || 
-                    htmlContent.match(/<h1[^>]*>([^<]+)</i);
-  const title = titleMatch ? titleMatch[1].trim() : 'Untitled Recipe';
+function parseMicrodata(htmlContent: string, url: string): Recipe | null {
+  // Look for microdata Recipe schema
+  const recipeMatch = htmlContent.match(/<[^>]*itemtype[^>]*schema\.org\/Recipe[^>]*>/i);
+  if (!recipeMatch) return null;
 
-  // Enhanced ingredient patterns for modern recipe sites
-  const ingredientPatterns = [
-    // AllRecipes and similar sites use spans with specific classes
-    /<span[^>]*class="[^"]*ingredients?-item-name[^"]*"[^>]*>([^<]+)</gi,
-    /<span[^>]*class="[^"]*recipe-summary__item[^"]*"[^>]*>([^<]+)</gi,
-    /<li[^>]*class="[^"]*mntl-structured-ingredients__list-item[^"]*"[^>]*>((?:[^<]|<(?!\/li>))*)<\/li>/gi,
-    /<li[^>]*data-ingredient[^>]*>([^<]+)</gi,
-    /<p[^>]*class="[^"]*ingredient[^"]*"[^>]*>([^<]+)</gi,
-    // Generic patterns
-    /<li[^>]*class="[^"]*ingredient[^"]*"[^>]*>([^<]+)</gi,
-    /<div[^>]*class="[^"]*ingredient[^"]*"[^>]*>([^<]+)</gi,
-  ];
-  
-  let ingredients: string[] = [];
-  for (const pattern of ingredientPatterns) {
-    const matches = [...htmlContent.matchAll(pattern)];
-    if (matches.length > 0) {
-      ingredients = matches.map(match => {
-        // Clean up HTML tags and extra whitespace
-        return match[1].replace(/<[^>]*>/g, '').trim();
-      }).filter(text => text.length > 0 && text.length < 200); // Filter out very long text that's likely not ingredients
-      if (ingredients.length > 0) {
-        console.log(`Found ${ingredients.length} ingredients using pattern`);
-        break;
-      }
-    }
-  }
+  const extractMicrodataProperty = (property: string): string[] => {
+    const regex = new RegExp(`<[^>]*itemprop=["']${property}["'][^>]*>([^<]*)</`, 'gi');
+    const matches = [...htmlContent.matchAll(regex)];
+    return matches.map(match => match[1].trim()).filter(text => text.length > 0);
+  };
 
-  // Enhanced instruction patterns
-  const instructionPatterns = [
-    // AllRecipes and modern sites
-    /<p[^>]*class="[^"]*mntl-sc-block-html[^"]*"[^>]*>((?:[^<]|<(?!\/p>))*)<\/p>/gi,
-    /<div[^>]*class="[^"]*recipe-summary__item[^"]*"[^>]*>([^<]+)</gi,
-    /<li[^>]*class="[^"]*mntl-sc-block-html[^"]*"[^>]*>((?:[^<]|<(?!\/li>))*)<\/li>/gi,
-    /<div[^>]*class="[^"]*recipe-instruction[^"]*"[^>]*>((?:[^<]|<(?!\/div>))*)<\/div>/gi,
-    // Generic patterns
-    /<li[^>]*class="[^"]*instruction[^"]*"[^>]*>([^<]+)</gi,
-    /<div[^>]*class="[^"]*instruction[^"]*"[^>]*>([^<]+)</gi,
-    /<p[^>]*class="[^"]*step[^"]*"[^>]*>([^<]+)</gi,
-    /<ol[^>]*>[^<]*<li[^>]*>([^<]+)</gi,
-  ];
-  
-  let instructions: string[] = [];
-  for (const pattern of instructionPatterns) {
-    const matches = [...htmlContent.matchAll(pattern)];
-    if (matches.length > 0) {
-      instructions = matches.map(match => {
-        // Clean up HTML tags and extra whitespace
-        return match[1].replace(/<[^>]*>/g, '').trim();
-      }).filter(text => text.length > 10 && text.length < 1000); // Filter reasonable instruction lengths
-      if (instructions.length > 0) {
-        console.log(`Found ${instructions.length} instructions using pattern`);
-        break;
-      }
-    }
-  }
+  const ingredients = extractMicrodataProperty('recipeIngredient');
+  const instructions = extractMicrodataProperty('recipeInstruction');
+  const title = extractMicrodataProperty('name')[0] || 'Untitled Recipe';
 
-  // Look for image with better patterns
-  const imagePatterns = [
-    /<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i,
-    /<img[^>]*class="[^"]*recipe[^"]*"[^>]*src=["']([^"']+)["']/i,
-    /<img[^>]*src=["']([^"']*recipe[^"']*)["']/i,
-  ];
-  
-  let image: string | undefined;
-  for (const pattern of imagePatterns) {
-    const match = htmlContent.match(pattern);
-    if (match) {
-      image = match[1];
-      break;
-    }
-  }
-
-  console.log(`Parsed ${ingredients.length} ingredients and ${instructions.length} instructions from HTML`);
+  if (ingredients.length === 0 && instructions.length === 0) return null;
 
   return {
     title,
-    image,
     ingredients: ingredients.length > 0 ? ingredients : ['No ingredients found'],
     instructions: instructions.length > 0 ? instructions : ['No instructions found'],
     source: url
   };
+}
+
+function parseWithEnhancedSelectors(htmlContent: string, url: string): Recipe | null {
+  console.log('Trying enhanced CSS selectors...');
+  
+  // Comprehensive ingredient patterns for major recipe sites
+  const ingredientSelectors = [
+    // AllRecipes
+    'span[class*="ingredients-item-name"]',
+    'span[class*="recipe-summary__item"]',
+    'li[class*="mntl-structured-ingredients__list-item"]',
+    // Food Network
+    'section[class*="o-RecipeIngredients"] li',
+    'div[class*="o-RecipeIngredients__a-Ingredient"]',
+    // Bon Appétit
+    'div[data-testid="IngredientList"] li',
+    'div[class*="ingredient"] p',
+    // Serious Eats
+    'li[class*="structured-ingredients__list-item"]',
+    'div[class*="ingredient-amount"]',
+    // NYT Cooking
+    'span[class*="ingredient-name"]',
+    'li[class*="recipe-ingredients"]',
+    // BBC Good Food
+    'li[class*="pb-xxs"]',
+    'section[class*="recipe-ingredients"] li',
+    // Generic patterns
+    'li[class*="ingredient"]',
+    'div[class*="ingredient"]',
+    'p[class*="ingredient"]',
+    'span[class*="ingredient"]',
+    // Data attributes
+    'li[data-ingredient]',
+    'div[data-ingredient]'
+  ];
+
+  const instructionSelectors = [
+    // AllRecipes
+    'div[class*="mntl-sc-block-html"] p',
+    'li[class*="mntl-sc-block-html"]',
+    'div[class*="recipe-instruction"]',
+    // Food Network
+    'section[class*="o-Method"] li',
+    'div[class*="o-Method__a-Step"]',
+    // Bon Appétit
+    'div[data-testid="InstructionList"] li',
+    'div[class*="instruction"] p',
+    // Serious Eats
+    'li[class*="mntl-sc-block-html"]',
+    'div[class*="recipe-procedure-text"]',
+    // NYT Cooking
+    'li[class*="recipe-instructions"]',
+    'ol[class*="recipe-instructions"] li',
+    // BBC Good Food
+    'li[class*="pb-xs"]',
+    'section[class*="recipe-method"] li',
+    // Generic patterns
+    'li[class*="instruction"]',
+    'li[class*="step"]',
+    'div[class*="instruction"]',
+    'div[class*="step"]',
+    'p[class*="step"]',
+    'ol[class*="recipe"] li',
+    'ul[class*="recipe"] li'
+  ];
+
+  let ingredients: string[] = [];
+  let instructions: string[] = [];
+
+  // Try ingredient selectors
+  for (const selector of ingredientSelectors) {
+    const pattern = new RegExp(`<[^>]*class="[^"]*${selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/g, '[^"]*')}[^"]*"[^>]*>([^<]+)</`, 'gi');
+    const matches = [...htmlContent.matchAll(pattern)];
+    if (matches.length > 0) {
+      ingredients = matches.map(match => match[1].trim()).filter(text => text.length > 0 && text.length < 200);
+      if (ingredients.length >= 3) {
+        console.log(`Found ${ingredients.length} ingredients using selector pattern`);
+        break;
+      }
+    }
+  }
+
+  // Try instruction selectors
+  for (const selector of instructionSelectors) {
+    const pattern = new RegExp(`<[^>]*class="[^"]*${selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\\\*/g, '[^"]*')}[^"]*"[^>]*>([^<]+)</`, 'gi');
+    const matches = [...htmlContent.matchAll(pattern)];
+    if (matches.length > 0) {
+      instructions = matches.map(match => match[1].trim()).filter(text => text.length > 10 && text.length < 1000);
+      if (instructions.length >= 2) {
+        console.log(`Found ${instructions.length} instructions using selector pattern`);
+        break;
+      }
+    }
+  }
+
+  const title = extractTitle(htmlContent);
+
+  if (ingredients.length === 0 && instructions.length === 0) return null;
+
+  return {
+    title,
+    image: extractImage(htmlContent),
+    ingredients: ingredients.length > 0 ? ingredients : ['No ingredients found'],
+    instructions: instructions.length > 0 ? instructions : ['No instructions found'],
+    source: url
+  };
+}
+
+function parseSemanticHtml(htmlContent: string, url: string): Recipe | null {
+  console.log('Trying semantic HTML parsing...');
+  
+  // Look for lists that might contain ingredients or instructions
+  const listMatches = htmlContent.match(/<ul[^>]*>([\s\S]*?)<\/ul>/gi) || [];
+  const orderedListMatches = htmlContent.match(/<ol[^>]*>([\s\S]*?)<\/ol>/gi) || [];
+  
+  let ingredients: string[] = [];
+  let instructions: string[] = [];
+  
+  // Parse unordered lists (typically ingredients)
+  for (const listMatch of listMatches) {
+    const listItems = [...listMatch.matchAll(/<li[^>]*>([^<]+)<\/li>/gi)]
+      .map(match => match[1].trim())
+      .filter(text => text.length > 0);
+    
+    if (listItems.length >= 3 && isLikelyIngredientList(listItems)) {
+      ingredients = listItems;
+      break;
+    }
+  }
+  
+  // Parse ordered lists (typically instructions)
+  for (const listMatch of orderedListMatches) {
+    const listItems = [...listMatch.matchAll(/<li[^>]*>([^<]+)<\/li>/gi)]
+      .map(match => match[1].trim())
+      .filter(text => text.length > 10);
+    
+    if (listItems.length >= 2 && isLikelyInstructionList(listItems)) {
+      instructions = listItems;
+      break;
+    }
+  }
+
+  if (ingredients.length === 0 && instructions.length === 0) return null;
+
+  return {
+    title: extractTitle(htmlContent),
+    image: extractImage(htmlContent),
+    ingredients: ingredients.length > 0 ? ingredients : ['No ingredients found'],
+    instructions: instructions.length > 0 ? instructions : ['No instructions found'],
+    source: url
+  };
+}
+
+function parseWithHeuristics(htmlContent: string, url: string): Recipe {
+  console.log('Using content-based heuristics...');
+  
+  // Extract all text content and analyze it
+  const textContent = htmlContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
+  const sentences = textContent.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 10);
+  
+  const ingredients: string[] = [];
+  const instructions: string[] = [];
+  
+  // Common ingredient indicators
+  const ingredientKeywords = /\b(cup|cups|tablespoon|tablespoons|teaspoon|teaspoons|tbsp|tsp|ounce|ounces|oz|pound|pounds|lb|lbs|gram|grams|g|kilogram|kg|liter|liters|ml|milliliter)\b/i;
+  
+  // Common instruction indicators
+  const instructionKeywords = /\b(heat|cook|bake|mix|stir|add|combine|place|remove|serve|preheat|season|slice|chop|dice|mince)\b/i;
+  
+  for (const sentence of sentences) {
+    if (sentence.length < 200 && ingredientKeywords.test(sentence)) {
+      ingredients.push(sentence);
+    } else if (sentence.length > 20 && sentence.length < 500 && instructionKeywords.test(sentence)) {
+      instructions.push(sentence);
+    }
+  }
+
+  return {
+    title: extractTitle(htmlContent),
+    image: extractImage(htmlContent),
+    ingredients: ingredients.length > 0 ? ingredients.slice(0, 20) : ['No ingredients found'],
+    instructions: instructions.length > 0 ? instructions.slice(0, 15) : ['No instructions found'],
+    source: url
+  };
+}
+
+function isLikelyIngredientList(items: string[]): boolean {
+  const ingredientKeywords = /\b(cup|cups|tablespoon|tablespoons|teaspoon|teaspoons|tbsp|tsp|ounce|ounces|oz|pound|pounds|lb|lbs)\b/i;
+  const matchingItems = items.filter(item => ingredientKeywords.test(item));
+  return matchingItems.length / items.length > 0.3; // At least 30% should contain measurement words
+}
+
+function isLikelyInstructionList(items: string[]): boolean {
+  const instructionKeywords = /\b(heat|cook|bake|mix|stir|add|combine|place|remove|serve|preheat)\b/i;
+  const matchingItems = items.filter(item => instructionKeywords.test(item));
+  return matchingItems.length / items.length > 0.4; // At least 40% should contain action words
+}
+
+function extractTitle(htmlContent: string): string {
+  const titlePatterns = [
+    /<title[^>]*>([^<]+)</i,
+    /<h1[^>]*class="[^"]*recipe[^"]*"[^>]*>([^<]+)</i,
+    /<h1[^>]*>([^<]+)</i,
+    /<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["']/i
+  ];
+  
+  for (const pattern of titlePatterns) {
+    const match = htmlContent.match(pattern);
+    if (match) {
+      return match[1].trim().replace(/\s*\|\s*.*$/, ''); // Remove site name after |
+    }
+  }
+  
+  return 'Untitled Recipe';
+}
+
+function extractImage(htmlContent: string): string | undefined {
+  const imagePatterns = [
+    /<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i,
+    /<img[^>]*class="[^"]*recipe[^"]*"[^>]*src=["']([^"']+)["']/i,
+    /<img[^>]*src=["']([^"']*recipe[^"']*)["']/i,
+    /<img[^>]*class="[^"]*featured[^"]*"[^>]*src=["']([^"']+)["']/i
+  ];
+  
+  for (const pattern of imagePatterns) {
+    const match = htmlContent.match(pattern);
+    if (match) {
+      return match[1];
+    }
+  }
+  
+  return undefined;
 }
