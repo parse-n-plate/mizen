@@ -89,19 +89,26 @@ const RecipeDisplay = ({ recipe, onBack }: RecipeDisplayProps) => {
 
           <div className="grid md:grid-cols-2 gap-6">
             {/* Ingredients */}
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="text-xl font-semibold mb-4 text-gray-900">
+            <Card className="shadow-lg border-0 bg-white">
+              <CardContent className="p-8">
+                <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center">
+                  <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center mr-3">
+                    <span className="text-sm">🥄</span>
+                  </div>
                   Ingredients
                 </h2>
-                <ul className="space-y-2">
+                <div className="space-y-4">
                   {recipe.ingredients.map((ingredient, index) => (
-                    <li key={index} className="flex items-start">
-                      <span className="w-2 h-2 bg-orange-400 rounded-full mt-2 mr-3 flex-shrink-0" />
-                      <span className="text-gray-700">{ingredient}</span>
-                    </li>
+                    <div key={index} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                      <div className="flex items-center">
+                        <div className="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                          <div className="w-2 h-2 bg-white rounded-full" />
+                        </div>
+                        <span className="text-gray-800 font-medium leading-relaxed">{ingredient}</span>
+                      </div>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </CardContent>
             </Card>
 
