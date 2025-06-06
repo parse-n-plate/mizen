@@ -27,7 +27,7 @@ const RecipeDisplay = ({ recipe, onBack }: RecipeDisplayProps) => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto p-4">
+        <div className="max-w-full mx-auto p-4">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
@@ -41,7 +41,7 @@ const RecipeDisplay = ({ recipe, onBack }: RecipeDisplayProps) => {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto p-4">
+      <div className="max-w-full mx-auto p-4">
         <div className="space-y-6">
           {/* Recipe Header */}
           <Card>
@@ -87,50 +87,110 @@ const RecipeDisplay = ({ recipe, onBack }: RecipeDisplayProps) => {
             </CardContent>
           </Card>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Ingredients */}
-            <Card className="shadow-lg border-0 bg-white">
-              <CardContent className="p-8">
-                <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center">
-                  <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center mr-3">
-                    <span className="text-sm">🥄</span>
-                  </div>
-                  Ingredients
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {recipe.ingredients.map((ingredient, index) => (
-                    <div key={index} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
-                      <div className="flex items-center">
-                        <div className="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
-                          <div className="w-2 h-2 bg-white rounded-full" />
+          {/* Recipe Summary Card */}
+          <Card className="shadow-lg border-0 bg-white">
+            <CardContent className="p-8">
+              <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center">
+                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-sm">📋</span>
+                </div>
+                Recipe Summary
+              </h2>
+              
+              <div className="grid md:grid-cols-2 gap-8">
+                {/* Recipe Info */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Recipe Details</h3>
+                  <div className="space-y-3">
+                    {recipe.prepTime && (
+                      <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                        <div className="flex items-center">
+                          <Clock className="mr-2 h-4 w-4 text-yellow-500" />
+                          <span className="text-gray-700 font-medium">Prep Time</span>
                         </div>
-                        <span className="text-gray-800 font-medium leading-relaxed">{ingredient}</span>
+                        <span className="text-gray-900 font-semibold">{recipe.prepTime}</span>
+                      </div>
+                    )}
+                    {recipe.cookTime && (
+                      <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                        <div className="flex items-center">
+                          <ChefHat className="mr-2 h-4 w-4 text-yellow-500" />
+                          <span className="text-gray-700 font-medium">Cook Time</span>
+                        </div>
+                        <span className="text-gray-900 font-semibold">{recipe.cookTime}</span>
+                      </div>
+                    )}
+                    {recipe.servings && (
+                      <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                        <div className="flex items-center">
+                          <Users className="mr-2 h-4 w-4 text-yellow-500" />
+                          <span className="text-gray-700 font-medium">Servings</span>
+                        </div>
+                        <span className="text-gray-900 font-semibold">{recipe.servings}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                      <div className="flex items-center">
+                        <div className="w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center mr-2">
+                          <span className="text-xs text-white">📝</span>
+                        </div>
+                        <span className="text-gray-700 font-medium">Total Steps</span>
+                      </div>
+                      <span className="text-gray-900 font-semibold">{recipe.instructions.length}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Ingredients */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <div className="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center mr-2">
+                      <span className="text-xs">🥄</span>
+                    </div>
+                    Ingredients ({recipe.ingredients.length})
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-80 overflow-y-auto">
+                    {recipe.ingredients.map((ingredient, index) => (
+                      <div key={index} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                        <div className="flex items-center">
+                          <div className="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                            <div className="w-2 h-2 bg-white rounded-full" />
+                          </div>
+                          <span className="text-gray-800 font-medium leading-relaxed">{ingredient}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Instructions Card */}
+          <Card className="shadow-lg border-0 bg-white">
+            <CardContent className="p-8">
+              <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center">
+                <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-sm">👨‍🍳</span>
+                </div>
+                Instructions
+              </h2>
+              <ol className="space-y-6">
+                {recipe.instructions.map((instruction, index) => (
+                  <li key={index} className="flex">
+                    <div className="flex-shrink-0 mr-4">
+                      <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-gray-900">{index + 1}</span>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Instructions */}
-            <Card>
-              <CardContent className="p-6">
-                <h2 className="text-xl font-semibold mb-4 text-gray-900">
-                  Instructions
-                </h2>
-                <ol className="space-y-4">
-                  {recipe.instructions.map((instruction, index) => (
-                    <li key={index} className="flex">
-                      <Badge variant="outline" className="mr-3 mt-1 flex-shrink-0">
-                        {index + 1}
-                      </Badge>
-                      <span className="text-gray-700">{instruction}</span>
-                    </li>
-                  ))}
-                </ol>
-              </CardContent>
-            </Card>
-          </div>
+                    <div className="flex-1">
+                      <p className="text-gray-700 leading-relaxed text-lg">{instruction}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
