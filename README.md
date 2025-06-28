@@ -27,3 +27,4 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 - Tailwindcss
 - Shadcn component library
 - Lucide svg icons
+- recipe-scrapers (python library)
