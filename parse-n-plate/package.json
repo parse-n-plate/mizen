@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "docker:run": "docker run -p 3000:3000 --env-file .env.local recipe-app",
+    "docker:build": "docker build -t parse-n-plate ."
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",

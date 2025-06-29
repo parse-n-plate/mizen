@@ -3,9 +3,8 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 
 interface ParsedRecipe {
   title?: string;
-  ingredients: any[];
-  instructions: any[];
-  aiEnhanced?: any;
+  ingredients: string[];
+  instructions: string[];
 }
 
 interface RecipeContextType {
@@ -18,6 +17,7 @@ const RecipeContext = createContext<RecipeContextType | undefined>(undefined);
 
 export function RecipeProvider({ children }: { children: ReactNode }) {
   const [parsedRecipe, setParsedRecipe] = useState<ParsedRecipe | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load from localStorage on mount

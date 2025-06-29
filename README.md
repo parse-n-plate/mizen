@@ -25,6 +25,12 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 - React
 - Next.js
 - Tailwindcss
+- Python
 - Shadcn component library
 - Lucide svg icons
 - recipe-scrapers (python library)
+
+## Infrastructure
+- Docker
+- AWS ECS/ECR (Elastic Container Service & Elastic Container Repository for cloud hosting)
+

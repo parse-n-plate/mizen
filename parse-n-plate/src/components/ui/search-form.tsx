@@ -10,19 +10,12 @@ import {useRecipe} from "@/contexts/RecipeContext";
 export default function SearchForm() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
-  const [recipeData, setRecipeData] = useState();
-  const [ingredients, setIngredients] = useState();
   const { setParsedRecipe } = useRecipe();
   const router = useRouter();
 
 
   const handleParse = async () => {
     try {
-      // setLoading(true)
-      // const scrapedRecipe = await recipeScrape(url);
-      // setRecipeData(scrapedRecipe);
-      // const parsedIngredients = await parseIngredients(scrapedRecipe.ingredients);
-      // setIngredients(parsedIngredients);
       setLoading(true);
       console.log("Starting recipe parsing for:", url);
 

@@ -52,7 +52,8 @@ export default function ParsedRecipePage() {
             Ingredients
           </h2>
           <ul className="space-y-2">
-            {parsedRecipe.ingredients.map((ingredient, index) => (
+            {Array.isArray(parsedRecipe.ingredients) &&
+              parsedRecipe.ingredients.map((ingredient, index) => (
               <li key={index} className="flex items-start gap-2">
                 <span className="text-gray-500 text-sm">•</span>
                 <span>{typeof ingredient === 'string' ? ingredient : JSON.stringify(ingredient)}</span>
@@ -67,7 +68,8 @@ export default function ParsedRecipePage() {
             Instructions
           </h2>
           <ol className="space-y-3">
-            {parsedRecipe.instructions.map((instruction, index) => (
+            {Array.isArray(parsedRecipe.instructions) &&
+              parsedRecipe.instructions.map((instruction, index) => (
               <li key={index} className="flex items-start gap-3">
                 <span className="bg-blue-100 text-blue-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium flex-shrink-0">
                   {index + 1}
@@ -78,18 +80,6 @@ export default function ParsedRecipePage() {
           </ol>
         </div>
       </div>
-
-      {/* AI Enhanced Data (if available) */}
-      {parsedRecipe.aiEnhanced && (
-        <div className="mt-8 bg-white p-6 rounded-lg shadow">
-          <h2 className="text-2xl font-semibold mb-4 text-purple-600">
-            AI Analysis
-          </h2>
-          <pre className="bg-gray-50 p-4 rounded text-sm overflow-auto">
-            {parsedRecipe.aiEnhanced}
-          </pre>
-        </div>
-      )}
     </div>
   );
 }
