@@ -1,5 +1,3 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
 ## Getting Started
 
 First, install necessary python packages:
@@ -28,5 +26,5 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Infrastructure
 - Docker
-- AWS ECS/ECR (Elastic Container Service & Elastic Container Repository for cloud hosting)
+- AWS ECS/ECR/EC2 (Elastic Container Service & Elastic Container Repository for cloud hosting on EC2 instance)
 
