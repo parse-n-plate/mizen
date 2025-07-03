@@ -11,7 +11,7 @@ export default function Home() {
         <SearchForm/>
       </main>
       <footer className="flex items-center justify-center">
-        NOT THE FOOTER
+        FOOTER CONTENT HERE
       </footer>
     </div>
   );
