@@ -24,20 +24,20 @@
 #    See the documentation for each action used below for the recommended IAM policies for this IAM user,
 #    and best practices on handling the access key credentials.
 
-name: Deploy to Amazon ECS
+name: Deploy to Prod
 
 on:
   push:
     branches: [ "main" ]
 
 env:
-  AWS_REGION: us-east-2                   # set this to your preferred AWS region, e.g. us-west-1
-  ECR_REPOSITORY: recipe-reboot-refined           # set this to your Amazon ECR repository name
-  ECS_SERVICE: parse-n-plate-task-service-h0kd2e5o                 # set this to your Amazon ECS service name
+  AWS_REGION: us-west-1                   # set this to your preferred AWS region, e.g. us-west-1
+  ECR_REPOSITORY: parse-n-plate           # set this to your Amazon ECR repository name
+  ECS_SERVICE: parse-n-plate-service-prod                 # set this to your Amazon ECS service name
   ECS_CLUSTER: parse-n-plate-ecs-cluster                 # set this to your Amazon ECS cluster name
   ECS_TASK_DEFINITION: .aws/task-definition.json # set this to the path to your Amazon ECS task definition
                                                # file, e.g. .aws/task-definition.json
-  CONTAINER_NAME: parse-n-plate           # set this to the name of the container in the
+  CONTAINER_NAME: parse-n-plate-container-prod           # set this to the name of the container in the
                                                # containerDefinitions section of your task definition
 
 permissions:
