@@ -56,7 +56,7 @@ export default function ParsedRecipePage() {
               parsedRecipe.ingredients.map((ingredient, index) => (
               <li key={index} className="flex items-start gap-2">
                 <span className="text-gray-500 text-sm">•</span>
-                <span>{typeof ingredient === 'string' ? ingredient : JSON.stringify(ingredient)}</span>
+                <span>{ingredient}</span>
               </li>
             ))}
           </ul>

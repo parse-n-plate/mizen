@@ -4,10 +4,14 @@ import {MoveRight} from "lucide-react";
 import {Input} from "@/components/ui/input";
 import {useState} from "react";
 import {parseIngredients, recipeScrape} from "@/functions/recipe-parse";
-import { useRouter } from "next/navigation";
+import {useRouter} from "next/navigation";
 import {useRecipe} from "@/contexts/RecipeContext";
 
-export default function SearchForm() {
+interface SearchFormProps {
+  setError: (error: boolean) => void;
+}
+
+export default function SearchForm({ setError }: SearchFormProps) {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const { setParsedRecipe } = useRecipe();
@@ -23,22 +27,28 @@ export default function SearchForm() {
       const scrapedData = await recipeScrape(url);
       console.log("Scraped Recipe:", scrapedData);
 
-      // Step 2: Parse ingredients with AI
-      const aiResult = await parseIngredients(scrapedData.ingredients);
-      console.log("AI Parsed Ingredients:", aiResult);
+      // Throw error if invalid url
+      if(scrapedData.error) {
+        setError(true);
+        throw new Error("Invalid URL: " + url);
+      } else {
+        // Proceed with the rest of steps only if URL was valid
+        // Step 2: Parse ingredients with AI
+        const aiResult = await parseIngredients(scrapedData.ingredients);
+        console.log("AI Parsed Ingredients:", aiResult);
 
-      // Step 3: Store in context and redirect
-      setParsedRecipe({
-        title: scrapedData.title,
-        ingredients: scrapedData.ingredients,
-        instructions: scrapedData.instructions,
-      });
+        // Step 3: Store in context and redirect
+        setParsedRecipe({
+          title: scrapedData.title,
+          ingredients: scrapedData.ingredients,
+          instructions: scrapedData.instructions,
+        });
 
-      // Step 4: Redirect to the parsed recipe page
-      router.push('/parsed-recipe-page');
+        // Step 4: Redirect to the parsed recipe page
+        router.push('/parsed-recipe-page');
+      }
     } catch (err) {
       console.error(err)
-      alert("Error parsing recipe")
     } finally {
       setLoading(false)
     }
