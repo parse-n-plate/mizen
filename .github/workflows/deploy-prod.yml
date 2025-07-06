@@ -15,6 +15,28 @@ permissions:
   contents: read
 
 jobs:
+  lint-and-format:
+    name: Lint & Prettier Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.1.0'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run Prettier check
+        run: npx prettier --check .
+
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
