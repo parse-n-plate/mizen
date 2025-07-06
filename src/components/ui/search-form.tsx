@@ -27,7 +27,7 @@ export default function SearchForm({ setError }: SearchFormProps) {
       console.log('Scraped Recipe:', scrapedData);
 
       // Throw error if invalid url
-      if(scrapedData.error) {
+      if (scrapedData.error) {
         setError(true);
         throw new Error('Invalid URL: ' + url);
       } else {
@@ -53,7 +53,7 @@ export default function SearchForm({ setError }: SearchFormProps) {
     }
   };
 
-  return(
+  return (
     <div className="flex gap-2 w-full">
       <Input
         type="string"
@@ -66,7 +66,7 @@ export default function SearchForm({ setError }: SearchFormProps) {
         onClick={handleParse}
         disabled={loading}
       >
-        {loading ? 'Processing...' : <MoveRight color="black"/>}
+        {loading ? 'Processing...' : <MoveRight color="black" />}
       </Button>
     </div>
   );

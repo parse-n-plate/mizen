@@ -25,10 +25,16 @@ export async function POST(req: NextRequest): Promise<Response> {
           resolve(NextResponse.json(json));
         } catch (err) {
           console.error('Error parsing Python output:', err);
-          resolve(NextResponse.json({ error: 'Failed to parse Python output' }));
+          resolve(
+            NextResponse.json({ error: 'Failed to parse Python output' }),
+          );
         }
       } else {
-        resolve(NextResponse.json({ error: error || 'Unknown error running Python script' }));
+        resolve(
+          NextResponse.json({
+            error: error || 'Unknown error running Python script',
+          }),
+        );
       }
     });
   });

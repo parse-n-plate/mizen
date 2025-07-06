@@ -16,7 +16,7 @@ export async function parseIngredients(ingredients: string) {
     },
     body: JSON.stringify({ text: ingredientsText }),
   });
-  
+
   return await res.json();
 }
 

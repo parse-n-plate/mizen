@@ -21,7 +21,8 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: 'system',
-          content: 'Given the ingredients, return an array of objects, each with amount, units (like cups, teaspoons, grams – NOT sizes like inch, oz, lb), and ingredient. If a size like ‘6 inch’ is describing the ingredient (e.g. ‘2 6-inch tortillas’), treat it as part of the ingredient and leave units empty. If no amount is found, use ‘As much as you like’. Return raw JSON only. No explanation',
+          content:
+            'Given the ingredients, return an array of objects, each with amount, units (like cups, teaspoons, grams – NOT sizes like inch, oz, lb), and ingredient. If a size like ‘6 inch’ is describing the ingredient (e.g. ‘2 6-inch tortillas’), treat it as part of the ingredient and leave units empty. If no amount is found, use ‘As much as you like’. Return raw JSON only. No explanation',
         },
         {
           role: 'user',
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
     });
 
     const result = response.choices[0]?.message?.content;
-    
+
     if (!result) {
       return NextResponse.json(
         { error: 'No response from Groq' },
@@ -43,19 +44,21 @@ export async function POST(req: NextRequest) {
       success: true,
       data: result,
     });
-
   } catch (error) {
     console.error('Recipe parsing failed:', error);
     return NextResponse.json(
-      { error: 'Failed to parse recipe', details: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Failed to parse recipe',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 },
     );
   }
 }
 
 export async function GET() {
-  return NextResponse.json({ 
-    message: 'Recipe parsing API endpoint', 
-    usage: 'Send POST request with { text: \'your recipe text here\' }', 
+  return NextResponse.json({
+    message: 'Recipe parsing API endpoint',
+    usage: "Send POST request with { text: 'your recipe text here' }",
   });
 }

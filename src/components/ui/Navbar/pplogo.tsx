@@ -38,7 +38,7 @@ function AvatarFallback({
 }
 
 export default function PPLogo() {
-  return(
+  return (
     <Avatar className="w-14 h-14">
       <AvatarFallback className="bg-yellow-400 text-white font-bold text-2xl">
         🍽

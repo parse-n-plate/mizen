@@ -1,0 +1,33 @@
+# Node + build output
+node_modules
+dist
+build
+.next
+out
+coverage
+.env
+.env.*  # any env files
+public  # skip images/fonts/assets
+
+# Lock & package files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Prettier itself
+.prettierrc
+.prettierignore
+
+# Git junk
+.git
+.gitignore
+
+# IDE junk
+.DS_Store
+.vscode
+.idea
+
+# Docker, certs, etc.
+docker-compose.yml
+*.pem
+*.key

@@ -32,8 +32,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <RecipeProvider>
-          <Navbar/>
-          <Separator/>
+          <Navbar />
+          <Separator />
           {children}
         </RecipeProvider>
       </body>
