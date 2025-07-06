@@ -9,17 +9,17 @@ RUN apt-get update && \
 WORKDIR /app
 
 # Copy package files first (for better caching)
-COPY parse-n-plate/package*.json ./
+COPY package*.json ./
 
 # Install Node dependencies
 RUN npm install
 
 # Copy requirements and install Python dependencies
-COPY parse-n-plate/requirements.txt .
+COPY requirements.txt .
 RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
 
 # Copy the rest of your app
-COPY parse-n-plate/ ./
+COPY / ./
 
 # Build the Next.js app
 RUN npm run build
