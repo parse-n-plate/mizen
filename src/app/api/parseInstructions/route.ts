@@ -22,28 +22,26 @@ export async function POST(req: NextRequest) {
         {
           role: 'system',
           content: `
-            You are an AI that extracts recipe ingredients from raw HTML.
+            You are an AI that extracts the recipe title and cooking instructions from raw HTML.
             
             Your task:
-            Return ONLY a JSON array of ingredient objects and a the recipe title. Each object must have the following keys:
-            - amount: string (e.g. "1", "½", "as much as you like")
-            - units: string (e.g. "cups", "tablespoons", "grams") — exclude size units like "inch", "oz", "lb"
-            - ingredient: string (e.g. "rigatoni", "gochujang")
+            Return ONLY a JSON object with the following:
+            array of strings — each string is a full step in the recipe
             
             Rules:
-            1. If a size like “6-inch” is part of the ingredient (e.g. “2 6-inch tortillas”), treat it as part of the **ingredient** and leave **units** blank.
-            2. If no amount is listed in the ingredients, try to infer it from the instructions.
-            3. If no amount is found at all, set **amount** to "as much as you like".
-            4. Do NOT include any explanation, formatting, markdown, or commentary — just raw JSON.
+            1. Only extract **visible, human-readable** steps meant to be followed by the cook.
+            2. Do NOT include ingredient lists, prep times, serving sizes, or nutritional info.
+            3. Clean each step by removing unnecessary line breaks or formatting artifacts.
+            4. Steps should be listed in the correct order.
+            5. Do NOT include any explanations, markdown, or commentary — just valid raw JSON.
             
             Example output:
             [
-              "Tortilla Soup",
-              [
-                { "amount": "1", "units": "cup", "ingredient": "heavy cream" },
-                { "amount": "2", "units": "", "ingredient": "6-inch tortillas" },
-                { "amount": "as much as you like", "units": "", "ingredient": "salt" }
-              ]
+              "Heat oil in a large pot over medium heat.",
+              "Add onions and garlic; sauté until fragrant.",
+              "Pour in chicken broth and bring to a boil.",
+              "Add shredded chicken, corn, and seasonings.",
+              "Simmer for 15 minutes, then serve hot with toppings of choice."
             ]
             `
         },

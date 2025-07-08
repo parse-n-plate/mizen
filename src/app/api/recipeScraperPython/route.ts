@@ -5,7 +5,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   const { url } = await req.json();
 
   return new Promise((resolve) => {
-    const process = spawn('python3', ['src/functions/scrape_recipe.py', url]);
+    const process = spawn('python3', ['src/utils/scrape_recipe.py', url]);
 
     let data = '';
     let error = '';
