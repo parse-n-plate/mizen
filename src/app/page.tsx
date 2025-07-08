@@ -31,7 +31,7 @@ export default function Home() {
             Clean, ad-free recipes from any cooking website
           </h3>
         </div>
-        <SearchForm setError={setError} />
+        <SearchForm setErrorAction={setError} />
       </main>
       <footer className="flex items-center justify-center">
         FOOTER CONTENT HERE SOON

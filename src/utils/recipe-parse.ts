@@ -4,6 +4,17 @@ export async function fetchHtml(url: string) {
   return await res.json();
 }
 
+export async function validateRecipeUrl(url: string):Promise<boolean> {
+  const res = await fetch('/api/urlValidator', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url }),
+  });
+
+  const data = await res.json();
+  return data.isRecipe;
+}
+
 export async function parseIngredients(ingredients: string) {
   // Convert array to string if needed
   const ingredientsText = Array.isArray(ingredients)

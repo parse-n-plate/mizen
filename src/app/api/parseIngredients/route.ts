@@ -21,8 +21,28 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: 'system',
-          content:
-            'Given the ingredients, return an array of objects, each with amount, units (like cups, teaspoons, grams – NOT sizes like inch, oz, lb), and ingredient. If a size like ‘6 inch’ is describing the ingredient (e.g. ‘2 6-inch tortillas’), treat it as part of the ingredient and leave units empty. If no amount is found, use ‘As much as you like’. Return raw JSON only. No explanation',
+          content: `
+            You are an AI that extracts recipe ingredients from raw HTML.
+            
+            Your task:
+            Return ONLY a JSON array of ingredient objects. Each object must have the following keys:
+            - amount: string (e.g. "1", "½", "as much as you like")
+            - units: string (e.g. "cups", "tablespoons", "grams") — exclude size units like "inch", "oz", "lb"
+            - ingredient: string (e.g. "rigatoni", "gochujang")
+            
+            Rules:
+            1. If a size like “6-inch” is part of the ingredient (e.g. “2 6-inch tortillas”), treat it as part of the **ingredient** and leave **units** blank.
+            2. If no amount is listed in the ingredients, try to infer it from the instructions.
+            3. If no amount is found at all, set **amount** to "as much as you like".
+            4. Do NOT include any explanation, formatting, markdown, or commentary — just raw JSON.
+            
+            Example output:
+            [
+              { "amount": "1", "units": "cup", "ingredient": "heavy cream" },
+              { "amount": "2", "units": "", "ingredient": "6-inch tortillas" },
+              { "amount": "as much as you like", "units": "", "ingredient": "salt" }
+            ]
+            `
         },
         {
           role: 'user',
