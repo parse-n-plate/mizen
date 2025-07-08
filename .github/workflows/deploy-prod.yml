@@ -69,6 +69,10 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:prod
 
+      - name: Inject GROQ_API_KEY into task definition
+        run: |
+          sed -i "s|REPLACE_ME_GROQ_API_KEY|${{ secrets.GROQ_API_KEY }}|" .aws/task-definition.json
+
       - name: Render Amazon ECS task definition
         id: render-task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
