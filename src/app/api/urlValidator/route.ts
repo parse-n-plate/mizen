@@ -9,8 +9,10 @@ export async function POST(req: Request) {
     const text = $.text().toLowerCase();
 
     const hasIngredients = text.includes('ingredient');
-    const hasInstructions = text.includes('instruction') || text.includes('step');
-    const hasSchema = html.includes('"@type":"Recipe"') || html.includes('@type": "Recipe"');
+    const hasInstructions =
+      text.includes('instruction') || text.includes('step');
+    const hasSchema =
+      html.includes('"@type":"Recipe"') || html.includes('@type": "Recipe"');
 
     const isRecipe = (hasIngredients && hasInstructions) || hasSchema;
 

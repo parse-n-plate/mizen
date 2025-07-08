@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
               "Add shredded chicken, corn, and seasonings.",
               "Simmer for 15 minutes, then serve hot with toppings of choice."
             ]
-            `
+            `,
         },
         {
           role: 'user',

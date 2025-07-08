@@ -59,16 +59,21 @@ export default function ParsedRecipePage() {
           </h2>
           <ul className="space-y-2">
             {Array.isArray(parsedRecipe.ingredients) &&
-              (parsedRecipe.ingredients as (string | IngredientObject)[]).map((ingredient, index) => (
-                <li key={index}>
-                  {typeof ingredient === 'string'
-                    ? ingredient
-                    : [ingredient.amount, ingredient.units, ingredient.ingredient]
-                      .filter(Boolean)
-                      .join(' ')}
-                </li>
-              ))
-            }
+              (parsedRecipe.ingredients as (string | IngredientObject)[]).map(
+                (ingredient, index) => (
+                  <li key={index}>
+                    {typeof ingredient === 'string'
+                      ? ingredient
+                      : [
+                          ingredient.amount,
+                          ingredient.units,
+                          ingredient.ingredient,
+                        ]
+                          .filter(Boolean)
+                          .join(' ')}
+                  </li>
+                ),
+              )}
           </ul>
         </div>
 

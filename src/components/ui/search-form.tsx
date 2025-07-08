@@ -3,7 +3,13 @@ import { Button } from '@/components/ui/button';
 import { MoveRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
-import { parseIngredients, parseInstructions, recipeScrape, validateRecipeUrl, fetchHtml } from '@/utils/recipe-parse';
+import {
+  parseIngredients,
+  parseInstructions,
+  recipeScrape,
+  validateRecipeUrl,
+  fetchHtml,
+} from '@/utils/recipe-parse';
 import { useRouter } from 'next/navigation';
 import { useRecipe } from '@/contexts/RecipeContext';
 
@@ -12,8 +18,8 @@ interface SearchFormProps {
 }
 
 export default function SearchForm({ setErrorAction }: SearchFormProps) {
-  const [ url, setUrl ] = useState('');
-  const [ loading, setLoading ] = useState(false);
+  const [url, setUrl] = useState('');
+  const [loading, setLoading] = useState(false);
   const { setParsedRecipe } = useRecipe();
   const router = useRouter();
 

@@ -4,7 +4,7 @@ export async function fetchHtml(url: string) {
   return await res.json();
 }
 
-export async function validateRecipeUrl(url: string):Promise<boolean> {
+export async function validateRecipeUrl(url: string): Promise<boolean> {
   const res = await fetch('/api/urlValidator', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -30,8 +30,8 @@ export async function parseIngredients(ingredients: string) {
 
   const { data } = await res.json();
   const cleanData = data
-    .replace(/^[\s`]*```(?:json)?/, '')  // Remove starting ```json or ```
-    .replace(/```[\s`]*$/, '')          // Remove trailing ```
+    .replace(/^[\s`]*```(?:json)?/, '') // Remove starting ```json or ```
+    .replace(/```[\s`]*$/, '') // Remove trailing ```
     .trim();
   return JSON.parse(cleanData);
 }
@@ -51,8 +51,8 @@ export async function parseInstructions(ingredients: string) {
 
   const { data } = await res.json();
   const cleanData = data
-    .replace(/^[\s`]*```(?:json)?/, '')  // Remove starting ```json or ```
-    .replace(/```[\s`]*$/, '')          // Remove trailing ```
+    .replace(/^[\s`]*```(?:json)?/, '') // Remove starting ```json or ```
+    .replace(/```[\s`]*$/, '') // Remove trailing ```
     .trim();
   return JSON.parse(cleanData);
 }

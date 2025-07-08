@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
                 { "amount": "as much as you like", "units": "", "ingredient": "salt" }
               ]
             ]
-            `
+            `,
         },
         {
           role: 'user',
