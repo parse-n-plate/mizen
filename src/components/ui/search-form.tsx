@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { MoveRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
-import { parseIngredients, recipeScrape, validateRecipeUrl, fetchHtml } from '@/utils/recipe-parse';
+import { parseIngredients, parseInstructions, recipeScrape, validateRecipeUrl, fetchHtml } from '@/utils/recipe-parse';
 import { useRouter } from 'next/navigation';
 import { useRecipe } from '@/contexts/RecipeContext';
 
@@ -30,19 +30,32 @@ export default function SearchForm({ setErrorAction }: SearchFormProps) {
       }
 
       // Step 2: Scrape with Python
-      const scrapedData = await recipeScrape(url);
-      console.log('Scraped Recipe:', scrapedData);
+      let scrapedData = await recipeScrape(url);
 
       // Step 3: Parse with AI if python script fails to parse
       if (scrapedData.error || scrapedData.ingredients.length === 0) {
-        console.log("RUN PARSING THROUGH AI")
         // Proceed with the rest of steps only if URL was valid
-
         const htmlRes = await fetchHtml(url);
-        // console.log('HTML:', htmlRes.html);
-        // Step 2: Parse ingredients with AI
-        const aiResult = await parseIngredients(htmlRes.html);
-        console.log('AI Parsed Ingredients:', aiResult);
+
+        // Step 3.1: Parse ingredients with AI
+        const aiParsedIngredients = await parseIngredients(htmlRes.html);
+
+        // Step 3.2: Parse instructions with AI
+        const aiParsedInstructions = await parseInstructions(htmlRes.html);
+
+        if (!htmlRes || !aiParsedIngredients || !aiParsedInstructions) {
+          setErrorAction(true);
+          throw new Error('Error parsing recipe. Please try again.');
+        }
+
+        // Stitch final scrapedData format
+        scrapedData = {
+          title: aiParsedIngredients[0],
+          ingredients: aiParsedIngredients[1],
+          instructions: Array.isArray(aiParsedInstructions)
+            ? aiParsedInstructions
+            : [aiParsedInstructions],
+        };
       }
 
       // Step 3: Store in context and redirect

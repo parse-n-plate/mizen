@@ -3,6 +3,12 @@ import { useRecipe } from '@/contexts/RecipeContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+type IngredientObject = {
+  amount?: string;
+  units?: string;
+  ingredient: string;
+};
+
 export default function ParsedRecipePage() {
   const { parsedRecipe, clearRecipe } = useRecipe();
   const router = useRouter();
@@ -53,12 +59,16 @@ export default function ParsedRecipePage() {
           </h2>
           <ul className="space-y-2">
             {Array.isArray(parsedRecipe.ingredients) &&
-              parsedRecipe.ingredients.map((ingredient, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <span className="text-gray-500 text-sm">•</span>
-                  <span>{ingredient}</span>
+              (parsedRecipe.ingredients as (string | IngredientObject)[]).map((ingredient, index) => (
+                <li key={index}>
+                  {typeof ingredient === 'string'
+                    ? ingredient
+                    : [ingredient.amount, ingredient.units, ingredient.ingredient]
+                      .filter(Boolean)
+                      .join(' ')}
                 </li>
-              ))}
+              ))
+            }
           </ul>
         </div>
 

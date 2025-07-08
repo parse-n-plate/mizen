@@ -28,7 +28,33 @@ export async function parseIngredients(ingredients: string) {
     body: JSON.stringify({ text: ingredientsText }),
   });
 
-  return await res.json();
+  const { data } = await res.json();
+  const cleanData = data
+    .replace(/^[\s`]*```(?:json)?/, '')  // Remove starting ```json or ```
+    .replace(/```[\s`]*$/, '')          // Remove trailing ```
+    .trim();
+  return JSON.parse(cleanData);
+}
+
+export async function parseInstructions(ingredients: string) {
+  // Convert array to string if needed
+  const ingredientsText = Array.isArray(ingredients)
+    ? ingredients.join('\n')
+    : ingredients;
+  const res = await fetch('/api/parseInstructions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ text: ingredientsText }),
+  });
+
+  const { data } = await res.json();
+  const cleanData = data
+    .replace(/^[\s`]*```(?:json)?/, '')  // Remove starting ```json or ```
+    .replace(/```[\s`]*$/, '')          // Remove trailing ```
+    .trim();
+  return JSON.parse(cleanData);
 }
 
 export async function recipeScrape(url: string) {
