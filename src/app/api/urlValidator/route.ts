@@ -4,12 +4,15 @@ import * as cheerio from 'cheerio';
 export async function POST(req: Request) {
   const { url } = await req.json();
   try {
-    const { data: html } = await axios.get(url, { timeout: 5000,
+    const { data: html } = await axios.get(url, {
+      timeout: 5000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
         'Accept-Language': 'en-US,en;q=0.9',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-      },});
+        Accept:
+          'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      },
+    });
     const $ = cheerio.load(html);
     const text = $.text().toLowerCase();
 
