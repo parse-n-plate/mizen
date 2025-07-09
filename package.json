@@ -9,7 +9,8 @@
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "docker:run": "docker run -p 3000:3000 --env-file .env.local recipe-app",
-    "docker:build": "docker build -t parse-n-plate ."
+    "docker:build": "docker build -t parse-n-plate .",
+    "prepare": "husky"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.10",
@@ -37,6 +38,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
+    "husky": "^9.1.7",
     "prettier": "3.6.2",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.4",
