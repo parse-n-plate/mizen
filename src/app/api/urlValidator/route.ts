@@ -10,7 +10,9 @@ export async function POST(req: Request) {
 
     const hasIngredients = text.includes('ingredient');
     const hasInstructions =
-      text.includes('instruction') || text.includes('step') || text.includes('directions');
+      text.includes('instruction') ||
+      text.includes('step') ||
+      text.includes('directions');
     const hasSchema =
       html.includes('"@type":"Recipe"') || html.includes('@type": "Recipe"');
 
