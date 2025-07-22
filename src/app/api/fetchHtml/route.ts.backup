@@ -1,0 +1,106 @@
+import { NextRequest, NextResponse } from 'next/server';
+import * as cheerio from 'cheerio';
+
+interface RecipeContentItem {
+  text: string;
+  html: string;
+  element: string;
+}
+
+export async function GET(req: NextRequest) {
+  const url = req.nextUrl.searchParams.get('url');
+  if (!url)
+    return NextResponse.json({ error: 'No URL provided' }, { status: 400 });
+
+  try {
+    console.log('Fetching HTML from:', url);
+    const htmlRes = await fetch(url);
+    
+    if (!htmlRes.ok) {
+      console.error('Failed to fetch HTML:', htmlRes.status, htmlRes.statusText);
+      return NextResponse.json(
+        { error: `Failed to fetch HTML: ${htmlRes.status} ${htmlRes.statusText}` },
+        { status: htmlRes.status },
+      );
+    }
+    
+    const fullHtml = await htmlRes.text();
+    console.log('HTML fetched, length:', fullHtml.length);
+
+    const $ = cheerio.load(fullHtml);
+    
+    // Check if this is a GoDaddy website (like shychef.com)
+    const isGoDaddySite = url.includes('shychef.com') || 
+                          $('meta[name="generator"]').text().includes('Go Daddy') ||
+                          $('body').hasClass('x');
+
+    console.log('Is GoDaddy site:', isGoDaddySite);
+
+    if (isGoDaddySite) {
+      // For GoDaddy sites, extract specific content areas
+      let cleanHtml = '';
+      
+      // Look for recipe-specific content
+      const recipeContent: RecipeContentItem[] = [];
+      
+      // Find all text content that might be recipe-related
+      $('*').each(function() {
+        const text = $(this).text().trim();
+        if (text.length > 50) {
+          // Check if this text contains recipe-related keywords
+          const recipeKeywords = ['ingredient', 'recipe', 'kimchi', 'cook', 'prep', 'total time', 'serves', 'main', 'garnish'];
+          const hasRecipeContent = recipeKeywords.some(keyword => 
+            text.toLowerCase().includes(keyword.toLowerCase())
+          );
+          
+          if (hasRecipeContent) {
+            recipeContent.push({
+              text: text,
+              html: $(this).html() || '',
+              element: $(this).prop('tagName') || 'div'
+            });
+          }
+        }
+      });
+      
+      if (recipeContent.length > 0) {
+        // Combine all recipe content
+        cleanHtml = recipeContent.map(item => item.html).join('\n');
+        console.log('Found recipe content, length:', cleanHtml.length);
+      } else {
+        // Fallback: look for any content with substantial text
+        const substantialContent = $('*').filter(function() {
+          const text = $(this).text().trim();
+          return text.length > 200 && !$(this).find('*').length; // No nested elements
+        });
+        
+        if (substantialContent.length > 0) {
+          cleanHtml = substantialContent.first().html() || '';
+          console.log('Found substantial content, length:', cleanHtml.length);
+        } else {
+          // Last resort: use body content
+          cleanHtml = $('body').html() || '';
+          console.log('Using body content, length:', cleanHtml.length);
+        }
+      }
+      
+      return NextResponse.json({ html: cleanHtml });
+    } else {
+      // Original aggressive cleaning for other sites
+      $(
+        'script, style, noscript, link, meta, head, svg, symbol, img, button, gcse, lite-youtube, .comments, .nav, .rmp-rating-widget, .rmp-widgets-container, .topper, .topper-inset, .subnav, .entry-metadata--date, .copyright, .network-icons, .thumb-grid, .entry-title, .hero-video-container, iframe, video, audio, canvas, form, input, select, option, .navbar, .header, .footer, .sidebar, .breadcrumb, .ad, .ads, .sponsor, .promo, .popup, .modal, .newsletter, .social, .share, .related, .rating, .author, .subscribe, .login, .user, .profile, .icon, .banner, .announcement, .entry-meta, .entry-footer, .post-meta, .wp-block-group, .wp-block-buttons, .wp-caption, .widget, .wp-block-embed, .wp-block-image, .wp-block-video, .wp-block-pullquote, .adsbygoogle, .ad-container, .sponsored, .sponsor-box, .ad-slot, .outbrain, .taboola, .yummly-share, .print-btn, .print-recipe, .printable, .breadcrumbs, .breadcrumbs-container, .site-branding, .site-header, .site-footer, .post-navigation, .nav-links, .mobile-banner, .mobile-sticky, .app-banner, .open-app, .app-link, .push-modal, .push-popup, .push-subscribe, .push-banner, .theme-toggle, .dark-mode, .light-mode, .toggle-switch, .color-mode, .font-size-control, script[type="application/ld+json"], script[type="application/json"], .scroll-to-top, .floating-btn, .chat-widget, .feedback-widget, .tooltips, .hint, .hovercard, .dropdown-menu, .search-box, .search-container, .search-form, .site-search, .search-bar, .comments, .comment, #comments, #comment, [class*="comment"], [id*="comment"], [class*="reply"], [id*="reply"], [class*="disqus"], [id*="disqus"], [class*="discussion"], [id*="discussion"], [id*="wprm"], [class*="wprm"], .screen-reader-text',
+      ).remove();
+
+      // Grab just the visible body content
+      const cleanHtml = $('body').html() || '';
+
+      return NextResponse.json({ html: cleanHtml });
+    }
+  } catch (err) {
+    console.error('Error parsing HTML:', err);
+    return NextResponse.json(
+      { error: 'Failed to fetch or clean HTML', details: err instanceof Error ? err.message : 'Unknown error' },
+      { status: 500 },
+    );
+  }
+}

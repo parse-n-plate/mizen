@@ -7,7 +7,6 @@ export default function Navbar() {
         <PPLogo />
         <h1 className="font-sans text-2xl font-semibold">Parse & Plate</h1>
       </div>
-      <h1 className="font-sans text-lg self-center">📖 COOKBOOK</h1>
     </div>
   );
 }

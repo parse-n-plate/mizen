@@ -12,6 +12,7 @@ import {
 } from '@/utils/recipe-parse';
 import { useRouter } from 'next/navigation';
 import { useRecipe } from '@/contexts/RecipeContext';
+import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 
 interface SearchFormProps {
   setErrorAction: (error: boolean) => void;
@@ -21,6 +22,7 @@ export default function SearchForm({ setErrorAction }: SearchFormProps) {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const { setParsedRecipe } = useRecipe();
+  const { addRecipe } = useParsedRecipes();
   const router = useRouter();
 
   const handleParse = async () => {
@@ -37,9 +39,14 @@ export default function SearchForm({ setErrorAction }: SearchFormProps) {
 
       // Step 2: Scrape with Python
       let scrapedData = await recipeScrape(url);
+      
+      // Debug: Log what the Python scraper returned
+      console.log('Python scraper response:', scrapedData);
 
       // Step 3: Parse with AI if python script fails to parse
       if (scrapedData.error || scrapedData.ingredients.length === 0) {
+        console.log('Python scraper failed, falling back to AI parsing...');
+        
         // Proceed with the rest of steps only if URL was valid
         const htmlRes = await fetchHtml(url);
 
@@ -71,10 +78,22 @@ export default function SearchForm({ setErrorAction }: SearchFormProps) {
         instructions: scrapedData.instructions,
       });
 
-      // Step 4: Redirect to the parsed recipe page
+      // Step 4: Add to recent recipes
+      const recipeSummary = Array.isArray(scrapedData.instructions) 
+        ? scrapedData.instructions.join(' ').slice(0, 140)
+        : scrapedData.instructions.slice(0, 140);
+
+      addRecipe({
+        title: scrapedData.title,
+        summary: recipeSummary,
+        url: url,
+      });
+
+      // Step 5: Redirect to the parsed recipe page
       router.push('/parsed-recipe-page');
     } catch (err) {
-      console.error(err);
+      console.error('Parse error:', err);
+      setErrorAction(true);
     } finally {
       setLoading(false);
     }
@@ -89,7 +108,7 @@ export default function SearchForm({ setErrorAction }: SearchFormProps) {
         onChange={(e) => setUrl(e.target.value)}
       />
       <Button
-        className="bg-yellow-400 hover:bg-yellow-300 cursor-pointer active:scale-90 transition"
+        className="bg-yellow-400 hover:bg-yellow-300 cursor-pointer active:scale-90 transition h-14 px-6 text-lg"
         onClick={handleParse}
         disabled={loading}
       >

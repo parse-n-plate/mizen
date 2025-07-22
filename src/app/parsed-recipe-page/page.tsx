@@ -3,6 +3,27 @@ import { useRecipe } from '@/contexts/RecipeContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
+// Helper function to format ingredient
+const formatIngredient = (ingredient: any): string => {
+  if (typeof ingredient === 'string') {
+    return ingredient;
+  }
+  
+  if (typeof ingredient === 'object' && ingredient.amount && ingredient.ingredient) {
+    const parts = [];
+    if (ingredient.amount && ingredient.amount !== 'as much as you like') {
+      parts.push(ingredient.amount);
+    }
+    if (ingredient.units) {
+      parts.push(ingredient.units);
+    }
+    parts.push(ingredient.ingredient);
+    return parts.join(' ');
+  }
+  
+  return String(ingredient);
+};
+
 export default function ParsedRecipePage() {
   const { parsedRecipe, clearRecipe } = useRecipe();
   const router = useRouter();
@@ -51,15 +72,23 @@ export default function ParsedRecipePage() {
           <h2 className="text-2xl font-semibold mb-4 text-green-600">
             Ingredients
           </h2>
-          <ul className="space-y-2">
-            {Array.isArray(parsedRecipe.ingredients) &&
-              parsedRecipe.ingredients.map((ingredient, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <span className="text-gray-500 text-sm">•</span>
-                  <span>{ingredient}</span>
-                </li>
-              ))}
-          </ul>
+          {Array.isArray(parsedRecipe.ingredients) &&
+            parsedRecipe.ingredients.map((group: any, groupIdx: number) => (
+              <div key={groupIdx} className="mb-6">
+                <h3 className="text-lg font-bold mb-2 text-gray-800">
+                  {group.groupName}
+                </h3>
+                <ul className="space-y-2">
+                  {Array.isArray(group.ingredients) &&
+                    group.ingredients.map((ingredient: any, index: number) => (
+                      <li key={index} className="flex items-start gap-2">
+                        <span className="text-gray-500 text-sm">•</span>
+                        <span>{formatIngredient(ingredient)}</span>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            ))}
         </div>
 
         {/* Instructions Section */}

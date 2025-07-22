@@ -1,0 +1,228 @@
+Parse-n-Plate: Technical Summary for CTO
+========================================
+
+Project Overview
+----------------
+Parse-n-Plate is a web application that extracts and displays clean, ad-free recipes from any cooking website. Users input a recipe URL, and the system parses the recipe content, removing ads and unnecessary elements to provide a clean recipe view.
+
+Architecture Overview
+--------------------
+High-Level Architecture:
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Frontend      │    │   Backend APIs   │    │   External      │
+│   (Next.js)     │◄──►│   (Next.js API)  │◄──►│   Services      │
+│                 │    │                  │    │                 │
+│ - React 19      │    │ - Python Script  │    │ - Groq AI API   │
+│ - TypeScript    │    │ - URL Validation │    │ - Recipe Sites  │
+│ - Tailwind CSS  │    │ - HTML Fetching  │    │                 │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+
+Tech Stack
+----------
+
+Frontend:
+- Framework: Next.js 15.3.4 (React 19)
+- Language: TypeScript
+- Styling: Tailwind CSS v4
+- UI Components: 
+  - Radix UI (accessible components)
+  - Shadcn/ui component library
+  - Lucide React (icons)
+- State Management: React Context API
+- Build Tool: Next.js built-in bundler
+
+Backend:
+- Runtime: Node.js 24.1
+- Framework: Next.js API Routes
+- Language: TypeScript
+- HTTP Client: Axios
+- HTML Parsing: Cheerio
+
+Python Integration:
+- Python Version: 3.9+
+- Key Libraries:
+  - recipe-scrapers: Specialized recipe extraction
+  - beautifulsoup4: HTML parsing
+  - requests: HTTP requests
+- Integration: Child process spawning from Node.js
+
+AI/ML:
+- Provider: Groq AI
+- Model: llama3-8b-8192 (default)
+- Fallback Model: mistral-saba-24b (requires terms acceptance)
+- Use Case: Recipe parsing when Python scraper fails
+
+Infrastructure & DevOps:
+- Containerization: Docker
+- Cloud Platform: AWS
+- Container Registry: Amazon ECR
+- Orchestration: Amazon ECS (EC2 launch type)
+- CI/CD: GitHub Actions
+- Reverse Proxy: Nginx (on EC2)
+- Region: us-west-1
+
+Data Flow
+---------
+Recipe Parsing Pipeline:
+1. URL Validation: Checks if URL contains recipe content
+2. Primary Parsing: Python script with recipe-scrapers library
+3. Fallback Parsing: AI-powered parsing using Groq API
+4. Data Processing: Format standardization and cleaning
+5. Storage: React Context + localStorage
+6. Display: Clean, formatted recipe view
+
+API Endpoints:
+- POST /api/urlValidator - Validates recipe URLs
+- GET /api/fetchHtml - Fetches and cleans HTML content
+- POST /api/recipeScraperPython - Python-based recipe scraping
+- POST /api/parseIngredients - AI-powered ingredient extraction
+- POST /api/parseInstructions - AI-powered instruction extraction
+
+Deployment Architecture
+-----------------------
+Production Environment:
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   GitHub        │    │   AWS ECR       │    │   AWS ECS       │
+│   Actions       │───►│   Container     │───►│   EC2 Instance  │
+│   CI/CD         │    │   Registry      │    │   (us-west-1)   │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                                │                       │
+                                ▼                       ▼
+                        ┌─────────────────┐    ┌─────────────────┐
+                        │   Docker Image  │    │   Nginx Proxy   │
+                        │   (Node + Python)│   │   (Port 80/443) │
+                        └─────────────────┘    └─────────────────┘
+
+Container Specifications:
+- Base Image: node:24.1
+- Python: 3.9+ (installed in container)
+- Port: 3000
+- Resources: 256 CPU units, 512MB memory
+- Environment: GROQ_API_KEY
+
+Security & Configuration
+------------------------
+Environment Variables:
+- GROQ_API_KEY: Required for AI-powered parsing
+- AWS credentials managed via GitHub Secrets
+
+Security Headers:
+- Content Security Policy (CSP)
+- Strict Transport Security (HSTS)
+- X-Frame-Options: DENY
+- X-Content-Type-Options: nosniff
+
+Dependencies:
+- Node.js: 24.1
+- Python: 3.9+
+- Key NPM packages: 18 production dependencies
+- Python packages: 3 core dependencies
+
+Performance Considerations
+--------------------------
+Optimization Strategies:
+- Caching: React Context + localStorage for parsed recipes
+- Lazy Loading: Next.js automatic code splitting
+- Image Optimization: Next.js built-in image optimization
+- Bundle Size: Tree shaking and code splitting
+
+Scalability:
+- Horizontal: ECS can scale multiple container instances
+- Vertical: Container resources can be adjusted
+- CDN: Can be added for static assets
+
+Monitoring & Observability
+---------------------------
+Current State:
+- Basic error logging in console
+- GitHub Actions deployment status
+- ECS service health checks
+
+Recommended Additions:
+- Application performance monitoring (APM)
+- Error tracking (Sentry)
+- Log aggregation (CloudWatch)
+- Health check endpoints
+
+Development Workflow
+--------------------
+Local Development:
+# Setup
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+npm install
+
+# Development
+npm run dev  # Runs on localhost:3001
+
+Code Quality:
+- Linting: ESLint with Next.js config
+- Formatting: Prettier
+- Git Hooks: Husky for pre-commit checks
+- Type Safety: TypeScript strict mode
+
+Risk Assessment
+---------------
+High Priority:
+- API Rate Limits: Groq API usage monitoring needed
+- External Dependencies: Recipe site changes can break parsing
+- Cost Management: AI API usage costs
+
+Medium Priority:
+- Data Validation: Input sanitization and validation
+- Error Handling: Graceful degradation for parsing failures
+- Performance: Large recipe pages may impact parsing speed
+
+Low Priority:
+- Browser Compatibility: Modern browsers only
+- Mobile Optimization: Basic responsive design
+
+Future Considerations
+---------------------
+Technical Debt:
+- Add comprehensive error handling
+- Implement proper logging
+- Add unit and integration tests
+- Consider microservices architecture for scaling
+
+Feature Enhancements:
+- Recipe search functionality
+- User accounts and saved recipes
+- Recipe sharing capabilities
+- Nutritional information extraction
+
+Infrastructure Improvements:
+- Multi-region deployment
+- CDN integration
+- Database for recipe storage
+- Caching layer (Redis)
+
+Cost Analysis
+-------------
+Current Costs:
+- AWS ECS: ~$15-30/month (t3.small instance)
+- Groq API: Pay-per-use (free tier available)
+- ECR: Minimal storage costs
+- GitHub Actions: Free tier sufficient
+
+Scaling Costs:
+- Compute: Linear scaling with usage
+- AI API: Proportional to parsing volume
+- Storage: Minimal for current use case
+
+Conclusion
+----------
+Parse-n-Plate is a well-architected application with modern technologies and solid infrastructure. The hybrid approach (Python + AI) provides robust recipe parsing capabilities. The deployment pipeline is production-ready with proper CI/CD practices.
+
+Key Strengths:
+- Modern tech stack with good developer experience
+- Robust parsing with fallback mechanisms
+- Production-ready deployment pipeline
+- Scalable architecture
+
+Areas for Improvement:
+- Comprehensive testing strategy
+- Enhanced monitoring and observability
+- Performance optimization for large recipes
+- Better error handling and user feedback 

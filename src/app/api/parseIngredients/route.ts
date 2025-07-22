@@ -21,31 +21,49 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: 'system',
-          content: `
-            You are an AI that extracts recipe ingredients from raw HTML.
-            
-            Your task:
-            Return ONLY a JSON array of ingredient objects and a the recipe title. Each object must have the following keys:
-            - amount: string (e.g. "1", "½", "as much as you like")
-            - units: string (e.g. "cups", "tablespoons", "grams") — exclude size units like "inch", "oz", "lb"
-            - ingredient: string (e.g. "rigatoni", "gochujang")
-            
-            Rules:
-            1. If a size like “6-inch” is part of the ingredient (e.g. “2 6-inch tortillas”), treat it as part of the **ingredient** and leave **units** blank.
-            2. If no amount is listed in the ingredients, try to infer it from the instructions.
-            3. If no amount is found at all, set **amount** to "as much as you like".
-            4. Do NOT include any explanation, formatting, markdown, or commentary — just raw JSON.
-            
-            Example output:
-            [
-              "Tortilla Soup",
-              [
-                { "amount": "1", "units": "cup", "ingredient": "heavy cream" },
-                { "amount": "2", "units": "", "ingredient": "6-inch tortillas" },
-                { "amount": "as much as you like", "units": "", "ingredient": "salt" }
-              ]
-            ]
-            `,
+          content: `You are an AI that extracts recipe ingredients from raw HTML.
+
+Your output must follow this exact JSON format:
+- A string for the recipe title as the first element
+- A JSON array of ingredient group objects as the second element
+
+Each ingredient group object must have exactly these keys:
+- "groupName": string (e.g. "For the cake", "For the frosting", or "Main" if no group)
+- "ingredients": array of ingredient objects
+
+Each ingredient object must have exactly these keys:
+- "amount": string (e.g. "1", "½", "as much as you like")
+- "units": string (e.g. "cups", "tablespoons", "grams") — exclude size units like "inch", "oz", "lb"
+- "ingredient": string (e.g. "rigatoni", "gochujang")
+
+Rules:
+1. If a size like "6-inch" is part of the ingredient (e.g. "2 6-inch tortillas"), treat it as part of the ingredient and leave units blank.
+2. If no amount is listed, try to infer it from the instructions.
+3. If no amount is found at all, use: "as much as you like"
+4. If the recipe does not have ingredient groups, use a single group with groupName "Main".
+5. Your response must be ONLY raw, valid JSON — no markdown, no code blocks, no explanation, no preamble or postscript.
+
+Valid example output:
+[
+  "Chocolate Cake",
+  [
+    {
+      "groupName": "For the cake",
+      "ingredients": [
+        {"amount": "2", "units": "cups", "ingredient": "flour"},
+        {"amount": "1", "units": "cup", "ingredient": "sugar"}
+      ]
+    },
+    {
+      "groupName": "For the frosting",
+      "ingredients": [
+        {"amount": "1/2", "units": "cup", "ingredient": "butter"},
+        {"amount": "2", "units": "cups", "ingredient": "powdered sugar"}
+      ]
+    }
+  ]
+]
+`,
         },
         {
           role: 'user',
@@ -55,6 +73,7 @@ export async function POST(req: NextRequest) {
     });
 
     const result = response.choices[0]?.message?.content;
+    console.log('result;', result);
 
     if (!result) {
       return NextResponse.json(

@@ -9,7 +9,7 @@ import React, {
 
 interface ParsedRecipe {
   title?: string;
-  ingredients: string[];
+  ingredients: any[]; // Can be grouped ingredients or flat array
   instructions: string[];
 }
 
