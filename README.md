@@ -24,7 +24,7 @@ GROQ_API_KEY=your_groq_api_key_here
 
 ### Groq API Setup
 
-1. **Get a Groq API Key**: 
+1. **Get a Groq API Key**:
    - Sign up at [https://console.groq.com/](https://console.groq.com/)
    - Create an API key in your dashboard
 

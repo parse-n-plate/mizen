@@ -9,7 +9,10 @@ import React, {
 
 interface ParsedRecipe {
   title?: string;
-  ingredients: any[]; // Can be grouped ingredients or flat array
+  ingredients: {
+    groupName: string;
+    ingredients: { amount: string; units: string; ingredient: string }[];
+  }[]; // Can be grouped ingredients or flat array
   instructions: string[];
 }
 
@@ -24,7 +27,6 @@ const RecipeContext = createContext<RecipeContextType | undefined>(undefined);
 
 export function RecipeProvider({ children }: { children: ReactNode }) {
   const [parsedRecipe, setParsedRecipe] = useState<ParsedRecipe | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Load from localStorage on mount

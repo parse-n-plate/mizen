@@ -7,6 +7,7 @@ export async function POST(req: NextRequest) {
       apiKey: process.env.GROQ_API_KEY,
     });
     const body = await req.json();
+    console.log('body;', body);
     const { text } = body;
 
     if (!text) {
@@ -42,6 +43,9 @@ Rules:
 3. If no amount is found at all, use: "as much as you like"
 4. If the recipe does not have ingredient groups, use a single group with groupName "Main".
 5. Your response must be ONLY raw, valid JSON — no markdown, no code blocks, no explanation, no preamble or postscript.
+6. If you cannot find a valid recipe in the HTML, you must return exactly: ["No recipe found", []]. Do NOT make up or hallucinate a recipe if none is present.
+
+// The above instruction is critical to prevent the AI from inventing recipes when the input does not contain one. This helps avoid misleading results and ensures the user is notified if no recipe is found.
 
 Valid example output:
 [
@@ -63,6 +67,13 @@ Valid example output:
     }
   ]
 ]
+
+Invalid example output:
+[
+  "No recipe found",
+  [
+  ]
+]
 `,
         },
         {
@@ -74,6 +85,15 @@ Valid example output:
 
     const result = response.choices[0]?.message?.content;
     console.log('result;', result);
+
+    // Check if the AI explicitly says no recipe was found
+    // This prevents hallucinated recipes from being returned to the user
+    if (result && result.toLowerCase().includes('no recipe found')) {
+      return NextResponse.json(
+        { error: 'No valid recipe found in the provided HTML.' },
+        { status: 404 },
+      );
+    }
 
     if (!result) {
       return NextResponse.json(

@@ -26,7 +26,7 @@ export default function SearchForm({ setErrorAction }: SearchFormProps) {
 
   const handleParse = async () => {
     if (!url.trim()) return;
-    
+
     try {
       setLoading(true);
 
@@ -40,14 +40,14 @@ export default function SearchForm({ setErrorAction }: SearchFormProps) {
 
       // Step 2: Scrape with Python
       let scrapedData = await recipeScrape(url);
-      
+
       // Debug: Log what the Python scraper returned
       console.log('Python scraper response:', scrapedData);
 
       // Step 3: Parse with AI if python script fails to parse
       if (scrapedData.error || scrapedData.ingredients.length === 0) {
         console.log('Python scraper failed, falling back to AI parsing...');
-        
+
         // Proceed with the rest of steps only if URL was valid
         const htmlRes = await fetchHtml(url);
 
@@ -80,7 +80,7 @@ export default function SearchForm({ setErrorAction }: SearchFormProps) {
       });
 
       // Step 4: Add to recent recipes
-      const recipeSummary = Array.isArray(scrapedData.instructions) 
+      const recipeSummary = Array.isArray(scrapedData.instructions)
         ? scrapedData.instructions.join(' ').slice(0, 140)
         : scrapedData.instructions.slice(0, 140);
 

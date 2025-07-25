@@ -6,7 +6,12 @@ import React, {
   ReactNode,
   useEffect,
 } from 'react';
-import { ParsedRecipe, getRecentRecipes, addRecentRecipe, getRecipeById } from '@/lib/storage';
+import {
+  ParsedRecipe,
+  getRecentRecipes,
+  addRecentRecipe,
+  getRecipeById,
+} from '@/lib/storage';
 
 interface ParsedRecipesContextType {
   recentRecipes: ParsedRecipe[];
@@ -17,7 +22,9 @@ interface ParsedRecipesContextType {
   getRecipeById: (id: string) => ParsedRecipe | null;
 }
 
-const ParsedRecipesContext = createContext<ParsedRecipesContextType | undefined>(undefined);
+const ParsedRecipesContext = createContext<
+  ParsedRecipesContextType | undefined
+>(undefined);
 
 export function ParsedRecipesProvider({ children }: { children: ReactNode }) {
   const [recentRecipes, setRecentRecipes] = useState<ParsedRecipe[]>([]);
@@ -39,7 +46,7 @@ export function ParsedRecipesProvider({ children }: { children: ReactNode }) {
     try {
       // Add to localStorage
       addRecentRecipe(recipe);
-      
+
       // Update state by re-fetching from localStorage
       const updatedRecipes = getRecentRecipes();
       setRecentRecipes(updatedRecipes);
@@ -52,7 +59,7 @@ export function ParsedRecipesProvider({ children }: { children: ReactNode }) {
     try {
       // Clear from localStorage
       localStorage.removeItem('recentRecipes');
-      
+
       // Update state
       setRecentRecipes([]);
     } catch (error) {
@@ -64,9 +71,11 @@ export function ParsedRecipesProvider({ children }: { children: ReactNode }) {
     try {
       // Remove from localStorage
       const currentRecipes = getRecentRecipes();
-      const filteredRecipes = currentRecipes.filter(recipe => recipe.id !== id);
+      const filteredRecipes = currentRecipes.filter(
+        (recipe) => recipe.id !== id,
+      );
       localStorage.setItem('recentRecipes', JSON.stringify(filteredRecipes));
-      
+
       // Update state
       setRecentRecipes(filteredRecipes);
     } catch (error) {
@@ -97,7 +106,9 @@ export function ParsedRecipesProvider({ children }: { children: ReactNode }) {
 export function useParsedRecipes() {
   const context = useContext(ParsedRecipesContext);
   if (context === undefined) {
-    throw new Error('useParsedRecipes must be used within a ParsedRecipesProvider');
+    throw new Error(
+      'useParsedRecipes must be used within a ParsedRecipesProvider',
+    );
   }
   return context;
-} 
+}

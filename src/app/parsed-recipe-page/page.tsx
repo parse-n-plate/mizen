@@ -5,12 +5,18 @@ import { useEffect } from 'react';
 import RecipeSkeleton from '@/components/ui/recipe-skeleton';
 
 // Helper function to format ingredient
-const formatIngredient = (ingredient: string | { amount?: string; units?: string; ingredient: string }): string => {
+const formatIngredient = (
+  ingredient: string | { amount?: string; units?: string; ingredient: string },
+): string => {
   if (typeof ingredient === 'string') {
     return ingredient;
   }
-  
-  if (typeof ingredient === 'object' && ingredient.amount && ingredient.ingredient) {
+
+  if (
+    typeof ingredient === 'object' &&
+    ingredient.amount &&
+    ingredient.ingredient
+  ) {
     const parts = [];
     if (ingredient.amount && ingredient.amount !== 'as much as you like') {
       parts.push(ingredient.amount);
@@ -21,7 +27,7 @@ const formatIngredient = (ingredient: string | { amount?: string; units?: string
     parts.push(ingredient.ingredient);
     return parts.join(' ');
   }
-  
+
   return String(ingredient);
 };
 
@@ -43,7 +49,9 @@ export default function ParsedRecipePage() {
   if (!parsedRecipe) {
     return (
       <div className="bg-[#fbf7f2] min-h-screen flex items-center justify-center">
-        <div className="font-albert text-[16px] text-[#1e1e1e]">No recipe data found. Redirecting...</div>
+        <div className="font-albert text-[16px] text-[#1e1e1e]">
+          No recipe data found. Redirecting...
+        </div>
       </div>
     );
   }
@@ -75,24 +83,55 @@ export default function ParsedRecipePage() {
                 Ingredients
               </h2>
               {Array.isArray(parsedRecipe.ingredients) &&
-                parsedRecipe.ingredients.map((group: { groupName: string; ingredients: Array<string | { amount?: string; units?: string; ingredient: string }> }, groupIdx: number) => (
-                  <div key={groupIdx} className="mb-6 last:mb-0">
-                    <h3 className="font-domine text-[18px] text-[#1e1e1e] mb-3 leading-none">
-                      {group.groupName}
-                    </h3>
-                    <ul className="space-y-2">
-                                              {Array.isArray(group.ingredients) &&
-                          group.ingredients.map((ingredient: string | { amount?: string; units?: string; ingredient: string }, index: number) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <span className="text-[#757575] text-sm mt-1">•</span>
-                            <span className="font-albert text-[16px] text-[#1e1e1e] leading-[1.4]">
-                              {formatIngredient(ingredient)}
-                            </span>
-                          </li>
-                        ))}
-                    </ul>
-                  </div>
-                ))}
+                parsedRecipe.ingredients.map(
+                  (
+                    group: {
+                      groupName: string;
+                      ingredients: Array<
+                        | string
+                        | {
+                            amount?: string;
+                            units?: string;
+                            ingredient: string;
+                          }
+                      >;
+                    },
+                    groupIdx: number,
+                  ) => (
+                    <div key={groupIdx} className="mb-6 last:mb-0">
+                      <h3 className="font-domine text-[18px] text-[#1e1e1e] mb-3 leading-none">
+                        {group.groupName}
+                      </h3>
+                      <ul className="space-y-2">
+                        {Array.isArray(group.ingredients) &&
+                          group.ingredients.map(
+                            (
+                              ingredient:
+                                | string
+                                | {
+                                    amount?: string;
+                                    units?: string;
+                                    ingredient: string;
+                                  },
+                              index: number,
+                            ) => (
+                              <li
+                                key={index}
+                                className="flex items-start gap-2"
+                              >
+                                <span className="text-[#757575] text-sm mt-1">
+                                  •
+                                </span>
+                                <span className="font-albert text-[16px] text-[#1e1e1e] leading-[1.4]">
+                                  {formatIngredient(ingredient)}
+                                </span>
+                              </li>
+                            ),
+                          )}
+                      </ul>
+                    </div>
+                  ),
+                )}
             </div>
 
             {/* Instructions Section */}

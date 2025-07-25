@@ -25,7 +25,7 @@ export default function Home() {
               What are you cookin&apos; up today?
             </h1>
             <SearchForm setErrorAction={setError} />
-            
+
             {/* Error Card - positioned below search input */}
             {error && (
               <div className="mt-5">
@@ -37,7 +37,7 @@ export default function Home() {
               </div>
             )}
           </div>
-        
+
           {/* Recent Recipes Section */}
           <div className="space-y-4">
             <h2 className="font-domine text-[20px] text-black leading-none">

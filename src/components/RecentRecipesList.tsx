@@ -1,21 +1,12 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useParsedRecipes } from "@/contexts/ParsedRecipesContext";
-import { useRecipe } from "@/contexts/RecipeContext";
-import { useRouter } from "next/navigation";
-import { formatRelativeTime } from "@/lib/utils";
+import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
+import { useRecipe } from '@/contexts/RecipeContext';
+import { useRouter } from 'next/navigation';
 
 export default function RecentRecipesList() {
   const { recentRecipes, clearRecipes, getRecipeById } = useParsedRecipes();
   const { setParsedRecipe } = useRecipe();
   const router = useRouter();
-  
+
   // Get the 3 most recent recipes
   const displayRecipes = recentRecipes.slice(0, 3);
 
@@ -27,7 +18,7 @@ export default function RecentRecipesList() {
     try {
       // Get the full recipe data from storage
       const fullRecipe = getRecipeById(recipeId);
-      
+
       if (fullRecipe && fullRecipe.ingredients && fullRecipe.instructions) {
         // Load the recipe into the RecipeContext for the parsed recipe page
         setParsedRecipe({
@@ -35,7 +26,7 @@ export default function RecentRecipesList() {
           ingredients: fullRecipe.ingredients,
           instructions: fullRecipe.instructions,
         });
-        
+
         // Navigate to the parsed recipe page
         router.push('/parsed-recipe-page');
       } else {
@@ -54,11 +45,13 @@ export default function RecentRecipesList() {
 
   if (displayRecipes.length === 0) {
     return (
-        <div className="text-center py-8">
-        <p className="font-albert text-[16px] text-[#757575]">No recent recipes yet.</p>
+      <div className="text-center py-8">
+        <p className="font-albert text-[16px] text-[#757575]">
+          No recent recipes yet.
+        </p>
         <p className="font-albert text-[14px] text-[#757575] mt-2">
-            Parse your first recipe to see it here!
-          </p>
+          Parse your first recipe to see it here!
+        </p>
       </div>
     );
   }
@@ -74,7 +67,7 @@ export default function RecentRecipesList() {
           🗑️ Clear All (Debug)
         </button>
       </div>
-      
+
       {displayRecipes.map((recipe) => (
         <div
           key={recipe.id}
@@ -88,9 +81,9 @@ export default function RecentRecipesList() {
             <p className="font-albert text-[16px] text-[#757575] leading-[1.4]">
               {recipe.summary}
             </p>
-      </div>
-              </div>
-        ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
-} 
+}

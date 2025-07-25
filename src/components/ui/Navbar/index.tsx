@@ -16,13 +16,13 @@ export default function Navbar() {
             Parse and Plate
           </h1>
         </div>
-        
+
         <nav className="flex items-center space-x-6">
-          <Link 
+          <Link
             href="/"
             className={`font-albert text-[14px] transition-colors ${
-              pathname === '/' 
-                ? 'text-[#ffa424] font-medium' 
+              pathname === '/'
+                ? 'text-[#ffa424] font-medium'
                 : 'text-[#1e1e1e] hover:text-[#ffa424]'
             }`}
           >

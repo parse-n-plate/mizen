@@ -20,7 +20,7 @@ export async function validateRecipeUrl(url: string): Promise<boolean> {
  */
 function extractJsonFromResponse(text: string): string {
   // First, try to clean common markdown patterns
-  let cleaned = text
+  const cleaned = text
     .replace(/^[\s`]*```(?:json)?/, '') // Remove starting ```json or ```
     .replace(/```[\s`]*$/, '') // Remove trailing ```
     .trim();
@@ -44,19 +44,27 @@ function extractJsonFromResponse(text: string): string {
 /**
  * Fallback recipe data when parsing fails
  */
-function getFallbackRecipeData(): [string, { groupName: string; ingredients: { amount: string; units: string; ingredient: string }[] }[]] {
-  console.warn('parseIngredients: Using fallback recipe data due to parsing failure');
+function getFallbackRecipeData(): [
+  string,
+  {
+    groupName: string;
+    ingredients: { amount: string; units: string; ingredient: string }[];
+  }[],
+] {
+  console.warn(
+    'parseIngredients: Using fallback recipe data due to parsing failure',
+  );
   return [
-    "Recipe",
+    'Recipe',
     [
       {
-        groupName: "Main",
+        groupName: 'Main',
         ingredients: [
-      { amount: "1", units: "cup", ingredient: "ingredient" },
-      { amount: "1", units: "tablespoon", ingredient: "seasoning" }
-        ]
-      }
-    ]
+          { amount: '1', units: 'cup', ingredient: 'ingredient' },
+          { amount: '1', units: 'tablespoon', ingredient: 'seasoning' },
+        ],
+      },
+    ],
   ];
 }
 
@@ -84,7 +92,7 @@ export async function parseIngredients(ingredients: string) {
   }
 
   const responseData = await res.json();
-  
+
   if (!responseData.data) {
     console.error('parseIngredients response missing data:', responseData);
     throw new Error('parseIngredients response missing data field');
@@ -105,15 +113,22 @@ export async function parseIngredients(ingredients: string) {
         typeof title === 'string' &&
         Array.isArray(groups) &&
         groups.every(
-          (g: any) =>
+          (g: {
+            groupName: string;
+            ingredients: {
+              amount: string;
+              units: string;
+              ingredient: string;
+            }[];
+          }) =>
             typeof g.groupName === 'string' &&
             Array.isArray(g.ingredients) &&
             g.ingredients.every(
-              (ing: any) =>
+              (ing: { amount: string; units: string; ingredient: string }) =>
                 typeof ing.amount === 'string' &&
                 typeof ing.units === 'string' &&
-                typeof ing.ingredient === 'string'
-            )
+                typeof ing.ingredient === 'string',
+            ),
         )
       ) {
         return parsedData;
@@ -123,25 +138,30 @@ export async function parseIngredients(ingredients: string) {
         Array.isArray(groups) &&
         groups.length > 0 &&
         groups.every(
-          (ing: any) =>
+          (ing: { amount: string; units: string; ingredient: string }) =>
             typeof ing.amount === 'string' &&
             typeof ing.units === 'string' &&
-            typeof ing.ingredient === 'string'
+            typeof ing.ingredient === 'string',
         )
       ) {
         return [title, [{ groupName: 'Main', ingredients: groups }]];
       }
     }
     // If structure is invalid, log and use fallback
-    console.warn('parseIngredients: Invalid data structure, using fallback', parsedData);
+    console.warn(
+      'parseIngredients: Invalid data structure, using fallback',
+      parsedData,
+    );
     return getFallbackRecipeData();
   } catch (parseError) {
     console.error('parseIngredients: JSON parsing failed', {
       error: parseError,
       rawResponse: rawData,
-      extractedJson: jsonString
+      extractedJson: jsonString,
     });
-    console.warn('parseIngredients: Using fallback due to JSON parsing failure');
+    console.warn(
+      'parseIngredients: Using fallback due to JSON parsing failure',
+    );
     return getFallbackRecipeData();
   }
 }
@@ -162,11 +182,13 @@ export async function parseInstructions(ingredients: string) {
   if (!res.ok) {
     const errorData = await res.json();
     console.error('parseInstructions API error:', errorData);
-    throw new Error(`parseInstructions failed: ${res.status} ${res.statusText}`);
+    throw new Error(
+      `parseInstructions failed: ${res.status} ${res.statusText}`,
+    );
   }
 
   const responseData = await res.json();
-  
+
   if (!responseData.data) {
     console.error('parseInstructions response missing data:', responseData);
     throw new Error('parseInstructions response missing data field');
