@@ -1,19 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
+import { formatError, ERROR_CODES } from '@/utils/formatError';
 
 export async function POST(req: NextRequest) {
   try {
     const groq = new Groq({
       apiKey: process.env.GROQ_API_KEY,
     });
+
     const body = await req.json();
     console.log('body;', body);
     const { text } = body;
 
-    if (!text) {
+    if (!text || typeof text !== 'string') {
       return NextResponse.json(
-        { error: 'Text input is required' },
-        { status: 400 },
+        formatError(
+          ERROR_CODES.ERR_INVALID_URL,
+          'Text input is required and must be a string',
+        ),
+      );
+    }
+
+    if (text.trim().length === 0) {
+      return NextResponse.json(
+        formatError(ERROR_CODES.ERR_NO_RECIPE_FOUND, 'Text input is empty'),
+      );
+    }
+
+    // Check if Groq API key is configured
+    if (!process.env.GROQ_API_KEY) {
+      console.error('GROQ_API_KEY is not configured');
+      return NextResponse.json(
+        formatError(ERROR_CODES.ERR_UNKNOWN, 'AI service is not configured'),
       );
     }
 
@@ -87,18 +105,35 @@ Invalid example output:
     console.log('result;', result);
 
     // Check if the AI explicitly says no recipe was found
-    // This prevents hallucinated recipes from being returned to the user
     if (result && result.toLowerCase().includes('no recipe found')) {
       return NextResponse.json(
-        { error: 'No valid recipe found in the provided HTML.' },
-        { status: 404 },
+        formatError(
+          ERROR_CODES.ERR_NO_RECIPE_FOUND,
+          'No valid recipe found in the provided HTML',
+        ),
       );
     }
 
-    if (!result) {
+    if (!result || result.trim().length === 0) {
       return NextResponse.json(
-        { error: 'No response from Groq' },
-        { status: 500 },
+        formatError(
+          ERROR_CODES.ERR_AI_PARSE_FAILED,
+          'No response from AI service',
+        ),
+      );
+    }
+
+    // Validate that the response contains valid JSON structure
+    try {
+      const extractedJson = extractJsonFromResponse(result);
+      JSON.parse(extractedJson);
+    } catch {
+      console.error('Invalid JSON response from AI:', result);
+      return NextResponse.json(
+        formatError(
+          ERROR_CODES.ERR_AI_PARSE_FAILED,
+          'AI returned invalid response format',
+        ),
       );
     }
 
@@ -108,14 +143,66 @@ Invalid example output:
     });
   } catch (error) {
     console.error('Recipe parsing failed:', error);
+
+    if (error instanceof Error) {
+      if (
+        error.message.includes('timeout') ||
+        error.message.includes('timed out')
+      ) {
+        return NextResponse.json(
+          formatError(ERROR_CODES.ERR_TIMEOUT, 'AI service request timed out'),
+        );
+      }
+      if (
+        error.message.includes('authentication') ||
+        error.message.includes('unauthorized')
+      ) {
+        return NextResponse.json(
+          formatError(
+            ERROR_CODES.ERR_UNKNOWN,
+            'AI service authentication failed',
+          ),
+        );
+      }
+      if (
+        error.message.includes('quota') ||
+        error.message.includes('rate limit')
+      ) {
+        return NextResponse.json(
+          formatError(ERROR_CODES.ERR_UNKNOWN, 'AI service quota exceeded'),
+        );
+      }
+    }
+
     return NextResponse.json(
-      {
-        error: 'Failed to parse recipe',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 },
+      formatError(
+        ERROR_CODES.ERR_AI_PARSE_FAILED,
+        'Failed to parse recipe with AI',
+      ),
     );
   }
+}
+
+// Helper function to extract JSON from AI response
+function extractJsonFromResponse(text: string): string {
+  const cleaned = text
+    .replace(/^[\s`]*```(?:json)?/, '')
+    .replace(/```[\s`]*$/, '')
+    .trim();
+
+  // Try to extract JSON array first (for our ["title", [ingredients]] format)
+  const arrayMatch = cleaned.match(/\[[\s\S]*\]/);
+  if (arrayMatch) {
+    return arrayMatch[0];
+  }
+
+  // If no JSON array found, try to extract JSON object
+  const objectMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (objectMatch) {
+    return objectMatch[0];
+  }
+
+  return cleaned;
 }
 
 export async function GET() {

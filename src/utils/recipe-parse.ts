@@ -4,15 +4,14 @@ export async function fetchHtml(url: string) {
   return await res.json();
 }
 
-export async function validateRecipeUrl(url: string): Promise<boolean> {
+export async function validateRecipeUrl(url: string) {
   const res = await fetch('/api/urlValidator', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ url }),
   });
 
-  const data = await res.json();
-  return data.isRecipe;
+  return await res.json();
 }
 
 /**
@@ -85,17 +84,22 @@ export async function parseIngredients(ingredients: string) {
     body: JSON.stringify({ text: ingredientsText }),
   });
 
-  if (!res.ok) {
-    const errorData = await res.json();
-    console.error('parseIngredients API error:', errorData);
-    throw new Error(`parseIngredients failed: ${res.status} ${res.statusText}`);
-  }
-
   const responseData = await res.json();
+
+  if (!res.ok || !responseData.success) {
+    console.error('parseIngredients API error:', responseData);
+    return responseData; // Return the error response
+  }
 
   if (!responseData.data) {
     console.error('parseIngredients response missing data:', responseData);
-    throw new Error('parseIngredients response missing data field');
+    return {
+      success: false,
+      error: {
+        code: 'ERR_AI_PARSE_FAILED',
+        message: 'Response missing data field',
+      },
+    };
   }
 
   // Extract and clean the JSON data
@@ -131,7 +135,7 @@ export async function parseIngredients(ingredients: string) {
             ),
         )
       ) {
-        return parsedData;
+        return { success: true, data: parsedData };
       }
       // Fallback: if groups is a flat array of ingredients, wrap in a single group
       if (
@@ -144,7 +148,10 @@ export async function parseIngredients(ingredients: string) {
             typeof ing.ingredient === 'string',
         )
       ) {
-        return [title, [{ groupName: 'Main', ingredients: groups }]];
+        return {
+          success: true,
+          data: [title, [{ groupName: 'Main', ingredients: groups }]],
+        };
       }
     }
     // If structure is invalid, log and use fallback
@@ -152,7 +159,7 @@ export async function parseIngredients(ingredients: string) {
       'parseIngredients: Invalid data structure, using fallback',
       parsedData,
     );
-    return getFallbackRecipeData();
+    return { success: true, data: getFallbackRecipeData() };
   } catch (parseError) {
     console.error('parseIngredients: JSON parsing failed', {
       error: parseError,
@@ -162,7 +169,7 @@ export async function parseIngredients(ingredients: string) {
     console.warn(
       'parseIngredients: Using fallback due to JSON parsing failure',
     );
-    return getFallbackRecipeData();
+    return { success: true, data: getFallbackRecipeData() };
   }
 }
 
@@ -179,26 +186,42 @@ export async function parseInstructions(ingredients: string) {
     body: JSON.stringify({ text: ingredientsText }),
   });
 
-  if (!res.ok) {
-    const errorData = await res.json();
-    console.error('parseInstructions API error:', errorData);
-    throw new Error(
-      `parseInstructions failed: ${res.status} ${res.statusText}`,
-    );
-  }
-
   const responseData = await res.json();
+
+  if (!res.ok || !responseData.success) {
+    console.error('parseInstructions API error:', responseData);
+    return responseData; // Return the error response
+  }
 
   if (!responseData.data) {
     console.error('parseInstructions response missing data:', responseData);
-    throw new Error('parseInstructions response missing data field');
+    return {
+      success: false,
+      error: {
+        code: 'ERR_AI_PARSE_FAILED',
+        message: 'Response missing data field',
+      },
+    };
   }
 
   const cleanData = responseData.data
     .replace(/^[\s`]*```(?:json)?/, '') // Remove starting ```json or ```
     .replace(/```[\s`]*$/, '') // Remove trailing ```
     .trim();
-  return JSON.parse(cleanData);
+
+  try {
+    const parsedData = JSON.parse(cleanData);
+    return { success: true, data: parsedData };
+  } catch (parseError) {
+    console.error('parseInstructions: JSON parsing failed', parseError);
+    return {
+      success: false,
+      error: {
+        code: 'ERR_AI_PARSE_FAILED',
+        message: 'Failed to parse instructions JSON',
+      },
+    };
+  }
 }
 
 export async function recipeScrape(url: string) {
@@ -210,9 +233,12 @@ export async function recipeScrape(url: string) {
     body: JSON.stringify({ url }),
   });
 
-  if (!res.ok) {
-    throw new Error(`Python scraper failed: ${res.status} ${res.statusText}`);
+  const responseData = await res.json();
+
+  if (!res.ok || !responseData.success) {
+    console.error('recipeScrape API error:', responseData);
+    return responseData; // Return the error response
   }
 
-  return await res.json();
+  return responseData;
 }

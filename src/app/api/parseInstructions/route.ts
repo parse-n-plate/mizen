@@ -1,18 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Groq from 'groq-sdk';
+import { formatError, ERROR_CODES } from '@/utils/formatError';
 
 export async function POST(req: NextRequest) {
   try {
     const groq = new Groq({
       apiKey: process.env.GROQ_API_KEY,
     });
+
     const body = await req.json();
     const { text } = body;
 
-    if (!text) {
+    if (!text || typeof text !== 'string') {
       return NextResponse.json(
-        { error: 'Text input is required' },
-        { status: 400 },
+        formatError(
+          ERROR_CODES.ERR_INVALID_URL,
+          'Text input is required and must be a string',
+        ),
+      );
+    }
+
+    if (text.trim().length === 0) {
+      return NextResponse.json(
+        formatError(ERROR_CODES.ERR_NO_RECIPE_FOUND, 'Text input is empty'),
+      );
+    }
+
+    // Check if Groq API key is configured
+    if (!process.env.GROQ_API_KEY) {
+      console.error('GROQ_API_KEY is not configured');
+      return NextResponse.json(
+        formatError(ERROR_CODES.ERR_UNKNOWN, 'AI service is not configured'),
       );
     }
 
@@ -34,6 +52,7 @@ export async function POST(req: NextRequest) {
             3. Clean each step by removing unnecessary line breaks or formatting artifacts.
             4. Steps should be listed in the correct order.
             5. Do NOT include any explanations, markdown, or commentary — just valid raw JSON.
+            6. If you cannot find valid cooking instructions, return an empty array: [].
             
             Example output:
             [
@@ -54,10 +73,35 @@ export async function POST(req: NextRequest) {
 
     const result = response.choices[0]?.message?.content;
 
-    if (!result) {
+    if (!result || result.trim().length === 0) {
       return NextResponse.json(
-        { error: 'No response from Groq' },
-        { status: 500 },
+        formatError(
+          ERROR_CODES.ERR_AI_PARSE_FAILED,
+          'No response from AI service',
+        ),
+      );
+    }
+
+    // Validate that the response contains valid JSON structure
+    try {
+      const extractedJson = extractJsonFromResponse(result);
+      const parsedInstructions = JSON.parse(extractedJson);
+
+      if (!Array.isArray(parsedInstructions)) {
+        return NextResponse.json(
+          formatError(
+            ERROR_CODES.ERR_AI_PARSE_FAILED,
+            'AI returned invalid instruction format',
+          ),
+        );
+      }
+    } catch {
+      console.error('Invalid JSON response from AI:', result);
+      return NextResponse.json(
+        formatError(
+          ERROR_CODES.ERR_AI_PARSE_FAILED,
+          'AI returned invalid response format',
+        ),
       );
     }
 
@@ -67,14 +111,66 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('Recipe parsing failed:', error);
+
+    if (error instanceof Error) {
+      if (
+        error.message.includes('timeout') ||
+        error.message.includes('timed out')
+      ) {
+        return NextResponse.json(
+          formatError(ERROR_CODES.ERR_TIMEOUT, 'AI service request timed out'),
+        );
+      }
+      if (
+        error.message.includes('authentication') ||
+        error.message.includes('unauthorized')
+      ) {
+        return NextResponse.json(
+          formatError(
+            ERROR_CODES.ERR_UNKNOWN,
+            'AI service authentication failed',
+          ),
+        );
+      }
+      if (
+        error.message.includes('quota') ||
+        error.message.includes('rate limit')
+      ) {
+        return NextResponse.json(
+          formatError(ERROR_CODES.ERR_UNKNOWN, 'AI service quota exceeded'),
+        );
+      }
+    }
+
     return NextResponse.json(
-      {
-        error: 'Failed to parse recipe',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 },
+      formatError(
+        ERROR_CODES.ERR_AI_PARSE_FAILED,
+        'Failed to parse recipe with AI',
+      ),
     );
   }
+}
+
+// Helper function to extract JSON from AI response
+function extractJsonFromResponse(text: string): string {
+  const cleaned = text
+    .replace(/^[\s`]*```(?:json)?/, '')
+    .replace(/```[\s`]*$/, '')
+    .trim();
+
+  // Try to extract JSON array first (for our instructions array format)
+  const arrayMatch = cleaned.match(/\[[\s\S]*\]/);
+  if (arrayMatch) {
+    return arrayMatch[0];
+  }
+
+  // If no JSON array found, try to extract JSON object
+  const objectMatch = cleaned.match(/\{[\s\S]*\}/);
+  if (objectMatch) {
+    return objectMatch[0];
+  }
+
+  return cleaned;
 }
 
 export async function GET() {

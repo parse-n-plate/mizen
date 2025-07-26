@@ -3,12 +3,19 @@
 import SearchForm from '@/components/ui/search-form';
 import RecentRecipesList from '@/components/RecentRecipesList';
 import HomepageSkeleton from '@/components/ui/homepage-skeleton';
+import ErrorDisplay from '@/components/ui/error-display';
 import { useState } from 'react';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 
 export default function Home() {
   const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const { isLoaded } = useParsedRecipes();
+
+  const handleRetry = () => {
+    setError(false);
+    setErrorMessage('');
+  };
 
   if (!isLoaded) {
     return <HomepageSkeleton />;
@@ -22,18 +29,19 @@ export default function Home() {
           {/* Hero Section */}
           <div className="mb-16">
             <h1 className="font-domine text-[36px] text-black leading-none mb-5">
-              What are you cookin&apos; up today?
+              What are you
+              <br />
+              cookin&apos; up today?
             </h1>
-            <SearchForm setErrorAction={setError} />
+            <SearchForm
+              setErrorAction={setError}
+              setErrorMessage={setErrorMessage}
+            />
 
-            {/* Error Card - positioned below search input */}
-            {error && (
+            {/* Error Display - positioned below search input */}
+            {error && errorMessage && (
               <div className="mt-5">
-                <div className="bg-[#ffb3b5] rounded-lg p-4">
-                  <p className="font-albert text-[16px] text-[#7a2d2d] leading-[1.4]">
-                    Please enter a valid URL.
-                  </p>
-                </div>
+                <ErrorDisplay message={errorMessage} onRetry={handleRetry} />
               </div>
             )}
           </div>
