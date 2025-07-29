@@ -8,7 +8,7 @@ def parse_recipe(url):
     # Layer 1 validation and scrape
     try:
         scraper = scrape_me(url)
-        
+
         # Check if we got valid data
         title = scraper.title()
         ingredients = scraper.ingredients()
@@ -16,13 +16,13 @@ def parse_recipe(url):
         
         # Validate that we got meaningful data
         if title and ingredients and instructions and len(ingredients) > 0 and len(instructions) > 0:
-            result = {
+        result = {
                 "title": title,
                 "ingredients": ingredients,
                 "instructions": instructions
-            }
-            print(json.dumps(result))
-            return result
+        }
+        print(json.dumps(result))
+        return result
         else:
             print(f"Layer 1 returned empty data: title='{title}', ingredients={len(ingredients) if ingredients else 0}, instructions={len(instructions) if instructions else 0}")
             raise Exception("Empty data from recipe_scrapers")
@@ -109,41 +109,41 @@ def parse_recipe(url):
         # Generic fallback for other sites
         else:
             title_tag = soup.select_one('.wprm-recipe-name') or soup.select_one('h1')
-            title = title_tag.get_text(strip=True) if title_tag else ''
+        title = title_tag.get_text(strip=True) if title_tag else ''
             
-            # INGREDIENTS
+        # INGREDIENTS
             ingredient_items = soup.select('.wprm-recipe-ingredients-container li.wprm-recipe-ingredient') or soup.select('li[class*="ingredient"]')
-            for item in ingredient_items:
-                amount = item.select_one('.wprm-recipe-ingredient-amount')
-                unit = item.select_one('.wprm-recipe-ingredient-unit')
-                name = item.select_one('.wprm-recipe-ingredient-name')
-                notes = item.select_one('.wprm-recipe-ingredient-notes')
+        for item in ingredient_items:
+            amount = item.select_one('.wprm-recipe-ingredient-amount')
+            unit = item.select_one('.wprm-recipe-ingredient-unit')
+            name = item.select_one('.wprm-recipe-ingredient-name')
+            notes = item.select_one('.wprm-recipe-ingredient-notes')
 
-                ingredients.append([
-                    name.text.strip().replace('-', '') if name else '',
-                    amount.text.strip().replace('-', '') if amount else '',
-                    unit.text.strip().replace('-', '') if unit else '',
-                    notes.text.strip().replace('-', '') if notes else ''
-                ])
+            ingredients.append([
+                name.text.strip().replace('-', '') if name else '',
+                amount.text.strip().replace('-', '') if amount else '',
+                unit.text.strip().replace('-', '') if unit else '',
+                notes.text.strip().replace('-', '') if notes else ''
+            ])
 
-            # INSTRUCTIONS
+        # INSTRUCTIONS
             instruction_items = soup.select('.wprm-recipe-instructions-container .wprm-recipe-instruction-text') or soup.select('[class*="instruction"]')
-            for step in instruction_items:
-                step_text = step.get_text(strip=True)
-                if step_text:
-                    instructions.append(step_text)
+        for step in instruction_items:
+            step_text = step.get_text(strip=True)
+            if step_text:
+                instructions.append(step_text)
 
         print(f"Layer 2 results: title='{title}', ingredients={len(ingredients)}, instructions={len(instructions)}")
-        
+
         # Final results from parsing recipe
         if title and ingredients and instructions:
-            result = {
-                "title": title,
-                "ingredients": ingredients,
-                "instructions": instructions
-            }
-            print(json.dumps(result))
-            return result
+        result = {
+            "title": title,
+            "ingredients": ingredients,
+            "instructions": instructions
+        }
+        print(json.dumps(result))
+        return result
         else:
             raise Exception(f"Failed to extract recipe data: title='{title}', ingredients={len(ingredients)}, instructions={len(instructions)}")
             

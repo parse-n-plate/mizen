@@ -3,8 +3,8 @@ import type { NextConfig } from 'next';
 const isDev = process.env.NODE_ENV !== 'production';
 
 const cspValue = isDev
-  ? "default-src 'self' 'unsafe-inline' 'unsafe-eval';"
-  : "default-src 'self'; script-src 'self' 'unsafe-inline'; object-src 'none';";
+  ? "default-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com;"
+  : "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; object-src 'none';";
 
 const securityHeaders = [
   {
