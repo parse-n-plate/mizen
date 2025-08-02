@@ -3,16 +3,12 @@ import { useRecipe } from '@/contexts/RecipeContext';
 import { useRouter } from 'next/navigation';
 
 export default function RecentRecipesList() {
-  const { recentRecipes, clearRecipes, getRecipeById } = useParsedRecipes();
+  const { recentRecipes, getRecipeById } = useParsedRecipes();
   const { setParsedRecipe } = useRecipe();
   const router = useRouter();
 
   // Get the 3 most recent recipes
   const displayRecipes = recentRecipes.slice(0, 3);
-
-  // Debug: Log the recipes to console
-  console.log('RecentRecipesList - recentRecipes:', recentRecipes);
-  console.log('RecentRecipesList - displayRecipes:', displayRecipes);
 
   const handleRecipeClick = (recipeId: string) => {
     try {
@@ -38,11 +34,6 @@ export default function RecentRecipesList() {
     }
   };
 
-  const handleClearAll = () => {
-    clearRecipes();
-    console.log('All recent recipes cleared');
-  };
-
   if (displayRecipes.length === 0) {
     return (
       <div className="text-center py-8">
@@ -57,32 +48,20 @@ export default function RecentRecipesList() {
   }
 
   return (
-    <div className="space-y-2">
-      {/* Debug: Clear All Button */}
-      <div className="flex justify-end mb-4">
-        <button
-          onClick={handleClearAll}
-          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-albert transition-colors"
-        >
-          🗑️ Clear All (Debug)
-        </button>
-      </div>
-
+    <div className="flex flex-wrap gap-2">
       {displayRecipes.map((recipe) => (
-        <div
+        <button
           key={recipe.id}
-          className="bg-white rounded-lg border border-[#d9d9d9] p-6 hover:shadow-md transition-shadow cursor-pointer"
+          className="
+            bg-black text-white font-albert text-[14.495px] leading-[23.889px]
+            px-4 py-3 rounded-[26.842px] 
+            hover:bg-gray-800 transition-colors duration-200
+            focus:outline-none focus:ring-2 focus:ring-black focus:ring-opacity-50
+          "
           onClick={() => handleRecipeClick(recipe.id)}
         >
-          <div className="space-y-2">
-            <h3 className="font-albert text-[16px] text-[#1e1e1e] leading-[1.4]">
-              {recipe.title}
-            </h3>
-            <p className="font-albert text-[16px] text-[#757575] leading-[1.4]">
-              {recipe.summary}
-            </p>
-          </div>
-        </div>
+          {recipe.title}
+        </button>
       ))}
     </div>
   );

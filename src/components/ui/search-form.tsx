@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   parseIngredients,
   parseInstructions,
@@ -26,10 +26,31 @@ export default function SearchForm({
 }: SearchFormProps) {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const { setParsedRecipe } = useRecipe();
   const { addRecipe } = useParsedRecipes();
   const { handle: handleError } = useRecipeErrorHandler();
   const router = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Handle focus state for animation
+  const handleFocus = () => {
+    setIsFocused(true);
+  };
+
+  const handleBlur = () => {
+    // Only blur if there's no text and we're not loading
+    if (!url.trim() && !loading) {
+      setIsFocused(false);
+    }
+  };
+
+  // Keep focused state when there's text
+  useEffect(() => {
+    if (url.trim()) {
+      setIsFocused(true);
+    }
+  }, [url]);
 
   const handleParse = async () => {
     if (!url.trim()) return;
@@ -176,31 +197,62 @@ export default function SearchForm({
 
   const clearInput = () => {
     setUrl('');
+    setIsFocused(false);
+    // Focus back to input after clearing
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
   };
 
   return (
     <>
       <LoadingAnimation isVisible={loading} />
       <div className="relative">
-        <div className="bg-white rounded-full border border-[#d9d9d9] flex items-center px-4 py-3">
-          <Search className="w-4 h-4 text-[#1e1e1e] mr-2 flex-shrink-0" />
-          <input
-            type="text"
-            placeholder="Enter recipe URL here"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="flex-1 bg-transparent font-albert text-[14px] text-[#1e1e1e] placeholder:text-[#1e1e1e] focus:outline-none border-none"
-            disabled={loading}
-          />
-          {url && (
-            <button
-              onClick={clearInput}
-              className="ml-2 p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
-            >
-              <X className="w-4 h-4 text-[#1e1e1e]" />
-            </button>
-          )}
+        {/* New animated search bar design */}
+        <div
+          className={`
+            bg-stone-100 rounded-[9999px] border border-[#d9d9d9] 
+            transition-all duration-300 ease-in-out
+            hover:border-[#FFA423] hover:border-opacity-80
+            ${isFocused ? 'shadow-sm' : ''}
+          `}
+        >
+          <div className="flex items-center px-4 py-4 relative">
+            {/* Search Icon - always visible */}
+            <Search className="w-4 h-4 text-stone-600 flex-shrink-0" />
+
+            {/* Input Container with smooth animation */}
+            <div className="flex-1 ml-2 relative">
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder={isFocused ? '' : 'Enter recipe URL here'}
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                onKeyPress={handleKeyPress}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                className={`
+                  w-full bg-transparent font-albert text-[14px] text-stone-600 
+                  placeholder:text-stone-600 focus:outline-none border-none
+                  transition-all duration-300 ease-in-out
+                  ${isFocused ? 'text-left' : 'text-center'}
+                `}
+                disabled={loading}
+              />
+            </div>
+
+            {/* X Button - appears when there's text */}
+            {url && (
+              <button
+                onClick={clearInput}
+                className="ml-2 p-1 hover:bg-stone-200 rounded-full transition-all duration-200 flex-shrink-0"
+                disabled={loading}
+              >
+                <X className="w-4 h-4 text-stone-600" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </>
