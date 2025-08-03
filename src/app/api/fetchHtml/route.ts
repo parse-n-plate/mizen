@@ -1,13 +1,81 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
 
+// Function to validate URL and prevent SSRF attacks
+function isValidUrl(urlString: string): boolean {
+  try {
+    const url = new URL(urlString);
+    
+    // Only allow HTTP and HTTPS protocols
+    if (!['http:', 'https:'].includes(url.protocol)) {
+      return false;
+    }
+    
+    // Block common internal/private IP ranges and localhost
+    const hostname = url.hostname.toLowerCase();
+    
+    // Block localhost and loopback addresses
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
+      return false;
+    }
+    
+    // Block private IP ranges (RFC 1918)
+    const ipv4Regex = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/;
+    const ipMatch = hostname.match(ipv4Regex);
+    if (ipMatch) {
+      const [, a, b, c, d] = ipMatch.map(Number);
+      // Block 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
+      if (
+        a === 10 ||
+        (a === 172 && b >= 16 && b <= 31) ||
+        (a === 192 && b === 168) ||
+        a === 169 && b === 254 // Link-local
+      ) {
+        return false;
+      }
+    }
+    
+    // Block common internal domains
+    const blockedDomains = ['internal', 'local', 'intranet'];
+    if (blockedDomains.some(domain => hostname.includes(domain))) {
+      return false;
+    }
+    
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get('url');
   if (!url)
     return NextResponse.json({ error: 'No URL provided' }, { status: 400 });
 
+  // Validate URL to prevent SSRF attacks
+  if (!isValidUrl(url)) {
+    return NextResponse.json(
+      { error: 'Invalid or potentially unsafe URL' },
+      { status: 400 }
+    );
+  }
+
   try {
-    const htmlRes = await fetch(url);
+    const htmlRes = await fetch(url, {
+      // Add timeout to prevent hanging requests
+      signal: AbortSignal.timeout(10000),
+      headers: {
+        'User-Agent': 'RecipeParser/1.0 (Recipe parsing bot)',
+      },
+    });
+    
+    if (!htmlRes.ok) {
+      return NextResponse.json(
+        { error: `Failed to fetch URL: ${htmlRes.status} ${htmlRes.statusText}` },
+        { status: 400 }
+      );
+    }
+    
     const fullHtml = await htmlRes.text();
 
     const $ = cheerio.load(fullHtml);

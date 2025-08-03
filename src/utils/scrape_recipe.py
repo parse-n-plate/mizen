@@ -7,7 +7,6 @@ import urllib.request
 def parse_recipe(url):
     # Layer 1 validation and scrape
     try:
-        url = sys.argv[1]
         scraper = scrape_me(url)
 
         result = {
@@ -22,7 +21,6 @@ def parse_recipe(url):
 
     # Layer 2 validation and scrape
     try:
-        url = sys.argv[1]
         req = urllib.request.Request(
             url,
             headers={ 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36' }
@@ -69,5 +67,9 @@ def parse_recipe(url):
         print(json.dumps({ "error": str(e) }))
 
 if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print(json.dumps({"error": "URL argument is required"}))
+        sys.exit(1)
+    
     url = sys.argv[1]
     parse_recipe(url)

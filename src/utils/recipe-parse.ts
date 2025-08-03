@@ -33,7 +33,18 @@ export async function parseIngredients(ingredients: string) {
     .replace(/^[\s`]*```(?:json)?/, '') // Remove starting ```json or ```
     .replace(/```[\s`]*$/, '') // Remove trailing ```
     .trim();
-  return JSON.parse(cleanData);
+  
+  try {
+    return JSON.parse(cleanData);
+  } catch (error) {
+    console.error('Failed to parse ingredients JSON:', error);
+    console.error('Malformed JSON data:', cleanData);
+    // Return fallback structure if parsing fails
+    return [
+      'Recipe Title Not Available',
+      [{ amount: 'as needed', units: '', ingredient: 'Ingredients could not be parsed' }]
+    ];
+  }
 }
 
 export async function parseInstructions(ingredients: string) {
@@ -54,7 +65,15 @@ export async function parseInstructions(ingredients: string) {
     .replace(/^[\s`]*```(?:json)?/, '') // Remove starting ```json or ```
     .replace(/```[\s`]*$/, '') // Remove trailing ```
     .trim();
-  return JSON.parse(cleanData);
+  
+  try {
+    return JSON.parse(cleanData);
+  } catch (error) {
+    console.error('Failed to parse instructions JSON:', error);
+    console.error('Malformed JSON data:', cleanData);
+    // Return fallback array if parsing fails
+    return ['Instructions could not be parsed from the recipe.'];
+  }
 }
 
 export async function recipeScrape(url: string) {
