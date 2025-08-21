@@ -26,8 +26,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        serif: ['var(--font-karla)', 'serif'],
-        sans: ['Inter', 'Helvetica', 'system-ui', 'sans-serif'],
+        serif: ['var(--font-domine)', 'serif'],
+        sans: ['var(--font-albert)', 'Helvetica', 'system-ui', 'sans-serif'],
       },
       lineHeight: {
         heading: '1.3',
