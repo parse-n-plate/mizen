@@ -83,30 +83,6 @@ export default function SearchForm({
     }, 200);
   };
 
-  // Handle input changes and search
-  useEffect(() => {
-    searchRecipes(query);
-    setShowDropdown(isFocused && query.trim() !== '' && !isUrl(query));
-
-    if (query.trim()) {
-      setIsFocused(true);
-    }
-  }, [query, isFocused, recentRecipes, searchRecipes]);
-
-  // Handle initialUrl from navbar
-  useEffect(() => {
-    if (initialUrl) {
-      setQuery(initialUrl);
-      setIsFocused(true);
-      // Auto-trigger parsing after a short delay
-      setTimeout(() => {
-        if (isUrl(initialUrl)) {
-          handleParse();
-        }
-      }, 500);
-    }
-  }, [initialUrl, handleParse]);
-
   // Handle recipe selection from dropdown
   const handleRecipeSelect = (recipe: ParsedRecipe) => {
     setParsedRecipe({
@@ -264,6 +240,30 @@ export default function SearchForm({
     handleError,
     router,
   ]);
+
+  // Handle input changes and search
+  useEffect(() => {
+    searchRecipes(query);
+    setShowDropdown(isFocused && query.trim() !== '' && !isUrl(query));
+
+    if (query.trim()) {
+      setIsFocused(true);
+    }
+  }, [query, isFocused, recentRecipes, searchRecipes]);
+
+  // Handle initialUrl from navbar
+  useEffect(() => {
+    if (initialUrl) {
+      setQuery(initialUrl);
+      setIsFocused(true);
+      // Auto-trigger parsing after a short delay
+      setTimeout(() => {
+        if (isUrl(initialUrl)) {
+          handleParse();
+        }
+      }, 500);
+    }
+  }, [initialUrl, handleParse]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {

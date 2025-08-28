@@ -4,11 +4,11 @@ import SearchForm from '@/components/ui/search-form';
 import RecentRecipesList from '@/components/RecentRecipesList';
 import HomepageSkeleton from '@/components/ui/homepage-skeleton';
 import ErrorDisplay from '@/components/ui/error-display';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 
-export default function Home() {
+function HomeContent() {
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const { isLoaded } = useParsedRecipes();
@@ -87,5 +87,13 @@ export default function Home() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<HomepageSkeleton />}>
+      <HomeContent />
+    </Suspense>
   );
 }
