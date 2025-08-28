@@ -18,11 +18,13 @@ import LoadingAnimation from './loading-animation';
 interface SearchFormProps {
   setErrorAction: (error: boolean) => void;
   setErrorMessage?: (message: string) => void;
+  initialUrl?: string;
 }
 
 export default function SearchForm({
   setErrorAction,
   setErrorMessage,
+  initialUrl = '',
 }: SearchFormProps) {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
@@ -51,6 +53,18 @@ export default function SearchForm({
       setIsFocused(true);
     }
   }, [url]);
+
+  // Handle initialUrl from navbar
+  useEffect(() => {
+    if (initialUrl) {
+      setUrl(initialUrl);
+      setIsFocused(true);
+      // Auto-trigger parsing after a short delay
+      setTimeout(() => {
+        handleParse();
+      }, 500);
+    }
+  }, [initialUrl]);
 
   const handleParse = async () => {
     if (!url.trim()) return;

@@ -2,12 +2,14 @@
 
 import PPLogo from '@/components/ui/Navbar/pplogo';
 import Link from 'next/link';
+import NavbarSearch from '@/components/ui/Navbar/navbar-search';
 
 export default function Navbar() {
   return (
     <div className="bg-white border-b border-[#d9d9d9] px-4 py-4">
-      <div className="max-w-4xl mx-auto flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+      <div className="max-w-6xl mx-auto flex items-center justify-between gap-6">
+        {/* Left: Logo and title */}
+        <div className="flex items-center space-x-3 flex-shrink-0">
           <Link href="/" className="hover:opacity-80 transition-opacity">
             <PPLogo />
           </Link>
@@ -16,8 +18,19 @@ export default function Navbar() {
           </h1>
         </div>
 
-        <nav className="flex items-center space-x-6">
-          {/* Navigation items can be added here in the future */}
+        {/* Center: Search */}
+        <div className="flex-1 max-w-md">
+          <NavbarSearch />
+        </div>
+
+        {/* Right: Auth buttons */}
+        <nav className="flex items-center space-x-4 flex-shrink-0">
+          <button className="font-albert text-[14px] text-stone-600 hover:text-stone-800 transition-colors duration-200">
+            Sign In
+          </button>
+          <button className="bg-[#4F46E5] hover:bg-[#4338CA] text-white font-albert text-[14px] px-4 py-2 rounded-lg transition-colors duration-200">
+            Get Started
+          </button>
         </nav>
       </div>
     </div>

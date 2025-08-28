@@ -4,13 +4,24 @@ import SearchForm from '@/components/ui/search-form';
 import RecentRecipesList from '@/components/RecentRecipesList';
 import HomepageSkeleton from '@/components/ui/homepage-skeleton';
 import ErrorDisplay from '@/components/ui/error-display';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 
 export default function Home() {
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const { isLoaded } = useParsedRecipes();
+  const searchParams = useSearchParams();
+  const [initialUrl, setInitialUrl] = useState('');
+
+  // Handle URL parameter from navbar
+  useEffect(() => {
+    const urlParam = searchParams.get('url');
+    if (urlParam) {
+      setInitialUrl(urlParam);
+    }
+  }, [searchParams]);
 
   const handleRetry = () => {
     setError(false);
@@ -55,6 +66,7 @@ export default function Home() {
             <SearchForm
               setErrorAction={setError}
               setErrorMessage={setErrorMessage}
+              initialUrl={initialUrl}
             />
 
             {/* Error Display - positioned below search input */}
