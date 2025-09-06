@@ -119,31 +119,37 @@ export default function ParsedRecipePage() {
           {/* Tabs Section */}
           <Tabs.Root defaultValue="prep" className="w-full">
             {/* Tab List */}
-            <Tabs.List className="flex gap-3 items-center justify-start mb-6">
+            <Tabs.List className="flex gap-1 items-center justify-start mb-6">
               <Tabs.Trigger
                 value="prep"
-                className="flex-1 bg-stone-950 rounded-lg p-2 flex items-center justify-center gap-1 data-[state=active]:bg-stone-950 data-[state=inactive]:bg-stone-100 transition-colors"
+                className="flex-1 bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 flex items-center justify-center gap-2 data-[state=active]:bg-stone-100 data-[state=active]:border-stone-300 data-[state=inactive]:bg-stone-50 data-[state=inactive]:border-stone-200 transition-all duration-200 hover:bg-stone-100 hover:border-stone-300"
               >
-                <span className="text-white text-sm">🔪</span>
-                <span className="font-albert-semibold text-[14px] text-stone-50 data-[state=inactive]:text-stone-600">
+                <span className="text-stone-700 data-[state=active]:text-stone-900 text-lg">
+                  🔪
+                </span>
+                <span className="font-albert-semibold text-[15px] text-stone-700 data-[state=active]:text-stone-900">
                   Prep
                 </span>
               </Tabs.Trigger>
               <Tabs.Trigger
                 value="cook"
-                className="flex-1 bg-stone-100 rounded-lg p-2 flex items-center justify-center gap-1 data-[state=active]:bg-stone-950 data-[state=inactive]:bg-stone-100 transition-colors"
+                className="flex-1 bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 flex items-center justify-center gap-2 data-[state=active]:bg-stone-100 data-[state=active]:border-stone-300 data-[state=inactive]:bg-stone-50 transition-all duration-200 hover:bg-stone-100 hover:border-stone-300"
               >
-                <span className="text-stone-600 text-sm">🍳</span>
-                <span className="font-albert-semibold text-[14px] text-stone-600 data-[state=active]:text-stone-50">
+                <span className="text-stone-700 data-[state=active]:text-stone-900 text-lg">
+                  🍳
+                </span>
+                <span className="font-albert-semibold text-[15px] text-stone-700 data-[state=active]:text-stone-900">
                   Cook
                 </span>
               </Tabs.Trigger>
               <Tabs.Trigger
                 value="plate"
-                className="flex-1 bg-stone-100 rounded-lg p-2 flex items-center justify-center gap-1 data-[state=active]:bg-stone-950 data-[state=inactive]:bg-stone-100 transition-colors"
+                className="flex-1 bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 flex items-center justify-center gap-2 data-[state=active]:bg-stone-100 data-[state=active]:border-stone-300 data-[state=inactive]:bg-stone-50 transition-all duration-200 hover:bg-stone-100 hover:border-stone-300"
               >
-                <span className="text-stone-600 text-sm">🍽️</span>
-                <span className="font-albert-semibold text-[14px] text-stone-600 data-[state=active]:text-stone-50">
+                <span className="text-stone-700 data-[state=active]:text-stone-900 text-lg">
+                  🍽️
+                </span>
+                <span className="font-albert-semibold text-[15px] text-stone-700 data-[state=active]:text-stone-900">
                   Plate
                 </span>
               </Tabs.Trigger>
