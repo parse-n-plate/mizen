@@ -43,8 +43,8 @@ GROQ_API_KEY=your_groq_api_key_here
 2. **Accept Terms and Conditions**:
    - Some Groq models require terms acceptance
    - If you encounter a "model_terms_required" error, visit the model playground to accept terms
-   - For example: [https://console.groq.com/playground?model=mistral-saba-24b](https://console.groq.com/playground?model=mistral-saba-24b)
-   - The app uses `mistral-saba-24b` by default
+   - For example: [https://console.groq.com/playground?model=qwen/qwen3-32b](https://console.groq.com/playground?model=qwen/qwen3-32b)
+   - The app uses `qwen/qwen3-32b` by default
 
 Next, start up development server:
 
@@ -60,7 +60,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - **UI Components**: Shadcn/ui, Lucide React icons
 - **Backend**: Next.js API Routes, Node.js
 - **Python Integration**: recipe-scrapers library, BeautifulSoup
-- **AI/ML**: Groq AI API (mistral-saba-24b, llama3-8b-8192 models)
+- **AI/ML**: Groq AI API (qwen/qwen3-32b, llama3-8b-8192 models)
 - **Data Persistence**: localStorage for recent recipes
 - **Error Handling**: Structured error responses, error logging system
 
@@ -87,18 +87,6 @@ The application includes a comprehensive error handling system:
 - **Structured Logging**: Timestamp, error code, message, URL, user agent
 - **Export Functionality**: JSON export for debugging sessions
 
-### Supported Domains
-
-- AllRecipes.com
-- FoodNetwork.com
-- Epicurious.com
-- BonAppetit.com
-- SeriousEats.com
-- TasteOfHome.com
-- SimplyRecipes.com
-- ThePioneerWoman.com
-- Food52.com
-- KingArthurBaking.com
 
 ## Node.js Version
 

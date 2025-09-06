@@ -35,34 +35,36 @@ export async function POST(req: NextRequest) {
     }
 
     const response = await groq.chat.completions.create({
-      model: 'mistral-saba-24b',
+      model: 'qwen/qwen3-32b',
       messages: [
         {
           role: 'system',
-          content: `
-            You are an AI that extracts the recipe title and cooking instructions from raw HTML.
+          content: `CRITICAL: You MUST output ONLY raw JSON. NO thinking, NO reasoning, NO explanations, NO text before or after the JSON.
+
+START YOUR RESPONSE IMMEDIATELY WITH [ and END WITH ]. Nothing else.
+
+You are an AI that extracts cooking instructions from raw HTML.
             
-            Your task:
-            Return ONLY a JSON object with the following:
-            array of strings — each string is a full step in the recipe
+Your task:
+Return ONLY a JSON array of strings — each string is a full step in the recipe
             
-            Rules:
-            1. Only extract **visible, human-readable** steps meant to be followed by the cook.
-            2. Do NOT include ingredient lists, prep times, serving sizes, or nutritional info.
-            3. Clean each step by removing unnecessary line breaks or formatting artifacts.
-            4. Steps should be listed in the correct order.
-            5. Do NOT include any explanations, markdown, or commentary — just valid raw JSON.
-            6. If you cannot find valid cooking instructions, return an empty array: [].
+Rules:
+1. Only extract **visible, human-readable** steps meant to be followed by the cook.
+2. Do NOT include ingredient lists, prep times, serving sizes, or nutritional info.
+3. Clean each step by removing unnecessary line breaks or formatting artifacts.
+4. Steps should be listed in the correct order.
+5. If you cannot find valid cooking instructions, return an empty array: [].
+
+REMINDER: Output ONLY the JSON array starting with [ and ending with ]. No markdown, no code blocks, no explanations, no reasoning text.
             
-            Example output:
-            [
-              "Heat oil in a large pot over medium heat.",
-              "Add onions and garlic; sauté until fragrant.",
-              "Pour in chicken broth and bring to a boil.",
-              "Add shredded chicken, corn, and seasonings.",
-              "Simmer for 15 minutes, then serve hot with toppings of choice."
-            ]
-            `,
+Example (what your response should look like):
+[
+  "Heat oil in a large pot over medium heat.",
+  "Add onions and garlic; sauté until fragrant.",
+  "Pour in chicken broth and bring to a boil.",
+  "Add shredded chicken, corn, and seasonings.",
+  "Simmer for 15 minutes, then serve hot with toppings of choice."
+]`,
         },
         {
           role: 'user',

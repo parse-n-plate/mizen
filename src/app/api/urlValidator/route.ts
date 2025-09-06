@@ -24,34 +24,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if domain is supported
-    const supportedDomains = [
-      'allrecipes.com',
-      'foodnetwork.com',
-      'epicurious.com',
-      'bonappetit.com',
-      'seriouseats.com',
-      'tasteofhome.com',
-      'simplyrecipes.com',
-      'thepioneerwoman.com',
-      'food52.com',
-      'kingarthurbaking.com',
-    ];
-
-    const urlObj = new URL(url);
-    const domain = urlObj.hostname.toLowerCase();
-    const isSupported = supportedDomains.some((supported) =>
-      domain.includes(supported),
-    );
-
-    if (!isSupported) {
-      return Response.json(
-        formatError(
-          ERROR_CODES.ERR_UNSUPPORTED_DOMAIN,
-          'This website is not currently supported',
-        ),
-      );
-    }
+    // Note: Domain restriction removed - now supports any recipe website
+    // The Python scraper will handle all domains with multi-layer fallback approach
 
     const { data: html } = await axios.get(url, {
       timeout: 10000,

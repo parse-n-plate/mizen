@@ -139,6 +139,7 @@ export default function SearchForm({
 
       // Step 3: Parse with AI if python script fails to parse
       if (
+        !scrapedData.success ||
         scrapedData.error ||
         !scrapedData.ingredients ||
         scrapedData.ingredients.length === 0
@@ -197,9 +198,19 @@ export default function SearchForm({
       }
 
       // Step 3: Store in context and redirect
+      // Convert flat ingredient array to grouped format
+      const formattedIngredients = Array.isArray(scrapedData.ingredients)
+        ? [
+            {
+              groupName: 'Main',
+              ingredients: scrapedData.ingredients,
+            },
+          ]
+        : scrapedData.ingredients;
+
       setParsedRecipe({
         title: scrapedData.title,
-        ingredients: scrapedData.ingredients,
+        ingredients: formattedIngredients,
         instructions: scrapedData.instructions,
       });
 
@@ -212,7 +223,7 @@ export default function SearchForm({
         title: scrapedData.title,
         summary: recipeSummary,
         url: query,
-        ingredients: scrapedData.ingredients,
+        ingredients: formattedIngredients,
         instructions: scrapedData.instructions,
       });
 

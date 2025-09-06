@@ -36,11 +36,15 @@ export async function POST(req: NextRequest) {
     }
 
     const response = await groq.chat.completions.create({
-      model: 'mistral-saba-24b',
+      model: 'qwen/qwen3-32b',
       messages: [
         {
           role: 'system',
-          content: `You are an AI that extracts recipe ingredients from raw HTML.
+          content: `CRITICAL: You MUST output ONLY raw JSON. NO thinking, NO reasoning, NO explanations, NO text before or after the JSON.
+
+START YOUR RESPONSE IMMEDIATELY WITH [ and END WITH ]. Nothing else.
+
+You are an AI that extracts recipe ingredients from raw HTML.
 
 Your output must follow this exact JSON format:
 - A string for the recipe title as the first element
@@ -63,7 +67,7 @@ Rules:
 5. Your response must be ONLY raw, valid JSON — no markdown, no code blocks, no explanation, no preamble or postscript.
 6. If you cannot find a valid recipe in the HTML, you must return exactly: ["No recipe found", []]. Do NOT make up or hallucinate a recipe if none is present.
 
-// The above instruction is critical to prevent the AI from inventing recipes when the input does not contain one. This helps avoid misleading results and ensures the user is notified if no recipe is found.
+REMINDER: Output ONLY the JSON array starting with [ and ending with ]. No markdown, no code blocks, no explanations, no reasoning text.
 
 Valid example output:
 [
