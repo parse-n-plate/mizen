@@ -127,7 +127,7 @@ export default function NavbarSearch() {
             <Search className="w-4 h-4 text-stone-600 flex-shrink-0" />
 
             {/* Input */}
-            <div className="flex-1 ml-2 relative">
+            <div className="flex-1 ml-2 relative flex items-center">
               <input
                 ref={inputRef}
                 type="text"
@@ -147,12 +147,11 @@ export default function NavbarSearch() {
               />
             </div>
 
-            {/* Keyboard Shortcut Indicator - Show when not focused or no query */}
-            {!isFocused && !query && (
-              <div className="ml-2 flex items-center gap-1 px-2 py-1 bg-stone-200 rounded text-stone-600 font-albert text-[12px]">
-                <kbd className="px-1">⌘</kbd>
-                <span>+</span>
-                <kbd className="px-1">K</kbd>
+            {/* Shortcut Hint - Only show when empty and not focused */}
+            {!query && !isFocused && (
+              <div className="hidden md:flex items-center gap-1 px-1.5 py-0.5 bg-stone-200 rounded text-[10px] font-mono text-stone-500 mr-2">
+                <span>⌘</span>
+                <span>K</span>
               </div>
             )}
 
@@ -171,7 +170,7 @@ export default function NavbarSearch() {
             {query && isUrl(query) && (
               <button
                 type="submit"
-                className="ml-2 bg-[#FFA423] hover:bg-[#FF9500] text-white font-albert text-[12px] px-3 py-1.5 rounded-full transition-colors duration-200 flex-shrink-0"
+                className="ml-2 bg-[#1e1e1e] hover:bg-[#333] text-white font-albert text-[12px] px-4 py-1.5 rounded-full transition-colors duration-200 flex-shrink-0"
               >
                 Parse Recipe
               </button>
