@@ -119,11 +119,16 @@ function HomeContent() {
             </div>
           </div>
         </div>
-        <SearchForm setErrorAction={setError} />
-      </main>
-      <footer className="flex items-center justify-center">
-        FOOTER CONTENT HERE SOON
-      </footer>
+      </div>
     </div>
+  );
+}
+
+// Export wrapped with Suspense for useSearchParams
+export default function Home() {
+  return (
+    <Suspense fallback={<HomepageSkeleton />}>
+      <HomeContent />
+    </Suspense>
   );
 }

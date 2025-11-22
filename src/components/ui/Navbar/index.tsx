@@ -1,4 +1,6 @@
 import PPLogo from '@/components/ui/Navbar/pplogo';
+import Link from 'next/link';
+import NavbarSearch from '@/components/ui/Navbar/navbar-search';
 
 /**
  * Navbar Component

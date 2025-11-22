@@ -7,7 +7,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   return new Promise((resolve) => {
     const process = spawn('python3', ['src/utils/scrape_recipe.py', url]);
 
-    let data = '';
+    const data = '';
     let error = '';
 
     // If URL is provided, validate it

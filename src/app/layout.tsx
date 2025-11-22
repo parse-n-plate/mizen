@@ -1,7 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import { Domine, Albert_Sans } from 'next/font/google';
 import { Separator } from '@/components/ui/separator';
 import Navbar from '@/components/ui/Navbar';
 import { RecipeProvider } from '@/contexts/RecipeContext';
