@@ -4,9 +4,9 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
 import RecipeSkeleton from '@/components/ui/recipe-skeleton';
 import * as Tabs from '@radix-ui/react-tabs';
-import { scaleIngredient } from '@/utils/ingredientScaler';
-import { Minus, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Plus, Minus } from 'lucide-react';
+import { scaleIngredients } from '@/utils/ingredientScaler';
+import ClassicSplitView from '@/components/ClassicSplitView';
 
 // Helper function to format ingredient
 const formatIngredient = (
@@ -68,20 +68,8 @@ const formatIngredient = (
 export default function ParsedRecipePage() {
   const { parsedRecipe, isLoaded } = useRecipe();
   const router = useRouter();
-
-  // Initialize servings state
-  // Use a safe default if parsedRecipe is not yet loaded
-  const [servings, setServings] = useState<number>(1);
-  
-  // Update servings when recipe loads
-  useEffect(() => {
-    if (parsedRecipe?.servings) {
-      setServings(parsedRecipe.servings);
-    } else {
-      // Default to 4 if no servings specified, or keep current if set
-      setServings((prev) => (prev === 1 && parsedRecipe ? 4 : prev));
-    }
-  }, [parsedRecipe]);
+  const [servings, setServings] = useState<number>(parsedRecipe?.servings || 4);
+  const [multiplier, setMultiplier] = useState<string>('1x');
 
   // Redirect if loaded and no recipe
   useEffect(() => {
@@ -90,28 +78,44 @@ export default function ParsedRecipePage() {
     }
   }, [isLoaded, parsedRecipe, router]);
 
+  // Initialize servings from recipe when loaded
+  useEffect(() => {
+    if (parsedRecipe?.servings) {
+      setServings(parsedRecipe.servings);
+    } else {
+      // Default to 4 if not specified, usually a safe bet for recipes
+      setServings(4);
+    }
+  }, [parsedRecipe]);
+
   // Calculate scaled ingredients
   const scaledIngredients = useMemo(() => {
     if (!parsedRecipe || !parsedRecipe.ingredients) return [];
-
-    const originalServings = parsedRecipe.servings || 4; // Default base to 4 if missing
-    const ratio = servings / originalServings;
-
-    return parsedRecipe.ingredients.map((group) => ({
-      ...group,
-      ingredients: group.ingredients.map((ing) => scaleIngredient(ing, ratio)),
-    }));
-  }, [parsedRecipe, servings]);
+    
+    // Get multiplier value (1x = 1, 2x = 2, 3x = 3)
+    const multiplierValue = parseInt(multiplier.replace('x', ''));
+    
+    // Calculate effective servings: base servings * multiplier
+    const effectiveServings = servings * multiplierValue;
+    
+    // Cast the ingredients to the expected type for the scaler
+    // The context type is slightly different but compatible structure-wise
+    return scaleIngredients(
+      parsedRecipe.ingredients as any, 
+      parsedRecipe.servings || 4, 
+      effectiveServings
+    );
+  }, [parsedRecipe, servings, multiplier]);
 
   const handleIncrementServings = () => {
     if (servings < 10) {
-      setServings(servings + 1);
+      setServings(prev => prev + 1);
     }
   };
 
   const handleDecrementServings = () => {
     if (servings > 1) {
-      setServings(servings - 1);
+      setServings(prev => prev - 1);
     }
   };
 
@@ -191,33 +195,47 @@ export default function ParsedRecipePage() {
 
             {/* Prep Tab Content */}
             <Tabs.Content value="prep" className="space-y-6">
-              {/* Servings Adjuster */}
-              <div className="bg-white rounded-lg p-4 border border-stone-200 flex items-center justify-between">
-                <span className="font-albert text-[16px] text-[#1e1e1e] font-medium">
-                  Serves {servings} {servings === 1 ? 'person' : 'people'}
-                </span>
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="outline"
-                    size="icon"
+              {/* Servings Adjuster and Multiplier Container */}
+              <div className="servings-controls-container">
+                {/* Servings Adjuster */}
+                <div className="control-card">
+                  <button
                     onClick={handleDecrementServings}
                     disabled={servings <= 1}
-                    className="h-8 w-8 rounded-full border-stone-300"
+                    className="control-button"
                   >
-                    <Minus className="h-4 w-4" />
-                    <span className="sr-only">Decrease servings</span>
-                  </Button>
-                  <span className="font-albert font-medium w-4 text-center">{servings}</span>
-                  <Button
-                    variant="outline"
-                    size="icon"
+                    <Minus className="control-button-icon" />
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <span className="servings-label">
+                      serving:
+                    </span>
+                    <span className="servings-value">
+                      {servings}
+                    </span>
+                  </div>
+                  <button
                     onClick={handleIncrementServings}
                     disabled={servings >= 10}
-                    className="h-8 w-8 rounded-full border-stone-300"
+                    className="control-button"
                   >
-                    <Plus className="h-4 w-4" />
-                    <span className="sr-only">Increase servings</span>
-                  </Button>
+                    <Plus className="control-button-icon" />
+                  </button>
+                </div>
+
+                {/* Multiplier Component */}
+                <div className="multiplier-container">
+                  {['1x', '2x', '3x'].map((mult) => (
+                    <button
+                      key={mult}
+                      onClick={() => setMultiplier(mult)}
+                      className={`multiplier-button ${
+                        multiplier === mult ? 'multiplier-button-selected' : ''
+                      }`}
+                    >
+                      {mult}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -281,51 +299,58 @@ export default function ParsedRecipePage() {
 
             {/* Cook Tab Content */}
             <Tabs.Content value="cook" className="space-y-6">
-              <div className="bg-stone-100 rounded-lg p-6">
-                <h2 className="font-domine text-[20px] text-stone-950 mb-6 leading-[1.1]">
-                  Instructions
-                </h2>
-                <ol className="space-y-4">
-                  {Array.isArray(parsedRecipe.instructions) &&
-                    parsedRecipe.instructions
-                      .map((instruction, index) => {
-                        // Safely convert instruction to string (handle objects, null, undefined)
-                        let instructionText = '';
-                        
-                        if (typeof instruction === 'string') {
-                          instructionText = instruction;
-                        } else if (instruction === null || instruction === undefined) {
-                          instructionText = '';
-                        } else if (typeof instruction === 'object' && instruction !== null) {
-                          // Handle object with text property (common in JSON-LD format)
-                          const instructionObj = instruction as Record<string, unknown>;
-                          if ('text' in instructionObj && typeof instructionObj.text === 'string') {
-                            instructionText = instructionObj.text;
-                          } else if ('name' in instructionObj && typeof instructionObj.name === 'string') {
-                            // Some formats use 'name' instead of 'text'
-                            instructionText = instructionObj.name;
-                          } else {
-                            // If it's an object we can't parse, skip it (don't show [object Object])
-                            instructionText = '';
-                          }
-                        } else {
-                          instructionText = String(instruction || '');
-                        }
-                        
-                        return { index, text: instructionText };
-                      })
-                      .filter((item) => item.text.trim()) // Filter out empty instructions
-                      .map((item, displayIndex) => (
-                        <li key={item.index} className="flex items-start gap-3">
-                          <span className="bg-[#FFBA25] text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium flex-shrink-0 font-albert">
-                            {displayIndex + 1}
-                          </span>
-                          <span className="font-albert text-[16px] text-stone-950 leading-[1.4]">
-                            {item.text}
-                          </span>
-                        </li>
-                      ))}
-                </ol>
+              <div className="flex justify-center w-full">
+                <ClassicSplitView
+                  title={parsedRecipe.title}
+                  steps={
+                    Array.isArray(parsedRecipe.instructions)
+                      ? parsedRecipe.instructions
+                          .map((instruction, index) => {
+                            let instructionText = '';
+                            if (typeof instruction === 'string') {
+                              instructionText = instruction;
+                            } else if (
+                              instruction === null ||
+                              instruction === undefined
+                            ) {
+                              instructionText = '';
+                            } else if (
+                              typeof instruction === 'object' &&
+                              instruction !== null
+                            ) {
+                              const instructionObj = instruction as Record<
+                                string,
+                                unknown
+                              >;
+                              if (
+                                'text' in instructionObj &&
+                                typeof instructionObj.text === 'string'
+                              ) {
+                                instructionText = instructionObj.text;
+                              } else if (
+                                'name' in instructionObj &&
+                                typeof instructionObj.name === 'string'
+                              ) {
+                                instructionText = instructionObj.name;
+                              } else {
+                                instructionText = '';
+                              }
+                            } else {
+                              instructionText = String(instruction || '');
+                            }
+                            return instructionText;
+                          })
+                          .filter((text) => text.trim())
+                          .map((text, index) => ({
+                            step: `Step ${index + 1}`,
+                            detail: text,
+                            time: 0,
+                            ingredients: [],
+                            tips: '',
+                          }))
+                      : []
+                  }
+                />
               </div>
             </Tabs.Content>
 

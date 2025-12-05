@@ -89,6 +89,41 @@ Please update CHANGELOG.md under the [Unreleased] section with:
 
 ---
 
+## 🎨 UI Component Guidelines
+
+### Global CSS Updates
+**ALWAYS update `src/app/globals.css` when creating or updating UI components.**
+
+When working with UI components in `/components/ui/`:
+
+1. **New Components**:
+   - Check if the component needs custom CSS variables, utility classes, or component-specific styles
+   - Add any necessary styles to `globals.css` in the appropriate layer:
+     - `@layer base` - Base element styles
+     - `@layer components` - Component-specific styles
+     - `@layer utilities` - Utility classes
+
+2. **Updating Components**:
+   - Review if style changes require updates to `globals.css`
+   - Add new CSS variables if introducing new design tokens
+   - Add component-specific classes if needed
+   - Update existing styles if component behavior changes
+
+3. **What to Add to globals.css**:
+   - Custom CSS variables for colors, spacing, typography
+   - Component-specific utility classes
+   - Shared component styles (e.g., `.control-card`, `.servings-controls-container`)
+   - Design system tokens that multiple components might use
+
+4. **Organization**:
+   - Follow the existing structure: CSS variables in `:root`, base styles in `@layer base`, utilities in `@layer utilities`, components in `@layer components`
+   - Add comments to group related styles
+   - Keep styles organized by purpose (typography, colors, spacing, components)
+
+**Default Behavior**: When creating or modifying any file in `/components/ui/`, automatically check and update `src/app/globals.css` if needed, even if the user doesn't explicitly request it.
+
+---
+
 ## 🎯 Code Quality Standards
 
 ### TypeScript
