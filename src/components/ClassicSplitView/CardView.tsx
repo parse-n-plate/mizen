@@ -9,9 +9,10 @@ interface CardViewProps {
   currentStep: number;
   onNext: () => void;
   onPrev: () => void;
+  onBackToList: () => void;
 }
 
-export default function CardView({ steps, currentStep, onNext, onPrev }: CardViewProps) {
+export default function CardView({ steps, currentStep, onNext, onPrev, onBackToList }: CardViewProps) {
   // Safety check: ensure we have valid steps and currentStep is in bounds
   if (!steps || steps.length === 0) {
     return (
@@ -33,7 +34,7 @@ export default function CardView({ steps, currentStep, onNext, onPrev }: CardVie
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#fdf7f3]">
+    <div className="flex flex-col h-full bg-white border-t border-stone-200">
       {/* Top Half: Step Display */}
       <StepDisplay
         step={step}
@@ -41,6 +42,7 @@ export default function CardView({ steps, currentStep, onNext, onPrev }: CardVie
         totalSteps={steps.length}
         onNext={onNext}
         onPrev={onPrev}
+        onBackToList={onBackToList}
       />
 
       {/* Bottom Half: Context Panel */}

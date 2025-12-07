@@ -7,19 +7,52 @@ interface TimerCardProps {
 }
 
 export default function TimerCard({ time }: TimerCardProps) {
+  // Don't show timer card if time is 0 or not set
+  if (!time || time === 0) {
+    return null;
+  }
+
   return (
-    <div className="bg-white rounded-xl border border-stone-200 p-4 shadow-sm">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-albert font-medium text-[#1e1e1e]">Timer</h3>
-        <Clock className="w-4 h-4 text-stone-400" />
+    <div className="bg-white border border-stone-200 rounded-[16px] p-6 flex flex-col gap-3">
+      {/* Header */}
+      <div className="flex items-center gap-2">
+        <div className="w-[19px] h-[19px] shrink-0">
+          <Clock className="w-full h-full text-stone-950" />
+        </div>
+        <p className="font-albert text-[18px] text-stone-950 leading-[28px]">
+          Timers
+        </p>
       </div>
-      <div className="flex items-baseline gap-1.5 mb-3">
-        <span className="font-domine text-[32px] text-[#193d34] leading-none">{time}</span>
-        <span className="font-albert text-stone-500">minutes</span>
+
+      {/* Timer Entries */}
+      <div className="flex flex-col gap-3">
+        {/* Timer Entry */}
+        <div className="flex items-center justify-between">
+          <p className="font-albert text-[18px] text-stone-500 leading-[28px]">
+            {time} min to bake bread
+          </p>
+          <button className="bg-[#027df4] px-3 py-2 rounded-[10px] hover:bg-[#0269d1] transition-colors">
+            <p className="font-albert font-medium text-[16px] text-white leading-6 text-center">
+              Start Timer
+            </p>
+          </button>
+        </div>
+
+        {/* Divider */}
+        <div className="h-px bg-stone-200 w-full" />
+
+        {/* Additional Timer Entry (if needed) */}
+        <div className="flex items-center justify-between">
+          <p className="font-albert text-[18px] text-stone-500 leading-[28px]">
+            {time} min to bake bread
+          </p>
+          <button className="bg-[#027df4] px-3 py-2 rounded-[10px] hover:bg-[#0269d1] transition-colors">
+            <p className="font-albert font-medium text-[16px] text-white leading-6 text-center">
+              Start Timer
+            </p>
+          </button>
+        </div>
       </div>
-      <button className="w-full bg-[#193d34] text-white font-albert font-medium py-2.5 rounded-lg hover:bg-[#142f28] transition-colors">
-        Start Timer
-      </button>
     </div>
   );
 }

@@ -10,6 +10,8 @@ export type ParsedRecipe = {
     ingredients: { amount: string; units: string; ingredient: string }[];
   }[];
   instructions?: string[];
+  author?: string; // Recipe author if available
+  sourceUrl?: string; // Source URL if available
 };
 
 const RECENT_RECIPES_KEY = 'recentRecipes';

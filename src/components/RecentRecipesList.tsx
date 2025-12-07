@@ -35,6 +35,8 @@ export default function RecentRecipesList() {
           title: fullRecipe.title,
           ingredients: fullRecipe.ingredients,
           instructions: fullRecipe.instructions,
+          author: fullRecipe.author, // Include author if available
+          sourceUrl: fullRecipe.sourceUrl || fullRecipe.url, // Include source URL if available
         });
 
         // Navigate to the parsed recipe page

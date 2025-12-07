@@ -4,9 +4,29 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
 import RecipeSkeleton from '@/components/ui/recipe-skeleton';
 import * as Tabs from '@radix-ui/react-tabs';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, Search, X } from 'lucide-react';
 import { scaleIngredients } from '@/utils/ingredientScaler';
 import ClassicSplitView from '@/components/ClassicSplitView';
+import IngredientCard from '@/components/ui/ingredient-card';
+
+// Helper function to extract step title from instruction text
+const extractStepTitle = (text: string): string => {
+  if (!text || text.trim() === '') return 'Step';
+  
+  // Remove leading/trailing whitespace
+  const trimmed = text.trim();
+  
+  // Try to extract first sentence (up to period, exclamation, or question mark)
+  const firstSentenceMatch = trimmed.match(/^([^.!?]+[.!?]?)/);
+  if (firstSentenceMatch) {
+    const firstSentence = firstSentenceMatch[1].trim();
+    // Return the full first sentence without truncation
+    return firstSentence.replace(/[.!?]+$/, '');
+  }
+  
+  // Fallback: return the full text (no truncation)
+  return trimmed;
+};
 
 // Helper function to format ingredient
 const formatIngredient = (
@@ -133,173 +153,248 @@ export default function ParsedRecipePage() {
     );
   }
 
+  // Helper function to extract domain from URL
+  const getDomainFromUrl = (url: string): string => {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname.replace('www.', '');
+    } catch {
+      return url;
+    }
+  };
+
+  // Helper function to get path from URL
+  const getPathFromUrl = (url: string): string => {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.pathname;
+    } catch {
+      return '';
+    }
+  };
+
   return (
-    <div className="bg-stone-50 min-h-screen relative max-w-full overflow-x-hidden">
+    <div className="bg-white min-h-screen relative max-w-full overflow-x-hidden">
       <div className="transition-opacity duration-300 ease-in-out opacity-100">
-        {/* Hero Section - Title and Author */}
-        <div className="w-full px-4 md:px-8 pt-6 pb-4">
-          <div className="flex flex-col gap-2.5">
-            <div className="flex flex-col">
-              <h1 className="font-domine text-[40px] text-black leading-[1.1] mb-1">
-                {parsedRecipe.title || 'Beef Udon'}
-              </h1>
-              <div className="flex items-center">
-                <span className="font-albert text-[14px] text-black leading-[1.4]">
-                  {parsedRecipe.author || 'Unknown Author'}
-                </span>
+        {/* Tabs Root - wraps both navigation and content */}
+        <Tabs.Root defaultValue="prep" className="w-full">
+          {/* Header Section with #F8F8F4 Background */}
+          <div className="bg-[#f8f8f4]">
+            {/* Main Content Container with max-width */}
+            <div className="max-w-6xl mx-auto px-4 md:px-8">
+              {/* Header Section with Search Bar */}
+              <div className="w-full pt-6 pb-0">
+                <div className="flex flex-col gap-3">
+                  {/* Search Bar */}
+                  <div className="flex gap-3 items-center justify-end">
+                    <div className="flex-1 bg-white rounded-full px-4 py-1.5 flex items-center gap-3 max-w-full">
+                      <Search className="w-4 h-4 text-stone-400 shrink-0" />
+                      {parsedRecipe.sourceUrl ? (
+                        <p className="font-albert text-[14px] text-stone-400 truncate flex-1 min-w-0">
+                          <span className="font-medium text-[#193d34]">
+                            {getDomainFromUrl(parsedRecipe.sourceUrl)}
+                          </span>
+                          <span className="text-stone-400">
+                            {getPathFromUrl(parsedRecipe.sourceUrl)}
+                          </span>
+                        </p>
+                      ) : (
+                        <p className="font-albert text-[14px] text-stone-400 truncate flex-1 min-w-0">
+                          Recipe source
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => router.push('/')}
+                      className="bg-white rounded-full p-4 flex items-center justify-center shrink-0 w-12 h-12 hover:bg-stone-50 transition-colors"
+                      aria-label="Close and return to homepage"
+                    >
+                      <X className="w-6 h-6 text-stone-600" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recipe Info Section */}
+              <div className="w-full pt-6 pb-0">
+                <div className="flex flex-col gap-3">
+                  <h1 className="font-domine text-[36px] text-[#193d34] leading-[1.2] font-bold">
+                    {parsedRecipe.title || 'Beef Udon'}
+                  </h1>
+                  <div className="flex flex-col gap-2.5">
+                    {parsedRecipe.author?.trim() && (
+                      <p className="font-albert text-[16px] text-stone-500 leading-[1.4]">
+                        by {parsedRecipe.author.trim()}
+                      </p>
+                    )}
+                    <p className="font-albert text-[16px] text-stone-500 leading-[1.4]">
+                      {parsedRecipe.totalTimeMinutes || parsedRecipe.prepTimeMinutes || parsedRecipe.cookTimeMinutes || '25'} min • {parsedRecipe.servings || servings} servings
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tabs Navigation */}
+              <div className="w-full">
+                {/* Tab List */}
+                <Tabs.List className="flex items-start border-b border-stone-200 w-full">
+                  <Tabs.Trigger
+                    value="prep"
+                    className="flex-1 h-[58px] flex items-center justify-center gap-2 px-0 py-0 relative data-[state=active]:border-b-2 data-[state=active]:border-[#193d34] transition-all duration-200"
+                  >
+                    <div className="relative shrink-0 w-9 h-9">
+                      <img 
+                        alt="Prep icon" 
+                        className="absolute inset-0 w-full h-full object-contain"
+                        src="http://localhost:3845/assets/3649672d8b7ae40173d1b3ae92af50e88cd7c177.png"
+                      />
+                    </div>
+                    <span className="font-albert font-medium text-[16px] data-[state=active]:text-[#193d34] data-[state=inactive]:text-[#79716b]">
+                      Prep
+                    </span>
+                  </Tabs.Trigger>
+                  <Tabs.Trigger
+                    value="cook"
+                    className="flex-1 h-[58px] flex items-center justify-center gap-2 px-0 py-0 relative data-[state=active]:border-b-2 data-[state=active]:border-[#193d34] transition-all duration-200"
+                  >
+                    <div className="relative shrink-0 w-9 h-9">
+                      <img 
+                        alt="Cook icon" 
+                        className="absolute inset-0 w-full h-full object-contain"
+                        src="http://localhost:3845/assets/ce69812a81bc831b3bf11efee3d22e40f992a668.png"
+                      />
+                    </div>
+                    <span className="font-albert font-medium text-[16px] data-[state=active]:text-[#193d34] data-[state=inactive]:text-[#79716b]">
+                      Cook
+                    </span>
+                  </Tabs.Trigger>
+                  <Tabs.Trigger
+                    value="plate"
+                    className="flex-1 h-[58px] flex items-center justify-center gap-2 px-0 py-0 relative data-[state=active]:border-b-2 data-[state=active]:border-[#193d34] transition-all duration-200"
+                  >
+                    <div className="relative shrink-0 w-9 h-9">
+                      <img 
+                        alt="Plate icon" 
+                        className="absolute inset-0 w-full h-full object-contain"
+                        src="http://localhost:3845/assets/c937b0aff3d8da7e5ccd01fda1a3a07459857918.png"
+                      />
+                    </div>
+                    <span className="font-albert font-medium text-[16px] data-[state=active]:text-[#193d34] data-[state=inactive]:text-[#79716b]">
+                      Plate
+                    </span>
+                  </Tabs.Trigger>
+                </Tabs.List>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Main Content */}
-        <div className="px-4 md:px-8 py-6 space-y-6">
-          {/* Tabs Section */}
-          <Tabs.Root defaultValue="prep" className="w-full">
-            {/* Tab List */}
-            <Tabs.List className="flex gap-1 items-center justify-start mb-6">
-              <Tabs.Trigger
-                value="prep"
-                className="flex-1 bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 flex items-center justify-center gap-2 data-[state=active]:bg-stone-100 data-[state=active]:border-stone-300 data-[state=inactive]:bg-stone-50 data-[state=inactive]:border-stone-200 transition-all duration-200 hover:bg-stone-100 hover:border-stone-300"
-              >
-                <span className="text-stone-700 data-[state=active]:text-stone-900 text-lg">
-                  🔪
-                </span>
-                <span className="font-albert-semibold text-[15px] text-stone-700 data-[state=active]:text-stone-900">
-                  Prep
-                </span>
-              </Tabs.Trigger>
-              <Tabs.Trigger
-                value="cook"
-                className="flex-1 bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 flex items-center justify-center gap-2 data-[state=active]:bg-stone-100 data-[state=active]:border-stone-300 data-[state=inactive]:bg-stone-50 transition-all duration-200 hover:bg-stone-100 hover:border-stone-300"
-              >
-                <span className="text-stone-700 data-[state=active]:text-stone-900 text-lg">
-                  🍳
-                </span>
-                <span className="font-albert-semibold text-[15px] text-stone-700 data-[state=active]:text-stone-900">
-                  Cook
-                </span>
-              </Tabs.Trigger>
-              <Tabs.Trigger
-                value="plate"
-                className="flex-1 bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 flex items-center justify-center gap-2 data-[state=active]:bg-stone-100 data-[state=active]:border-stone-300 data-[state=inactive]:bg-stone-50 transition-all duration-200 hover:bg-stone-100 hover:border-stone-300"
-              >
-                <span className="text-stone-700 data-[state=active]:text-stone-900 text-lg">
-                  🍽️
-                </span>
-                <span className="font-albert-semibold text-[15px] text-stone-700 data-[state=active]:text-stone-900">
-                  Plate
-                </span>
-              </Tabs.Trigger>
-            </Tabs.List>
-
+          {/* Main Content - Tab Content Sections */}
+          <div className="max-w-6xl mx-auto px-4 md:px-8">
             {/* Prep Tab Content */}
-            <Tabs.Content value="prep" className="space-y-6">
-              {/* Servings Adjuster and Multiplier Container */}
-              <div className="servings-controls-container">
-                {/* Servings Adjuster */}
-                <div className="control-card">
-                  <button
-                    onClick={handleDecrementServings}
-                    disabled={servings <= 1}
-                    className="control-button"
-                  >
-                    <Minus className="control-button-icon" />
-                  </button>
-                  <div className="flex items-center gap-2">
-                    <span className="servings-label">
-                      serving:
-                    </span>
-                    <span className="servings-value">
-                      {servings}
-                    </span>
-                  </div>
-                  <button
-                    onClick={handleIncrementServings}
-                    disabled={servings >= 10}
-                    className="control-button"
-                  >
-                    <Plus className="control-button-icon" />
-                  </button>
-                </div>
-
-                {/* Multiplier Component */}
-                <div className="multiplier-container">
-                  {['1x', '2x', '3x'].map((mult) => (
-                    <button
-                      key={mult}
-                      onClick={() => setMultiplier(mult)}
-                      className={`multiplier-button ${
-                        multiplier === mult ? 'multiplier-button-selected' : ''
-                      }`}
-                    >
-                      {mult}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Ingredients */}
-              <div className="bg-stone-100 rounded-lg p-6">
-                <h2 className="font-domine text-[20px] text-stone-950 mb-6 leading-[1.1]">
-                  Ingredients
-                </h2>
-                {Array.isArray(scaledIngredients) &&
-                  scaledIngredients.map(
-                    (
-                      group: {
-                        groupName: string;
-                        ingredients: Array<
-                          | string
-                          | {
-                              amount?: string;
-                              units?: string;
-                              ingredient: string;
-                            }
-                        >;
-                      },
-                      groupIdx: number,
-                    ) => (
-                      <div key={groupIdx} className="mb-6 last:mb-0">
-                        <h3 className="font-domine text-[18px] text-[#1e1e1e] mb-3 leading-none">
-                          {group.groupName}
-                        </h3>
-                        <ul className="space-y-2">
-                          {Array.isArray(group.ingredients) &&
-                            group.ingredients.map(
-                              (
-                                ingredient:
-                                  | string
-                                  | {
-                                      amount?: string;
-                                      units?: string;
-                                      ingredient: string;
-                                    },
-                                index: number,
-                              ) => (
-                                <li
-                                  key={index}
-                                  className="flex items-start gap-2"
-                                >
-                                  <span className="text-[#757575] text-sm mt-1">
-                                    •
-                                  </span>
-                                  <span className="font-albert text-[16px] text-[#1e1e1e] leading-[1.4]">
-                                    {formatIngredient(ingredient)}
-                                  </span>
-                                </li>
-                              ),
-                            )}
-                        </ul>
+            <Tabs.Content value="prep" className="space-y-0">
+              <div className="bg-white border-t border-stone-200">
+                <div className="p-6 space-y-6">
+                  {/* Servings Adjuster and Multiplier Container */}
+                  <div className="servings-controls-container">
+                    {/* Servings Adjuster */}
+                    <div className="control-card">
+                      <button
+                        onClick={handleDecrementServings}
+                        disabled={servings <= 1}
+                        className="control-button"
+                      >
+                        <Minus className="control-button-icon" />
+                      </button>
+                      <div className="flex items-center gap-2">
+                        <span className="servings-label">
+                          serving:
+                        </span>
+                        <span className="servings-value">
+                          {servings}
+                        </span>
                       </div>
-                    ),
-                  )}
+                      <button
+                        onClick={handleIncrementServings}
+                        disabled={servings >= 10}
+                        className="control-button"
+                      >
+                        <Plus className="control-button-icon" />
+                      </button>
+                    </div>
+
+                    {/* Multiplier Component */}
+                    <div className="multiplier-container">
+                      {['1x', '2x', '3x'].map((mult) => (
+                        <button
+                          key={mult}
+                          onClick={() => setMultiplier(mult)}
+                          className={`multiplier-button ${
+                            multiplier === mult ? 'multiplier-button-selected' : ''
+                          }`}
+                        >
+                          {mult}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Ingredients */}
+                  <div className="bg-white">
+                    <h2 className="font-domine text-[20px] text-[#193d34] mb-6 leading-[1.1]">
+                      Ingredients
+                    </h2>
+                    {Array.isArray(scaledIngredients) &&
+                      scaledIngredients.map(
+                        (
+                          group: {
+                            groupName: string;
+                            ingredients: Array<
+                              | string
+                              | {
+                                  amount?: string;
+                                  units?: string;
+                                  ingredient: string;
+                                }
+                            >;
+                          },
+                          groupIdx: number,
+                        ) => (
+                          <div key={groupIdx} className="mb-6 last:mb-0">
+                            <h3 className="font-domine text-[18px] text-[#193d34] mb-3 leading-none">
+                              {group.groupName}
+                            </h3>
+                            <div className="flex flex-col gap-3">
+                              {Array.isArray(group.ingredients) &&
+                                group.ingredients.map(
+                                  (
+                                    ingredient:
+                                      | string
+                                      | {
+                                          amount?: string;
+                                          units?: string;
+                                          ingredient: string;
+                                        },
+                                    index: number,
+                                  ) => (
+                                    <IngredientCard
+                                      key={index}
+                                      ingredient={ingredient}
+                                      description={undefined} // Empty state - not connected to backend yet
+                                    />
+                                  ),
+                                )}
+                            </div>
+                          </div>
+                        ),
+                      )}
+                  </div>
+                </div>
               </div>
             </Tabs.Content>
 
             {/* Cook Tab Content */}
-            <Tabs.Content value="cook" className="space-y-6">
-              <div className="flex justify-center w-full">
+            <Tabs.Content value="cook" className="space-y-0">
+              <div className="w-full">
                 <ClassicSplitView
                   title={parsedRecipe.title}
                   steps={
@@ -342,7 +437,7 @@ export default function ParsedRecipePage() {
                           })
                           .filter((text) => text.trim())
                           .map((text, index) => ({
-                            step: `Step ${index + 1}`,
+                            step: extractStepTitle(text),
                             detail: text,
                             time: 0,
                             ingredients: [],
@@ -355,24 +450,26 @@ export default function ParsedRecipePage() {
             </Tabs.Content>
 
             {/* Plate Tab Content */}
-            <Tabs.Content value="plate" className="space-y-6">
-              <div className="bg-stone-100 rounded-lg p-6">
-                <h2 className="font-domine text-[20px] text-stone-950 mb-6 leading-[1.1]">
-                  Plate & Serve
-                </h2>
-                <div className="text-center py-12">
-                  <div className="text-6xl mb-4">🍽️</div>
-                  <p className="font-albert text-[18px] text-stone-600">
-                    Coming soon...
-                  </p>
-                  <p className="font-albert text-[14px] text-stone-600 mt-2">
-                    Plating suggestions and serving tips will be available here.
-                  </p>
+            <Tabs.Content value="plate" className="space-y-0">
+              <div className="bg-white border-t border-stone-200">
+                <div className="p-6">
+                  <h2 className="font-domine text-[20px] text-[#193d34] mb-6 leading-[1.1]">
+                    Plate & Serve
+                  </h2>
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4">🍽️</div>
+                    <p className="font-albert text-[18px] text-stone-500">
+                      Coming soon...
+                    </p>
+                    <p className="font-albert text-[16px] text-stone-500 mt-2">
+                      Plating suggestions and serving tips will be available here.
+                    </p>
+                  </div>
                 </div>
               </div>
             </Tabs.Content>
-          </Tabs.Root>
-        </div>
+          </div>
+        </Tabs.Root>
       </div>
     </div>
   );

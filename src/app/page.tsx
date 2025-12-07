@@ -122,6 +122,8 @@ function HomeContent() {
           title: fullRecipe.title,
           ingredients: fullRecipe.ingredients,
           instructions: fullRecipe.instructions,
+          author: fullRecipe.author, // Include author if available
+          sourceUrl: fullRecipe.sourceUrl || fullRecipe.url, // Include source URL if available
         });
         router.push('/parsed-recipe-page');
       }

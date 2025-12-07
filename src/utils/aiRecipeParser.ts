@@ -189,6 +189,55 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
                 .filter((s: string) => s.length > 10 && !isAuthorName(s));
             }
 
+            // Extract author if available - handle various formats
+            let author: string | undefined = undefined;
+            
+            // Try different author field formats
+            if (recipe.author) {
+              if (typeof recipe.author === 'string') {
+                author = recipe.author.trim();
+              } else if (typeof recipe.author === 'object' && recipe.author !== null) {
+                // Handle author as object (e.g., {"@type": "Person", "name": "John Doe"})
+                if (recipe.author.name && typeof recipe.author.name === 'string') {
+                  author = recipe.author.name.trim();
+                }
+              }
+            }
+            
+            // Try publisher as fallback
+            if (!author && recipe.publisher) {
+              if (typeof recipe.publisher === 'string') {
+                author = recipe.publisher.trim();
+              } else if (typeof recipe.publisher === 'object' && recipe.publisher !== null) {
+                if (recipe.publisher.name && typeof recipe.publisher.name === 'string') {
+                  author = recipe.publisher.name.trim();
+                }
+              }
+            }
+            
+            // Try creator as another fallback
+            if (!author && recipe.creator) {
+              if (typeof recipe.creator === 'string') {
+                author = recipe.creator.trim();
+              } else if (Array.isArray(recipe.creator) && recipe.creator.length > 0) {
+                const firstCreator = recipe.creator[0];
+                if (typeof firstCreator === 'string') {
+                  author = firstCreator.trim();
+                } else if (typeof firstCreator === 'object' && firstCreator !== null && firstCreator.name) {
+                  author = firstCreator.name.trim();
+                }
+              } else if (typeof recipe.creator === 'object' && recipe.creator !== null) {
+                if (recipe.creator.name && typeof recipe.creator.name === 'string') {
+                  author = recipe.creator.name.trim();
+                }
+              }
+            }
+            
+            // Only set author if it's a non-empty string
+            if (author && author.length === 0) {
+              author = undefined;
+            }
+
             // Validate we have complete data
             if (
               title &&
@@ -197,9 +246,9 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
               instructions.length > 0
             ) {
               console.log(
-                `[JSON-LD] Found recipe: "${title}" with ${ingredients[0].ingredients.length} ingredients and ${instructions.length} instructions`
+                `[JSON-LD] Found recipe: "${title}" with ${ingredients[0].ingredients.length} ingredients and ${instructions.length} instructions${author ? `, author: "${author}"` : ''}`
               );
-              return { title, ingredients, instructions };
+              return { title, ingredients, instructions, author };
             }
           }
         }
@@ -250,6 +299,7 @@ START YOUR RESPONSE IMMEDIATELY WITH { and END WITH }. Nothing else.
 Required JSON structure:
 {
   "title": "string",
+  "author": "string (optional - recipe author name if found)",
   "ingredients": [
     {
       "groupName": "string",
@@ -345,9 +395,14 @@ DETAIL PRESERVATION:
 - Keep all helpful details about techniques, visual cues, and tips
 - Maintain the original level of detail from the HTML
 
+AUTHOR EXTRACTION:
+- Extract the recipe author name if clearly visible (e.g., "By Chef John", "Recipe by Jane Doe")
+- Include author in the JSON output as a separate "author" field
+- Do NOT include author names in instruction text - extract separately
+- If no clear author is found, omit the "author" field (don't use null)
+
 CLEANING (remove these only):
-- Author names and bylines (e.g., "By Chef John:")
-- Attribution text (e.g., "Recipe courtesy of...")
+- Attribution text (e.g., "Recipe courtesy of...") - but extract author name separately
 - Nutritional information
 - Prep time, cook time, total time labels
 - Serving size information
@@ -479,7 +534,16 @@ ABSOLUTE REQUIREMENTS:
         console.log(
           `[AI Parser] Successfully parsed recipe: "${parsedData.title}" with ${parsedData.ingredients.reduce((sum: number, g: any) => sum + g.ingredients.length, 0)} ingredients and ${parsedData.instructions.length} instructions`
         );
-        return parsedData as ParsedRecipe;
+        // Return recipe with author if available
+        const recipe: ParsedRecipe = {
+          title: parsedData.title,
+          ingredients: parsedData.ingredients,
+          instructions: parsedData.instructions,
+        };
+        if (parsedData.author && typeof parsedData.author === 'string') {
+          recipe.author = parsedData.author;
+        }
+        return recipe;
       }
     }
 
@@ -601,7 +665,14 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
     }
 
     // Parse the fetched HTML
-    return await parseRecipe(html);
+    const result = await parseRecipe(html);
+    
+    // Add sourceUrl to the result if parsing was successful
+    if (result.success && result.data) {
+      result.data.sourceUrl = url;
+    }
+    
+    return result;
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error fetching URL';

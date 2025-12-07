@@ -1,6 +1,5 @@
 'use client';
 
-import { Clock } from 'lucide-react';
 import { RecipeStep } from './types';
 
 interface ListViewProps {
@@ -18,36 +17,33 @@ export default function ListView({ steps, onSelectStep }: ListViewProps) {
   }
 
   return (
-    <div className="h-full overflow-y-auto p-6 bg-[#fdf7f3]">
-      <div className="space-y-4 pb-6">
+    <div className="h-full overflow-y-auto p-6 bg-white">
+      <div className="space-y-2 pb-6">
         {steps.map((step, index) => (
           <button
             key={index}
             onClick={() => onSelectStep(index)}
-            className="w-full bg-white rounded-2xl border border-stone-200 p-4 shadow-sm text-left hover:border-stone-300 transition-all group"
+            className="w-full bg-white border border-[#e7e5e4] rounded-[14px] p-[17px] text-left hover:border-stone-300 transition-all group"
           >
-            <div className="flex items-start gap-4">
-              {/* Number Badge */}
-              <div className="w-8 h-8 rounded-full bg-[#193d34] flex items-center justify-center shrink-0 text-white font-albert font-medium text-sm mt-0.5 group-hover:bg-[#cff1e8] group-hover:text-[#193d34] transition-colors">
-                {index + 1}
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  <h3 className="font-domine text-[18px] text-[#193d34] leading-tight truncate">
-                    {step.step}
-                  </h3>
-                  <div className="flex items-center gap-1.5 text-stone-400 shrink-0 bg-stone-50 px-2 py-1 rounded-md">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span className="font-albert text-xs font-medium">{step.time}m</span>
-                  </div>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-3">
+                {/* Number Badge - Gray circular badge */}
+                <div className="w-6 h-6 rounded-full bg-stone-100 flex items-center justify-center shrink-0">
+                  <span className="font-albert font-semibold text-[12px] text-stone-500 leading-4">
+                    {index + 1}
+                  </span>
                 </div>
-                
-                <p className="font-albert text-[14px] text-stone-600 line-clamp-2 leading-relaxed">
-                  {step.detail}
-                </p>
+
+                {/* Step Title - No truncation, allow wrapping */}
+                <h3 className="font-albert font-medium text-[16px] text-[#193d34] leading-6 flex-1 min-w-0">
+                  {step.step}
+                </h3>
               </div>
+              
+              {/* Step Description */}
+              <p className="font-albert text-[16px] text-stone-500 leading-[26px] pl-9">
+                {step.detail}
+              </p>
             </div>
           </button>
         ))}

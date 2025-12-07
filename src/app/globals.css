@@ -233,4 +233,115 @@
     font-weight: 500;
     font-size: 0.875rem;
   }
+
+  /* Font weight utilities for Albert Sans */
+  .font-albert-medium {
+    font-family: var(--font-albert);
+    font-weight: 500;
+  }
+
+  .font-albert-semibold {
+    font-family: var(--font-albert);
+    font-weight: 600;
+  }
+
+  /* Ingredient Card Component */
+  .ingredient-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background-color: #fafaf9; /* stone-50 */
+    border: 1px solid #e7e5e4; /* stone-200 */
+    border-radius: 14px;
+    padding: 17px;
+    width: 100%;
+  }
+
+  .ingredient-card-checkbox {
+    flex-shrink: 0;
+  }
+
+  .ingredient-checkbox-input {
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid #d6d3d1; /* stone-300 */
+    border-radius: 4px;
+    background-color: transparent;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    position: relative;
+  }
+
+  .ingredient-checkbox-input:checked {
+    background-color: #193d34;
+    border-color: #193d34;
+  }
+
+  .ingredient-checkbox-input:checked::after {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 1px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .ingredient-card-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0; /* Allows text truncation */
+  }
+
+  .ingredient-card-primary {
+    height: 24px;
+    display: flex;
+    align-items: center;
+  }
+
+  .ingredient-card-name {
+    font-family: var(--font-albert);
+    font-weight: 500; /* medium */
+    font-size: 16px;
+    line-height: 24px;
+    color: #0c0a09; /* stone-900 */
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ingredient-card-secondary {
+    height: 20px;
+    display: flex;
+    align-items: center;
+  }
+
+  .ingredient-card-description {
+    font-family: var(--font-albert);
+    font-weight: 400; /* regular */
+    font-size: 14px;
+    line-height: 20px;
+    color: #57534d; /* stone-600 */
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ingredient-card-description-empty {
+    font-family: var(--font-albert);
+    font-weight: 400; /* regular */
+    font-size: 14px;
+    line-height: 20px;
+    color: #78716c; /* stone-500 - muted for empty state */
+    font-style: italic;
+    margin: 0;
+  }
 }

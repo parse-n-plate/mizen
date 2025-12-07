@@ -81,6 +81,8 @@ export default function NavbarSearch() {
       title: recipe.title,
       ingredients: recipe.ingredients || [],
       instructions: recipe.instructions || [],
+      author: recipe.author, // Include author if available
+      sourceUrl: recipe.sourceUrl, // Include source URL if available
     });
     setQuery('');
     setShowDropdown(false);
@@ -141,6 +143,8 @@ export default function NavbarSearch() {
         title: response.title,
         ingredients: response.ingredients,
         instructions: response.instructions,
+        author: response.author, // Include author if available
+        sourceUrl: response.sourceUrl || query, // Use sourceUrl from response or fallback to query URL
       });
 
       // Step 4: Add to recent recipes
@@ -154,6 +158,8 @@ export default function NavbarSearch() {
         url: query,
         ingredients: response.ingredients,
         instructions: response.instructions,
+        author: response.author, // Include author if available
+        sourceUrl: response.sourceUrl || query, // Include source URL if available
       });
 
       // Step 5: Navigate to the parsed recipe page

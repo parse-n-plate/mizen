@@ -192,6 +192,9 @@ export async function GET(req: NextRequest): Promise<Response> {
           .filter((text: string) => text.length > 10);
       }
 
+      // Extract author if available
+      const author = jsonLdResult.author?.name || jsonLdResult.author || jsonLdResult.publisher?.name || undefined;
+
       // CHECKPOINT 3: Data Validation
       const validationResult = {
         hasTitle: false,
@@ -257,7 +260,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       steps.push({
         step: 'final_result',
         title: 'Final Parsed Recipe (via JSON-LD)',
-        data: { title, ingredients, instructions, method: 'json-ld', validationPassed },
+        data: { title, ingredients, instructions, method: 'json-ld', validationPassed, author, sourceUrl: url },
         success: validationPassed,
         timestamp: Date.now(),
       });
@@ -562,6 +565,8 @@ ABSOLUTE REQUIREMENTS:
       ingredients: Array.isArray(parsedData.ingredients) ? parsedData.ingredients : [],
       instructions: Array.isArray(parsedData.instructions) ? parsedData.instructions : [],
       method: 'ai',
+      author: parsedData.author || undefined,
+      sourceUrl: url,
     };
 
     // Log warning if null values were found
@@ -832,10 +837,13 @@ export async function POST(req: NextRequest): Promise<Response> {
           .filter((text: string) => text.length > 10);
       }
 
+      // Extract author if available
+      const author = jsonLdResult.author?.name || jsonLdResult.author || jsonLdResult.publisher?.name || undefined;
+
       steps.push({
         step: 'final_result',
         title: 'Final Parsed Recipe (via JSON-LD)',
-        data: { title, ingredients, instructions, method: 'json-ld' },
+        data: { title, ingredients, instructions, method: 'json-ld', author, sourceUrl: url },
         success: true,
         timestamp: Date.now(),
       });
@@ -1135,6 +1143,8 @@ ABSOLUTE REQUIREMENTS:
       ingredients: Array.isArray(parsedData.ingredients) ? parsedData.ingredients : [],
       instructions: Array.isArray(parsedData.instructions) ? parsedData.instructions : [],
       method: 'ai',
+      author: parsedData.author || undefined,
+      sourceUrl: url,
     };
 
     // Log warning if null values were found

@@ -93,6 +93,8 @@ export default function SearchForm({
       title: recipe.title,
       ingredients: recipe.ingredients || [],
       instructions: recipe.instructions || [],
+      author: recipe.author, // Include author if available
+      sourceUrl: recipe.sourceUrl, // Include source URL if available
     });
     setQuery('');
     setShowDropdown(false);
@@ -176,6 +178,8 @@ export default function SearchForm({
         title: response.title,
         ingredients: response.ingredients,
         instructions: response.instructions,
+        author: response.author, // Include author if available
+        sourceUrl: response.sourceUrl, // Include source URL if available
       });
 
       // Add to recent recipes
@@ -189,6 +193,8 @@ export default function SearchForm({
         url: `image:${selectedImage.name}`, // Store as image reference
         ingredients: response.ingredients,
         instructions: response.instructions,
+        author: response.author, // Include author if available
+        sourceUrl: response.sourceUrl, // Include source URL if available
       });
 
       // Navigate to parsed recipe page
@@ -279,6 +285,8 @@ export default function SearchForm({
         title: response.title,
         ingredients: response.ingredients,
         instructions: response.instructions,
+        author: response.author, // Include author if available
+        sourceUrl: response.sourceUrl || query, // Use sourceUrl from response or fallback to query URL
       });
 
       // Step 4: Add to recent recipes for quick access
@@ -292,6 +300,8 @@ export default function SearchForm({
         url: query,
         ingredients: response.ingredients,
         instructions: response.instructions,
+        author: response.author, // Include author if available
+        sourceUrl: response.sourceUrl || query, // Include source URL if available
       });
 
       // Step 5: Navigate to the parsed recipe page

@@ -79,7 +79,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       console.error('[API /parseRecipe] Parsing failed:', result.error);
       
       // Determine appropriate error code based on error message
-      let errorCode = ERROR_CODES.ERR_NO_RECIPE_FOUND;
+      let errorCode: string = ERROR_CODES.ERR_NO_RECIPE_FOUND;
       let errorMessage = 'Could not extract recipe from this page';
 
       if (result.error) {
@@ -142,6 +142,8 @@ export async function POST(req: NextRequest): Promise<Response> {
       title: result.data.title,
       ingredients: result.data.ingredients,
       instructions: result.data.instructions,
+      author: result.data.author, // Include author if available
+      sourceUrl: result.data.sourceUrl, // Include source URL if available
       method: result.method, // Include which method was used (json-ld or ai)
     });
   } catch (error) {

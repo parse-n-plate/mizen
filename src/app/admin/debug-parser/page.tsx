@@ -45,18 +45,26 @@ Required JSON structure:
   "instructions": ["string", "string", ...]
 }
 
+CRITICAL: ingredients and instructions MUST be arrays, NEVER null.
+- If ingredients are found: extract them into the array structure above
+- If NO ingredients found: use empty array []
+- If instructions are found: extract them into an array of strings
+- If NO instructions found: use empty array []
+- NEVER use null for ingredients or instructions - ALWAYS use [] if nothing is found
+
 ========================================
 THE HTML PROVIDED IS YOUR ONLY SOURCE OF DATA
 ========================================
 You are an AI recipe extractor. Your SOLE purpose is to read the HTML provided and extract recipe data EXACTLY as it appears.
 
 CORE EXTRACTION PRINCIPLES:
-1. Read the HTML carefully and locate the recipe content
+1. Read the HTML carefully and locate the recipe content - ingredients and instructions ARE in the HTML
 2. Extract amounts, units, and ingredient names EXACTLY as written in the HTML
 3. Extract instruction steps EXACTLY as written in the HTML
 4. Never invent, estimate, round, convert, or modify any values
 5. If data is missing from HTML, use fallback values (see Edge Cases section)
 6. Only normalize whitespace and line breaks - nothing else
+7. ALWAYS return arrays for ingredients and instructions - NEVER null, use [] if empty
 
 ========================================
 EXTRACTION WORKFLOW
@@ -150,6 +158,14 @@ If instructions are incomplete or unclear:
 
 If no valid recipe is found in HTML:
 - Return: {"title": "No recipe found", "ingredients": [], "instructions": []}
+- NEVER use null - ALWAYS use empty arrays []
+
+MANDATORY OUTPUT REQUIREMENTS:
+- ingredients MUST be an array (never null) - use [] if empty
+- instructions MUST be an array (never null) - use [] if empty
+- If you cannot find ingredients, return []
+- If you cannot find instructions, return []
+- The HTML contains recipe data - search more carefully if you initially find nothing
 
 ========================================
 FORMAT EXAMPLES (FOR STRUCTURE REFERENCE ONLY)
@@ -185,7 +201,15 @@ IMPORTANT: The example above shows JSON format structure only. You MUST extract 
 FINAL REMINDER
 ========================================
 Output ONLY the JSON object. No markdown, no code blocks, no explanations, no text before or after.
-START with { and END with }. Nothing else.`;
+START with { and END with }. Nothing else.
+
+ABSOLUTE REQUIREMENTS:
+- ingredients: MUST be an array [] (never null)
+- instructions: MUST be an array [] (never null)
+- If you find ingredients in the HTML, extract them
+- If you find instructions in the HTML, extract them
+- If you don't find them, use empty arrays [] - NEVER null
+- The recipe data exists in the HTML - extract it carefully`;
 
 export default function DebugParserPage() {
   const [url, setUrl] = useState('');
@@ -820,6 +844,25 @@ export default function DebugParserPage() {
                             <h4 className="font-semibold text-sm mb-1">Title:</h4>
                             <p className="text-sm">{typeof data.title === 'string' ? data.title : ''}</p>
                           </div>
+                          {data.author && (
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Author:</h4>
+                              <p className="text-sm">{typeof data.author === 'string' ? data.author : ''}</p>
+                            </div>
+                          )}
+                          {data.sourceUrl && (
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">Source URL:</h4>
+                              <a
+                                href={typeof data.sourceUrl === 'string' ? data.sourceUrl : '#'}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-blue-600 hover:text-blue-800 underline break-all"
+                              >
+                                {typeof data.sourceUrl === 'string' ? data.sourceUrl : ''}
+                              </a>
+                            </div>
+                          )}
                           <div>
                             <h4 className="font-semibold text-sm mb-1">
                               Ingredients ({typeof data.ingredientCount === 'number' ? data.ingredientCount : (Array.isArray(data.ingredients) ? (data.ingredients as IngredientGroup[]).reduce((sum: number, g: IngredientGroup) => sum + (g.ingredients?.length || 0), 0) : 0)} total):
