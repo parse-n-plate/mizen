@@ -246,7 +246,7 @@ export default function ParsedRecipePage() {
                       <img 
                         alt="Prep icon" 
                         className="absolute inset-0 w-full h-full object-contain"
-                        src="http://localhost:3845/assets/3649672d8b7ae40173d1b3ae92af50e88cd7c177.png"
+                        src="/assets/icons/Prep_Icon.png"
                       />
                     </div>
                     <span className="font-albert font-medium text-[16px] data-[state=active]:text-[#193d34] data-[state=inactive]:text-[#79716b]">
@@ -261,7 +261,7 @@ export default function ParsedRecipePage() {
                       <img 
                         alt="Cook icon" 
                         className="absolute inset-0 w-full h-full object-contain"
-                        src="http://localhost:3845/assets/ce69812a81bc831b3bf11efee3d22e40f992a668.png"
+                        src="/assets/icons/Cook_Icon.png"
                       />
                     </div>
                     <span className="font-albert font-medium text-[16px] data-[state=active]:text-[#193d34] data-[state=inactive]:text-[#79716b]">
@@ -276,7 +276,7 @@ export default function ParsedRecipePage() {
                       <img 
                         alt="Plate icon" 
                         className="absolute inset-0 w-full h-full object-contain"
-                        src="http://localhost:3845/assets/c937b0aff3d8da7e5ccd01fda1a3a07459857918.png"
+                        src="/assets/icons/Plate_Icon.png"
                       />
                     </div>
                     <span className="font-albert font-medium text-[16px] data-[state=active]:text-[#193d34] data-[state=inactive]:text-[#79716b]">

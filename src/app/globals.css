@@ -273,7 +273,7 @@
     display: flex;
     align-items: center; /* Center items vertically */
     gap: 12px;
-    padding: 9px 8px;
+    padding: 16px 8px; /* Increased vertical padding for more space between items */
     position: relative;
     transition: background-color 0.2s;
   }
@@ -370,7 +370,8 @@
   .ingredient-list-swap-button {
     position: absolute;
     right: 8px;
-    top: 8px;
+    top: 50%; /* Center vertically */
+    transform: translateY(-50%); /* Center vertically */
     width: 32px;
     height: 32px;
     display: flex;
