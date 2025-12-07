@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useRecipe } from '@/contexts/RecipeContext';
 import { ParsedRecipe } from '@/lib/storage';
 import {
@@ -17,15 +18,40 @@ import LoadingAnimation from '@/components/ui/loading-animation';
 export default function NavbarSearch() {
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchResults, setSearchResults] = useState<ParsedRecipe[]>([]);
   const [loading, setLoading] = useState(false);
   const { recentRecipes, addRecipe } = useParsedRecipes();
-  const { setParsedRecipe } = useRecipe();
+  const { parsedRecipe, setParsedRecipe } = useRecipe();
   const { handle: handleError } = useRecipeErrorHandler();
   const router = useRouter();
+  const pathname = usePathname();
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Detect if on parsed recipe page
+  const isOnParsedRecipePage = pathname === '/parsed-recipe-page';
+
+  // Helper function to extract domain from URL
+  const getDomainFromUrl = (url: string): string => {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname.replace('www.', '');
+    } catch {
+      return url;
+    }
+  };
+
+  // Helper function to get path from URL
+  const getPathFromUrl = (url: string): string => {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.pathname;
+    } catch {
+      return '';
+    }
+  };
 
   // Check if query looks like a URL
   const isUrl = (text: string) => {
@@ -62,9 +88,29 @@ export default function NavbarSearch() {
     setShowDropdown(isFocused && query.trim() !== '' && !isUrl(query));
   }, [query, isFocused, recentRecipes, searchRecipes]);
 
-  // Handle focus
+  // Handle focus - when on parsed recipe page, clear the displayed URL and allow editing
   const handleFocus = () => {
     setIsFocused(true);
+    setIsHovered(false);
+    // If we're on parsed recipe page and showing the URL, focus the input to allow new input
+    if (isOnParsedRecipePage && parsedRecipe?.sourceUrl && !query) {
+      // Focus the input so user can immediately start typing or pasting
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
+    }
+  };
+
+  // Handle click on the search container - focus input when showing URL
+  const handleContainerClick = () => {
+    if (isOnParsedRecipePage && parsedRecipe?.sourceUrl && !isFocused && !query) {
+      setIsFocused(true);
+      setTimeout(() => {
+        inputRef.current?.focus();
+        // Select all text if there's any, to make it easy to replace
+        inputRef.current?.select();
+      }, 0);
+    }
   };
 
   // Handle blur with delay to allow clicking on dropdown items
@@ -228,28 +274,77 @@ export default function NavbarSearch() {
             hover:border-[#4F46E5] hover:border-opacity-80
             ${isFocused ? 'shadow-sm border-[#4F46E5] border-opacity-60' : ''}
           `}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          onClick={handleContainerClick}
         >
-          <div className="flex items-center pl-4 pr-1.5 py-1.5 relative">
+          <div className="flex items-center pl-4 pr-1.5 py-1.5 relative min-h-[40px]">
             {/* Search Icon */}
             <Search className="w-4 h-4 text-stone-600 flex-shrink-0" />
 
             {/* Input */}
-            <div className="flex-1 ml-2 relative">
-              <input
-                ref={inputRef}
-                type="text"
-                placeholder="Try entering recipe URL"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyPress={handleKeyPress}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-                className="w-full bg-transparent font-albert text-[14px] text-stone-600 placeholder:text-stone-500 focus:outline-none border-none"
-              />
+            <div className="flex-1 ml-2 relative min-h-[20px] flex items-center">
+              {/* Show URL display when on parsed recipe page and not focused/editing */}
+              {isOnParsedRecipePage && parsedRecipe?.sourceUrl && !isFocused && !query ? (
+                <div className="w-full font-albert text-[14px] truncate flex-1 min-w-0 cursor-text h-[20px] flex items-center">
+                  <AnimatePresence mode="wait">
+                    {isHovered ? (
+                      <motion.span
+                        key="placeholder"
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 5 }}
+                        transition={{ duration: 0.2 }}
+                        className="text-stone-500 block"
+                      >
+                        Try entering recipe URL
+                      </motion.span>
+                    ) : (
+                      <motion.div
+                        key="url"
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 5 }}
+                        transition={{ duration: 0.2 }}
+                        className="truncate"
+                      >
+                        <span className="font-medium text-[#193d34]">
+                          {getDomainFromUrl(parsedRecipe.sourceUrl)}
+                        </span>
+                        <span className="text-stone-400">
+                          {getPathFromUrl(parsedRecipe.sourceUrl)}
+                        </span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ) : (
+                <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder={isOnParsedRecipePage ? "Try entering recipe URL" : "Try entering recipe URL"}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
+                  onPaste={(e) => {
+                    // Handle paste - the value will be set automatically by the input
+                    // but we ensure focus is maintained
+                    setTimeout(() => {
+                      const pastedText = e.clipboardData.getData('text');
+                      if (pastedText) {
+                        setQuery(pastedText);
+                      }
+                    }, 0);
+                  }}
+                  className="w-full bg-transparent font-albert text-[14px] text-stone-600 placeholder:text-stone-500 focus:outline-none border-none h-[20px]"
+                />
+              )}
             </div>
 
-            {/* Keyboard Shortcut Indicator (⌘+K) - shown when not focused or no query */}
-            {!isFocused && !query && (
+            {/* Keyboard Shortcut Indicator (⌘+K) - shown when not focused or no query, but not on parsed recipe page showing URL */}
+            {!isFocused && !query && !(isOnParsedRecipePage && parsedRecipe?.sourceUrl) && (
               <div className="ml-2 flex items-center gap-1 flex-shrink-0">
                 <kbd className="hidden md:inline-flex items-center px-2 py-1 text-[10px] font-albert text-stone-500 bg-white border border-[#d9d9d9] rounded">
                   ⌘K

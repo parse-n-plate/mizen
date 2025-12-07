@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
 import RecipeSkeleton from '@/components/ui/recipe-skeleton';
 import * as Tabs from '@radix-ui/react-tabs';
-import { Plus, Minus, Search, X } from 'lucide-react';
+import { Plus, Minus, X, ArrowLeft } from 'lucide-react';
 import { scaleIngredients } from '@/utils/ingredientScaler';
 import ClassicSplitView from '@/components/ClassicSplitView';
 import IngredientCard from '@/components/ui/ingredient-card';
@@ -153,26 +153,6 @@ export default function ParsedRecipePage() {
     );
   }
 
-  // Helper function to extract domain from URL
-  const getDomainFromUrl = (url: string): string => {
-    try {
-      const urlObj = new URL(url);
-      return urlObj.hostname.replace('www.', '');
-    } catch {
-      return url;
-    }
-  };
-
-  // Helper function to get path from URL
-  const getPathFromUrl = (url: string): string => {
-    try {
-      const urlObj = new URL(url);
-      return urlObj.pathname;
-    } catch {
-      return '';
-    }
-  };
-
   return (
     <div className="bg-white min-h-screen relative max-w-full overflow-x-hidden">
       <div className="transition-opacity duration-300 ease-in-out opacity-100">
@@ -182,31 +162,25 @@ export default function ParsedRecipePage() {
           <div className="bg-[#f8f8f4]">
             {/* Main Content Container with max-width */}
             <div className="max-w-6xl mx-auto px-4 md:px-8">
-              {/* Header Section with Search Bar */}
+              {/* Header Section with Navigation */}
               <div className="w-full pt-6 pb-0">
                 <div className="flex flex-col gap-3">
-                  {/* Search Bar */}
-                  <div className="flex gap-3 items-center justify-end">
-                    <div className="flex-1 bg-white rounded-full px-4 py-1.5 flex items-center gap-3 max-w-full">
-                      <Search className="w-4 h-4 text-stone-400 shrink-0" />
-                      {parsedRecipe.sourceUrl ? (
-                        <p className="font-albert text-[14px] text-stone-400 truncate flex-1 min-w-0">
-                          <span className="font-medium text-[#193d34]">
-                            {getDomainFromUrl(parsedRecipe.sourceUrl)}
-                          </span>
-                          <span className="text-stone-400">
-                            {getPathFromUrl(parsedRecipe.sourceUrl)}
-                          </span>
-                        </p>
-                      ) : (
-                        <p className="font-albert text-[14px] text-stone-400 truncate flex-1 min-w-0">
-                          Recipe source
-                        </p>
-                      )}
-                    </div>
+                  {/* Responsive Navigation: Breadcrumb for desktop, X button for mobile */}
+                  <div className="flex gap-3 items-center justify-between">
+                    {/* Desktop: Back to Home breadcrumb */}
                     <button
                       onClick={() => router.push('/')}
-                      className="bg-white rounded-full p-4 flex items-center justify-center shrink-0 w-12 h-12 hover:bg-stone-50 transition-colors"
+                      className="hidden md:flex items-center gap-2 text-stone-500 hover:text-stone-700 transition-colors"
+                      aria-label="Back to Home"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      <span className="font-albert text-[14px]">Back to Home</span>
+                    </button>
+                    
+                    {/* Mobile: X close button */}
+                    <button
+                      onClick={() => router.push('/')}
+                      className="md:hidden bg-white rounded-full p-4 flex items-center justify-center shrink-0 w-12 h-12 hover:bg-stone-50 transition-colors ml-auto"
                       aria-label="Close and return to homepage"
                     >
                       <X className="w-6 h-6 text-stone-600" />
@@ -218,15 +192,19 @@ export default function ParsedRecipePage() {
               {/* Recipe Info Section */}
               <div className="w-full pt-6 pb-0">
                 <div className="flex flex-col gap-3">
-                  <h1 className="font-domine text-[36px] text-[#193d34] leading-[1.2] font-bold">
-                    {parsedRecipe.title || 'Beef Udon'}
-                  </h1>
+                  <div className="flex flex-col gap-1.5">
+                    <h1 className="font-domine text-[36px] text-[#193d34] leading-[1.2] font-bold">
+                      {parsedRecipe.title || 'Beef Udon'}
+                    </h1>
+                    <p className="font-albert text-[16px] text-stone-400 leading-[1.4]">
+                      {parsedRecipe.author?.trim() ? (
+                        <>by {parsedRecipe.author.trim()}</>
+                      ) : (
+                        <span className="italic">No author information</span>
+                      )}
+                    </p>
+                  </div>
                   <div className="flex flex-col gap-2.5">
-                    {parsedRecipe.author?.trim() && (
-                      <p className="font-albert text-[16px] text-stone-500 leading-[1.4]">
-                        by {parsedRecipe.author.trim()}
-                      </p>
-                    )}
                     <p className="font-albert text-[16px] text-stone-500 leading-[1.4]">
                       {parsedRecipe.totalTimeMinutes || parsedRecipe.prepTimeMinutes || parsedRecipe.cookTimeMinutes || '25'} min • {parsedRecipe.servings || servings} servings
                     </p>
@@ -457,9 +435,6 @@ export default function ParsedRecipePage() {
             <Tabs.Content value="plate" className="space-y-0">
               <div className="bg-white border-t border-stone-200">
                 <div className="p-6">
-                  <h2 className="font-domine text-[20px] text-[#193d34] mb-6 leading-[1.1]">
-                    Plate & Serve
-                  </h2>
                   <div className="text-center py-12">
                     <div className="text-6xl mb-4">🍽️</div>
                     <p className="font-albert text-[18px] text-stone-500">
