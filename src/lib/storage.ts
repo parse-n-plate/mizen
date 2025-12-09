@@ -1,3 +1,11 @@
+export type InstructionStep = {
+  title: string;   // Short, high-level name for the step
+  detail: string;  // Full instruction text
+  timeMinutes?: number;
+  ingredients?: string[];
+  tips?: string;
+};
+
 export type ParsedRecipe = {
   id: string;
   title: string;
@@ -9,13 +17,68 @@ export type ParsedRecipe = {
     groupName: string;
     ingredients: { amount: string; units: string; ingredient: string }[];
   }[];
-  instructions?: string[];
+  // Accept legacy string steps or new titled steps; we normalize on read/write.
+  instructions?: Array<string | InstructionStep>;
   author?: string; // Recipe author if available
   sourceUrl?: string; // Source URL if available
 };
 
 const RECENT_RECIPES_KEY = 'recentRecipes';
 const MAX_RECENT_RECIPES = 10;
+
+// Derive a concise title from a full instruction for legacy data
+function deriveStepTitle(text: string): string {
+  const trimmed = text?.trim() || '';
+  if (!trimmed) return 'Step';
+  const match = trimmed.match(/^([^.!?]+[.!?]?)/);
+  if (match) {
+    return match[1].trim().replace(/[.!?]+$/, '') || 'Step';
+  }
+  return trimmed;
+}
+
+// Normalize instructions into titled steps, tolerating legacy string arrays
+function normalizeInstructions(
+  instructions?: Array<string | InstructionStep>,
+): InstructionStep[] {
+  if (!instructions || !Array.isArray(instructions)) return [];
+
+  return instructions
+    .map((item) => {
+      if (typeof item === 'string') {
+        const detail = item.trim();
+        if (!detail) return null;
+        return {
+          title: deriveStepTitle(detail),
+          detail,
+        } satisfies InstructionStep;
+      }
+
+      if (item && typeof item === 'object') {
+        const title =
+          typeof (item as any).title === 'string'
+            ? (item as any).title.trim()
+            : '';
+        const detail =
+          typeof (item as any).detail === 'string'
+            ? (item as any).detail.trim()
+            : '';
+
+        if (!detail) return null;
+
+        return {
+          title: title || deriveStepTitle(detail),
+          detail,
+          timeMinutes: (item as any).timeMinutes,
+          ingredients: (item as any).ingredients,
+          tips: (item as any).tips,
+        } satisfies InstructionStep;
+      }
+
+      return null;
+    })
+    .filter((step): step is InstructionStep => Boolean(step));
+}
 
 /**
  * Get recent recipes from localStorage
@@ -27,9 +90,16 @@ export function getRecentRecipes(): ParsedRecipe[] {
     if (!stored) return [];
 
     const recipes = JSON.parse(stored) as ParsedRecipe[];
-    return recipes.sort(
-      (a, b) => new Date(b.parsedAt).getTime() - new Date(a.parsedAt).getTime(),
-    );
+    const normalized = recipes
+      .map((recipe) => ({
+        ...recipe,
+        instructions: normalizeInstructions(recipe.instructions),
+      }))
+      .sort(
+        (a, b) =>
+          new Date(b.parsedAt).getTime() - new Date(a.parsedAt).getTime(),
+      );
+    return normalized;
   } catch (error) {
     console.error('Error reading recent recipes from localStorage:', error);
     return [];
@@ -49,6 +119,7 @@ export function addRecentRecipe(
     // Create new recipe with id and parsedAt
     const newRecipe: ParsedRecipe = {
       ...recipe,
+      instructions: normalizeInstructions(recipe.instructions),
       id: generateId(),
       parsedAt: new Date().toISOString(),
     };

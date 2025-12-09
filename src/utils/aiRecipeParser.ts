@@ -12,6 +12,61 @@ import * as cheerio from 'cheerio';
 import Groq from 'groq-sdk';
 import { cleanRecipeHTML } from './htmlCleaner';
 
+// Derive a concise, human-friendly title from an instruction detail
+const deriveStepTitle = (text: string): string => {
+  const trimmed = text?.trim() || '';
+  if (!trimmed) return 'Step';
+  const match = trimmed.match(/^([^.!?]+[.!?]?)/);
+  if (match) {
+    return match[1].trim().replace(/[.!?]+$/, '') || 'Step';
+  }
+  return trimmed;
+};
+
+// Normalize any instruction array (strings or objects) into InstructionStep objects
+const normalizeInstructionSteps = (
+  instructions: any,
+): InstructionStep[] => {
+  if (!Array.isArray(instructions)) return [];
+
+  return instructions
+    .map((item: any) => {
+      if (typeof item === 'string') {
+        const detail = item.trim();
+        if (!detail) return null;
+        return { title: deriveStepTitle(detail), detail };
+      }
+
+      if (item && typeof item === 'object') {
+        const detail =
+          typeof item.detail === 'string'
+            ? item.detail.trim()
+            : typeof item.text === 'string'
+            ? item.text.trim()
+            : typeof item.name === 'string'
+            ? item.name.trim()
+            : '';
+        if (!detail) return null;
+
+        const title =
+          typeof item.title === 'string'
+            ? item.title.trim()
+            : deriveStepTitle(detail);
+
+        return {
+          title: title || deriveStepTitle(detail),
+          detail,
+          timeMinutes: item.timeMinutes,
+          ingredients: item.ingredients,
+          tips: item.tips,
+        } as InstructionStep;
+      }
+
+      return null;
+    })
+    .filter((step): step is InstructionStep => Boolean(step));
+};
+
 /**
  * Interface for ingredient with amount, units, and name
  */
@@ -30,6 +85,17 @@ export interface IngredientGroup {
 }
 
 /**
+ * Instruction step with a human-friendly title and full detail text
+ */
+export interface InstructionStep {
+  title: string;
+  detail: string;
+  timeMinutes?: number;
+  ingredients?: string[];
+  tips?: string;
+}
+
+/**
  * Interface for parsed recipe data
  */
 export interface ParsedRecipe {
@@ -38,7 +104,7 @@ export interface ParsedRecipe {
   publishedDate?: string;
   sourceUrl?: string;
   ingredients: IngredientGroup[];
-  instructions: string[];
+  instructions: InstructionStep[];
 }
 
 /**
@@ -238,17 +304,19 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
               author = undefined;
             }
 
+            const normalizedInstructions = normalizeInstructionSteps(instructions);
+
             // Validate we have complete data
             if (
               title &&
               title.length > 3 &&
               ingredients[0].ingredients.length > 0 &&
-              instructions.length > 0
+              normalizedInstructions.length > 0
             ) {
               console.log(
-                `[JSON-LD] Found recipe: "${title}" with ${ingredients[0].ingredients.length} ingredients and ${instructions.length} instructions${author ? `, author: "${author}"` : ''}`
+                `[JSON-LD] Found recipe: "${title}" with ${ingredients[0].ingredients.length} ingredients and ${normalizedInstructions.length} instructions${author ? `, author: "${author}"` : ''}`
               );
-              return { title, ingredients, instructions, author };
+              return { title, ingredients, instructions: normalizedInstructions, author };
             }
           }
         }
@@ -308,13 +376,21 @@ Required JSON structure:
       ]
     }
   ],
-  "instructions": ["string", "string", ...]
+  "instructions": [
+    {
+      "title": "Short, human-friendly step title (e.g., \"Make the broth\")",
+      "detail": "Full instruction text exactly as written in the HTML",
+      "timeMinutes": 0,
+      "ingredients": ["ingredient 1", "ingredient 2"],
+      "tips": "Optional tip for this step"
+    }
+  ]
 }
 
 CRITICAL: ingredients and instructions MUST be arrays, NEVER null.
 - If ingredients are found: extract them into the array structure above
 - If NO ingredients found: use empty array []
-- If instructions are found: extract them into an array of strings
+- If instructions are found: extract them into an array of instruction objects
 - If NO instructions found: use empty array []
 - NEVER use null for ingredients or instructions - ALWAYS use [] if nothing is found
 
@@ -345,7 +421,8 @@ Follow these steps in order:
 4. Preserve any ingredient groups found in the HTML
 5. Locate the instructions section in the HTML
 6. Extract each instruction step EXACTLY as written, preserving all details
-7. Format the extracted data into the required JSON structure
+7. Create a concise, action-oriented title for each step (do NOT invent new content; summarize the step in 3-8 words)
+8. Format the extracted data into the required JSON structure
 
 ========================================
 INGREDIENT EXTRACTION RULES
@@ -394,6 +471,12 @@ DETAIL PRESERVATION:
 - Do NOT simplify complex steps
 - Keep all helpful details about techniques, visual cues, and tips
 - Maintain the original level of detail from the HTML
+
+STEP TITLES:
+- Provide a short, clear title that summarizes what the step does (3-8 words)
+- Use action verbs and keep it high-level (e.g., "Make the broth", "Simmer the soup", "Season the noodles")
+- Do NOT include times or temperatures in the title (keep those in detail)
+- Do NOT leave titles blank; if unclear, use a brief summary of the action
 
 AUTHOR EXTRACTION:
 - Extract the recipe author name if clearly visible (e.g., "By Chef John", "Recipe by Jane Doe")
@@ -530,15 +613,19 @@ ABSOLUTE REQUIREMENTS:
           )
       );
 
-      if (validIngredients && parsedData.instructions.length > 0) {
+      const normalizedInstructions = normalizeInstructionSteps(
+        parsedData.instructions,
+      );
+
+      if (validIngredients && normalizedInstructions.length > 0) {
         console.log(
-          `[AI Parser] Successfully parsed recipe: "${parsedData.title}" with ${parsedData.ingredients.reduce((sum: number, g: any) => sum + g.ingredients.length, 0)} ingredients and ${parsedData.instructions.length} instructions`
+          `[AI Parser] Successfully parsed recipe: "${parsedData.title}" with ${parsedData.ingredients.reduce((sum: number, g: any) => sum + g.ingredients.length, 0)} ingredients and ${normalizedInstructions.length} instructions`
         );
         // Return recipe with author if available
         const recipe: ParsedRecipe = {
           title: parsedData.title,
           ingredients: parsedData.ingredients,
-          instructions: parsedData.instructions,
+          instructions: normalizedInstructions,
         };
         if (parsedData.author && typeof parsedData.author === 'string') {
           recipe.author = parsedData.author;
@@ -748,7 +835,15 @@ export async function parseRecipeFromImage(imageBase64: string): Promise<ParserR
       ]
     }
   ],
-  "instructions": ["Step 1 text here", "Step 2 text here"]
+  "instructions": [
+    {
+      "title": "Short, high-level step title",
+      "detail": "Full step text exactly as shown in the image",
+      "timeMinutes": 0,
+      "ingredients": ["ingredient 1", "ingredient 2"],
+      "tips": "Optional tip for this step"
+    }
+  ]
 }
 
 Rules:
@@ -758,7 +853,8 @@ Rules:
 4. If ingredients have groups (like "For the sauce"), preserve the group names
 5. If no groups, use "Main" as the groupName
 6. Extract every instruction step you can see
-7. If no recipe is visible, return: {"title": "No recipe found", "ingredients": [], "instructions": []}
+7. Write a concise, action-focused title for each step (3-8 words)
+8. If no recipe is visible, return: {"title": "No recipe found", "ingredients": [], "instructions": []}
 
 Start your response with { and end with }`,
             },
@@ -844,13 +940,20 @@ Start your response with { and end with }`,
           )
       );
 
-      if (validIngredients && parsedData.instructions.length > 0) {
+      const normalizedInstructions = normalizeInstructionSteps(
+        parsedData.instructions,
+      );
+
+      if (validIngredients && normalizedInstructions.length > 0) {
         console.log(
-          `[Image Parser] Successfully parsed recipe: "${parsedData.title}" with ${parsedData.ingredients.reduce((sum: number, g: any) => sum + g.ingredients.length, 0)} ingredients and ${parsedData.instructions.length} instructions`
+          `[Image Parser] Successfully parsed recipe: "${parsedData.title}" with ${parsedData.ingredients.reduce((sum: number, g: any) => sum + g.ingredients.length, 0)} ingredients and ${normalizedInstructions.length} instructions`
         );
         return {
           success: true,
-          data: parsedData as ParsedRecipe,
+          data: {
+            ...parsedData,
+            instructions: normalizedInstructions,
+          } as ParsedRecipe,
           method: 'ai',
         };
       }

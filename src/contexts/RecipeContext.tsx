@@ -7,6 +7,15 @@ import React, {
   useEffect,
 } from 'react';
 
+// Represents a single step in the parsed recipe with a human-friendly title
+export interface InstructionStep {
+  title: string; // Short, high-level step title (e.g., "Make the broth")
+  detail: string; // Full instruction text for the step
+  timeMinutes?: number;
+  ingredients?: string[];
+  tips?: string;
+}
+
 export interface RecipeStep {
   stepNumber: number;
   instruction: string;
@@ -38,7 +47,8 @@ export interface ParsedRecipe {
     groupName: string;
     ingredients: { amount: string; units: string; ingredient: string }[];
   }[];
-  instructions: string[];
+  // Instructions can be legacy strings or new objects with titles
+  instructions: Array<string | InstructionStep>;
 }
 
 interface RecipeContextType {
@@ -50,6 +60,55 @@ interface RecipeContextType {
 
 const RecipeContext = createContext<RecipeContextType | undefined>(undefined);
 
+// --- Helpers to normalize instructions into titled steps for legacy data ---
+const deriveStepTitle = (text: string): string => {
+  const trimmed = text?.trim() || '';
+  if (!trimmed) return 'Step';
+  const firstSentenceMatch = trimmed.match(/^([^.!?]+[.!?]?)/);
+  if (firstSentenceMatch) {
+    const firstSentence = firstSentenceMatch[1].trim();
+    return firstSentence.replace(/[.!?]+$/, '') || 'Step';
+  }
+  return trimmed;
+};
+
+const normalizeInstructions = (
+  instructions?: Array<string | InstructionStep>,
+): InstructionStep[] => {
+  if (!instructions || !Array.isArray(instructions)) return [];
+
+  return instructions
+    .map((item) => {
+      if (typeof item === 'string') {
+        const detail = item.trim();
+        if (!detail) return null;
+        return { title: deriveStepTitle(detail), detail };
+      }
+
+      if (item && typeof item === 'object') {
+        const title =
+          typeof (item as any).title === 'string'
+            ? (item as any).title.trim()
+            : '';
+        const detail =
+          typeof (item as any).detail === 'string'
+            ? (item as any).detail.trim()
+            : '';
+        if (!detail) return null;
+        return {
+          title: title || deriveStepTitle(detail),
+          detail,
+          timeMinutes: (item as any).timeMinutes,
+          ingredients: (item as any).ingredients,
+          tips: (item as any).tips,
+        } satisfies InstructionStep;
+      }
+
+      return null;
+    })
+    .filter((step): step is InstructionStep => Boolean(step));
+};
+
 export function RecipeProvider({ children }: { children: ReactNode }) {
   const [parsedRecipe, setParsedRecipe] = useState<ParsedRecipe | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -59,7 +118,11 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     const saved = localStorage.getItem('parsedRecipe');
     if (saved) {
       try {
-        setParsedRecipe(JSON.parse(saved));
+        const loaded = JSON.parse(saved) as ParsedRecipe;
+        setParsedRecipe({
+          ...loaded,
+          instructions: normalizeInstructions(loaded.instructions),
+        });
       } catch (error) {
         console.error('Error loading recipe from localStorage:', error);
       }
@@ -68,10 +131,15 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setParsedRecipeWithStorage = (recipe: ParsedRecipe | null) => {
-    setParsedRecipe(recipe);
     if (recipe) {
-      localStorage.setItem('parsedRecipe', JSON.stringify(recipe));
+      const normalizedRecipe: ParsedRecipe = {
+        ...recipe,
+        instructions: normalizeInstructions(recipe.instructions),
+      };
+      setParsedRecipe(normalizedRecipe);
+      localStorage.setItem('parsedRecipe', JSON.stringify(normalizedRecipe));
     } else {
+      setParsedRecipe(null);
       localStorage.removeItem('parsedRecipe');
     }
   };

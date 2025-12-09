@@ -382,49 +382,92 @@ export default function ParsedRecipePage() {
                   steps={
                     Array.isArray(parsedRecipe.instructions)
                       ? parsedRecipe.instructions
-                          .map((instruction, index) => {
-                            let instructionText = '';
+                          .map((instruction) => {
+                            // Normalize instruction into object with title/detail
                             if (typeof instruction === 'string') {
-                              instructionText = instruction;
-                            } else if (
-                              instruction === null ||
-                              instruction === undefined
-                            ) {
-                              instructionText = '';
-                            } else if (
-                              typeof instruction === 'object' &&
-                              instruction !== null
+                              const detail = instruction.trim();
+                              if (!detail) return null;
+                              return {
+                                step: extractStepTitle(detail),
+                                detail,
+                                time: 0,
+                                ingredients: [],
+                                tips: '',
+                              };
+                            }
+
+                            if (
+                              instruction &&
+                              typeof instruction === 'object'
                             ) {
                               const instructionObj = instruction as Record<
                                 string,
                                 unknown
                               >;
-                              if (
-                                'text' in instructionObj &&
-                                typeof instructionObj.text === 'string'
-                              ) {
-                                instructionText = instructionObj.text;
-                              } else if (
-                                'name' in instructionObj &&
-                                typeof instructionObj.name === 'string'
-                              ) {
-                                instructionText = instructionObj.name;
-                              } else {
-                                instructionText = '';
-                              }
-                            } else {
-                              instructionText = String(instruction || '');
+                              const detail = (() => {
+                                if (
+                                  typeof instructionObj.detail === 'string'
+                                ) {
+                                  return instructionObj.detail.trim();
+                                }
+                                if (
+                                  typeof instructionObj.text === 'string'
+                                ) {
+                                  return instructionObj.text.trim();
+                                }
+                                if (
+                                  typeof instructionObj.name === 'string'
+                                ) {
+                                  return instructionObj.name.trim();
+                                }
+                                return '';
+                              })();
+
+                              if (!detail) return null;
+
+                              const title =
+                                typeof instructionObj.title === 'string'
+                                  ? instructionObj.title.trim()
+                                  : '';
+
+                              const time =
+                                typeof instructionObj.timeMinutes === 'number'
+                                  ? instructionObj.timeMinutes
+                                  : 0;
+
+                              const ingredients =
+                                Array.isArray(instructionObj.ingredients) &&
+                                instructionObj.ingredients.every(
+                                  (item) => typeof item === 'string',
+                                )
+                                  ? (instructionObj.ingredients as string[])
+                                  : [];
+
+                              const tips =
+                                typeof instructionObj.tips === 'string'
+                                  ? instructionObj.tips
+                                  : '';
+
+                              return {
+                                step: title || extractStepTitle(detail),
+                                detail,
+                                time,
+                                ingredients,
+                                tips,
+                              };
                             }
-                            return instructionText;
+
+                            return null;
                           })
-                          .filter((text) => text.trim())
-                          .map((text, index) => ({
-                            step: extractStepTitle(text),
-                            detail: text,
-                            time: 0,
-                            ingredients: [],
-                            tips: '',
-                          }))
+                          .filter(
+                            (step): step is {
+                              step: string;
+                              detail: string;
+                              time: number;
+                              ingredients: string[];
+                              tips: string;
+                            } => Boolean(step),
+                          )
                       : []
                   }
                 />

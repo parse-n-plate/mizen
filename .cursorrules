@@ -1,31 +1,5 @@
 # Cursor AI Rules for Parse N' Plate
 
-## 📋 Changelog Maintenance
-
-### When to Update CHANGELOG.md
-Automatically remind the user to update the CHANGELOG.md when making:
-
-1. **Major Changes** (use 🛑 HIGH RISK MODIFICATION signal):
-   - Breaking changes to APIs or components
-   - Removing or deprecating features
-   - Major refactoring that affects multiple files
-   - Changes to core functionality
-
-2. **Significant Features** (use ⚠️ LARGE CHANGE ALERT signal):
-   - New pages or routes
-   - New API endpoints
-   - New components with significant functionality
-   - Integration of new third-party services
-   - Database schema changes
-   - Major UI/UX improvements
-
-3. **Important Updates**:
-   - Bug fixes that affect user experience
-   - Security updates
-   - Performance improvements
-   - Dependency updates (major versions only)
-   - Configuration changes
-
 ### Reminder Format
 When making changes that should be logged, include a reminder like:
 
