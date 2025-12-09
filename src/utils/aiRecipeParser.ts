@@ -29,37 +29,59 @@ const normalizeInstructionSteps = (
 ): InstructionStep[] => {
   if (!Array.isArray(instructions)) return [];
 
+  const chooseTitleAndDetail = (
+    detailRaw: string,
+    extras?: {
+      timeMinutes?: number;
+      ingredients?: string[];
+      tips?: string;
+    },
+  ): InstructionStep | null => {
+    const detail = detailRaw.trim();
+    if (!detail) return null;
+
+    const autoTitle = deriveStepTitle(detail);
+    const chosenTitle = autoTitle || 'Step';
+
+    // Strip leading chosen title from detail to avoid duplication
+    const escapedTitle = chosenTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const stripped = detail.replace(
+      new RegExp(`^${escapedTitle}\\s*[:\\-–—]?\\s*`, 'i'),
+      '',
+    ).trim();
+
+    const finalDetail = stripped.length > 0 ? stripped : detail;
+
+    return {
+      title: chosenTitle,
+      detail: finalDetail,
+      timeMinutes: extras?.timeMinutes,
+      ingredients: extras?.ingredients,
+      tips: extras?.tips,
+    };
+  };
+
   return instructions
     .map((item: any) => {
       if (typeof item === 'string') {
-        const detail = item.trim();
-        if (!detail) return null;
-        return { title: deriveStepTitle(detail), detail };
+        return chooseTitleAndDetail(item);
       }
 
       if (item && typeof item === 'object') {
-        const detail =
+        const rawDetail =
           typeof item.detail === 'string'
-            ? item.detail.trim()
+            ? item.detail
             : typeof item.text === 'string'
-            ? item.text.trim()
+            ? item.text
             : typeof item.name === 'string'
-            ? item.name.trim()
+            ? item.name
             : '';
-        if (!detail) return null;
 
-        const title =
-          typeof item.title === 'string'
-            ? item.title.trim()
-            : deriveStepTitle(detail);
-
-        return {
-          title: title || deriveStepTitle(detail),
-          detail,
+        return chooseTitleAndDetail(rawDetail, {
           timeMinutes: item.timeMinutes,
           ingredients: item.ingredients,
           tips: item.tips,
-        } as InstructionStep;
+        });
       }
 
       return null;

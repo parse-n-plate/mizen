@@ -43,14 +43,26 @@ function normalizeInstructions(
 ): InstructionStep[] {
   if (!instructions || !Array.isArray(instructions)) return [];
 
+  const stripLeadingTitle = (title: string, detail: string): string => {
+    if (!title) return detail;
+    const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const stripped = detail.replace(
+      new RegExp(`^${escaped}\\s*[:\\-–—]?\\s*`, 'i'),
+      '',
+    ).trim();
+    return stripped.length > 0 ? stripped : detail;
+  };
+
   return instructions
     .map((item) => {
       if (typeof item === 'string') {
         const detail = item.trim();
         if (!detail) return null;
+        const autoTitle = deriveStepTitle(detail);
+        const cleanedDetail = stripLeadingTitle(autoTitle, detail);
         return {
-          title: deriveStepTitle(detail),
-          detail,
+          title: autoTitle || 'Step',
+          detail: cleanedDetail,
         } satisfies InstructionStep;
       }
 
@@ -66,9 +78,13 @@ function normalizeInstructions(
 
         if (!detail) return null;
 
+        const autoTitle = deriveStepTitle(detail);
+        const chosenTitle = autoTitle || 'Step';
+        const cleanedDetail = stripLeadingTitle(chosenTitle, detail);
+
         return {
-          title: title || deriveStepTitle(detail),
-          detail,
+          title: chosenTitle,
+          detail: cleanedDetail,
           timeMinutes: (item as any).timeMinutes,
           ingredients: (item as any).ingredients,
           tips: (item as any).tips,

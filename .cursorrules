@@ -1,25 +1,5 @@
 # Cursor AI Rules for Parse N' Plate
 
-### Reminder Format
-When making changes that should be logged, include a reminder like:
-
-```
-📋 CHANGELOG REMINDER:
-Please update CHANGELOG.md under the [Unreleased] section with:
-- Category: [Added/Changed/Fixed/etc.]
-- Description: [Brief description of what changed]
-```
-
-### Don't Update for:
-- Minor code formatting or style changes
-- Comment updates
-- README updates (unless they reflect feature changes)
-- Test file additions
-- Minor dependency patch updates
-- Internal refactoring that doesn't change functionality
-
----
-
 ## 👤 User Context
 
 ### User Profile

@@ -79,7 +79,7 @@ function HomeContent() {
 
   // Filter recipes based on selected cuisine
   useEffect(() => {
-    if (selectedCuisine === 'All' || selectedCuisine === 'More 12+') {
+    if (selectedCuisine === 'All') {
       setFilteredRecipes(PLACEHOLDER_RECIPES);
     } else {
       const filtered = PLACEHOLDER_RECIPES.filter(
@@ -177,11 +177,11 @@ function HomeContent() {
                 Mis San Plas
               </p>
               <h1 className="font-domine text-[48px] md:text-[72px] font-normal text-black leading-[1.05] mb-4">
-                Clean recipes,
-                <span className="block md:inline"> fast cooking.</span>
+                Cook with confidence,
+                <span className="block md:inline"> from prep to plate.</span>
               </h1>
               <p className="font-albert text-[16px] md:text-[18px] text-stone-700 leading-[1.5] max-w-2xl mx-auto">
-                Spend less time on ad-filled recipes and more time cooking.
+                Structured steps, helpful cues, and guidance for every stage of the process.
               </p>
             </div>
           </div>
@@ -232,7 +232,11 @@ function HomeContent() {
                 Trending Recipes
               </h2>
               <div className="flex items-center gap-2">
-                <span className="text-xl md:text-2xl">🍅</span>
+                <img
+                  src="/assets/icons/Plate_Icon.png"
+                  alt="Plate icon"
+                  className="w-7 h-7 md:w-8 md:h-8 object-contain"
+                />
                 <h3 className="font-domine text-[24px] md:text-[28px] font-normal text-black leading-[1.1]">
                   {selectedCuisine}
                 </h3>
