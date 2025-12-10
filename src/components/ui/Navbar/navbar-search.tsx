@@ -278,7 +278,7 @@ export default function NavbarSearch() {
           onMouseLeave={() => setIsHovered(false)}
           onClick={handleContainerClick}
         >
-          <div className="flex items-center pl-4 pr-1.5 py-1.5 relative min-h-[40px]">
+          <div className="flex items-center pl-4 pr-3.5 md:pr-4 py-2 relative min-h-[44px]">
             {/* Search Icon */}
             <Search className="w-4 h-4 text-stone-600 flex-shrink-0" />
 

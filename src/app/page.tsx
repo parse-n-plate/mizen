@@ -186,30 +186,28 @@ function HomeContent() {
 
       <div className="transition-opacity duration-300 ease-in-out opacity-100 relative z-10 flex-1">
         {/* Main Content Container */}
-        <div className="max-w-6xl mx-auto px-4 md:px-8 pt-8 md:pt-12 pb-8">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 pt-12 md:pt-16 pb-12 md:pb-16 flex flex-col gap-12 md:gap-16">
           {/* Hero Section */}
-          <div className="mb-10 md:mb-12">
-            <div className="text-center mb-6">
+          <div className="text-center space-y-4 md:space-y-5">
               {/* App Name */}
               <p className="font-domine text-[16px] md:text-[18px] font-normal text-[#5a5a5a] tracking-[0.08em] uppercase leading-[1.2] mb-4">
                 Mis San Plas
               </p>
               <h1 className="font-domine text-[48px] md:text-[72px] font-normal text-black leading-[1.05] mb-4">
                 Cook with confidence,
-                <span className="block md:inline"> from prep to plate.</span>
+                <span className="block"> from prep to plate.</span>
               </h1>
-              <p className="font-albert text-[16px] md:text-[18px] text-stone-700 leading-[1.5] max-w-2xl mx-auto">
+            <p className="font-albert text-[16px] md:text-[18px] text-stone-700 leading-[1.5] max-w-2xl mx-auto">
                 Structured steps, helpful cues, and guidance for every stage of the process.
               </p>
-            </div>
           </div>
 
           {/* Recent Recipes Section */}
           {displayRecentRecipes.length > 0 && (
-            <div className="mb-8 md:mb-12">
-              <div className="mb-4 md:mb-6">
+            <div className="space-y-6 md:space-y-8">
+              <div className="space-y-3 md:space-y-4">
                 {/* Header with title and Clear All button */}
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between">
                   <h2 className="font-domine text-[24px] md:text-[32px] font-normal text-black leading-[1.1]">
                     Recent Recipes
                   </h2>
@@ -226,7 +224,7 @@ function HomeContent() {
                   </Button>
                 </div>
                 <p className="font-albert text-[16px] text-stone-600 leading-[1.4]">
-                  Your recently parsed recipes
+                  Fresh pulls from your kitchen queue
                 </p>
               </div>
 
@@ -247,21 +245,11 @@ function HomeContent() {
           )}
 
           {/* Trending Recipes Section */}
-          <div className="mb-8 md:mb-12">
-            <div className="mb-4 md:mb-6">
-              <h2 className="font-domine text-[24px] md:text-[32px] font-normal text-black leading-[1.1] mb-3">
+          <div className="space-y-6 md:space-y-8">
+            <div className="space-y-3 md:space-y-4">
+              <h2 className="font-domine text-[24px] md:text-[32px] font-normal text-black leading-[1.1]">
                 Trending Recipes
               </h2>
-              <div className="flex items-center gap-2">
-                <img
-                  src="/assets/icons/Plate_Icon.png"
-                  alt="Plate icon"
-                  className="w-7 h-7 md:w-8 md:h-8 object-contain"
-                />
-                <h3 className="font-domine text-[24px] md:text-[28px] font-normal text-black leading-[1.1]">
-                  {selectedCuisine}
-                </h3>
-              </div>
             </div>
 
             {/* Cuisine Filter Pills now sit below the Trending header */}
