@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 interface LoadingAnimationProps {
   isVisible: boolean;
@@ -34,53 +35,22 @@ export default function LoadingAnimation({ isVisible }: LoadingAnimationProps) {
 
   return (
     <div
-      className="fixed inset-x-0 top-0 bottom-0 bg-[#fbf7f2] bg-opacity-95 backdrop-blur-sm z-50 flex items-center justify-center"
+      className="fixed inset-x-0 top-0 bottom-0 bg-neutral-50/95 backdrop-blur-sm z-50 flex items-center justify-center"
       style={{ marginTop: '72px' }}
     >
       <div className="text-center space-y-6 max-w-sm mx-auto px-4">
-        {/* Animated cooking pot icon */}
-        <div className="relative">
-          <div className="w-24 h-24 mx-auto mb-4">
-            {/* Main pot body */}
-            <div className="w-20 h-16 bg-[#1e1e1e] rounded-b-full mx-auto relative">
-              {/* Pot lid */}
-              <div className="w-16 h-4 bg-[#1e1e1e] rounded-full mx-auto -mt-2 relative">
-                {/* Lid handle */}
-                <div className="w-6 h-2 bg-[#1e1e1e] rounded-full mx-auto -mt-1"></div>
-              </div>
-
-              {/* Steam animation */}
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <div className="flex space-x-1">
-                  {[0, 1, 2].map((i) => (
-                    <div
-                      key={i}
-                      className="w-1 h-3 bg-gray-400 rounded-full animate-pulse"
-                      style={{
-                        animationDelay: `${i * 0.2}s`,
-                        animationDuration: '1.5s',
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Bubbling animation inside pot */}
-              <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
-                <div className="flex space-x-1">
-                  {[0, 1, 2].map((i) => (
-                    <div
-                      key={i}
-                      className="w-2 h-2 bg-white rounded-full animate-ping opacity-75"
-                      style={{
-                        animationDelay: `${i * 0.3}s`,
-                        animationDuration: '2s',
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
+        {/* Fish mark with gentle bounce */}
+        <div className="relative flex items-center justify-center">
+          <div className="absolute -inset-8 rounded-full bg-neutral-200/60 blur-xl" aria-hidden />
+          <div className="relative bg-white/90 border border-neutral-200 rounded-full p-6 shadow-sm backdrop-blur">
+            <Image
+              src="/assets/icons/Fish Logo.svg"
+              alt="Parse & Plate fish logo"
+              width={96}
+              height={96}
+              className="fish-bounce"
+              priority
+            />
           </div>
         </div>
 
@@ -95,14 +65,14 @@ export default function LoadingAnimation({ isVisible }: LoadingAnimationProps) {
         </div>
 
         {/* Animated dots */}
-        <div className="flex justify-center space-x-1">
+        <div className="flex justify-center space-x-2">
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="w-2 h-2 bg-[#1e1e1e] rounded-full animate-bounce"
+              className="w-2 h-2 rounded-full bg-neutral-800 loader-dot"
               style={{
                 animationDelay: `${i * 0.1}s`,
-                animationDuration: '1s',
+                animationDuration: '1.1s',
               }}
             />
           ))}

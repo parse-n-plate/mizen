@@ -7,6 +7,7 @@ import Footer from '@/components/ui/footer';
 import { useState, useEffect, Suspense } from 'react';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRecipe } from '@/contexts/RecipeContext';
+import { useAdminSettings } from '@/contexts/AdminSettingsContext';
 import { useRouter } from 'next/navigation';
 import type { CuisineType } from '@/components/ui/cuisine-pills';
 import { Button } from '@/components/ui/button';
@@ -19,12 +20,16 @@ const PLACEHOLDER_RECIPES: RecipeCardData[] = [
     title: 'Beef Udon',
     author: 'Namiko Hirasawa Chen',
     cuisine: 'Asian',
+    // Use the beef udon placeholder image so the card reflects the recipe
+    imageUrl: '/assets/recipeImagePlaceholders/Image (Beef Udon).webp',
   },
   {
     id: '2',
     title: 'Garlic Shrimp Ramen',
     author: 'Cameron Tillman',
     cuisine: 'Asian',
+    // Match the ramen card with its placeholder image
+    imageUrl: '/assets/recipeImagePlaceholders/Image (Garlic Shrimp Ramen).webp',
   },
   {
     id: '3',
@@ -55,6 +60,8 @@ const PLACEHOLDER_RECIPES: RecipeCardData[] = [
     title: 'Pad Thai',
     author: 'Somsak Wong',
     cuisine: 'Asian',
+    // Pair the Pad Thai card with the Pad Thai placeholder image
+    imageUrl: '/assets/recipeImagePlaceholders/Image (Pad Thai).webp',
   },
   {
     id: '8',
@@ -71,7 +78,14 @@ const PLACEHOLDER_RECIPES: RecipeCardData[] = [
 ];
 
 function HomeContent() {
-  const { isLoaded, recentRecipes, getRecipeById, clearRecipes } = useParsedRecipes();
+  const {
+    isLoaded,
+    recentRecipes,
+    getRecipeById,
+    clearRecipes,
+    removeRecipe,
+  } = useParsedRecipes();
+  const { settings } = useAdminSettings();
   const { setParsedRecipe } = useRecipe();
   const router = useRouter();
   const [selectedCuisine, setSelectedCuisine] = useState<CuisineType>('Asian');
@@ -132,6 +146,10 @@ function HomeContent() {
     }
   };
 
+  const handleRemoveRecentRecipe = (recipeId: string) => {
+    removeRecipe(recipeId);
+  };
+
   // Convert ParsedRecipe to RecipeCardData format
   const convertToRecipeCardData = (recipe: typeof recentRecipes[0]): RecipeCardData => {
     // Extract domain name from URL as a simple "author" placeholder
@@ -151,7 +169,7 @@ function HomeContent() {
       id: recipe.id,
       title: recipe.title,
       author: author,
-      imageUrl: undefined, // Recent recipes don't have images
+      imageUrl: recipe.imageUrl, // Optional image support when available
       cuisine: undefined,
     };
   };
@@ -218,7 +236,10 @@ function HomeContent() {
                   <RecipeCard
                     key={recipe.id}
                     recipe={recipe}
+                    showImage={settings.showRecentRecipeImages}
                     onClick={() => handleRecentRecipeClick(recipe.id)}
+                    showDelete
+                    onDelete={() => handleRemoveRecentRecipe(recipe.id)}
                   />
                 ))}
               </div>

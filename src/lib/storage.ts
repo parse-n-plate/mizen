@@ -11,6 +11,7 @@ export type ParsedRecipe = {
   title: string;
   summary: string;
   url: string;
+  imageUrl?: string;
   parsedAt: string;
   // Full recipe data for viewing
   ingredients?: {
