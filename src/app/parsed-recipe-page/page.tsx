@@ -196,13 +196,11 @@ export default function ParsedRecipePage() {
                     <h1 className="font-domine text-[36px] text-[#193d34] leading-[1.2] font-bold">
                       {parsedRecipe.title || 'Beef Udon'}
                     </h1>
-                    <p className="font-albert text-[16px] text-stone-400 leading-[1.4]">
-                      {parsedRecipe.author?.trim() ? (
-                        <>by {parsedRecipe.author.trim()}</>
-                      ) : (
-                        <span className="italic">No author information</span>
-                      )}
-                    </p>
+                    {parsedRecipe.author?.trim() && (
+                      <p className="font-albert text-[16px] text-stone-400 leading-[1.4]">
+                        by {parsedRecipe.author.trim()}
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-col gap-2.5">
                     <p className="font-albert text-[16px] text-stone-500 leading-[1.4]">

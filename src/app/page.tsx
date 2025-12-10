@@ -246,14 +246,14 @@ function HomeContent() {
 
           {/* Trending Recipes Section */}
           <div className="space-y-6 md:space-y-8">
-            <div className="space-y-3 md:space-y-4">
-              <h2 className="font-domine text-[24px] md:text-[32px] font-normal text-black leading-[1.1]">
-                Trending Recipes
-              </h2>
-            </div>
+            <div className="space-y-2 md:space-y-3 mb-6 md:mb-8">
+              <div className="space-y-3 md:space-y-4">
+                <h2 className="font-domine text-[24px] md:text-[32px] font-normal text-black leading-[1.1]">
+                  Trending Recipes
+                </h2>
+              </div>
 
-            {/* Cuisine Filter Pills now sit below the Trending header */}
-            <div className="mb-6 md:mb-8">
+              {/* Cuisine Filter Pills now sit closer to the Trending header */}
               <CuisinePills onCuisineChange={handleCuisineChange} />
             </div>
 

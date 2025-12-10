@@ -708,6 +708,10 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
     // Layer 2: AI parsing fallback
     const aiResult = await parseWithAI(cleaned.html);
     if (aiResult) {
+      // Log when AI parsing succeeds, including whether we captured author metadata
+      console.log(
+        `[Recipe Parser] AI parsing succeeded${aiResult.author ? ` with author "${aiResult.author}"` : ' (no author found)'}`
+      );
       return {
         success: true,
         data: aiResult,

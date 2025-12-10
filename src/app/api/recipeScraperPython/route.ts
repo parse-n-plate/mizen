@@ -160,6 +160,9 @@ export async function POST(req: NextRequest): Promise<Response> {
       title: result.data.title,
       ingredients: result.data.ingredients,
       instructions: result.data.instructions,
+      // Surface optional metadata so the client can display attribution
+      author: result.data.author,
+      sourceUrl: result.data.sourceUrl,
     });
   } catch (error) {
     console.error('[API /recipeScraperPython] Unexpected error:', error);
