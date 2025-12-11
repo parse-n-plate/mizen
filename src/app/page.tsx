@@ -7,6 +7,7 @@ import Footer from '@/components/ui/footer';
 import { useState, useEffect, Suspense } from 'react';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRecipe } from '@/contexts/RecipeContext';
+import type { ParsedRecipe } from '@/contexts/RecipeContext';
 import { useAdminSettings } from '@/contexts/AdminSettingsContext';
 import { useRouter } from 'next/navigation';
 import type { CuisineType } from '@/components/ui/cuisine-pills';
@@ -77,6 +78,134 @@ const PLACEHOLDER_RECIPES: RecipeCardData[] = [
   },
 ];
 
+// Comprehensive Pad Thai mock that fills every ParsedRecipe field
+const PAD_THAI_MOCK: ParsedRecipe = {
+  title: 'Pad Thai with Tamarind Sauce',
+  description:
+    'A balanced, street-style Pad Thai with chewy rice noodles, sweet-sour tamarind sauce, and crunchy peanuts.',
+  imageUrl: '/assets/recipeImagePlaceholders/Image (Pad Thai).webp',
+  author: 'Chef Somsak Wong',
+  publishedDate: '2024-06-12',
+  sourceUrl: 'https://example.com/mock-pad-thai',
+  prepTimeMinutes: 15,
+  cookTimeMinutes: 20,
+  totalTimeMinutes: 35,
+  servings: 4,
+  cuisine: ['Thai', 'Asian', 'Noodles'],
+  rating: 4.8,
+  skills: {
+    techniques: ['Stir-frying', 'Tossing noodles', 'Balancing sweet-sour'],
+    knifework: ['Thin slicing', 'Rough chop', 'Mincing aromatics'],
+  },
+  ingredients: [
+    {
+      groupName: 'Pad Thai Sauce',
+      ingredients: [
+        { amount: '3', units: 'tbsp', ingredient: 'tamarind paste' },
+        { amount: '3', units: 'tbsp', ingredient: 'fish sauce' },
+        { amount: '2', units: 'tbsp', ingredient: 'palm sugar' },
+        { amount: '1', units: 'tbsp', ingredient: 'rice vinegar' },
+        { amount: '1', units: 'tsp', ingredient: 'chili flakes' },
+        { amount: '2', units: 'tbsp', ingredient: 'warm water (to loosen)' },
+      ],
+    },
+    {
+      groupName: 'Noodles & Protein',
+      ingredients: [
+        { amount: '8', units: 'oz', ingredient: 'dried rice noodles (3 mm)' },
+        { amount: '12', units: 'oz', ingredient: 'boneless chicken thighs, thinly sliced' },
+        { amount: '1', units: 'cup', ingredient: 'firm tofu, diced' },
+        { amount: '2', units: 'large', ingredient: 'eggs, lightly beaten' },
+        { amount: '2', units: 'tbsp', ingredient: 'neutral oil (divided)' },
+      ],
+    },
+    {
+      groupName: 'Aromatics & Veg',
+      ingredients: [
+        { amount: '3', units: 'cloves', ingredient: 'garlic, minced' },
+        { amount: '2', units: '', ingredient: 'shallots, thinly sliced' },
+        { amount: '4', units: '', ingredient: 'green onions, cut into 1-inch pieces' },
+        { amount: '1', units: 'cup', ingredient: 'bean sprouts' },
+      ],
+    },
+    {
+      groupName: 'Garnish',
+      ingredients: [
+        { amount: '1/2', units: 'cup', ingredient: 'roasted peanuts, crushed' },
+        { amount: '1', units: '', ingredient: 'lime, cut into wedges' },
+        { amount: '1/4', units: 'cup', ingredient: 'cilantro leaves' },
+        { amount: '1', units: '', ingredient: 'red chili, thinly sliced (optional)' },
+      ],
+    },
+  ],
+  instructions: [
+    {
+      title: 'Soak the noodles',
+      detail:
+        'Soak rice noodles in warm water for 20-30 minutes until pliable but not fully soft. Drain and pat dry before cooking.',
+      timeMinutes: 20,
+      ingredients: ['Rice noodles'],
+      tips: 'Do not boil; soaked-only noodles stay springy and avoid clumping.',
+    },
+    {
+      title: 'Mix the sauce',
+      detail:
+        'In a bowl, whisk tamarind paste, fish sauce, palm sugar, rice vinegar, chili flakes, and warm water until dissolved.',
+      timeMinutes: 5,
+      ingredients: ['Tamarind paste', 'Fish sauce', 'Palm sugar', 'Rice vinegar'],
+      tips: 'Taste and balance: add more sugar for sweetness or tamarind for tang.',
+    },
+    {
+      title: 'Sear protein and tofu',
+      detail:
+        'Heat 1 tbsp oil in a wok over medium-high. Sear chicken and tofu until browned and just cooked through, 5-6 minutes. Season with a pinch of salt. Push to one side.',
+      timeMinutes: 6,
+      ingredients: ['Chicken thighs', 'Firm tofu', 'Neutral oil'],
+      tips: 'Keep heat high to avoid steaming; work in batches if crowded.',
+    },
+    {
+      title: 'Scramble the eggs',
+      detail:
+        'Add a small splash of oil if the pan looks dry. Pour in beaten eggs and softly scramble into ribbons. Keep in the pan.',
+      timeMinutes: 2,
+      ingredients: ['Eggs', 'Neutral oil'],
+      tips: 'Pull the eggs just before fully set so they stay tender.',
+    },
+    {
+      title: 'Bloom aromatics',
+      detail:
+        'Add garlic and shallots. Stir-fry 30-45 seconds until fragrant but not browned.',
+      timeMinutes: 1,
+      ingredients: ['Garlic', 'Shallots'],
+      tips: 'If garlic starts to darken, lower the heat briefly.',
+    },
+    {
+      title: 'Toss noodles with sauce',
+      detail:
+        'Add soaked noodles and pour in the sauce. Toss continuously for 2-3 minutes until noodles turn glossy and just tender. Splash 1-2 tbsp water if they look dry.',
+      timeMinutes: 3,
+      ingredients: ['Soaked noodles', 'Pad Thai sauce'],
+      tips: 'Keep noodles moving to prevent sticking; stop when al dente.',
+    },
+    {
+      title: 'Finish with vegetables',
+      detail:
+        'Add bean sprouts and green onions. Toss 30-60 seconds to wilt slightly while keeping crunch.',
+      timeMinutes: 1,
+      ingredients: ['Bean sprouts', 'Green onions'],
+      tips: 'Remove from heat once greens brighten to keep texture.',
+    },
+    {
+      title: 'Plate and garnish',
+      detail:
+        'Divide into bowls. Top with crushed peanuts, cilantro, and sliced chili. Serve with lime wedges to squeeze over.',
+      timeMinutes: 2,
+      ingredients: ['Roasted peanuts', 'Cilantro', 'Lime wedges', 'Red chili'],
+      tips: 'A fresh lime squeeze just before eating brightens everything.',
+    },
+  ],
+};
+
 function HomeContent() {
   const {
     isLoaded,
@@ -109,6 +238,12 @@ function HomeContent() {
       PLACEHOLDER_RECIPES.filter((recipe) => recipe.cuisine === 'Asian'),
     );
   }, []);
+
+  // Provide a full mock experience for the Pad Thai Trending card
+  const handlePadThaiClick = () => {
+    setParsedRecipe(PAD_THAI_MOCK);
+    router.push('/parsed-recipe-page');
+  };
 
   const handleCuisineChange = (cuisine: CuisineType) => {
     setSelectedCuisine(cuisine);
@@ -260,7 +395,11 @@ function HomeContent() {
             {/* Recipe Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredRecipes.map((recipe) => (
-                <RecipeCard key={recipe.id} recipe={recipe} />
+                <RecipeCard
+                  key={recipe.id}
+                  recipe={recipe}
+                  onClick={recipe.id === '7' ? handlePadThaiClick : undefined}
+                />
               ))}
             </div>
 

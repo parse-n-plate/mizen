@@ -204,7 +204,20 @@ export default function ParsedRecipePage() {
                   </div>
                   <div className="flex flex-col gap-2.5">
                     <p className="font-albert text-[16px] text-stone-500 leading-[1.4]">
-                      {parsedRecipe.totalTimeMinutes || parsedRecipe.prepTimeMinutes || parsedRecipe.cookTimeMinutes || '25'} min • {parsedRecipe.servings || servings} servings
+                      {(() => {
+                        const time =
+                          parsedRecipe.totalTimeMinutes ??
+                          parsedRecipe.prepTimeMinutes ??
+                          parsedRecipe.cookTimeMinutes;
+                        const servingsDisplay = parsedRecipe.servings ?? servings;
+                        const timeText =
+                          typeof time === 'number' ? `${time} min` : undefined;
+
+                        if (timeText) {
+                          return `${timeText} • ${servingsDisplay} servings`;
+                        }
+                        return `${servingsDisplay} servings`;
+                      })()}
                     </p>
                   </div>
                 </div>
