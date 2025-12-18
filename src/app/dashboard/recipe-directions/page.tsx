@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React, { Suspense, use } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { ChefHat, ArrowLeft } from 'lucide-react';
@@ -77,7 +77,20 @@ function RecipeDirectionsContent() {
   );
 }
 
-export default function RecipeDirectionsPage() {
+export default function RecipeDirectionsPage({
+  params,
+  searchParams,
+}: {
+  params?: Promise<Record<string, string | string[]>>;
+  searchParams?: Promise<Record<string, string | string[]>>;
+} = {} as any) {
+  // For Next.js 15: Unwrap params/searchParams if provided to prevent enumeration warnings
+  // This prevents React DevTools/error serialization from enumerating these props
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  if (params) use(params);
+  // eslint-disable-next-line react-hooks/rules-of-hooks  
+  if (searchParams) use(searchParams);
+  
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <RecipeDirectionsContent />

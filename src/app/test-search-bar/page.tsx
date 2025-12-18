@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, use } from 'react';
 import { Search, Globe, ChefHat, X, ArrowRight, Command, Sparkles, MessageSquare, Layout, PanelRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,20 @@ import { Card } from '@/components/ui/card';
 
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 
-export default function SearchBarTestingPage() {
+export default function SearchBarTestingPage({
+  params,
+  searchParams,
+}: {
+  params?: Promise<Record<string, string | string[]>>;
+  searchParams?: Promise<Record<string, string | string[]>>;
+} = {} as any) {
+  // For Next.js 15: Unwrap params/searchParams if provided to prevent enumeration warnings
+  // This prevents React DevTools/error serialization from enumerating these props
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  if (params) use(params);
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  if (searchParams) use(searchParams);
+  
   return (
     <div className="min-h-screen bg-white py-12 px-4 md:px-8">
       <div className="max-w-5xl mx-auto space-y-12">

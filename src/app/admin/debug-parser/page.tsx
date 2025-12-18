@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, use } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Upload, X } from 'lucide-react';
@@ -211,7 +211,20 @@ ABSOLUTE REQUIREMENTS:
 - If you don't find them, use empty arrays [] - NEVER null
 - The recipe data exists in the HTML - extract it carefully`;
 
-export default function DebugParserPage() {
+export default function DebugParserPage({
+  params,
+  searchParams,
+}: {
+  params?: Promise<Record<string, string | string[]>>;
+  searchParams?: Promise<Record<string, string | string[]>>;
+} = {} as any) {
+  // For Next.js 15: Unwrap params/searchParams if provided to prevent enumeration warnings
+  // This prevents React DevTools/error serialization from enumerating these props
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  if (params) use(params);
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  if (searchParams) use(searchParams);
+  
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [debugSteps, setDebugSteps] = useState<DebugStep[]>([]);

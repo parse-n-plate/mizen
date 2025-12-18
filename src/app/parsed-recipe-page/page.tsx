@@ -1,7 +1,7 @@
 'use client';
 import { useRecipe } from '@/contexts/RecipeContext';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, use } from 'react';
 import RecipeSkeleton from '@/components/ui/recipe-skeleton';
 import * as Tabs from '@radix-ui/react-tabs';
 import { Plus, Minus, X, ArrowLeft } from 'lucide-react';
@@ -85,7 +85,20 @@ const formatIngredient = (
   }
 };
 
-export default function ParsedRecipePage() {
+export default function ParsedRecipePage({
+  params,
+  searchParams,
+}: {
+  params?: Promise<Record<string, string | string[]>>;
+  searchParams?: Promise<Record<string, string | string[]>>;
+} = {} as any) {
+  // For Next.js 15: Unwrap params/searchParams if provided to prevent enumeration warnings
+  // This prevents React DevTools/error serialization from enumerating these props
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  if (params) use(params);
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  if (searchParams) use(searchParams);
+  
   const { parsedRecipe, isLoaded } = useRecipe();
   const router = useRouter();
   const [servings, setServings] = useState<number>(parsedRecipe?.servings || 4);

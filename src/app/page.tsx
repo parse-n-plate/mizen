@@ -4,7 +4,7 @@ import HomepageSkeleton from '@/components/ui/homepage-skeleton';
 import CuisinePills from '@/components/ui/cuisine-pills';
 import RecipeCard, { RecipeCardData } from '@/components/ui/recipe-card';
 import Footer from '@/components/ui/footer';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, use } from 'react';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRecipe } from '@/contexts/RecipeContext';
 import { useAdminSettings } from '@/contexts/AdminSettingsContext';
@@ -282,7 +282,20 @@ function HomeContent() {
   );
 }
 
-export default function Home() {
+export default function Home({
+  params,
+  searchParams,
+}: {
+  params?: Promise<Record<string, string | string[]>>;
+  searchParams?: Promise<Record<string, string | string[]>>;
+} = {} as any) {
+  // For Next.js 15: Unwrap params/searchParams if provided to prevent enumeration warnings
+  // This prevents React DevTools/error serialization from enumerating these props
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  if (params) use(params);
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  if (searchParams) use(searchParams);
+  
   return (
     <Suspense fallback={<HomepageSkeleton />}>
       <HomeContent />
