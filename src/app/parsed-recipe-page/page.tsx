@@ -424,7 +424,9 @@ export default function ParsedRecipePage({
                               instruction &&
                               typeof instruction === 'object'
                             ) {
-                              const instructionObj = instruction as Record<
+                              // Fix: Cast to unknown first, then to Record<string, unknown>
+                              // This is necessary because InstructionStep doesn't have an index signature
+                              const instructionObj = instruction as unknown as Record<
                                 string,
                                 unknown
                               >;

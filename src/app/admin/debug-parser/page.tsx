@@ -379,12 +379,13 @@ export default function DebugParserPage({
 
       if (!response.ok || !result.success) {
         setError(result.error?.message || 'Failed to parse image');
+        const aiVisionData = aiVisionStep.data as Record<string, unknown>;
         setDebugSteps([
           imageUploadStep,
           {
             ...aiVisionStep,
             success: false,
-            data: { ...aiVisionStep.data, error: result.error?.message || 'Parsing failed' },
+            data: { ...aiVisionData, error: result.error?.message || 'Parsing failed' },
           },
         ]);
         return;
@@ -694,10 +695,10 @@ export default function DebugParserPage({
                   {step.step === 'raw_html' && (
                     <div>
                       <p className="text-sm text-gray-600 mb-2">
-                        Raw HTML length: {step.data.length.toLocaleString()} characters
+                        Raw HTML length: {typeof step.data === 'string' ? step.data.length.toLocaleString() : '0'} characters
                       </p>
                       <pre className="text-xs max-h-96 overflow-y-auto whitespace-pre-wrap break-words">
-                        {step.data}
+                        {typeof step.data === 'string' ? step.data : String(step.data)}
                       </pre>
                     </div>
                   )}
@@ -705,41 +706,52 @@ export default function DebugParserPage({
                   {step.step === 'cleaned_html' && (
                     <div>
                       <p className="text-sm text-gray-600 mb-2">
-                        Cleaned HTML length: {step.data.length.toLocaleString()} characters
+                        Cleaned HTML length: {typeof step.data === 'string' ? step.data.length.toLocaleString() : '0'} characters
                         <br />
-                        <span className="text-green-600">
-                          Reduced by {((1 - step.data.length / debugSteps[0].data.length) * 100).toFixed(1)}%
-                        </span>
+                        {typeof step.data === 'string' && debugSteps[0] && typeof debugSteps[0].data === 'string' && (
+                          <span className="text-green-600">
+                            Reduced by {((1 - step.data.length / debugSteps[0].data.length) * 100).toFixed(1)}%
+                          </span>
+                        )}
                       </p>
                       <pre className="text-xs max-h-[600px] overflow-y-auto whitespace-pre-wrap break-words">
-                        {step.data}
+                        {typeof step.data === 'string' ? step.data : String(step.data)}
                       </pre>
                     </div>
                   )}
 
-                  {step.step === 'checkpoint_1' && (
-                    <div>
-                      <div className={`mb-3 p-3 rounded ${step.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-                        <p className={`text-sm font-semibold mb-2 ${step.success ? 'text-green-700' : 'text-red-700'}`}>
-                          {step.success ? '✅ PASSED' : '❌ FAILED'}
-                        </p>
-                        <div className="space-y-1 text-xs">
-                          <p><strong>Has Ingredients Keyword:</strong> {step.data.hasIngredients ? '✅ Yes' : '❌ No'}</p>
-                          <p><strong>Has Instructions Keyword:</strong> {step.data.hasInstructions ? '✅ Yes' : '❌ No'}</p>
-                          <p><strong>Has JSON-LD Schema:</strong> {step.data.hasSchema ? '✅ Yes' : '❌ No'}</p>
-                          <p><strong>Is Recipe Page:</strong> {step.data.isRecipe ? '✅ Yes' : '❌ No'}</p>
-                        </div>
-                        {step.data.details && (
-                          <div className="mt-3 pt-3 border-t border-gray-300">
-                            <p className="text-xs font-semibold mb-1">Details:</p>
-                            <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-48">
-                              {formatData(step.data.details)}
-                            </pre>
+                  {step.step === 'checkpoint_1' && (() => {
+                    const data = step.data as Record<string, unknown>;
+                    return (
+                      <div>
+                        <div className={`mb-3 p-3 rounded ${step.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                          <p className={`text-sm font-semibold mb-2 ${step.success ? 'text-green-700' : 'text-red-700'}`}>
+                            {step.success ? '✅ PASSED' : '❌ FAILED'}
+                          </p>
+                          <div className="space-y-1 text-xs">
+                            <p><strong>Has Ingredients Keyword:</strong> {typeof data.hasIngredients === 'boolean' && data.hasIngredients ? '✅ Yes' : '❌ No'}</p>
+                            <p><strong>Has Instructions Keyword:</strong> {typeof data.hasInstructions === 'boolean' && data.hasInstructions ? '✅ Yes' : '❌ No'}</p>
+                            <p><strong>Has JSON-LD Schema:</strong> {typeof data.hasSchema === 'boolean' && data.hasSchema ? '✅ Yes' : '❌ No'}</p>
+                            <p><strong>Is Recipe Page:</strong> {typeof data.isRecipe === 'boolean' && data.isRecipe ? '✅ Yes' : '❌ No'}</p>
                           </div>
-                        )}
+                          {(() => {
+                            const details = data.details;
+                            if (details && typeof details !== 'undefined') {
+                              return (
+                                <div className="mt-3 pt-3 border-t border-gray-300">
+                                  <p className="text-xs font-semibold mb-1">Details:</p>
+                                  <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-48">
+                                    {formatData(details)}
+                                  </pre>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {(step.step === 'checkpoint_2_jsonld' || step.step === 'json_ld') && (
                     <div>
@@ -760,28 +772,70 @@ export default function DebugParserPage({
                     </div>
                   )}
 
-                  {step.step === 'checkpoint_3' && (
-                    <div>
-                      <div className={`mb-3 p-3 rounded ${step.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-                        <p className={`text-sm font-semibold mb-2 ${step.success ? 'text-green-700' : 'text-red-700'}`}>
-                          {step.success ? '✅ PASSED' : '❌ FAILED'}
-                        </p>
-                        <div className="space-y-1 text-xs">
-                          <p><strong>Has Valid Title:</strong> {step.data.hasTitle ? '✅ Yes' : '❌ No'} {step.data.details?.title && `(${step.data.details.title})`}</p>
-                          <p><strong>Has Ingredients:</strong> {step.data.hasIngredients ? '✅ Yes' : '❌ No'} {step.data.details?.totalIngredients !== undefined && `(${step.data.details.totalIngredients} total)`}</p>
-                          <p><strong>Has Instructions:</strong> {step.data.hasInstructions ? '✅ Yes' : '❌ No'} {step.data.details?.instructionCount !== undefined && `(${step.data.details.instructionCount} steps)`}</p>
-                        </div>
-                        {step.data.details && (
-                          <div className="mt-3 pt-3 border-t border-gray-300">
-                            <p className="text-xs font-semibold mb-1">Validation Details:</p>
-                            <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-48">
-                              {formatData(step.data.details)}
-                            </pre>
+                  {step.step === 'checkpoint_3' && (() => {
+                    const data = step.data as Record<string, unknown>;
+                    return (
+                      <div>
+                        <div className={`mb-3 p-3 rounded ${step.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                          <p className={`text-sm font-semibold mb-2 ${step.success ? 'text-green-700' : 'text-red-700'}`}>
+                            {step.success ? '✅ PASSED' : '❌ FAILED'}
+                          </p>
+                          <div className="space-y-1 text-xs">
+                            <p>
+                              <strong>Has Valid Title:</strong> {typeof data.hasTitle === 'boolean' && data.hasTitle ? '✅ Yes' : '❌ No'}
+                              {(() => {
+                                if (data.details && typeof data.details === 'object' && data.details !== null && 'title' in data.details) {
+                                  const title = (data.details as Record<string, unknown>).title;
+                                  if (typeof title === 'string') {
+                                    return ` (${title})`;
+                                  }
+                                }
+                                return '';
+                              })()}
+                            </p>
+                            <p>
+                              <strong>Has Ingredients:</strong> {typeof data.hasIngredients === 'boolean' && data.hasIngredients ? '✅ Yes' : '❌ No'}
+                              {(() => {
+                                if (data.details && typeof data.details === 'object' && data.details !== null && 'totalIngredients' in data.details) {
+                                  const total = (data.details as Record<string, unknown>).totalIngredients;
+                                  if (typeof total === 'number') {
+                                    return ` (${total} total)`;
+                                  }
+                                }
+                                return '';
+                              })()}
+                            </p>
+                            <p>
+                              <strong>Has Instructions:</strong> {typeof data.hasInstructions === 'boolean' && data.hasInstructions ? '✅ Yes' : '❌ No'}
+                              {(() => {
+                                if (data.details && typeof data.details === 'object' && data.details !== null && 'instructionCount' in data.details) {
+                                  const count = (data.details as Record<string, unknown>).instructionCount;
+                                  if (typeof count === 'number') {
+                                    return ` (${count} steps)`;
+                                  }
+                                }
+                                return '';
+                              })()}
+                            </p>
                           </div>
-                        )}
+                          {(() => {
+                            const details = data.details;
+                            if (details && typeof details !== 'undefined') {
+                              return (
+                                <div className="mt-3 pt-3 border-t border-gray-300">
+                                  <p className="text-xs font-semibold mb-1">Validation Details:</p>
+                                  <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-48">
+                                    {formatData(details)}
+                                  </pre>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {step.step === 'ai_prompt' && (
                     <div>
@@ -789,7 +843,7 @@ export default function DebugParserPage({
                         AI Prompt sent to Groq (llama-3.3-70b-versatile)
                       </p>
                       <pre className="text-xs max-h-96 overflow-y-auto whitespace-pre-wrap break-words">
-                        {step.data}
+                        {typeof step.data === 'string' ? step.data : String(step.data)}
                       </pre>
                     </div>
                   )}
@@ -816,34 +870,40 @@ export default function DebugParserPage({
                     </div>
                   )}
 
-                  {step.step === 'image_upload' && (
-                    <div>
-                      <p className="text-sm text-gray-600 mb-2">
-                        Image file information
-                      </p>
-                      <div className="space-y-1 text-xs">
-                        <p><strong>File Name:</strong> {step.data.name}</p>
-                        <p><strong>File Type:</strong> {step.data.type}</p>
-                        <p><strong>File Size:</strong> {step.data.sizeFormatted}</p>
+                  {step.step === 'image_upload' && (() => {
+                    const data = step.data as Record<string, unknown>;
+                    return (
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">
+                          Image file information
+                        </p>
+                        <div className="space-y-1 text-xs">
+                          <p><strong>File Name:</strong> {typeof data.name === 'string' ? data.name : 'Unknown'}</p>
+                          <p><strong>File Type:</strong> {typeof data.type === 'string' ? data.type : 'Unknown'}</p>
+                          <p><strong>File Size:</strong> {typeof data.sizeFormatted === 'string' ? data.sizeFormatted : 'Unknown'}</p>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
-                  {step.step === 'ai_vision' && (
-                    <div>
-                      <p className="text-sm text-gray-600 mb-2">
-                        AI Vision Model Processing
-                      </p>
-                      <div className="space-y-1 text-xs">
-                        <p><strong>Model:</strong> {step.data.model}</p>
-                        <p><strong>Image Size (base64):</strong> {step.data.imageSize.toLocaleString()} characters</p>
-                        <p><strong>Status:</strong> {step.success ? '✅ Processing complete' : '❌ Processing failed'}</p>
-                        {step.data.error && (
-                          <p className="text-red-600"><strong>Error:</strong> {step.data.error}</p>
-                        )}
+                  {step.step === 'ai_vision' && (() => {
+                    const data = step.data as Record<string, unknown>;
+                    return (
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">
+                          AI Vision Model Processing
+                        </p>
+                        <div className="space-y-1 text-xs">
+                          <p><strong>Model:</strong> {typeof data.model === 'string' ? data.model : 'Unknown'}</p>
+                          <p><strong>Image Size (base64):</strong> {typeof data.imageSize === 'number' ? data.imageSize.toLocaleString() : 'Unknown'} characters</p>
+                          <p><strong>Status:</strong> {step.success ? '✅ Processing complete' : '❌ Processing failed'}</p>
+                          {typeof data.error === 'string' && data.error && (
+                            <p className="text-red-600"><strong>Error:</strong> {data.error}</p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {step.step === 'final_result' && (() => {
                     const data = step.data as Record<string, unknown>;
@@ -857,22 +917,22 @@ export default function DebugParserPage({
                             <h4 className="font-semibold text-sm mb-1">Title:</h4>
                             <p className="text-sm">{typeof data.title === 'string' ? data.title : ''}</p>
                           </div>
-                          {data.author && (
+                          {typeof data.author === 'string' && data.author && (
                             <div>
                               <h4 className="font-semibold text-sm mb-1">Author:</h4>
-                              <p className="text-sm">{typeof data.author === 'string' ? data.author : ''}</p>
+                              <p className="text-sm">{data.author}</p>
                             </div>
                           )}
-                          {data.sourceUrl && (
+                          {typeof data.sourceUrl === 'string' && data.sourceUrl && (
                             <div>
                               <h4 className="font-semibold text-sm mb-1">Source URL:</h4>
                               <a
-                                href={typeof data.sourceUrl === 'string' ? data.sourceUrl : '#'}
+                                href={data.sourceUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-sm text-blue-600 hover:text-blue-800 underline break-all"
                               >
-                                {typeof data.sourceUrl === 'string' ? data.sourceUrl : ''}
+                                {data.sourceUrl}
                               </a>
                             </div>
                           )}
