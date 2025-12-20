@@ -69,17 +69,12 @@ export function highlightQuantities(text: string): React.ReactElement {
       parts.push(text.substring(lastIndex, match.index));
     }
     
-    // Add the matched quantity as a highlighted span using React.createElement
+    // Add the matched quantity as a highlighted span
     // Using lighter gray color (stone-400) to match the design
     parts.push(
-      React.createElement(
-        'span',
-        {
-          key: `qty-${keyCounter++}`,
-          className: 'text-stone-400 font-medium'
-        },
-        match[0]
-      )
+      <span key={`qty-${keyCounter++}`} className="text-stone-400 font-medium">
+        {match[0]}
+      </span>
     );
     
     lastIndex = match.index + match[0].length;
@@ -92,10 +87,9 @@ export function highlightQuantities(text: string): React.ReactElement {
   
   // If no matches found, return the original text wrapped in a fragment
   if (parts.length === 0) {
-    return React.createElement(React.Fragment, null, text);
+    return <>{text}</>;
   }
   
   // Return all parts wrapped in a fragment
-  // Note: React.createElement accepts children as additional arguments, not as an array
-  return React.createElement(React.Fragment, null, ...parts);
+  return <>{parts}</>;
 }

@@ -3,10 +3,17 @@
 import { Plus, Minus } from 'lucide-react';
 
 /**
- * ServingsControls Component
+ * ServingsControls Component - Improved UX & Visual Design
  * 
- * A reusable component that allows users to adjust recipe servings
- * and select a multiplier (1x, 2x, 3x) for scaling ingredients.
+ * A beautifully designed component for adjusting recipe servings
+ * and selecting multipliers for scaling ingredients.
+ * 
+ * Design improvements:
+ * - Clear visual hierarchy with prominent values
+ * - Subtle labels that don't compete with actions
+ * - Smooth micro-interactions and hover states
+ * - Polished, modern appearance with refined shadows
+ * - Better touch targets for mobile usability
  * 
  * @param servings - Current number of servings (1-10)
  * @param onServingsChange - Callback function when servings change
@@ -41,46 +48,60 @@ export function ServingsControls({
   };
 
   return (
-    <div className="servings-controls-container items-center justify-between p-6 bg-stone-50 rounded-2xl border border-stone-100">
-      {/* YIELD Section - Servings Adjuster */}
-      <div className="flex items-center gap-4">
-        <span className="font-albert font-semibold text-stone-700">YIELD</span>
-        <div className="control-card">
+    <div className="yield-adjuster-container">
+      {/* ── YIELD Section ── */}
+      <div className="yield-section">
+        {/* Small subtle label above the control */}
+        <span className="yield-section-label">Yield</span>
+        
+        {/* Main servings control card with stepper */}
+        <div className="yield-stepper-card">
+          {/* Decrement button */}
           <button
             onClick={handleDecrementServings}
             disabled={servings <= 1}
-            className="control-button"
+            className="yield-stepper-btn yield-stepper-btn-left"
             aria-label="Decrease servings"
           >
-            <Minus className="control-button-icon" />
+            <Minus className="yield-stepper-icon" strokeWidth={2.5} />
           </button>
-          <div className="flex items-center gap-2">
-            <span className="servings-value">{servings}</span>
-            <span className="servings-label">servings</span>
+          
+          {/* Central value display */}
+          <div className="yield-value-display">
+            <span className="yield-value-number">{servings}</span>
+            <span className="yield-value-unit">servings</span>
           </div>
+          
+          {/* Increment button */}
           <button
             onClick={handleIncrementServings}
             disabled={servings >= 10}
-            className="control-button"
+            className="yield-stepper-btn yield-stepper-btn-right"
             aria-label="Increase servings"
           >
-            <Plus className="control-button-icon" />
+            <Plus className="yield-stepper-icon" strokeWidth={2.5} />
           </button>
         </div>
       </div>
 
-      {/* SCALE INGREDIENTS Section - Multiplier Component */}
-      <div className="flex items-center gap-4">
-        <span className="font-albert font-semibold text-stone-700">SCALE INGREDIENTS</span>
-        <div className="multiplier-container">
+      {/* Vertical divider between sections */}
+      <div className="yield-divider" aria-hidden="true" />
+
+      {/* ── SCALE Section ── */}
+      <div className="yield-section">
+        <span className="yield-section-label">Scale</span>
+        
+        {/* Multiplier pill group */}
+        <div className="yield-multiplier-group">
           {['1x', '2x', '3x'].map((mult) => (
             <button
               key={mult}
               onClick={() => onMultiplierChange(mult)}
-              className={`multiplier-button ${
-                multiplier === mult ? 'multiplier-button-selected' : ''
+              className={`yield-multiplier-pill ${
+                multiplier === mult ? 'yield-multiplier-pill-active' : ''
               }`}
-              aria-label={`Set multiplier to ${mult}`}
+              aria-label={`Scale ingredients by ${mult}`}
+              aria-pressed={multiplier === mult}
             >
               {mult}
             </button>
@@ -90,4 +111,3 @@ export function ServingsControls({
     </div>
   );
 }
-

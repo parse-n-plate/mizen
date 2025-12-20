@@ -99,7 +99,263 @@
 
 /* Component Styles */
 @layer components {
-  /* Servings Adjuster and Multiplier Container */
+  /* ═══════════════════════════════════════════════════════════════════════════
+     YIELD ADJUSTER - Improved ServingsControls Component
+     A polished, modern control for adjusting recipe yield and scaling
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  /* Main container - horizontal layout with two sections */
+  .yield-adjuster-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, #fafaf9 0%, #f5f5f4 100%);
+    border-radius: 1rem;
+    border: 1px solid #e7e5e4;
+    box-shadow: 
+      0 1px 2px rgba(0, 0, 0, 0.03),
+      0 4px 12px rgba(0, 0, 0, 0.02);
+  }
+
+  /* Section wrapper - contains label + control */
+  .yield-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  /* Section label - subtle, uppercase, small */
+  .yield-section-label {
+    font-family: var(--font-albert);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #a8a29e;
+  }
+
+  /* Vertical divider between sections */
+  .yield-divider {
+    width: 1px;
+    height: 3rem;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      #d6d3d1 20%,
+      #d6d3d1 80%,
+      transparent 100%
+    );
+    flex-shrink: 0;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     STEPPER CARD - The +/- servings control
+  ───────────────────────────────────────────────────────────────────────── */
+
+  .yield-stepper-card {
+    display: flex;
+    align-items: center;
+    background: white;
+    border-radius: 0.75rem;
+    border: 1px solid #e7e5e4;
+    box-shadow: 
+      0 1px 2px rgba(0, 0, 0, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    overflow: hidden;
+  }
+
+  /* Stepper buttons (+ and -) */
+  .yield-stepper-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    position: relative;
+  }
+
+  .yield-stepper-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: transparent;
+    transition: background 0.15s ease;
+  }
+
+  .yield-stepper-btn:hover:not(:disabled)::before {
+    background: rgba(25, 61, 52, 0.06);
+  }
+
+  .yield-stepper-btn:active:not(:disabled)::before {
+    background: rgba(25, 61, 52, 0.1);
+  }
+
+  .yield-stepper-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .yield-stepper-btn:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 2px rgba(25, 61, 52, 0.3);
+  }
+
+  /* Icon inside stepper buttons */
+  .yield-stepper-icon {
+    width: 1rem;
+    height: 1rem;
+    color: #57534e;
+    position: relative;
+    z-index: 1;
+    transition: color 0.15s ease;
+  }
+
+  .yield-stepper-btn:hover:not(:disabled) .yield-stepper-icon {
+    color: #193d34;
+  }
+
+  /* Center value display */
+  .yield-value-display {
+    display: flex;
+    align-items: baseline;
+    gap: 0.375rem;
+    padding: 0 0.75rem;
+    border-left: 1px solid #f5f5f4;
+    border-right: 1px solid #f5f5f4;
+    min-width: 5.5rem;
+    justify-content: center;
+  }
+
+  /* The big number */
+  .yield-value-number {
+    font-family: var(--font-albert);
+    font-size: 1.375rem;
+    font-weight: 700;
+    color: #193d34;
+    line-height: 1;
+    min-width: 1.5rem;
+    text-align: center;
+  }
+
+  /* "servings" text */
+  .yield-value-unit {
+    font-family: var(--font-albert);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #78716c;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     MULTIPLIER PILLS - 1x, 2x, 3x scale options
+  ───────────────────────────────────────────────────────────────────────── */
+
+  .yield-multiplier-group {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    background: white;
+    padding: 0.25rem;
+    border-radius: 0.625rem;
+    border: 1px solid #e7e5e4;
+    box-shadow: 
+      0 1px 2px rgba(0, 0, 0, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+
+  .yield-multiplier-pill {
+    padding: 0.5rem 0.875rem;
+    border-radius: 0.5rem;
+    font-family: var(--font-albert);
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    color: #78716c;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .yield-multiplier-pill::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: transparent;
+    border-radius: 0.5rem;
+    transition: all 0.18s ease;
+  }
+
+  .yield-multiplier-pill:hover:not(.yield-multiplier-pill-active)::before {
+    background: #f5f5f4;
+  }
+
+  .yield-multiplier-pill:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(25, 61, 52, 0.3);
+  }
+
+  /* Active/selected state */
+  .yield-multiplier-pill-active {
+    background: #193d34;
+    color: white;
+    box-shadow: 
+      0 2px 4px rgba(25, 61, 52, 0.2),
+      0 1px 2px rgba(25, 61, 52, 0.15);
+  }
+
+  .yield-multiplier-pill-active:hover {
+    background: #1e4a3f;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     RESPONSIVE - Stack on mobile
+  ───────────────────────────────────────────────────────────────────────── */
+
+  @media (max-width: 540px) {
+    .yield-adjuster-container {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1.25rem;
+      padding: 1.25rem;
+    }
+
+    .yield-section {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .yield-divider {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        #d6d3d1 20%,
+        #d6d3d1 80%,
+        transparent 100%
+      );
+    }
+
+    .yield-section-label {
+      flex-shrink: 0;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     LEGACY STYLES - Keeping for backwards compatibility
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  /* Old servings controls container (kept for reference) */
   .servings-controls-container {
     display: flex;
     align-items: center;
@@ -627,5 +883,423 @@
   @keyframes tooltip-in {
     from { opacity: 0; transform: translate(-50%, 4px); }
     to { opacity: 1; transform: translate(-50%, 0); }
+  }
+
+  /* Recipe Step List Layout */
+  .recipe-step-list-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid #e7e5e4;
+    transition: background-color 0.2s ease;
+  }
+
+  .recipe-step-list-item:last-child {
+    border-bottom: none;
+  }
+
+  .recipe-step-list-item:hover {
+    background-color: rgba(250, 250, 249, 0.5);
+  }
+
+  /* Step image container - square shape */
+  .recipe-step-image {
+    flex-shrink: 0;
+    width: 96px;
+    height: 96px;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: 1px solid #e7e5e4;
+    transition: border-color 0.3s ease, transform 0.3s ease;
+  }
+
+  .recipe-step-list-item:hover .recipe-step-image {
+    border-color: #d6d3d1;
+  }
+
+  .recipe-step-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .recipe-step-list-item:hover .recipe-step-image img {
+    transform: scale(1.05);
+  }
+
+  /* Quantity highlight styling */
+  .quantity-highlight {
+    color: #a8a29e; /* stone-400 */
+    font-weight: 500;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     MOBILE TOOLBAR - Fixed bottom navigation for recipe pages
+     A pill-shaped toolbar with quick actions: Timer, Servings, Add to Library
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  /* Container - positions the toolbar at the bottom of the viewport */
+  .mobile-toolbar-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    padding: 1rem 1rem 1.5rem;
+    pointer-events: none; /* Allow clicks to pass through the container */
+    z-index: 50;
+    /* Only show on mobile (hidden on screens wider than 768px) */
+  }
+
+  /* The actual toolbar - pill-shaped with glass effect */
+  .mobile-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 9999px;
+    border: 1px solid rgba(231, 229, 228, 0.8);
+    box-shadow: 
+      0 4px 24px rgba(0, 0, 0, 0.08),
+      0 2px 8px rgba(0, 0, 0, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    pointer-events: auto; /* Re-enable clicks on the toolbar itself */
+  }
+
+  /* Individual toolbar buttons */
+  .mobile-toolbar-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 9999px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .mobile-toolbar-btn:hover,
+  .mobile-toolbar-btn:focus-visible {
+    background: #f5f5f4;
+  }
+
+  .mobile-toolbar-btn:active {
+    transform: scale(0.95);
+  }
+
+  .mobile-toolbar-btn:focus-visible {
+    outline: 2px solid #193d34;
+    outline-offset: 2px;
+  }
+
+  /* Active state when panel is open */
+  .mobile-toolbar-btn-active {
+    background: #193d34;
+  }
+
+  .mobile-toolbar-btn-active .mobile-toolbar-icon {
+    color: white;
+  }
+
+  /* Saved state for library button */
+  .mobile-toolbar-btn-saved {
+    background: #dcfce7;
+  }
+
+  .mobile-toolbar-btn-saved:hover {
+    background: #dcfce7;
+    cursor: default;
+  }
+
+  /* Inner container for button content */
+  .mobile-toolbar-btn-inner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Icons inside buttons */
+  .mobile-toolbar-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: #57534e;
+    transition: color 0.2s ease;
+  }
+
+  .mobile-toolbar-icon-success {
+    color: #16a34a;
+  }
+
+  /* Timer count badge */
+  .mobile-toolbar-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 1.125rem;
+    height: 1.125rem;
+    padding: 0 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-albert);
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: white;
+    background: #ef4444;
+    border-radius: 9999px;
+    border: 2px solid white;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     TOOLBAR PANELS - Expandable content above the toolbar
+  ───────────────────────────────────────────────────────────────────────── */
+
+  /* Backdrop overlay when panel is open */
+  .mobile-toolbar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 45;
+  }
+
+  /* Panel container */
+  .mobile-toolbar-panel {
+    position: fixed;
+    bottom: 6.5rem;
+    left: 1rem;
+    right: 1rem;
+    max-width: 24rem;
+    margin: 0 auto;
+    background: white;
+    border-radius: 1rem;
+    border: 1px solid #e7e5e4;
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.12),
+      0 4px 16px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    z-index: 55;
+    pointer-events: auto;
+  }
+
+  /* Panel header */
+  .mobile-toolbar-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1rem 0.75rem;
+    border-bottom: 1px solid #f5f5f4;
+  }
+
+  .mobile-toolbar-panel-title {
+    font-family: var(--font-albert);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1c1917;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .mobile-toolbar-panel-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 9999px;
+    border: none;
+    background: #f5f5f4;
+    color: #78716c;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .mobile-toolbar-panel-close:hover {
+    background: #e7e5e4;
+    color: #1c1917;
+  }
+
+  /* Empty state for timer panel */
+  .mobile-toolbar-panel-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+  }
+
+  .mobile-toolbar-panel-empty-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: #a8a29e; /* stone-400 */
+    opacity: 0.6;
+  }
+
+  .mobile-toolbar-panel-empty-title {
+    font-family: var(--font-albert);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #78716c; /* stone-500 */
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  .mobile-toolbar-panel-empty-description {
+    font-family: var(--font-albert);
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: #a8a29e; /* stone-400 */
+    line-height: 1.4;
+    margin: 0;
+    max-width: 16rem;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     TIMER LIST - List of active timers in the panel
+  ───────────────────────────────────────────────────────────────────────── */
+
+  .mobile-toolbar-timer-list {
+    padding: 0.5rem;
+  }
+
+  .mobile-toolbar-timer-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    background: #f5f5f4;
+    border-radius: 0.75rem;
+  }
+
+  .mobile-toolbar-timer-item + .mobile-toolbar-timer-item {
+    margin-top: 0.5rem;
+  }
+
+  .mobile-toolbar-timer-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .mobile-toolbar-timer-label {
+    font-family: var(--font-albert);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #1c1917;
+  }
+
+  .mobile-toolbar-timer-time {
+    font-family: var(--font-albert);
+    font-size: 1rem;
+    font-weight: 700;
+    color: #193d34;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     SERVINGS CONTROL - Stepper inside the panel
+  ───────────────────────────────────────────────────────────────────────── */
+
+  .mobile-toolbar-servings-control {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1rem;
+  }
+
+  .mobile-toolbar-servings-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 9999px;
+    border: 1px solid #e7e5e4;
+    background: white;
+    color: #57534e;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .mobile-toolbar-servings-btn:hover:not(:disabled) {
+    background: #f5f5f4;
+    border-color: #d6d3d1;
+    color: #193d34;
+  }
+
+  .mobile-toolbar-servings-btn:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+
+  .mobile-toolbar-servings-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .mobile-toolbar-servings-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.125rem;
+  }
+
+  .mobile-toolbar-servings-value {
+    font-family: var(--font-albert);
+    font-size: 2rem;
+    font-weight: 700;
+    color: #193d34;
+    line-height: 1;
+  }
+
+  .mobile-toolbar-servings-unit {
+    font-family: var(--font-albert);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #78716c;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     RESPONSIVE - Hide on desktop, show on mobile
+  ───────────────────────────────────────────────────────────────────────── */
+
+  /* Hide toolbar on desktop (768px and wider) */
+  @media (min-width: 768px) {
+    .mobile-toolbar-container,
+    .mobile-toolbar-backdrop,
+    .mobile-toolbar-panel {
+      display: none;
+    }
+  }
+
+  /* Add bottom padding to page content on mobile to prevent overlap */
+  @media (max-width: 767px) {
+    .mobile-toolbar-page-padding {
+      padding-bottom: 6rem;
+    }
+  }
+
+  /* Hide servings controls on mobile - it's available in the mobile toolbar */
+  .servings-controls-desktop-only {
+    display: block;
+  }
+
+  @media (max-width: 767px) {
+    .servings-controls-desktop-only {
+      display: none;
+    }
   }
 }
