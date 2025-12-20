@@ -50,8 +50,9 @@ export default function IngredientCard({ ingredient, description, isLast = false
       }
       
       // Add ingredient name
-      if (ingredient.ingredient && ingredient.ingredient.trim()) {
-        parts.push(ingredient.ingredient.trim());
+      const ingredientName = ingredient.ingredient && ingredient.ingredient.trim();
+      if (ingredientName) {
+        parts.push(ingredientName);
       }
       
       return parts.join(' ');

@@ -25,17 +25,10 @@ const normalizeInstructionSteps = (
 
   return instructions
     .map((item: any, index: number) => {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'aiRecipeParser.ts:27',message:'normalizeInstructionSteps processing item',data:{index,itemType:typeof item,isString:typeof item==='string',isObject:typeof item==='object'&&item!==null,itemKeys:item&&typeof item==='object'?Object.keys(item):null,hasTitle:item&&typeof item==='object'?typeof item.title==='string':false,titleValue:item&&typeof item==='object'?item.title:null,hasDetail:item&&typeof item==='object'?typeof item.detail==='string':false},timestamp:Date.now(),sessionId:'debug-session',runId:'title-debug',hypothesisId:'title-missing'})}).catch(()=>{});
-      // #endregion
-
       // Handle string inputs (legacy format - AI should not return these)
       if (typeof item === 'string') {
         const detail = cleanLeading(item.trim());
         if (!detail) return null;
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'aiRecipeParser.ts:32',message:'Using fallback title for string input',data:{index,detail:detail.substring(0,50)},timestamp:Date.now(),sessionId:'debug-session',runId:'title-debug',hypothesisId:'title-missing'})}).catch(()=>{});
-        // #endregion
         // Use generic title for legacy string inputs
         return {
           title: `Step ${index + 1}`,
@@ -63,17 +56,9 @@ const normalizeInstructionSteps = (
             ? item.title.trim()
             : null;
 
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'aiRecipeParser.ts:58',message:'Processing object instruction',data:{index,hasTitle:!!aiTitle,aiTitle,rawDetail:rawDetail.substring(0,50),itemKeys:Object.keys(item),itemTitleType:typeof item.title,itemTitleValue:item.title},timestamp:Date.now(),sessionId:'debug-session',runId:'title-debug',hypothesisId:'title-missing'})}).catch(()=>{});
-        // #endregion
-
         // Use AI-provided title, or fallback to generic if missing
         const title = aiTitle ? cleanLeading(aiTitle) : `Step ${index + 1}`;
         const detail = cleanLeading(rawDetail.trim());
-
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'aiRecipeParser.ts:64',message:'Final title decision',data:{index,finalTitle:title,usedFallback:!aiTitle,aiTitleProvided:aiTitle},timestamp:Date.now(),sessionId:'debug-session',runId:'title-debug',hypothesisId:'title-missing'})}).catch(()=>{});
-        // #endregion
 
         return {
           title,
@@ -187,6 +172,11 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
 
             const title = recipe.name || '';
 
+            // Normalize double parentheses to single parentheses (some sites have ((...)) in their JSON-LD)
+            const normalizeDoubleParens = (text: string): string => {
+              return text.replace(/\(\(/g, '(').replace(/\)\)/g, ')');
+            };
+
             // Extract ingredients as simple strings first
             const ingredientStrings: string[] = Array.isArray(
               recipe.recipeIngredient
@@ -203,7 +193,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
                 ingredients: ingredientStrings.map((ing) => ({
                   amount: '',
                   units: '',
-                  ingredient: ing,
+                  ingredient: normalizeDoubleParens(ing),
                 })),
               },
             ];
@@ -238,11 +228,11 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
               instructions = recipe.recipeInstructions
                 .map((inst: any) => {
                   // Handle string format
-                  if (typeof inst === 'string') return inst.trim();
+                  if (typeof inst === 'string') return normalizeDoubleParens(inst.trim());
 
                   // Handle object with text property
                   if (inst.text && typeof inst.text === 'string')
-                    return inst.text.trim();
+                    return normalizeDoubleParens(inst.text.trim());
 
                   // Handle HowToStep format
                   if (
@@ -250,7 +240,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
                     inst.text &&
                     typeof inst.text === 'string'
                   )
-                    return inst.text.trim();
+                    return normalizeDoubleParens(inst.text.trim());
 
                   // Handle HowToStep with name property
                   if (
@@ -258,21 +248,23 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
                     inst.name &&
                     typeof inst.name === 'string'
                   )
-                    return inst.name.trim();
+                    return normalizeDoubleParens(inst.name.trim());
 
                   // Handle itemListElement format
                   if (
                     inst.itemListElement &&
                     Array.isArray(inst.itemListElement)
                   ) {
-                    return inst.itemListElement
-                      .map((item: any) => {
-                        if (item.text) return item.text.trim();
-                        if (item.name) return item.name.trim();
-                        return '';
-                      })
-                      .filter((t: string) => t.length > 0)
-                      .join(' ');
+                    return normalizeDoubleParens(
+                      inst.itemListElement
+                        .map((item: any) => {
+                          if (item.text) return item.text.trim();
+                          if (item.name) return item.name.trim();
+                          return '';
+                        })
+                        .filter((t: string) => t.length > 0)
+                        .join(' ')
+                    );
                   }
 
                   return '';
@@ -285,7 +277,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
               // Split string instructions by newlines
               instructions = recipe.recipeInstructions
                 .split(/\n+/)
-                .map((s: string) => s.trim())
+                .map((s: string) => normalizeDoubleParens(s.trim()))
                 .filter((s: string) => s.length > 10 && !isAuthorName(s));
             }
 
@@ -484,7 +476,7 @@ NEVER use strings like ["Step 1", "Step 2"] - ALWAYS use objects like [{"title":
 
 Required JSON structure:
 {
-  "title": "string",
+  "title": "string (cleaned recipe title following TITLE EXTRACTION RULES - no prefixes/suffixes)",
   "author": "string (optional - recipe author name if found)",
   "ingredients": [
     {
@@ -549,6 +541,39 @@ Follow these steps in order:
    - Extract the full instruction text EXACTLY as written in the HTML → use as "detail"
    - Create a concise summary (2-8 words) describing the main action → use as "title"
    - Format as an object: {"title": "Summary", "detail": "Full instruction text"}
+
+========================================
+TITLE EXTRACTION RULES
+========================================
+LOCATION PRIORITY:
+1. Look for the main heading (usually <h1> tag) - this is most common
+2. Look for recipe title in structured data or meta tags
+3. Look for prominent headings near the recipe content
+4. Avoid navigation menus, headers, or footer content
+
+CLEANING RULES:
+- Remove common prefixes: "Recipe:", "Recipe for", "How to Make", "How to Cook"
+- Remove common suffixes: "Recipe", "| [Site Name]", "- [Site Name]"
+- Remove extra whitespace (multiple spaces, tabs, newlines)
+- Trim leading and trailing whitespace
+- Remove HTML entities and decode special characters
+
+FORMAT RULES:
+- Keep the title as a single line (no line breaks)
+- Preserve capitalization as written in the HTML
+- Keep punctuation only if it's part of the actual title (e.g., "Mom's Apple Pie")
+- Remove trailing punctuation that's clearly not part of the title (e.g., "Recipe Title -")
+
+VALIDATION:
+- Title should be 3-100 characters long
+- Title should contain actual recipe name, not generic text like "Recipe" or "Home"
+- If title contains only numbers or symbols, look for a better heading
+
+EXAMPLES:
+- Good: "Classic Chocolate Chip Cookies"
+- Good: "Grandma's Famous Meatloaf"
+- Bad: "Recipe: Classic Chocolate Chip Cookies | AllRecipes" (remove prefix/suffix)
+- Bad: "Recipe" (too generic, find actual title)
 
 ========================================
 INGREDIENT EXTRACTION RULES
@@ -621,8 +646,12 @@ CLEANING (remove these only):
 ========================================
 EDGE CASES AND MISSING DATA
 ========================================
-If the recipe title is missing:
-- Use the page's main heading or first prominent heading
+If the recipe title is missing or invalid:
+- Follow the TITLE EXTRACTION RULES above to find alternative headings
+- Check for title in meta tags (og:title, twitter:title)
+- Look for the largest or most prominent heading in the recipe content area
+- If still not found, use a descriptive title based on main ingredients (e.g., "Chicken and Rice Dish")
+- Never use generic fallbacks like "Recipe" or "Untitled Recipe"
 
 If an ingredient amount is missing:
 - Use "as needed" for amount
@@ -740,19 +769,6 @@ ABSOLUTE REQUIREMENTS:
     let parsedData;
     try {
       parsedData = JSON.parse(jsonString);
-      
-      // #region agent log
-      console.log('[DEBUG] Parsed AI response:', {
-        hasTitle: !!parsedData.title,
-        hasInstructions: Array.isArray(parsedData.instructions),
-        instructionsCount: parsedData.instructions?.length || 0,
-        firstInstruction: parsedData.instructions?.[0],
-        firstInstructionType: typeof parsedData.instructions?.[0],
-        firstInstructionIsObject: typeof parsedData.instructions?.[0] === 'object' && parsedData.instructions?.[0] !== null,
-        firstInstructionKeys: parsedData.instructions?.[0] && typeof parsedData.instructions[0] === 'object' ? Object.keys(parsedData.instructions[0]) : null
-      });
-      fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'aiRecipeParser.ts:800',message:'Parsed AI response',data:{hasTitle:!!parsedData.title,hasInstructions:Array.isArray(parsedData.instructions),instructionsCount:parsedData.instructions?.length||0,firstInstruction:parsedData.instructions?.[0],firstInstructionType:typeof parsedData.instructions?.[0],firstInstructionIsObject:typeof parsedData.instructions?.[0]==='object'&&parsedData.instructions?.[0]!==null,firstInstructionKeys:parsedData.instructions?.[0]&&typeof parsedData.instructions[0]==='object'?Object.keys(parsedData.instructions[0]):null},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix-v3',hypothesisId:'A,B,C'})}).catch(()=>{});
-      // #endregion
     } catch (parseError) {
       throw parseError;
     }
@@ -763,9 +779,6 @@ ABSOLUTE REQUIREMENTS:
       Array.isArray(parsedData.ingredients) &&
       Array.isArray(parsedData.instructions)
     ) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'aiRecipeParser.ts:815',message:'AI response instructions structure',data:{instructionsCount:parsedData.instructions.length,firstInstruction:parsedData.instructions[0],firstInstructionType:typeof parsedData.instructions[0],firstInstructionKeys:parsedData.instructions[0]?Object.keys(parsedData.instructions[0]):null},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix-v2',hypothesisId:'A,B,C'})}).catch(()=>{});
-      // #endregion
 
       // Ensure ingredients have the correct structure
       const validIngredients = parsedData.ingredients.every(
@@ -780,19 +793,6 @@ ABSOLUTE REQUIREMENTS:
           )
       );
 
-      // #region agent log
-      console.log('[DEBUG] Parsed AI response instructions:', {
-        instructionsCount: parsedData.instructions?.length || 0,
-        firstInstruction: parsedData.instructions?.[0],
-        firstInstructionType: typeof parsedData.instructions?.[0],
-        firstInstructionIsObject: typeof parsedData.instructions?.[0] === 'object' && parsedData.instructions?.[0] !== null,
-        firstInstructionKeys: parsedData.instructions?.[0] && typeof parsedData.instructions[0] === 'object' ? Object.keys(parsedData.instructions[0]) : null,
-        firstInstructionTitle: parsedData.instructions?.[0] && typeof parsedData.instructions[0] === 'object' ? parsedData.instructions[0].title : null,
-        firstInstructionDetail: parsedData.instructions?.[0] && typeof parsedData.instructions[0] === 'object' ? parsedData.instructions[0].detail : null,
-      });
-      fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'aiRecipeParser.ts:789',message:'AI response before normalization',data:{instructionsCount:parsedData.instructions?.length||0,firstInstruction:parsedData.instructions?.[0],firstInstructionType:typeof parsedData.instructions?.[0],firstInstructionKeys:parsedData.instructions?.[0]&&typeof parsedData.instructions[0]==='object'?Object.keys(parsedData.instructions[0]):null,firstInstructionTitle:parsedData.instructions?.[0]&&typeof parsedData.instructions[0]==='object'?parsedData.instructions[0].title:null,firstInstructionDetail:parsedData.instructions?.[0]&&typeof parsedData.instructions[0]==='object'?parsedData.instructions[0].detail:null},timestamp:Date.now(),sessionId:'debug-session',runId:'title-debug',hypothesisId:'title-missing'})}).catch(()=>{});
-      // #endregion
-
       // Validate that AI returned objects, not strings
       const hasStringInstructions = parsedData.instructions.some(
         (inst: any) => typeof inst === 'string'
@@ -800,23 +800,13 @@ ABSOLUTE REQUIREMENTS:
       
       if (hasStringInstructions) {
         console.warn('[AI Parser] ⚠️ AI returned instructions as strings instead of objects. Prompt may need adjustment.');
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'aiRecipeParser.ts:804',message:'AI returned strings instead of objects',data:{instructionsCount:parsedData.instructions.length,firstInstruction:parsedData.instructions[0],firstInstructionType:typeof parsedData.instructions[0]},timestamp:Date.now(),sessionId:'debug-session',runId:'title-debug',hypothesisId:'title-missing'})}).catch(()=>{});
-        // #endregion
       } else {
         console.log('[AI Parser] ✅ AI correctly returned instructions as objects with title/detail');
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'aiRecipeParser.ts:808',message:'AI correctly returned objects',data:{instructionsCount:parsedData.instructions.length,firstInstruction:parsedData.instructions[0],firstInstructionHasTitle:typeof parsedData.instructions[0]?.title==='string',firstInstructionTitle:parsedData.instructions[0]?.title},timestamp:Date.now(),sessionId:'debug-session',runId:'title-debug',hypothesisId:'title-missing'})}).catch(()=>{});
-        // #endregion
       }
 
       const normalizedInstructions = normalizeInstructionSteps(
         parsedData.instructions,
       );
-
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'aiRecipeParser.ts:858',message:'Normalized instructions output',data:{normalizedCount:normalizedInstructions.length,firstNormalized:normalizedInstructions[0]},timestamp:Date.now(),sessionId:'debug-session',runId:'prompt-fix',hypothesisId:'A,B,C'})}).catch(()=>{});
-      // #endregion
 
       if (validIngredients && normalizedInstructions.length > 0) {
         console.log(
