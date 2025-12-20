@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { RecipeStep } from './types';
 import ListView from './ListView';
 import CardView from './CardView';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ClassicSplitViewProps {
   steps: RecipeStep[];
@@ -50,20 +51,40 @@ export default function ClassicSplitView({ steps, title = 'Recipe Steps' }: Clas
     <div className="classic-split-view-container bg-white w-full flex flex-col min-h-[calc(100vh-300px)]">
       {/* Content Area */}
       <div className="flex-1 overflow-hidden relative">
-        {view === 'list' ? (
-          <ListView 
-            steps={steps} 
-            onSelectStep={handleSelectStep} 
-          />
-        ) : (
-          <CardView 
-            steps={steps}
-            currentStep={currentStep}
-            onNext={handleNextStep}
-            onPrev={handlePrevStep}
-            onBackToList={handleBackToList}
-          />
-        )}
+        <AnimatePresence mode="wait">
+          {view === 'list' ? (
+            <motion.div
+              key="list"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="h-full"
+            >
+              <ListView 
+                steps={steps} 
+                onSelectStep={handleSelectStep} 
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="card"
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="h-full"
+            >
+              <CardView 
+                steps={steps}
+                currentStep={currentStep}
+                onNext={handleNextStep}
+                onPrev={handlePrevStep}
+                onBackToList={handleBackToList}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

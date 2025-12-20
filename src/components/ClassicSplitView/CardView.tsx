@@ -3,6 +3,7 @@
 import { RecipeStep } from './types';
 import StepDisplay from './StepDisplay';
 import ContextPanel from './ContextPanel';
+import { motion } from 'framer-motion';
 
 interface CardViewProps {
   steps: RecipeStep[];
@@ -34,7 +35,11 @@ export default function CardView({ steps, currentStep, onNext, onPrev, onBackToL
   }
 
   return (
-    <div className="flex flex-col h-full bg-white border-t border-stone-200">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex flex-col h-full bg-white border-t border-stone-100"
+    >
       {/* Top Half: Step Display */}
       <StepDisplay
         step={step}
@@ -47,6 +52,6 @@ export default function CardView({ steps, currentStep, onNext, onPrev, onBackToL
 
       {/* Bottom Half: Context Panel */}
       <ContextPanel step={step} />
-    </div>
+    </motion.div>
   );
 }

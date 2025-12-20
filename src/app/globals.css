@@ -275,7 +275,7 @@
     gap: 12px;
     padding: 16px 8px; /* Increased vertical padding for more space between items */
     position: relative;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s ease-in-out;
   }
 
   /* Darken background on hover */

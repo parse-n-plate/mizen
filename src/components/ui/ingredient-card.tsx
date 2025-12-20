@@ -2,6 +2,7 @@
 
 import { ArrowUpDown } from 'lucide-react';
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 /**
  * IngredientCard Component (Linear List Style)
@@ -69,17 +70,20 @@ export default function IngredientCard({ ingredient, description, isLast = false
   };
 
   return (
-    <div className={`ingredient-list-item ${isChecked ? 'is-checked' : ''}`}>
+    <motion.div 
+      className={`ingredient-list-item group ${isChecked ? 'is-checked' : ''}`}
+    >
       {/* Divider line at the bottom (hidden for last item) */}
-      {!isLast && <div className="ingredient-list-divider" />}
+      {!isLast && <div className="ingredient-list-divider transition-opacity group-hover:opacity-0" />}
       
       {/* Main content row */}
       <div className="ingredient-list-content">
         {/* Checkbox on the left */}
         <div className="ingredient-list-checkbox">
-          <input
+          <motion.input
+            whileTap={{ scale: 0.8 }}
             type="checkbox"
-            className="ingredient-checkbox-input"
+            className="ingredient-checkbox-input transition-all duration-200"
             aria-label={`Select ${ingredientText}`}
             checked={isChecked}
             onChange={handleCheckboxChange}
@@ -90,27 +94,44 @@ export default function IngredientCard({ ingredient, description, isLast = false
         <div className="ingredient-list-text-content">
           {/* Primary text: Ingredient name with amount/units */}
           <div className="ingredient-list-primary">
-            <p className="ingredient-list-name">{ingredientText}</p>
+            <motion.p 
+              animate={{ 
+                opacity: isChecked ? 0.5 : 1,
+                x: isChecked ? 4 : 0
+              }}
+              className="ingredient-list-name transition-all duration-300"
+            >
+              {ingredientText}
+            </motion.p>
           </div>
 
           {/* Secondary text: Description (hidden when empty) */}
-          {hasDescription && (
-            <div className="ingredient-list-secondary">
-              <p className="ingredient-list-description">{description}</p>
-            </div>
-          )}
+          <AnimatePresence>
+            {hasDescription && (
+              <motion.div 
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="ingredient-list-secondary overflow-hidden"
+              >
+                <p className="ingredient-list-description">{description}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Swap icon on the right */}
-        <button
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
           type="button"
           className="ingredient-list-swap-button"
           aria-label={`Reorder ${ingredientText}`}
         >
           <ArrowUpDown className="ingredient-list-swap-icon" />
-        </button>
+        </motion.button>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
