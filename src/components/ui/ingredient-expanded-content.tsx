@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowUpDown, ChefHat, Tag, Calendar, Flag, MessageSquare } from 'lucide-react';
+import { ArrowUpDown, Tag, Calendar, Flag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -30,10 +30,6 @@ export function IngredientExpandedContent({
     )}>
       {/* Description / Notes Section */}
       <div className="space-y-1">
-        <div className="flex items-center gap-2 text-stone-400">
-          <MessageSquare className="h-3 w-3" />
-          <span className="text-[10px] font-albert font-bold uppercase tracking-wider">Notes</span>
-        </div>
         <div className="min-h-[60px] p-2 bg-stone-50/50 rounded-lg border border-dashed border-stone-200 text-stone-500 text-sm font-albert">
           {description || "Add preparation notes, substitutions, or brand preferences..."}
         </div>
@@ -41,10 +37,6 @@ export function IngredientExpandedContent({
 
       {/* Related Steps Section */}
       <div className="space-y-2">
-        <div className="flex items-center gap-2 text-stone-400">
-          <ChefHat className="h-3 w-3" />
-          <span className="text-[10px] font-albert font-bold uppercase tracking-wider">Related Steps</span>
-        </div>
         <div className="flex flex-wrap gap-2">
           {linkedSteps.length > 0 ? (
             linkedSteps.map((stepNum) => (

@@ -31,6 +31,12 @@ export default function ListView({ steps, onSelectStep }: ListViewProps) {
             <div className="flex items-start gap-4 relative z-10">
               {/* Left side: Text content */}
               <div className="flex-1 min-w-0">
+                {/* Step header - shows step number at a glance */}
+                <div className="mb-2">
+                  <span className="font-albert text-[11px] font-semibold uppercase tracking-wider text-stone-400">
+                    Step {index + 1}
+                  </span>
+                </div>
                 <p className="font-albert text-[16px] text-stone-900 leading-relaxed">
                   {highlightQuantities(step.detail)}
                 </p>

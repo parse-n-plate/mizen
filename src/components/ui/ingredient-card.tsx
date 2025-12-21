@@ -34,11 +34,32 @@ interface IngredientCardProps {
   description?: string; // Future: will be populated from backend
   isLast?: boolean; // Hide divider if this is the last item
   recipeSteps?: { instruction: string }[];
+  /** Controlled checked state */
+  checked?: boolean;
+  /** Callback when checked state changes */
+  onCheckedChange?: (checked: boolean) => void;
+  /** Controlled expanded state (for accordion behavior - only one expanded at a time) */
+  isExpanded?: boolean;
+  /** Callback when expansion state changes */
+  onExpandChange?: (expanding: boolean) => void;
 }
 
-export default function IngredientCard({ ingredient, description, isLast = false, recipeSteps = [] }: IngredientCardProps) {
-  const [isChecked, setIsChecked] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+export default function IngredientCard({ 
+  ingredient, 
+  description, 
+  isLast = false, 
+  recipeSteps = [],
+  checked,
+  onCheckedChange,
+  isExpanded: controlledIsExpanded,
+  onExpandChange
+}: IngredientCardProps) {
+  const [internalChecked, setInternalChecked] = useState(false);
+  const isChecked = checked !== undefined ? checked : internalChecked;
+  
+  // Use controlled expansion state if provided, otherwise fall back to internal state
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const isExpanded = controlledIsExpanded !== undefined ? controlledIsExpanded : internalExpanded;
   const { settings } = useUISettings();
 
   // Extract just the ingredient name for matching
@@ -101,11 +122,22 @@ export default function IngredientCard({ ingredient, description, isLast = false
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
-    setIsChecked(e.target.checked);
+    const nextChecked = e.target.checked;
+    if (onCheckedChange) {
+      onCheckedChange(nextChecked);
+    } else {
+      setInternalChecked(nextChecked);
+    }
   };
 
   const toggleExpand = () => {
-    setIsExpanded(!isExpanded);
+    const nextExpanded = !isExpanded;
+    // If controlled, notify parent; otherwise update internal state
+    if (onExpandChange) {
+      onExpandChange(nextExpanded);
+    } else {
+      setInternalExpanded(nextExpanded);
+    }
   };
 
   return (
@@ -150,7 +182,19 @@ export default function IngredientCard({ ingredient, description, isLast = false
                 }}
                 className="ingredient-list-name transition-all duration-300"
               >
-                {ingredientText}
+                {/* Render amount/unit in black and ingredient name in gray */}
+                {typeof ingredient === 'string' ? (
+                  <span className="text-stone-600">{ingredientText}</span>
+                ) : (
+                  <>
+                    {/* Amount and unit in black */}
+                    {ingredientAmount && (
+                      <span className="text-stone-900 font-medium">{ingredientAmount} </span>
+                    )}
+                    {/* Ingredient name in gray */}
+                    <span className="text-stone-600">{ingredientNameOnly}</span>
+                  </>
+                )}
               </motion.p>
               
               {/* Expand Indicator instead of step badges */}

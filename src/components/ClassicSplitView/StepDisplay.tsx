@@ -41,7 +41,7 @@ const formatStepText = (text: string): JSX.Element => {
             <motion.span 
               key={index} 
               initial={{ color: "#193d34" }}
-              whileHover={{ color: "#ff6f00" }}
+              whileHover={{ color: "#0072ff" }}
               className="font-bold underline decoration-stone-200 underline-offset-4 transition-colors cursor-help"
             >
               {part}

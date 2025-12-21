@@ -4,11 +4,12 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo, use } from 'react';
 import RecipeSkeleton from '@/components/ui/recipe-skeleton';
 import * as Tabs from '@radix-ui/react-tabs';
-import { ArrowLeft, ExternalLink, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Link, Copy, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { scaleIngredients } from '@/utils/ingredientScaler';
 import ClassicSplitView from '@/components/ClassicSplitView';
 import IngredientCard from '@/components/ui/ingredient-card';
+import { IngredientGroup } from '@/components/ui/ingredient-group';
 import { ServingsControls } from '@/components/ui/servings-controls';
 import { MobileToolbar } from '@/components/ui/mobile-toolbar';
 import { UISettingsProvider } from '@/contexts/UISettingsContext';
@@ -153,6 +154,75 @@ export default function ParsedRecipePage({
   const [multiplier, setMultiplier] = useState<string>('1x');
   const [activeTab, setActiveTab] = useState<string>('prep');
   const [copied, setCopied] = useState(false);
+
+  // --- Persistence & Progress State ---
+  const recipeKey = useMemo(() => {
+    if (!parsedRecipe) return '';
+    return `recipe-progress-${parsedRecipe.title || 'untitled'}-${parsedRecipe.sourceUrl || ''}`;
+  }, [parsedRecipe]);
+
+  // Map of groupName -> array of checked ingredient names
+  const [checkedIngredients, setCheckedIngredients] = useState<Record<string, string[]>>({});
+  // Map of groupName -> isCollapsed (true = collapsed)
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  // Track which ingredient is currently expanded (accordion behavior - only one at a time)
+  // Format: "groupName:ingredientName" or null if none expanded
+  const [expandedIngredient, setExpandedIngredient] = useState<string | null>(null);
+
+  // Load persistence from localStorage
+  useEffect(() => {
+    if (!recipeKey) return;
+    const saved = localStorage.getItem(recipeKey);
+    if (saved) {
+      try {
+        const { checked, collapsed } = JSON.parse(saved);
+        if (checked) setCheckedIngredients(checked);
+        if (collapsed) setCollapsedGroups(collapsed);
+      } catch (e) {
+        console.error('Error loading recipe progress:', e);
+      }
+    }
+  }, [recipeKey]);
+
+  // Save persistence to localStorage
+  useEffect(() => {
+    if (!recipeKey || Object.keys(checkedIngredients).length === 0 && Object.keys(collapsedGroups).length === 0) return;
+    const data = { checked: checkedIngredients, collapsed: collapsedGroups };
+    localStorage.setItem(recipeKey, JSON.stringify(data));
+  }, [recipeKey, checkedIngredients, collapsedGroups]);
+
+  const handleIngredientCheck = (groupName: string, ingredientName: string, isChecked: boolean) => {
+    setCheckedIngredients(prev => {
+      const groupChecked = prev[groupName] || [];
+      const newGroupChecked = isChecked 
+        ? [...groupChecked, ingredientName]
+        : groupChecked.filter(name => name !== ingredientName);
+      
+      return {
+        ...prev,
+        [groupName]: newGroupChecked
+      };
+    });
+  };
+
+  // Handle ingredient expansion (accordion behavior - only one can be expanded at a time)
+  const handleIngredientExpand = (groupName: string, ingredientName: string, isExpanding: boolean) => {
+    if (isExpanding) {
+      // When expanding, set this ingredient as the expanded one (closes any other expanded ingredient)
+      setExpandedIngredient(`${groupName}:${ingredientName}`);
+    } else {
+      // When collapsing, clear the expanded ingredient
+      setExpandedIngredient(null);
+    }
+  };
+
+  const handleGroupToggle = (groupName: string, isExpanded: boolean) => {
+    setCollapsedGroups(prev => ({
+      ...prev,
+      [groupName]: !isExpanded
+    }));
+  };
+  // --- End Persistence & Progress State ---
 
   // Handle navigation to ingredients from the Cook tab
   useEffect(() => {
@@ -382,8 +452,8 @@ export default function ParsedRecipePage({
                                   className="font-albert text-[16px] text-stone-400 hover:text-[#193d34] transition-colors flex items-center gap-1"
                                   aria-label={`View original recipe on ${getDomainFromUrl(parsedRecipe.sourceUrl)}`}
                                 >
+                                  <Link className="w-3 h-3" />
                                   {getDomainFromUrl(parsedRecipe.sourceUrl)}
-                                  <ExternalLink className="w-3 h-3" />
                                 </a>
                                 
                                 {/* Simple Copy Button - slides out from under URL on hover */}
@@ -578,39 +648,67 @@ export default function ParsedRecipePage({
                                   >;
                                 },
                                 groupIdx: number,
-                              ) => (
-                                <div key={groupIdx} className="mb-6 last:mb-0">
-                                  <h3 className="font-domine text-[18px] text-[#193d34] mb-3 leading-none">
-                                    {group.groupName}
-                                  </h3>
-                                  <div className="ingredient-list-container">
-                                    {Array.isArray(group.ingredients) &&
-                                      group.ingredients.map(
-                                        (
-                                          ingredient:
-                                            | string
-                                          | {
-                                                amount?: string;
-                                                units?: string;
-                                                ingredient: string;
-                                              },
-                                          index: number,
-                                        ) => {
-                                          const isLast = index === group.ingredients.length - 1;
-                                          return (
-                                            <IngredientCard
-                                              key={index}
-                                              ingredient={ingredient}
-                                              description={undefined} // Empty state - not connected to backend yet
-                                              isLast={isLast}
-                                              recipeSteps={normalizedSteps.map(s => ({ instruction: s.detail }))}
-                                            />
-                                          );
-                                        },
-                                      )}
-                                  </div>
-                                </div>
-                              ),
+                              ) => {
+                                const groupName = group.groupName || 'Main';
+                                const groupChecked = checkedIngredients[groupName] || [];
+                                const isCollapsed = collapsedGroups[groupName] || false;
+
+                                return (
+                                  <IngredientGroup 
+                                    key={groupIdx}
+                                    title={groupName}
+                                    totalCount={group.ingredients.length}
+                                    checkedCount={groupChecked.length}
+                                    isInitialExpanded={!isCollapsed}
+                                    onToggle={(isExpanded) => handleGroupToggle(groupName, isExpanded)}
+                                    pieLayout="inline" // You can test "below" too
+                                  >
+                                    <div className="ingredient-list-container">
+                                      {Array.isArray(group.ingredients) &&
+                                        group.ingredients.map(
+                                          (
+                                            ingredient:
+                                              | string
+                                            | {
+                                                  amount?: string;
+                                                  units?: string;
+                                                  ingredient: string;
+                                                },
+                                            index: number,
+                                          ) => {
+                                            const isLast = index === group.ingredients.length - 1;
+                                            const ingredientName = typeof ingredient === 'string' 
+                                              ? ingredient 
+                                              : ingredient.ingredient;
+                                            
+                                            const isChecked = groupChecked.includes(ingredientName);
+                                            // Check if this ingredient is currently expanded (accordion behavior)
+                                            const ingredientKey = `${groupName}:${ingredientName}`;
+                                            const isExpanded = expandedIngredient === ingredientKey;
+
+                                            return (
+                                              <IngredientCard
+                                                key={index}
+                                                ingredient={ingredient}
+                                                description={undefined}
+                                                isLast={isLast}
+                                                recipeSteps={normalizedSteps.map(s => ({ instruction: s.detail }))}
+                                                checked={isChecked}
+                                                onCheckedChange={(checked) => 
+                                                  handleIngredientCheck(groupName, ingredientName, checked)
+                                                }
+                                                isExpanded={isExpanded}
+                                                onExpandChange={(expanding) => 
+                                                  handleIngredientExpand(groupName, ingredientName, expanding)
+                                                }
+                                              />
+                                            );
+                                          },
+                                        )}
+                                    </div>
+                                  </IngredientGroup>
+                                );
+                              },
                             )}
                         </div>
                       </div>

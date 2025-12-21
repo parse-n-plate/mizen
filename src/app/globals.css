@@ -8,6 +8,7 @@
   --color-primary-yellow: #ffcc00;
   --color-primary-tomato-red: #ff3b3b;
   --color-primary-fresh-green: #00b96d;
+  --color-things3-blue: #007aff;
   --color-background-cream: #fdf7f3;
   --color-text-heading: #000000;
   --color-text-body: #333333;
@@ -933,6 +934,30 @@
   .quantity-highlight {
     color: #a8a29e; /* stone-400 */
     font-weight: 500;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     INGREDIENT GROUP PROGRESS COUNTER
+     Styling for the progress pie counter text (e.g., "0/18")
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  .ingredient-group-progress-counter {
+    font-family: var(--font-albert);
+    font-size: 0.75rem; /* 12px */
+    font-weight: 500; /* medium */
+    color: #a8a29e; /* stone-400 */
+    font-variant-numeric: tabular-nums; /* Ensures numbers align properly */
+    line-height: 1;
+  }
+
+  .ingredient-group-progress-counter-below {
+    font-family: var(--font-albert);
+    font-size: 0.6875rem; /* 11px */
+    font-weight: 500; /* medium */
+    color: #a8a29e; /* stone-400 */
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    line-height: 1.4;
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
