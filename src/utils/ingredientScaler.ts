@@ -150,6 +150,33 @@ export function formatAmount(amount: number): string {
 }
 
 /**
+ * Parse amount/unit from ingredient string when amount/units fields are empty
+ * Handles patterns like "1½ Tbsp soy sauce", "2 cups dashi", etc.
+ */
+function parseIngredientString(ingredientStr: string): { amount: string; unit: string; name: string } | null {
+  // Pattern: matches amount (can include fractions like 1½, 2½, ⅛) + unit + ingredient name
+  // Examples: "1½ Tbsp soy sauce", "2½ cups dashi", "1 tsp sugar"
+  const match = ingredientStr.match(/^([\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+(?:\s*[–-]\s*[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)?)\s+([a-zA-Z]+)\s+(.+)$/);
+  if (match) {
+    return {
+      amount: match[1].trim(),
+      unit: match[2].trim(),
+      name: match[3].trim()
+    };
+  }
+  // Fallback: try simpler pattern without fractions
+  const simpleMatch = ingredientStr.match(/^(\d+(?:\s*[–-]\s*\d+)?)\s+([a-zA-Z]+)\s+(.+)$/);
+  if (simpleMatch) {
+    return {
+      amount: simpleMatch[1].trim(),
+      unit: simpleMatch[2].trim(),
+      name: simpleMatch[3].trim()
+    };
+  }
+  return null;
+}
+
+/**
  * Scale a single ingredient
  */
 export function scaleIngredient(
@@ -161,13 +188,28 @@ export function scaleIngredient(
     return ingredient;
   }
 
-  // If parsed as object but missing amount, return as is
-  if (!ingredient.amount) {
+  // If parsed as object but missing amount, try to parse from ingredient string
+  if (!ingredient.amount && ingredient.ingredient) {
+    const parsed = parseIngredientString(ingredient.ingredient);
+    if (parsed && parsed.amount) {
+      // Parse and scale the amount
+      const val = parseAmount(parsed.amount);
+      if (val !== null) {
+        const scaledAmount = formatAmount(val * scaleFactor);
+        // Return scaled ingredient with parsed amount/unit separated
+        return {
+          amount: scaledAmount,
+          units: parsed.unit,
+          ingredient: parsed.name
+        };
+      }
+    }
+    // If parsing fails, return as is
     return ingredient;
   }
 
   // Check for range (e.g., "2-3")
-  if (ingredient.amount.includes('-')) {
+  if (ingredient.amount && ingredient.amount.includes('-')) {
     const parts = ingredient.amount.split('-');
     if (parts.length === 2) {
       const min = parseAmount(parts[0]);
@@ -185,7 +227,7 @@ export function scaleIngredient(
   }
   
   // Check for "to" range (e.g. "2 to 3")
-  if (ingredient.amount.toLowerCase().includes(' to ')) {
+  if (ingredient.amount && ingredient.amount.toLowerCase().includes(' to ')) {
      const parts = ingredient.amount.toLowerCase().split(' to ');
      if (parts.length === 2) {
       const min = parseAmount(parts[0]);
@@ -203,6 +245,9 @@ export function scaleIngredient(
   }
 
   // Regular scaling
+  if (!ingredient.amount) {
+    return ingredient;
+  }
   const val = parseAmount(ingredient.amount);
   if (val !== null) {
     return {
