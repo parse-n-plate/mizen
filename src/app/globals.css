@@ -597,7 +597,7 @@
     font-weight: 500; /* medium */
     font-size: 14px;
     line-height: 20px;
-    color: #0c0a09; /* stone-900 */
+    /* Color removed - child spans control their own colors */
     margin: 0;
   }
 
@@ -618,6 +618,7 @@
 
   /* Checked State Styles */
   .ingredient-list-item.is-checked .ingredient-list-name,
+  .ingredient-list-item.is-checked .ingredient-list-name span,
   .ingredient-list-item.is-checked .ingredient-list-description {
     text-decoration: line-through;
     color: #a8a29e; /* stone-400 */

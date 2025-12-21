@@ -62,9 +62,43 @@ export default function IngredientCard({
   const isExpanded = controlledIsExpanded !== undefined ? controlledIsExpanded : internalExpanded;
   const { settings } = useUISettings();
 
+  // Helper function to parse amount/unit from ingredient string
+  const parseIngredientString = (ingredientStr: string): { amount: string; unit: string; name: string } => {
+    // Pattern: matches amount (can include fractions like 1½, 2½, ⅛) + unit + ingredient name
+    // Examples: "1½ Tbsp soy sauce", "2½ cups dashi", "1 tsp sugar"
+    const match = ingredientStr.match(/^([\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+(?:\s*[–-]\s*[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)?)\s+([a-zA-Z]+)\s+(.+)$/);
+    if (match) {
+      return {
+        amount: match[1].trim(),
+        unit: match[2].trim(),
+        name: match[3].trim()
+      };
+    }
+    // Fallback: try simpler pattern without fractions
+    const simpleMatch = ingredientStr.match(/^(\d+(?:\s*[–-]\s*\d+)?)\s+([a-zA-Z]+)\s+(.+)$/);
+    if (simpleMatch) {
+      return {
+        amount: simpleMatch[1].trim(),
+        unit: simpleMatch[2].trim(),
+        name: simpleMatch[3].trim()
+      };
+    }
+    // No match found, return empty amount/unit
+    return { amount: '', unit: '', name: ingredientStr };
+  };
+
   // Extract just the ingredient name for matching
   const ingredientNameOnly = useMemo(() => {
     if (typeof ingredient === 'string') return ingredient;
+    
+    // If amount/units are empty, try to parse from ingredient string to get just the name
+    if (!ingredient.amount && !ingredient.units && ingredient.ingredient) {
+      const parsed = parseIngredientString(ingredient.ingredient);
+      if (parsed.amount && parsed.unit) {
+        return parsed.name; // Return just the name part
+      }
+    }
+    
     return ingredient.ingredient;
   }, [ingredient]);
 
@@ -114,7 +148,17 @@ export default function IngredientCard({
 
   const ingredientAmount = useMemo(() => {
     if (typeof ingredient === 'string') return '';
-    return `${ingredient.amount || ''} ${ingredient.units || ''}`.trim();
+    
+    // If amount/units are empty, try to parse from ingredient string
+    if (!ingredient.amount && !ingredient.units && ingredient.ingredient) {
+      const parsed = parseIngredientString(ingredient.ingredient);
+      if (parsed.amount && parsed.unit) {
+        return `${parsed.amount} ${parsed.unit}`;
+      }
+    }
+    
+    const computed = `${ingredient.amount || ''} ${ingredient.units || ''}`.trim();
+    return computed;
   }, [ingredient]);
 
   const ingredientText = formatIngredientText();
@@ -189,7 +233,7 @@ export default function IngredientCard({
                   <>
                     {/* Amount and unit in black */}
                     {ingredientAmount && (
-                      <span className="text-stone-900 font-medium">{ingredientAmount} </span>
+                      <span className="text-stone-900 font-bold">{ingredientAmount} </span>
                     )}
                     {/* Ingredient name in gray */}
                     <span className="text-stone-600">{ingredientNameOnly}</span>
