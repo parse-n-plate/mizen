@@ -67,7 +67,7 @@ export function IngredientGroup({
       <button
         type="button"
         onClick={handleToggle}
-        className="w-full flex items-center justify-between py-3 px-0 group cursor-pointer transition-colors duration-[180ms] hover:opacity-80 relative"
+        className="w-full flex items-center justify-between py-3 pl-2 pr-0 group cursor-pointer transition-colors duration-[180ms] hover:opacity-80 relative"
         aria-expanded={isExpanded}
         aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${title} ingredient group`}
       >
@@ -87,9 +87,6 @@ export function IngredientGroup({
                 strokeWidth={1.5}
                 color="#193d34"
               />
-              <span className="ingredient-group-progress-counter">
-                {checkedCount}/{totalCount}
-              </span>
             </div>
           )}
         </div>
@@ -113,9 +110,6 @@ export function IngredientGroup({
             strokeWidth={1.5}
             color="#193d34"
           />
-          <span className="ingredient-group-progress-counter-below">
-            {checkedCount} of {totalCount} complete
-          </span>
         </div>
       )}
 

@@ -7,19 +7,27 @@ import { IngredientExpandedContent } from './ingredient-expanded-content';
 interface IngredientExpandedThings3Props {
   ingredientName: string;
   ingredientAmount?: string;
+  ingredientUnits?: string;
+  groupName?: string;
   description?: string;
   linkedSteps: number[];
   onStepClick: (stepNumber: number) => void;
   isOpen: boolean;
+  recipeUrl?: string;
+  onNotesChange?: (notes: string) => void;
 }
 
 export function IngredientExpandedThings3({
   ingredientName,
   ingredientAmount,
+  ingredientUnits,
+  groupName,
   description,
   linkedSteps,
   onStepClick,
-  isOpen
+  isOpen,
+  recipeUrl,
+  onNotesChange
 }: IngredientExpandedThings3Props) {
   return (
     <motion.div
@@ -37,10 +45,14 @@ export function IngredientExpandedThings3({
         <IngredientExpandedContent
           ingredientName={ingredientName}
           ingredientAmount={ingredientAmount}
+          ingredientUnits={ingredientUnits}
+          groupName={groupName}
           description={description}
           linkedSteps={linkedSteps}
           onStepClick={onStepClick}
           variant="things3"
+          recipeUrl={recipeUrl}
+          onNotesChange={onNotesChange}
         />
       </div>
     </motion.div>

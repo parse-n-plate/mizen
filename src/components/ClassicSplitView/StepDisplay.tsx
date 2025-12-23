@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, List } from 'lucide-react';
 import { RecipeStep } from './types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { findIngredientsInText, IngredientInfo } from '@/utils/ingredientMatcher';
+import { highlightQuantitiesAndIngredients } from '@/lib/utils';
 import { useUISettings } from '@/contexts/UISettingsContext';
 import { useAdminSettings } from '@/contexts/AdminSettingsContext';
 
@@ -16,45 +17,6 @@ interface StepDisplayProps {
   onBackToList: () => void;
   allIngredients: any[];
 }
-
-// Helper function to extract and bold keywords in text
-const formatStepText = (text: string): JSX.Element => {
-  // Enhanced keyword list for cooking
-  const keywords = [
-    'overnight', 'carefully', 'gently', 'slowly', 'quickly', 
-    'boil', 'simmer', 'sauté', 'whisk', 'fold', 'knead',
-    'golden brown', 'tender', 'fragrant', 'smooth'
-  ];
-  let formattedText = text;
-  
-  // Replace keywords with bold version (temporary marker)
-  keywords.forEach(keyword => {
-    const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
-    formattedText = formattedText.replace(regex, (match) => `**${match}**`);
-  });
-
-  const parts = formattedText.split('**');
-  return (
-    <>
-      {parts.map((part, index) => {
-        const isKeyword = keywords.some(kw => part.toLowerCase() === kw.toLowerCase());
-        if (isKeyword) {
-          return (
-            <motion.span 
-              key={index} 
-              initial={{ color: "#193d34" }}
-              whileHover={{ color: "#0072ff" }}
-              className="font-bold underline decoration-stone-200 underline-offset-4 transition-colors cursor-help"
-            >
-              {part}
-            </motion.span>
-          );
-        }
-        return <span key={index}>{part}</span>;
-      })}
-    </>
-  );
-};
 
 export default function StepDisplay({ step, currentStep, totalSteps, onNext, onPrev, onBackToList, allIngredients }: StepDisplayProps) {
   const { settings } = useUISettings();
@@ -151,7 +113,7 @@ export default function StepDisplay({ step, currentStep, totalSteps, onNext, onP
             </h2>
             <div className="flex flex-col gap-6">
               <p className={`${settings.fontFamily === 'serif' ? 'font-domine' : 'font-albert'} text-[#193d34]/80 leading-relaxed max-w-2xl transition-all duration-300 ${detailSizeMap[stepSizing]}`}>
-                {formatStepText(step.detail)}
+                {highlightQuantitiesAndIngredients(step.detail, allIngredients)}
               </p>
               
               {/* Ingredient Tags - Minimal and Tag-like */}

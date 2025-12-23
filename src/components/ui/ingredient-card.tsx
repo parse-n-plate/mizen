@@ -34,6 +34,10 @@ interface IngredientCardProps {
   description?: string; // Future: will be populated from backend
   isLast?: boolean; // Hide divider if this is the last item
   recipeSteps?: { instruction: string }[];
+  /** Ingredient group name (e.g., "Main", "Sauce") */
+  groupName?: string;
+  /** Recipe URL for note persistence */
+  recipeUrl?: string;
   /** Controlled checked state */
   checked?: boolean;
   /** Callback when checked state changes */
@@ -42,6 +46,8 @@ interface IngredientCardProps {
   isExpanded?: boolean;
   /** Callback when expansion state changes */
   onExpandChange?: (expanding: boolean) => void;
+  /** Callback when notes change */
+  onNotesChange?: (notes: string) => void;
 }
 
 export default function IngredientCard({ 
@@ -49,10 +55,13 @@ export default function IngredientCard({
   description, 
   isLast = false, 
   recipeSteps = [],
+  groupName = 'Main',
+  recipeUrl,
   checked,
   onCheckedChange,
   isExpanded: controlledIsExpanded,
-  onExpandChange
+  onExpandChange,
+  onNotesChange
 }: IngredientCardProps) {
   const [internalChecked, setInternalChecked] = useState(false);
   const isChecked = checked !== undefined ? checked : internalChecked;
@@ -178,6 +187,28 @@ export default function IngredientCard({
     
     const computed = `${ingredient.amount || ''} ${ingredient.units || ''}`.trim();
     return computed;
+  }, [ingredient]);
+
+  // Extract units separately for note storage
+  const ingredientUnits = useMemo(() => {
+    if (typeof ingredient === 'string') {
+      // Try to parse units from string
+      const parsed = parseIngredientString(ingredient);
+      return parsed.unit || '';
+    }
+    
+    // Return units from object, or try to parse if not available
+    if (ingredient.units) {
+      return ingredient.units;
+    }
+    
+    // If no units but we have an ingredient string, try parsing
+    if (ingredient.ingredient && !ingredient.amount) {
+      const parsed = parseIngredientString(ingredient.ingredient);
+      return parsed.unit || '';
+    }
+    
+    return '';
   }, [ingredient]);
 
   const ingredientText = formatIngredientText();
@@ -334,10 +365,14 @@ export default function IngredientCard({
         <IngredientExpandedAccordion
           ingredientName={ingredientNameOnly}
           ingredientAmount={ingredientAmount}
+          ingredientUnits={ingredientUnits}
+          groupName={groupName}
           description={description}
           linkedSteps={linkedSteps}
           onStepClick={handleStepClick}
           isOpen={isExpanded}
+          recipeUrl={recipeUrl}
+          onNotesChange={onNotesChange}
         />
       )}
 
@@ -345,31 +380,43 @@ export default function IngredientCard({
         <IngredientExpandedThings3
           ingredientName={ingredientNameOnly}
           ingredientAmount={ingredientAmount}
+          ingredientUnits={ingredientUnits}
+          groupName={groupName}
           description={description}
           linkedSteps={linkedSteps}
           onStepClick={handleStepClick}
           isOpen={isExpanded}
+          recipeUrl={recipeUrl}
+          onNotesChange={onNotesChange}
         />
       )}
 
       <IngredientExpandedModal
         ingredientName={ingredientNameOnly}
         ingredientAmount={ingredientAmount}
+        ingredientUnits={ingredientUnits}
+        groupName={groupName}
         description={description}
         linkedSteps={linkedSteps}
         onStepClick={handleStepClick}
         isOpen={isExpanded && settings.ingredientExpandStyle === 'modal'}
         onClose={() => setIsExpanded(false)}
+        recipeUrl={recipeUrl}
+        onNotesChange={onNotesChange}
       />
 
       <IngredientExpandedSidePanel
         ingredientName={ingredientNameOnly}
         ingredientAmount={ingredientAmount}
+        ingredientUnits={ingredientUnits}
+        groupName={groupName}
         description={description}
         linkedSteps={linkedSteps}
         onStepClick={handleStepClick}
         isOpen={isExpanded && settings.ingredientExpandStyle === 'sidepanel'}
         onClose={() => setIsExpanded(false)}
+        recipeUrl={recipeUrl}
+        onNotesChange={onNotesChange}
       />
 
       <IngredientExpandedDrawer

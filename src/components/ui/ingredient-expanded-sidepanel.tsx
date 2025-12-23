@@ -8,21 +8,29 @@ import { IngredientExpandedContent } from './ingredient-expanded-content';
 interface IngredientExpandedSidePanelProps {
   ingredientName: string;
   ingredientAmount?: string;
+  ingredientUnits?: string;
+  groupName?: string;
   description?: string;
   linkedSteps: number[];
   onStepClick: (stepNumber: number) => void;
   isOpen: boolean;
   onClose: () => void;
+  recipeUrl?: string;
+  onNotesChange?: (notes: string) => void;
 }
 
 export function IngredientExpandedSidePanel({
   ingredientName,
   ingredientAmount,
+  ingredientUnits,
+  groupName,
   description,
   linkedSteps,
   onStepClick,
   isOpen,
-  onClose
+  onClose,
+  recipeUrl,
+  onNotesChange
 }: IngredientExpandedSidePanelProps) {
   return (
     <AnimatePresence>
@@ -63,10 +71,14 @@ export function IngredientExpandedSidePanel({
               <IngredientExpandedContent
                 ingredientName={ingredientName}
                 ingredientAmount={ingredientAmount}
+                ingredientUnits={ingredientUnits}
+                groupName={groupName}
                 description={description}
                 linkedSteps={linkedSteps}
                 onStepClick={onStepClick}
                 variant="sidepanel"
+                recipeUrl={recipeUrl}
+                onNotesChange={onNotesChange}
               />
             </div>
           </motion.div>

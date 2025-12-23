@@ -8,21 +8,29 @@ import { IngredientExpandedContent } from './ingredient-expanded-content';
 interface IngredientExpandedModalProps {
   ingredientName: string;
   ingredientAmount?: string;
+  ingredientUnits?: string;
+  groupName?: string;
   description?: string;
   linkedSteps: number[];
   onStepClick: (stepNumber: number) => void;
   isOpen: boolean;
   onClose: () => void;
+  recipeUrl?: string;
+  onNotesChange?: (notes: string) => void;
 }
 
 export function IngredientExpandedModal({
   ingredientName,
   ingredientAmount,
+  ingredientUnits,
+  groupName,
   description,
   linkedSteps,
   onStepClick,
   isOpen,
-  onClose
+  onClose,
+  recipeUrl,
+  onNotesChange
 }: IngredientExpandedModalProps) {
   return (
     <AnimatePresence>
@@ -61,10 +69,14 @@ export function IngredientExpandedModal({
               <IngredientExpandedContent
                 ingredientName={ingredientName}
                 ingredientAmount={ingredientAmount}
+                ingredientUnits={ingredientUnits}
+                groupName={groupName}
                 description={description}
                 linkedSteps={linkedSteps}
                 onStepClick={onStepClick}
                 variant="modal"
+                recipeUrl={recipeUrl}
+                onNotesChange={onNotesChange}
               />
             </div>
           </motion.div>

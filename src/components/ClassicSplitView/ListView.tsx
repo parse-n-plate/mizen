@@ -1,16 +1,18 @@
 'use client';
 
 import { RecipeStep } from './types';
-import { highlightQuantities } from '@/lib/utils';
+import { highlightQuantitiesAndIngredients } from '@/lib/utils';
 import Image from 'next/image';
 import { useUISettings } from '@/contexts/UISettingsContext';
+import { IngredientInfo } from '@/utils/ingredientMatcher';
 
 interface ListViewProps {
   steps: RecipeStep[];
   onSelectStep: (index: number) => void;
+  allIngredients?: IngredientInfo[];
 }
 
-export default function ListView({ steps, onSelectStep }: ListViewProps) {
+export default function ListView({ steps, onSelectStep, allIngredients = [] }: ListViewProps) {
   const { settings } = useUISettings();
   const { stepSizing } = settings;
 
@@ -61,7 +63,7 @@ export default function ListView({ steps, onSelectStep }: ListViewProps) {
                   </span>
                 </div>
                 <p className={`${settings.fontFamily === 'serif' ? 'font-domine' : 'font-albert'} text-stone-900 leading-[1.6] antialiased ${fontSizeMap[stepSizing]}`}>
-                  {highlightQuantities(step.detail)}
+                  {highlightQuantitiesAndIngredients(step.detail, allIngredients)}
                 </p>
               </div>
               

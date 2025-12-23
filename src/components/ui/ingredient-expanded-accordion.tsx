@@ -7,19 +7,27 @@ import { IngredientExpandedContent } from './ingredient-expanded-content';
 interface IngredientExpandedAccordionProps {
   ingredientName: string;
   ingredientAmount?: string;
+  ingredientUnits?: string;
+  groupName?: string;
   description?: string;
   linkedSteps: number[];
   onStepClick: (stepNumber: number) => void;
   isOpen: boolean;
+  recipeUrl?: string;
+  onNotesChange?: (notes: string) => void;
 }
 
 export function IngredientExpandedAccordion({
   ingredientName,
   ingredientAmount,
+  ingredientUnits,
+  groupName,
   description,
   linkedSteps,
   onStepClick,
-  isOpen
+  isOpen,
+  recipeUrl,
+  onNotesChange
 }: IngredientExpandedAccordionProps) {
   return (
     <motion.div
@@ -32,10 +40,14 @@ export function IngredientExpandedAccordion({
         <IngredientExpandedContent
           ingredientName={ingredientName}
           ingredientAmount={ingredientAmount}
+          ingredientUnits={ingredientUnits}
+          groupName={groupName}
           description={description}
           linkedSteps={linkedSteps}
           onStepClick={onStepClick}
           variant="accordion"
+          recipeUrl={recipeUrl}
+          onNotesChange={onNotesChange}
         />
       </div>
     </motion.div>

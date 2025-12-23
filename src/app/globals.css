@@ -546,6 +546,7 @@
     padding: 16px 8px; /* Increased vertical padding for more space between items */
     position: relative;
     transition: background-color 0.18s ease-in-out;
+    border-radius: 8px; /* Rounded corners for hover effect */
   }
 
   /* Darken background on hover */

@@ -472,7 +472,8 @@ export default function ClassicSplitView({ steps, title = 'Recipe Steps', allIng
             >
               <ListView 
                 steps={steps} 
-                onSelectStep={handleSelectStep} 
+                onSelectStep={handleSelectStep}
+                allIngredients={allIngredients}
               />
             </motion.div>
           ) : (

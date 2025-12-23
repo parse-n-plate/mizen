@@ -693,6 +693,8 @@ export default function ParsedRecipePage({
                                                 description={undefined}
                                                 isLast={isLast}
                                                 recipeSteps={normalizedSteps.map(s => ({ instruction: s.detail }))}
+                                                groupName={groupName}
+                                                recipeUrl={parsedRecipe?.sourceUrl}
                                                 checked={isChecked}
                                                 onCheckedChange={(checked) => 
                                                   handleIngredientCheck(groupName, ingredientName, checked)
