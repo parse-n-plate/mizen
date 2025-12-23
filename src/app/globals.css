@@ -96,6 +96,19 @@
   .bg-cream {
     background-color: var(--color-background-cream);
   }
+
+  /* Menu component typography - using CSS variables from globals.css */
+  .menu-search-input {
+    font-family: var(--font-albert);
+  }
+
+  .menu-section-label {
+    font-family: var(--font-albert);
+  }
+
+  .menu-action-label {
+    font-family: var(--font-albert);
+  }
 }
 
 /* Component Styles */

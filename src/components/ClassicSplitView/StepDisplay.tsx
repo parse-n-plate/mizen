@@ -148,7 +148,7 @@ export default function StepDisplay({ step, currentStep, totalSteps, onNext, onP
               {step.step}
             </h2>
             <div className="flex flex-col gap-6">
-              <p className={`font-albert text-[#193d34]/80 leading-relaxed max-w-2xl transition-all duration-300 ${detailSizeMap[stepSizing]} ${settings.fontFamily === 'serif' ? 'font-domine' : ''}`}>
+              <p className={`${settings.fontFamily === 'serif' ? 'font-domine' : 'font-albert'} text-[#193d34]/80 leading-relaxed max-w-2xl transition-all duration-300 ${detailSizeMap[stepSizing]}`}>
                 {formatStepText(step.detail)}
               </p>
               

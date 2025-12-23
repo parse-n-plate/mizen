@@ -22,7 +22,7 @@ export default function ContextPanel({ step, allIngredients }: ContextPanelProps
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-8 space-y-10 bg-[#fafafa] rounded-[12px]">
+    <div className="flex-1 overflow-y-auto p-8 space-y-10 bg-[#fafafa] rounded-t-[12px]">
       <AnimatePresence mode="wait">
         <motion.div
           key={step.step} // Use step title as key to trigger re-animation

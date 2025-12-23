@@ -60,7 +60,7 @@ export default function ListView({ steps, onSelectStep }: ListViewProps) {
                     Step {index + 1}
                   </span>
                 </div>
-                <p className={`font-albert text-stone-900 leading-[1.6] antialiased ${fontSizeMap[stepSizing]} ${settings.fontFamily === 'serif' ? 'font-domine' : ''}`}>
+                <p className={`${settings.fontFamily === 'serif' ? 'font-domine' : 'font-albert'} text-stone-900 leading-[1.6] antialiased ${fontSizeMap[stepSizing]}`}>
                   {highlightQuantities(step.detail)}
                 </p>
               </div>
