@@ -1039,11 +1039,30 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
 export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
   try {
     console.log(`[Recipe Parser] Fetching recipe from URL: ${url}`);
+    // #region agent log
+    try {
+      const { appendFile } = await import('fs/promises');
+      const logPath = '/Users/gageminamoto/Documents/GitHub/parse-n-plate/.cursor/debug.log';
+      await appendFile(logPath, JSON.stringify({location:'aiRecipeParser.ts:1040',message:'parseRecipeFromUrl entry',data:{url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'ALL'}) + '\n', 'utf8').catch((err) => console.error('[DEBUG LOG] Write failed:', err));
+    } catch (importErr) {
+      console.error('[DEBUG LOG] Import failed:', importErr);
+    }
+    // #endregion
 
     // Fetch HTML with timeout and proper headers
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
+    // #region agent log
+    try {
+      const { appendFile } = await import('fs/promises');
+      const logPath = '/Users/gageminamoto/Documents/GitHub/parse-n-plate/.cursor/debug.log';
+      await appendFile(logPath, JSON.stringify({location:'aiRecipeParser.ts:1048',message:'Before fetch call',data:{url,timeout:10000},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'}) + '\n', 'utf8').catch((err) => console.error('[DEBUG LOG] Write failed:', err));
+    } catch (importErr) {
+      console.error('[DEBUG LOG] Import failed:', importErr);
+    }
+    // #endregion
 
+    console.log(`[Recipe Parser] Making fetch request to: ${url}`);
     const response = await fetch(url, {
       headers: {
         'User-Agent':
@@ -1056,8 +1075,28 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
     });
 
     clearTimeout(timeoutId);
+    console.log(`[Recipe Parser] Fetch response: ${response.status} ${response.statusText}, ok: ${response.ok}`);
+    // #region agent log
+    try {
+      const { appendFile } = await import('fs/promises');
+      const logPath = '/Users/gageminamoto/Documents/GitHub/parse-n-plate/.cursor/debug.log';
+      await appendFile(logPath, JSON.stringify({location:'aiRecipeParser.ts:1066',message:'After fetch success',data:{status:response.status,statusText:response.statusText,ok:response.ok,contentType:response.headers.get('content-type'),url:response.url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'}) + '\n', 'utf8').catch((err) => console.error('[DEBUG LOG] Write failed:', err));
+    } catch (importErr) {
+      console.error('[DEBUG LOG] Import failed:', importErr);
+    }
+    // #endregion
 
     if (!response.ok) {
+      console.error(`[Recipe Parser] Response not ok: ${response.status} ${response.statusText}`);
+      // #region agent log
+      try {
+        const { appendFile } = await import('fs/promises');
+        const logPath = '/Users/gageminamoto/Documents/GitHub/parse-n-plate/.cursor/debug.log';
+        await appendFile(logPath, JSON.stringify({location:'aiRecipeParser.ts:1071',message:'Response not ok',data:{status:response.status,statusText:response.statusText},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'}) + '\n', 'utf8').catch((err) => console.error('[DEBUG LOG] Write failed:', err));
+      } catch (importErr) {
+        console.error('[DEBUG LOG] Import failed:', importErr);
+      }
+      // #endregion
       return {
         success: false,
         error: `Failed to fetch URL: ${response.status} ${response.statusText}`,
@@ -1066,8 +1105,28 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
     }
 
     const html = await response.text();
+    console.log(`[Recipe Parser] HTML length: ${html.length}`);
+    // #region agent log
+    try {
+      const { appendFile } = await import('fs/promises');
+      const logPath = '/Users/gageminamoto/Documents/GitHub/parse-n-plate/.cursor/debug.log';
+      await appendFile(logPath, JSON.stringify({location:'aiRecipeParser.ts:1084',message:'After text extraction',data:{htmlLength:html.length,htmlTrimmedLength:html.trim().length,first200Chars:html.substring(0,200)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'}) + '\n', 'utf8').catch((err) => console.error('[DEBUG LOG] Write failed:', err));
+    } catch (importErr) {
+      console.error('[DEBUG LOG] Import failed:', importErr);
+    }
+    // #endregion
 
     if (!html || html.trim().length === 0) {
+      console.error('[Recipe Parser] HTML content is empty');
+      // #region agent log
+      try {
+        const { appendFile } = await import('fs/promises');
+        const logPath = '/Users/gageminamoto/Documents/GitHub/parse-n-plate/.cursor/debug.log';
+        await appendFile(logPath, JSON.stringify({location:'aiRecipeParser.ts:1089',message:'HTML content empty',data:{htmlLength:html?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'}) + '\n', 'utf8').catch((err) => console.error('[DEBUG LOG] Write failed:', err));
+      } catch (importErr) {
+        console.error('[DEBUG LOG] Import failed:', importErr);
+      }
+      // #endregion
       return {
         success: false,
         error: 'Fetched HTML is empty',
@@ -1085,11 +1144,31 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
     
     return result;
   } catch (error) {
+    console.error('[Recipe Parser] Error caught:', error);
+    // #region agent log
+    try {
+      const { appendFile } = await import('fs/promises');
+      const logPath = '/Users/gageminamoto/Documents/GitHub/parse-n-plate/.cursor/debug.log';
+      await appendFile(logPath, JSON.stringify({location:'aiRecipeParser.ts:1107',message:'Error caught in parseRecipeFromUrl',data:{errorName:error instanceof Error?error.name:'unknown',errorMessage:error instanceof Error?error.message:String(error),errorStack:error instanceof Error?error.stack:undefined,errorType:error instanceof TypeError?'TypeError':error instanceof Error?'Error':'Unknown'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'ALL'}) + '\n', 'utf8').catch((err) => console.error('[DEBUG LOG] Write failed:', err));
+    } catch (importErr) {
+      console.error('[DEBUG LOG] Import failed:', importErr);
+    }
+    // #endregion
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error fetching URL';
     
     // Check for timeout
     if (errorMessage.includes('abort')) {
+      console.error('[Recipe Parser] Timeout error detected');
+      // #region agent log
+      try {
+        const { appendFile } = await import('fs/promises');
+        const logPath = '/Users/gageminamoto/Documents/GitHub/parse-n-plate/.cursor/debug.log';
+        await appendFile(logPath, JSON.stringify({location:'aiRecipeParser.ts:1118',message:'Timeout error detected',data:{errorMessage},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'}) + '\n', 'utf8').catch((err) => console.error('[DEBUG LOG] Write failed:', err));
+      } catch (importErr) {
+        console.error('[DEBUG LOG] Import failed:', importErr);
+      }
+      // #endregion
       return {
         success: false,
         error: 'Request timed out after 10 seconds',
