@@ -209,14 +209,14 @@ export default function IngredientCard({
         id={`ingredient-${ingredientNameOnly.toLowerCase().replace(/\s+/g, '-')}`}
         onClick={toggleExpand}
         className={cn(
-          "ingredient-list-item group cursor-pointer transition-all duration-200",
+          "ingredient-list-item group cursor-pointer transition-all duration-[180ms]",
           isChecked ? 'is-checked' : '',
           isExpanded && settings.ingredientExpandStyle === 'things3' ? "bg-stone-50/50 shadow-sm rounded-xl border border-stone-100 -mx-1 px-1" : ""
         )}
       >
         {/* Divider line at the bottom (hidden for last item or when expanded in things3) */}
         {!isLast && !(isExpanded && settings.ingredientExpandStyle === 'things3') && (
-          <div className="ingredient-list-divider transition-opacity group-hover:opacity-0" />
+          <div className="ingredient-list-divider transition-opacity duration-[180ms] group-hover:opacity-0" />
         )}
         
         {/* Main content row */}
@@ -226,7 +226,7 @@ export default function IngredientCard({
             <motion.input
               whileTap={{ scale: 0.8 }}
               type="checkbox"
-              className="ingredient-checkbox-input transition-all duration-200"
+              className="ingredient-checkbox-input transition-all duration-[180ms]"
               aria-label={`Select ${ingredientText}`}
               checked={isChecked}
               onChange={handleCheckboxChange}
@@ -243,7 +243,7 @@ export default function IngredientCard({
                   opacity: isChecked ? 0.5 : 1,
                   x: isChecked ? 4 : 0
                 }}
-                className="ingredient-list-name transition-all duration-300"
+                className="ingredient-list-name transition-all duration-[180ms]"
               >
                 {/* Render amount/unit in black and ingredient name in gray, or ingredient name in bold black with parentheses in gray if no amount */}
                 {typeof ingredient === 'string' ? (
@@ -289,7 +289,7 @@ export default function IngredientCard({
               
               {/* Expand Indicator instead of step badges */}
               <div className={cn(
-                "p-1 rounded-full text-stone-300 group-hover:text-stone-500 transition-all",
+                "p-1 rounded-full text-stone-300 group-hover:text-stone-500 transition-all duration-[180ms]",
                 isExpanded ? "rotate-45 text-[#FFBA25]" : ""
               )}>
                 <Plus className="h-4 w-4" />

@@ -67,38 +67,41 @@ export function IngredientGroup({
       <button
         type="button"
         onClick={handleToggle}
-        className="w-full flex items-center gap-3 py-3 px-0 group cursor-pointer transition-colors hover:opacity-80"
+        className="w-full flex items-center justify-between py-3 px-0 group cursor-pointer transition-colors duration-[180ms] hover:opacity-80 relative"
         aria-expanded={isExpanded}
         aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${title} ingredient group`}
       >
-        {/* Chevron Icon - Rotates when expanded */}
+        {/* Container for title and progress pie */}
+        <div className="flex items-center gap-3 flex-1">
+          {/* Group Title */}
+          <h3 className="font-domine text-[18px] text-[#193d34] font-semibold leading-[1.2]">
+            {title}
+          </h3>
+
+          {/* Progress Pie - Inline Layout (right next to title) */}
+          {pieLayout === 'inline' && (
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <ProgressPie 
+                percentage={progressPercentage} 
+                size={18} 
+                strokeWidth={1.5}
+                color="#193d34"
+              />
+              <span className="ingredient-group-progress-counter">
+                {checkedCount}/{totalCount}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Chevron Icon - Right aligned, rotates when expanded, fades in on hover */}
         <motion.div
           animate={{ rotate: isExpanded ? 0 : -90 }}
           transition={{ duration: 0.2, ease: 'easeInOut' }}
-          className="flex-shrink-0"
+          className="flex-shrink-0 ingredient-group-chevron"
         >
-          <ChevronDown className="w-5 h-5 text-stone-400 group-hover:text-stone-600 transition-colors" />
+          <ChevronDown className="w-5 h-5 text-stone-400 group-hover:text-stone-600 transition-colors duration-[180ms]" />
         </motion.div>
-
-        {/* Group Title */}
-        <h3 className="font-domine text-[18px] text-[#193d34] font-semibold leading-[1.2]">
-          {title}
-        </h3>
-
-        {/* Progress Pie - Inline Layout (right next to title) */}
-        {pieLayout === 'inline' && (
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <ProgressPie 
-              percentage={progressPercentage} 
-              size={18} 
-              strokeWidth={1.5}
-              color="#193d34"
-            />
-            <span className="ingredient-group-progress-counter">
-              {checkedCount}/{totalCount}
-            </span>
-          </div>
-        )}
       </button>
 
       {/* Progress Pie - Below Layout (shown when inline is not used) */}
