@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation';
 import type { CuisineType } from '@/components/ui/cuisine-pills';
 import { Button } from '@/components/ui/button';
 import { Trash2, Link as LinkIcon, ChevronDown, Image as ImageIcon } from 'lucide-react';
-import SearchForm from '@/components/ui/search-form';
+import { useCommandK } from '@/contexts/CommandKContext';
 
 // Placeholder recipe data matching the prototype
 const PLACEHOLDER_RECIPES: RecipeCardData[] = [
@@ -87,9 +87,17 @@ function HomeContent() {
   } = useParsedRecipes();
   const { settings } = useAdminSettings();
   const { setParsedRecipe } = useRecipe();
+  const { open: openCommandK } = useCommandK();
   const router = useRouter();
   const [selectedCuisine, setSelectedCuisine] = useState<CuisineType>('Asian');
   const [filteredRecipes, setFilteredRecipes] = useState<RecipeCardData[]>([]);
+  const [keyboardShortcut, setKeyboardShortcut] = useState<string>('⌘K');
+  
+  // Detect platform for keyboard shortcut display (client-side only to avoid hydration issues)
+  useEffect(() => {
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    setKeyboardShortcut(isMac ? '⌘K' : 'Ctrl+K');
+  }, []);
 
   // Filter recipes based on selected cuisine
   useEffect(() => {
@@ -193,13 +201,36 @@ function HomeContent() {
               <h1 className="font-domine text-[48px] md:text-[56px] font-normal text-black leading-[1.05]">
                 Clean recipes, fast cooking.
               </h1>
-              <p className="font-albert text-[16px] md:text-[17px] text-stone-600 leading-[1.6] max-w-2xl mx-auto">
-                No distractions. No clutter. Just clear, elegant recipes designed for people who love to cook.
-              </p>
+              <>
+    <p className="font-albert text-[16px] md:text-[17px] text-stone-600 leading-[1.6] max-w-2xl mx-auto">
+        No distractions. No clutter. Just clear, elegant recipes designed<span className="responsive-break"></span> for people who love to cook.
+    </p>
+</>
+
               
-              {/* Search Form - Command K style search bar */}
+              {/* Command K Search Bar - Opens Command K modal */}
               <div className="max-w-lg mx-auto mt-8 md:mt-10">
-                <SearchForm />
+                <button
+                  onClick={openCommandK}
+                  className="w-full bg-stone-100 rounded-lg border border-[#d9d9d9] 
+                    transition-all duration-300 ease-in-out
+                    hover:border-[#4F46E5] hover:border-opacity-80
+                    focus:outline-none focus:ring-2 focus:ring-[#4F46E5] focus:ring-opacity-50"
+                >
+                  <div className="flex items-center px-4 py-3 relative">
+                    <LinkIcon className="w-5 h-5 text-stone-600 flex-shrink-0" />
+                    <div className="flex-1 ml-3 text-left">
+                      <span className="font-albert text-[14px] text-stone-500">
+                        Enter a recipe URL
+                      </span>
+                    </div>
+                    <div className="ml-2 flex items-center gap-1 text-stone-400">
+                      <kbd className="hidden sm:inline-flex items-center px-2 py-1 text-xs font-albert border border-stone-300 rounded bg-white text-stone-600">
+                        {keyboardShortcut}
+                      </kbd>
+                    </div>
+                  </div>
+                </button>
               </div>
           </div>
 

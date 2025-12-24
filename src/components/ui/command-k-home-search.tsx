@@ -18,8 +18,9 @@ import { useRecipeErrorHandler } from '@/hooks/useRecipeErrorHandler';
 import { errorLogger } from '@/utils/errorLogger';
 import { isUrl, getDomainFromUrl, fuzzyMatch } from '@/utils/searchUtils';
 import { Search, X, Clock, Trash2, ExternalLink } from 'lucide-react';
-import { ParsedRecipe } from '@/lib/storage';
+import { ParsedRecipe, InstructionStep } from '@/lib/storage';
 import LoadingAnimation from './loading-animation';
+import Image from 'next/image';
 
 interface CommandKHomeSearchProps {
   onClose: () => void;
@@ -38,6 +39,7 @@ export default function CommandKHomeSearch({
 }: CommandKHomeSearchProps) {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
+  const [keyboardShortcut, setKeyboardShortcut] = useState<string>('⌘K');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { recentRecipes: contextRecipes } = useParsedRecipes();
@@ -82,6 +84,48 @@ export default function CommandKHomeSearch({
       inputRef.current?.focus();
     }, 100);
   }, []);
+
+  // Detect platform for keyboard shortcut display
+  useEffect(() => {
+    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    setKeyboardShortcut(isMac ? '⌘K' : 'Ctrl+K');
+  }, []);
+
+  // Helper function to calculate total recipe time
+  const calculateTotalTime = (recipe: ParsedRecipe): number | null => {
+    if (!recipe.instructions || !Array.isArray(recipe.instructions)) return null;
+    
+    const totalMinutes = recipe.instructions.reduce((total, step) => {
+      if (typeof step === 'object' && step.timeMinutes) {
+        return total + step.timeMinutes;
+      }
+      return total;
+    }, 0);
+    
+    return totalMinutes > 0 ? totalMinutes : null;
+  };
+
+  // Helper function to extract cuisine from URL or use placeholder
+  const getCuisine = (recipe: ParsedRecipe): string => {
+    // Try to extract from URL domain or use a placeholder
+    // For now, we'll use a simple placeholder or extract from domain
+    try {
+      if (recipe.sourceUrl || recipe.url) {
+        const url = recipe.sourceUrl || recipe.url;
+        const domain = new URL(url).hostname.toLowerCase();
+        // Simple cuisine detection based on domain
+        if (domain.includes('indian') || domain.includes('curry')) return 'Indian';
+        if (domain.includes('italian') || domain.includes('pasta')) return 'Italian';
+        if (domain.includes('chinese') || domain.includes('asian')) return 'Asian';
+        if (domain.includes('mexican') || domain.includes('taco')) return 'Mexican';
+        if (domain.includes('french')) return 'French';
+        if (domain.includes('mediterranean')) return 'Mediterranean';
+      }
+    } catch {
+      // URL parsing failed
+    }
+    return 'Recipe'; // Default placeholder
+  };
 
   // Handle URL parsing
   const handleParse = useCallback(
@@ -219,14 +263,14 @@ export default function CommandKHomeSearch({
         {/* Search Input */}
         <div className="p-4 border-b border-[#d9d9d9]">
           <form onSubmit={handleSubmit}>
-            <div className="flex items-center gap-2 bg-stone-50 rounded-lg border border-[#d9d9d9] px-3 py-2 focus-within:border-[#4F46E5] focus-within:ring-1 focus-within:ring-[#4F46E5] transition-all">
+            <div className="flex items-center gap-2 bg-stone-50 rounded-lg border border-[#d9d9d9] px-3 py-2.5 focus-within:border-[#4F46E5] focus-within:ring-1 focus-within:ring-[#4F46E5] transition-all">
               <Search className="w-4 h-4 text-stone-500 flex-shrink-0" />
               <input
                 ref={inputRef}
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Enter recipe URL..."
+                placeholder="Search recipes..."
                 className="flex-1 bg-transparent font-albert text-sm text-stone-800 placeholder:text-stone-500 focus:outline-none"
               />
               {query && (
@@ -237,6 +281,11 @@ export default function CommandKHomeSearch({
                 >
                   <X className="w-3.5 h-3.5 text-stone-500" />
                 </button>
+              )}
+              {!query && (
+                <kbd className="hidden sm:inline-flex items-center px-2 py-1 text-xs font-albert text-stone-500 bg-white border border-[#d9d9d9] rounded">
+                  {keyboardShortcut}
+                </kbd>
               )}
             </div>
           </form>
@@ -251,23 +300,53 @@ export default function CommandKHomeSearch({
                 {query.trim() && !isUrl(query) ? 'Matching Recipes' : 'Recent Recipes'}
               </h3>
               <div className="space-y-1">
-                {filteredRecipes.map((recipe) => (
-                  <button
-                    key={recipe.id}
-                    onClick={() => handleRecipeSelect(recipe)}
-                    className="w-full text-left p-3 rounded-lg hover:bg-stone-50 transition-colors group"
-                  >
-                    <div className="font-albert font-medium text-sm text-stone-800 truncate">
-                      {recipe.title}
-                    </div>
-                    <div className="font-albert text-xs text-stone-500 mt-1 line-clamp-1">
-                      {recipe.summary}
-                    </div>
-                    <div className="font-albert text-xs text-stone-400 mt-1">
-                      {new Date(recipe.parsedAt).toLocaleDateString()}
-                    </div>
-                  </button>
-                ))}
+                {filteredRecipes.map((recipe) => {
+                  const totalTime = calculateTotalTime(recipe);
+                  const cuisine = getCuisine(recipe);
+                  const author = recipe.author || 'Recipe';
+                  
+                  return (
+                    <button
+                      key={recipe.id}
+                      onClick={() => handleRecipeSelect(recipe)}
+                      className="w-full text-left p-3 rounded-lg hover:bg-stone-50 transition-colors group flex items-center gap-3"
+                    >
+                      {/* Recipe Image */}
+                      <div className="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-stone-200">
+                        {recipe.imageUrl ? (
+                          <Image
+                            src={recipe.imageUrl}
+                            alt={recipe.title}
+                            width={64}
+                            height={64}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-stone-200 to-stone-300 flex items-center justify-center">
+                            <span className="text-stone-400 font-albert text-xs">No Image</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Recipe Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="font-albert font-semibold text-sm text-stone-900 truncate">
+                          {recipe.title}
+                        </div>
+                        <div className="font-albert text-xs text-stone-600 mt-0.5">
+                          {author} · {cuisine}
+                        </div>
+                      </div>
+                      
+                      {/* Time */}
+                      {totalTime && (
+                        <div className="flex-shrink-0 font-albert text-xs text-stone-500">
+                          {totalTime} min
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
