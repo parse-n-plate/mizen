@@ -515,6 +515,21 @@
     font-weight: 600;
   }
 
+  /* Responsive line break - inserts a line break only on larger screens */
+  .responsive-break {
+    display: none;
+  }
+
+  @media (min-width: 1024px) {
+    .responsive-break {
+      display: block;
+      height: 0;
+      line-height: 0;
+      margin: 0;
+      padding: 0;
+    }
+  }
+
   /* Ingredient List Component (Linear List Style) */
   .ingredient-list-container {
     display: flex;
