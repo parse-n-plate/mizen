@@ -286,8 +286,6 @@ export default function SearchForm({
 
       // Step 3: Store parsed recipe in context
       // The new parser already returns data in the correct grouped format
-      // Step 3: Store parsed recipe in context
-      // The new parser already returns data in the correct grouped format
       const recipeToStore = {
         title: response.title,
         ingredients: response.ingredients,
@@ -295,6 +293,7 @@ export default function SearchForm({
         author: response.author, // Include author if available
         sourceUrl: response.sourceUrl || query, // Use sourceUrl from response or fallback to query URL
         summary: response.summary, // Include AI-generated summary if available
+        cuisine: response.cuisine, // Include cuisine tags if available
       };
       
       // Store recipe first (this writes to localStorage synchronously)
@@ -322,6 +321,7 @@ export default function SearchForm({
         instructions: response.instructions,
         author: response.author, // Include author if available
         sourceUrl: response.sourceUrl || query, // Include source URL if available
+        cuisine: response.cuisine, // Include cuisine tags if available
       });
 
       // Show success toast

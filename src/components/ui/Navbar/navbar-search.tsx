@@ -200,6 +200,7 @@ export default function NavbarSearch() {
         author: response.author, // Include author if available
         sourceUrl: response.sourceUrl || query, // Use sourceUrl from response or fallback to query URL
         summary: response.summary, // Include AI-generated summary if available
+        cuisine: response.cuisine, // Include cuisine tags if available
       };
       
       setParsedRecipe(recipeToStore);
@@ -224,6 +225,7 @@ export default function NavbarSearch() {
         instructions: response.instructions,
         author: response.author, // Include author if available
         sourceUrl: response.sourceUrl || query, // Include source URL if available
+        cuisine: response.cuisine, // Include cuisine tags if available
       });
 
       // Show success toast

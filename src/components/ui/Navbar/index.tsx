@@ -21,7 +21,10 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 md:gap-6">
         {/* Left: Logo */}
         <div className="flex items-center flex-shrink-0">
-          <Link href="/" className="hover:opacity-80 transition-opacity">
+          <Link 
+            href="/" 
+            className="group transition-all duration-300 ease-in-out"
+          >
             <PPLogo />
           </Link>
         </div>
