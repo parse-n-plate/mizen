@@ -85,6 +85,16 @@
     line-height: var(--line-height-body);
   }
 
+  /* Hide scrollbar while maintaining scroll functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+
   .text-heading {
     color: var(--color-text-heading);
   }
@@ -1611,5 +1621,36 @@
       opacity: 1;
       transform: translateY(0);
     }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     LANDING PAGE ONLOAD ANIMATION
+     Smooth fade-in-up animation for landing page content sections
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  /* Fade-in-up animation keyframe */
+  @keyframes page-fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Base fade-in-up animation class */
+  .page-fade-in-up {
+    animation: page-fade-in-up 0.6s ease-out forwards;
+  }
+
+  /* Staggered delay classes for sequential animations */
+  .page-fade-delay-1 {
+    animation-delay: 0.15s;
+  }
+
+  .page-fade-delay-2 {
+    animation-delay: 0.3s;
   }
 }
