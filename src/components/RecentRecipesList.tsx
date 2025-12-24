@@ -38,6 +38,7 @@ export default function RecentRecipesList() {
           author: fullRecipe.author, // Include author if available
           sourceUrl: fullRecipe.sourceUrl || fullRecipe.url, // Include source URL if available
           summary: fullRecipe.description || fullRecipe.summary, // Use AI summary if available, fallback to card summary
+          cuisine: fullRecipe.cuisine, // Include cuisine tags if available
         });
 
         // Navigate to the parsed recipe page
