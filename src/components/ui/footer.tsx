@@ -2,251 +2,119 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
-import { X, Settings2, AlertCircle } from 'lucide-react';
-import { useAdminSettings } from '@/contexts/AdminSettingsContext';
-import { useToast } from '@/hooks/useToast';
-import { ERROR_CODES } from '@/utils/formatError';
 
 export default function Footer() {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { settings, toggleShowRecentRecipeImages, toggleEnableErrorStateTesting } = useAdminSettings();
-  const { showError } = useToast();
-
-  const closeDrawer = () => setIsDrawerOpen(false);
-
-  // Error state testing functions
-  const triggerError = (code: string) => {
-    showError({ code });
+  // Social profile URLs for team members
+  const linkedInProfiles = {
+    gage: 'https://gageminamoto.vercel.app/',
+    michelle: 'https://www.linkedin.com/in/michelle-tran-a48a14203/',
+    will: 'https://www.linkedin.com/in/william-liang808/',
   };
 
   return (
-    <>
-      <footer className="bg-stone-950 text-white w-full py-12 px-4 md:px-8 relative overflow-hidden rounded-t-[16px]">
-        <div className="max-w-6xl mx-auto relative z-10">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-            {/* Left: Text and Buttons */}
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-col gap-[10px]">
-                <h2 className="font-domine text-[40px] md:text-[48px] font-normal leading-[1.1] text-stone-50">
-                  Clean recipes,
-                  <br />
-                  fast cooking.
+    <footer className="bg-[#FAFAF9] max-w-6xl mx-auto pt-6 md:pt-8 pb-12 md:pb-16 px-4 md:px-8 relative overflow-hidden rounded-t-[32px]">
+      {/* Content container */}
+      <div className="relative z-10">
+        <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 md:gap-8 relative min-h-[250px] md:min-h-[300px]">
+          {/* Left Section: Branding and Team Info */}
+          <div className="flex flex-col gap-6 md:gap-8 w-full items-start justify-start relative z-10">
+            {/* Brand Section: Pan Logo + Title */}
+            <div className="flex flex-col gap-[10px]">
+              <div className="flex items-center gap-[10px]">
+                {/* Pan Logo Icon - 36px based on Figma */}
+                <div className="relative w-9 h-9 flex-shrink-0">
+                  <Image
+                    src="/assets/icons/Pan_Icon.png"
+                    alt="Pan Icon"
+                    width={36}
+                    height={36}
+                    className="object-contain"
+                  />
+                </div>
+                {/* Mi San Plas Title */}
+                <h2 className="font-domine text-[36px] font-normal leading-[1.1] text-stone-950">
+                  Mi San Plas
                 </h2>
               </div>
-
-              <Link
-                href="/"
-                className="
-                  inline-flex items-center justify-center
-                  bg-stone-900 text-stone-50
-                  font-albert font-medium text-[16px] leading-[1.4] px-5 py-2 rounded-full
-                  hover:bg-stone-800 transition-all duration-200
-                  w-fit
-                "
-              >
-                Find Recipe
-              </Link>
-
-              <p className="font-albert text-[14px] md:text-[16px] leading-none text-stone-50">
-                © Parse and Plate 2025
+              {/* Prep, Cook, Plate Subtitle */}
+              <p className="font-albert text-[24px] font-normal leading-[1.1] text-stone-500">
+                Prep, Cook, Plate
               </p>
             </div>
 
-            {/* Right: Fish Logo Illustration */}
-            <div className="flex-shrink-0 absolute right-0 top-0 bottom-0 md:relative md:static">
-              <div className="w-32 h-32 md:w-40 md:h-40 relative">
-                <Image
-                  src="/assets/icons/fish logo.svg"
-                  alt="Parse and Plate Logo"
-                  fill
-                  className="object-contain opacity-90"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
-
-      {/* Admin Drawer */}
-      {isDrawerOpen && (
-        <div
-          className="admin-drawer-overlay"
-          role="presentation"
-          onClick={closeDrawer}
-        >
-          <div
-            className="admin-drawer-panel"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Admin settings"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex items-start justify-between gap-4 mb-4">
-              <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-stone-500 font-semibold">
-                  Admin
-                </p>
-                <h3 className="font-domine text-[28px] text-stone-900 leading-[1.1]">
-                  Settings & toggles
-                </h3>
-                <p className="font-albert text-sm text-stone-600 mt-1">
-                  Quick switches to test UI behaviors. Changes save locally.
-                </p>
-              </div>
-              <button
-                type="button"
-                aria-label="Close settings drawer"
-                onClick={closeDrawer}
-                className="admin-drawer-close"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="divide-y divide-stone-200">
-              <div className="py-4 flex items-center justify-between gap-4">
-                <div className="flex-1">
-                  <p className="font-domine text-lg text-stone-900 leading-[1.2]">
-                    Recent recipe images
-                  </p>
-                  <p className="font-albert text-sm text-stone-600">
-                    Toggle image slots on recent recipe cards. Turn off to see the
-                    cards without image frames.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={settings.showRecentRecipeImages}
-                  onClick={toggleShowRecentRecipeImages}
-                  className={`admin-toggle ${settings.showRecentRecipeImages ? 'is-on' : ''}`}
-                >
-                  <span className="admin-toggle-handle" />
-                </button>
-              </div>
-
-              <div className="py-4 flex items-center justify-between gap-4">
-                <div className="flex-1">
-                  <p className="font-domine text-lg text-stone-900 leading-[1.2]">
-                    Error state testing
-                  </p>
-                  <p className="font-albert text-sm text-stone-600">
-                    Enable error state testing tools to trigger different error types for UI testing.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={settings.enableErrorStateTesting}
-                  onClick={toggleEnableErrorStateTesting}
-                  className={`admin-toggle ${settings.enableErrorStateTesting ? 'is-on' : ''}`}
-                >
-                  <span className="admin-toggle-handle" />
-                </button>
-              </div>
-
-              {/* Error State Testing Controls - Only shown when enabled */}
-              {settings.enableErrorStateTesting && (
-                <div className="py-4 space-y-3">
-                  <div className="flex items-center gap-2 mb-3">
-                    <AlertCircle className="w-4 h-4 text-stone-500" />
-                    <p className="font-albert text-sm font-medium text-stone-700">
-                      Trigger Error States
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => triggerError(ERROR_CODES.ERR_INVALID_URL)}
-                      className="px-3 py-2 text-xs font-albert bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg transition-colors"
-                    >
-                      Invalid URL
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => triggerError(ERROR_CODES.ERR_NO_RECIPE_FOUND)}
-                      className="px-3 py-2 text-xs font-albert bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg transition-colors"
-                    >
-                      No Recipe Found
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => triggerError(ERROR_CODES.ERR_FETCH_FAILED)}
-                      className="px-3 py-2 text-xs font-albert bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg transition-colors"
-                    >
-                      Fetch Failed
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => triggerError(ERROR_CODES.ERR_TIMEOUT)}
-                      className="px-3 py-2 text-xs font-albert bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg transition-colors"
-                    >
-                      Timeout
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => triggerError(ERROR_CODES.ERR_AI_PARSE_FAILED)}
-                      className="px-3 py-2 text-xs font-albert bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg transition-colors"
-                    >
-                      AI Parse Failed
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => triggerError(ERROR_CODES.ERR_UNSUPPORTED_DOMAIN)}
-                      className="px-3 py-2 text-xs font-albert bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg transition-colors"
-                    >
-                      Unsupported Domain
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => triggerError(ERROR_CODES.ERR_INVALID_FILE_TYPE)}
-                      className="px-3 py-2 text-xs font-albert bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg transition-colors"
-                    >
-                      Invalid File Type
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => triggerError(ERROR_CODES.ERR_FILE_TOO_LARGE)}
-                      className="px-3 py-2 text-xs font-albert bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg transition-colors"
-                    >
-                      File Too Large
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => triggerError(ERROR_CODES.ERR_UNKNOWN)}
-                      className="px-3 py-2 text-xs font-albert bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg transition-colors col-span-2"
-                    >
-                      Unknown Error
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div className="py-4 flex items-center justify-end">
+            {/* Team Section: Cooked with care by + Avatars */}
+            <div className="flex items-center gap-3 flex-nowrap">
+              <p className="font-albert text-[16px] font-normal leading-[1.1] text-stone-500 whitespace-nowrap">
+                Cooked with care by
+              </p>
+              {/* Avatar Group - slightly overlapping based on Figma design */}
+              <div className="flex items-start justify-start w-full -space-x-2">
+                {/* Gage Avatar */}
                 <Link
-                  href="/admin/debug-parser"
-                  className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-200 text-sm font-medium"
+                  href={linkedInProfiles.gage}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative w-[37px] h-[37px] rounded-full overflow-hidden border-2 border-stone-100 hover:border-stone-100 transition-all hover:scale-110 flex-shrink-0 z-10"
+                  aria-label="Visit Gage's LinkedIn profile"
                 >
-                  <Settings2 className="w-4 h-4" />
-                  Admin tools
+                  <Image
+                    src="/assets/avatars/Gage_Avatar.jpg"
+                    alt="Gage"
+                    width={37}
+                    height={37}
+                    className="object-cover rounded-full"
+                  />
+                </Link>
+                {/* Michelle Avatar */}
+                <Link
+                  href={linkedInProfiles.michelle}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative w-[37px] h-[37px] rounded-full overflow-hidden border-2 border-stone-100 hover:border-stone-100 transition-all hover:scale-110 flex-shrink-0 z-20"
+                  aria-label="Visit Michelle's LinkedIn profile"
+                >
+                  <Image
+                    src="/assets/avatars/Michelle_Avatar.jpg"
+                    alt="Michelle"
+                    width={37}
+                    height={37}
+                    className="object-cover rounded-full"
+                  />
+                </Link>
+                {/* Will Avatar */}
+                <Link
+                  href={linkedInProfiles.will}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative w-[37px] h-[37px] rounded-full overflow-hidden border-2 border-stone-100 hover:border-stone-100 transition-all hover:scale-110 flex-shrink-0 z-30"
+                  aria-label="Visit Will's LinkedIn profile"
+                >
+                  <Image
+                    src="/assets/avatars/Will_Avatar.jpg"
+                    alt="Will"
+                    width={37}
+                    height={37}
+                    className="object-cover rounded-full"
+                  />
                 </Link>
               </div>
             </div>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Floating settings tab */}
-      <button
-        type="button"
-        aria-label="Open settings"
-        className="admin-settings-tab"
-        onClick={() => setIsDrawerOpen(true)}
-      >
-        <Settings2 className="w-4 h-4" />
-      </button>
-    </>
+      {/* Fish Illustration - positioned absolutely, extends from bottom half and gets cut off */}
+      <div className="absolute right-0 w-[300px] sm:w-[400px] md:w-[500px] lg:w-[600px] h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] z-0 pointer-events-none" style={{ bottom: '-40%' }}>
+        <div className="relative w-full h-full">
+          <Image
+            src="/assets/icons/Fish Logo.svg"
+            alt="Fish Logo"
+            fill
+            className="object-contain object-bottom"
+            priority
+          />
+        </div>
+      </div>
+      </footer>
   );
 }
-
