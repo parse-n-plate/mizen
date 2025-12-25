@@ -2,6 +2,7 @@ import React from 'react';
 import type { Metadata } from 'next';
 import { Domine, Albert_Sans } from 'next/font/google';
 import Navbar from '@/components/ui/Navbar';
+import Footer from '@/components/ui/footer';
 import { AdminSettingsProvider } from '@/contexts/AdminSettingsContext';
 import { RecipeProvider } from '@/contexts/RecipeContext';
 import { ParsedRecipesProvider } from '@/contexts/ParsedRecipesContext';
@@ -47,6 +48,7 @@ export default function RootLayout({
                 <CommandKProvider>
                   <Navbar />
                   {children}
+                  <Footer />
                   <CommandKModal />
                   <Toaster />
                 </CommandKProvider>
