@@ -28,6 +28,9 @@ export const ERROR_CODES = {
   ERR_UNKNOWN: 'ERR_UNKNOWN',
   ERR_INVALID_FILE_TYPE: 'ERR_INVALID_FILE_TYPE',
   ERR_FILE_TOO_LARGE: 'ERR_FILE_TOO_LARGE',
+  ERR_NOT_A_URL: 'ERR_NOT_A_URL',
+  ERR_RATE_LIMIT: 'ERR_RATE_LIMIT',
+  ERR_API_UNAVAILABLE: 'ERR_API_UNAVAILABLE',
 } as const;
 
 export const ERROR_MESSAGES = {
@@ -42,6 +45,9 @@ export const ERROR_MESSAGES = {
   [ERROR_CODES.ERR_UNKNOWN]: 'An unexpected error occurred.',
   [ERROR_CODES.ERR_INVALID_FILE_TYPE]: 'Please select a valid image file',
   [ERROR_CODES.ERR_FILE_TOO_LARGE]: 'Image size must be less than 10MB',
+  [ERROR_CODES.ERR_NOT_A_URL]: 'Paste a recipe URL',
+  [ERROR_CODES.ERR_RATE_LIMIT]: 'Too many requests',
+  [ERROR_CODES.ERR_API_UNAVAILABLE]: 'Service temporarily unavailable',
 } as const;
 
 // Enhanced error information with details and suggestions
@@ -132,6 +138,33 @@ export const ERROR_DETAILS: Record<string, EnhancedErrorInfo> = {
       'Use an image compression tool to reduce file size',
       'Take a screenshot instead of uploading the original photo',
       'Try a different image with better compression',
+    ],
+  },
+  [ERROR_CODES.ERR_NOT_A_URL]: {
+    userMessage: 'Paste a recipe URL',
+    detailedExplanation: 'This app imports recipes from recipe websites. Paste a full URL to get started.',
+    suggestions: [
+      'Copy the full URL from your browser\'s address bar',
+      'Make sure the URL starts with http:// or https://',
+      'Try a recipe from sites like AllRecipes, Food Network, or Bon Appétit',
+    ],
+  },
+  [ERROR_CODES.ERR_RATE_LIMIT]: {
+    userMessage: 'Too many requests',
+    detailedExplanation: 'You\'ve hit the rate limit. Please wait a moment before trying again.',
+    suggestions: [
+      'Wait 30-60 seconds before trying again',
+      'Try parsing a different recipe',
+      'Rate limits reset automatically after a short time',
+    ],
+  },
+  [ERROR_CODES.ERR_API_UNAVAILABLE]: {
+    userMessage: 'Service temporarily unavailable',
+    detailedExplanation: 'Our AI service is experiencing issues. Please try again in a few moments.',
+    suggestions: [
+      'Wait a few minutes and try again',
+      'The service should be back online shortly',
+      'Try a different recipe if the issue persists',
     ],
   },
 };

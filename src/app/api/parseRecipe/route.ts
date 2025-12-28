@@ -83,7 +83,13 @@ export async function POST(req: NextRequest): Promise<Response> {
       let errorMessage = 'Could not extract recipe from this page';
 
       if (result.error) {
-        if (result.error.includes('timeout') || result.error.includes('abort')) {
+        if (result.error === 'ERR_RATE_LIMIT' || result.error.includes('rate limit') || result.error.includes('quota')) {
+          errorCode = ERROR_CODES.ERR_RATE_LIMIT;
+          errorMessage = 'Too many requests';
+        } else if (result.error === 'ERR_API_UNAVAILABLE' || result.error.includes('service unavailable')) {
+          errorCode = ERROR_CODES.ERR_API_UNAVAILABLE;
+          errorMessage = 'Service temporarily unavailable';
+        } else if (result.error.includes('timeout') || result.error.includes('abort')) {
           errorCode = ERROR_CODES.ERR_TIMEOUT;
           errorMessage = 'Request timed out';
         } else if (result.error.includes('fetch') || result.error.includes('Failed to fetch')) {

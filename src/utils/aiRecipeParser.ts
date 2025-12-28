@@ -1119,8 +1119,27 @@ ABSOLUTE REQUIREMENTS:
 
     console.error('[AI Parser] Invalid recipe structure from AI:', parsedData);
     return null;
-  } catch (error) {
+  } catch (error: any) {
     console.error('[AI Parser] Error:', error);
+    
+    // Check for rate limit errors
+    if (error?.status === 429 || 
+        error?.message?.includes('rate limit') || 
+        error?.message?.includes('quota') ||
+        error?.response?.status === 429) {
+      console.error('[AI Parser] Rate limit detected');
+      throw new Error('ERR_RATE_LIMIT');
+    }
+    
+    // Check for service unavailable
+    if (error?.status === 503 || 
+        error?.status === 502 ||
+        error?.message?.includes('service unavailable') ||
+        error?.message?.includes('temporarily unavailable')) {
+      console.error('[AI Parser] Service unavailable');
+      throw new Error('ERR_API_UNAVAILABLE');
+    }
+    
     return null;
   }
 }
@@ -1258,10 +1277,35 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
       error: 'Could not extract recipe data using JSON-LD or AI parsing',
       method: 'none',
     };
-  } catch (error) {
+  } catch (error: any) {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error during parsing';
     console.error('[Recipe Parser] Error:', errorMessage);
+    
+    // Check for rate limit errors
+    if (errorMessage === 'ERR_RATE_LIMIT' || 
+        error?.status === 429 || 
+        error?.message?.includes('rate limit') || 
+        error?.message?.includes('quota')) {
+      return {
+        success: false,
+        error: 'ERR_RATE_LIMIT',
+        method: 'none',
+      };
+    }
+    
+    // Check for service unavailable
+    if (errorMessage === 'ERR_API_UNAVAILABLE' ||
+        error?.status === 503 || 
+        error?.status === 502 ||
+        error?.message?.includes('service unavailable')) {
+      return {
+        success: false,
+        error: 'ERR_API_UNAVAILABLE',
+        method: 'none',
+      };
+    }
+    
     return {
       success: false,
       error: errorMessage,
@@ -1542,7 +1586,7 @@ Start your response with { and end with }`,
       error: 'Could not extract valid recipe structure from image',
       method: 'none',
     };
-  } catch (error) {
+  } catch (error: any) {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error during image parsing';
     console.error('[Image Parser] Error:', errorMessage);
@@ -1551,6 +1595,30 @@ Start your response with { and end with }`,
     // If it's a Groq API error, include more details
     if (error && typeof error === 'object' && 'response' in error) {
       console.error('[Image Parser] API error response:', JSON.stringify((error as any).response, null, 2));
+    }
+    
+    // Check for rate limit errors
+    if (error?.status === 429 || 
+        error?.message?.includes('rate limit') || 
+        error?.message?.includes('quota') ||
+        error?.response?.status === 429) {
+      return {
+        success: false,
+        error: 'ERR_RATE_LIMIT',
+        method: 'none',
+      };
+    }
+    
+    // Check for service unavailable
+    if (error?.status === 503 || 
+        error?.status === 502 ||
+        error?.message?.includes('service unavailable') ||
+        error?.message?.includes('temporarily unavailable')) {
+      return {
+        success: false,
+        error: 'ERR_API_UNAVAILABLE',
+        method: 'none',
+      };
     }
     
     return {
