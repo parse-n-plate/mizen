@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Search, X, Paperclip, ChevronDown } from 'lucide-react';
+import { Link, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRecipe } from '@/contexts/RecipeContext';
-// Removed ParsedRecipe import - no longer needed without dropdown
 import {
   recipeScrape,
   validateRecipeUrl,
@@ -14,121 +13,105 @@ import {
 import { errorLogger } from '@/utils/errorLogger';
 import { isUrl } from '@/utils/searchUtils';
 import { addToSearchHistory } from '@/lib/searchHistory';
-import { useRecipeErrorHandler } from '@/hooks/useRecipeErrorHandler';
-import { ERROR_MESSAGES, ERROR_CODES } from '@/utils/formatError';
+import { useToast } from '@/hooks/useToast';
+import { ERROR_CODES } from '@/utils/formatError';
 import LoadingAnimation from '@/components/ui/loading-animation';
-// Import Solar icons for URL and Image modes
-import LinkRound from '@solar-icons/react/csr/text-formatting/LinkRound';
-import Gallery from '@solar-icons/react/csr/video/Gallery';
 
 /**
  * HomepageSearch Component
  * 
- * Large search bar for the homepage with a paperclip attachment button at the front.
- * Works like the navbar search bar but styled for homepage prominence.
- * Based on Figma design with paperclip icon and dropdown arrow.
+ * Modern pill-shaped search bar for the homepage with integrated URL and image parsing.
+ * Features:
+ * - Clean, minimal design matching Figma specifications
+ * - URL parsing via recipeScrape()
+ * - Image upload and parsing via parseRecipeFromImage()
+ * - Command+K keyboard shortcut to focus
+ * - Image chip preview when file is selected
+ * - Albert Sans typography throughout
  */
 export default function HomepageSearch() {
-  const [query, setQuery] = useState('');
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [loading, setLoading] = useState(false);
-  // Removed recentRecipes, filteredRecipes, showRecents, and selectedIndex states
-  // since we're removing the dropdown - HomepageRecentRecipes component handles this
-  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
-  // Mode switching state: 'url' or 'image'
-  const [inputMode, setInputMode] = useState<'url' | 'image'>('url');
-  // Image upload states
+  const [searchValue, setSearchValue] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  // Removed dropdownRef - no longer needed without dropdown
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const switcherButtonRef = useRef<HTMLButtonElement>(null);
-  const dropdownMenuRef = useRef<HTMLDivElement>(null);
 
   const { setParsedRecipe } = useRecipe();
   const { addRecipe } = useParsedRecipes();
-  const { handle: handleError } = useRecipeErrorHandler();
+  const { showError, showInfo } = useToast();
   const router = useRouter();
 
-  // Removed recent recipes loading and filtering logic
-  // HomepageRecentRecipes component handles displaying recent recipes
-
-  // Handle clicks outside to collapse
+  // Command+K keyboard shortcut handler - focuses the search bar
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      
-      // Don't close if clicking on the switcher button or dropdown menu
-      if (
-        switcherButtonRef.current?.contains(target) ||
-        dropdownMenuRef.current?.contains(target)
-      ) {
-        return;
-      }
-      
-      // Close if clicking outside the container
-      if (containerRef.current && !containerRef.current.contains(target)) {
-        setIsExpanded(false);
-        setShowAttachmentMenu(false);
-        // Only clear query if in URL mode
-        if (inputMode === 'url') {
-          setQuery('');
-        }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
       }
     };
 
-    if (isExpanded || showAttachmentMenu) {
-      // Use click event (not mousedown) so button onClick fires first
-      document.addEventListener('click', handleClickOutside);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Create and cleanup image preview URL
+  useEffect(() => {
+    if (selectedImage) {
+      const objectUrl = URL.createObjectURL(selectedImage);
+      setImagePreviewUrl(objectUrl);
       
+      // Cleanup function to revoke the object URL
       return () => {
-        document.removeEventListener('click', handleClickOutside);
+        URL.revokeObjectURL(objectUrl);
       };
+    } else {
+      setImagePreviewUrl(null);
     }
-  }, [isExpanded, showAttachmentMenu, inputMode]);
+  }, [selectedImage]);
 
-  // Handle focus - expand search bar (visual feedback only, no dropdown)
-  const handleFocus = () => {
-    setIsExpanded(true);
-  };
-
-  // Handle image file selection
-  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  // Handle file selection with validation
+  const handleFileSelect = (file: File) => {
     // Validate file type - only allow images
     if (!file.type.startsWith('image/')) {
-      const errorMessage = ERROR_MESSAGES[ERROR_CODES.ERR_INVALID_FILE_TYPE];
-      errorLogger.log(ERROR_CODES.ERR_INVALID_FILE_TYPE, errorMessage, file.name);
-      console.error('Invalid file type:', file.type);
-      // Show error to user (error handler will display it)
-      handleError(ERROR_CODES.ERR_INVALID_FILE_TYPE);
+      errorLogger.log(ERROR_CODES.ERR_INVALID_FILE_TYPE, 'Invalid file type', file.name);
+      showError({
+        code: ERROR_CODES.ERR_INVALID_FILE_TYPE,
+      });
       return;
     }
 
     // Validate file size - max 10MB
     const maxSize = 10 * 1024 * 1024; // 10MB in bytes
     if (file.size > maxSize) {
-      const errorMessage = ERROR_MESSAGES[ERROR_CODES.ERR_FILE_TOO_LARGE];
-      errorLogger.log(ERROR_CODES.ERR_FILE_TOO_LARGE, errorMessage, file.name);
-      console.error('File too large:', file.size);
-      // Show error to user (error handler will display it)
-      handleError(ERROR_CODES.ERR_FILE_TOO_LARGE);
+      errorLogger.log(ERROR_CODES.ERR_FILE_TOO_LARGE, 'File too large', file.name);
+      showError({
+        code: ERROR_CODES.ERR_FILE_TOO_LARGE,
+      });
       return;
     }
 
-    // Set the selected file
+    // Set the selected file and clear URL input
     setSelectedImage(file);
+    setSearchValue('');
+  };
 
-    // Create a preview URL for the image
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+  // Handle file input change
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileSelect(file);
+    }
+  };
+
+  // Handle search input change - clear image when typing URL
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchValue(value);
+    if (value && selectedImage) {
+      setSelectedImage(null); // Clear image when typing URL
+    }
   };
 
   // Handle image parsing
@@ -146,9 +129,12 @@ export default function HomepageSearch() {
       // Check if parsing failed
       if (!response.success || response.error) {
         const errorCode = response.error?.code || 'ERR_NO_RECIPE_FOUND';
-        const errorMessage = handleError(errorCode);
         errorLogger.log(errorCode, response.error?.message || 'Image parsing failed', selectedImage.name);
-        console.error('Image parse error:', errorMessage);
+        showError({
+          code: errorCode,
+          message: response.error?.message,
+        });
+        setLoading(false);
         return;
       }
 
@@ -192,15 +178,18 @@ export default function HomepageSearch() {
       // Navigate to recipe page
       router.push('/parsed-recipe-page');
       setSelectedImage(null);
-      setImagePreview(null);
-      setIsExpanded(false);
+      setSearchValue('');
     } catch (err) {
       console.error('[HomepageSearch] Image parse error:', err);
       errorLogger.log('ERR_UNKNOWN', 'An unexpected error occurred during image parsing', selectedImage.name);
+      showError({
+        code: 'ERR_UNKNOWN',
+        message: 'An unexpected error occurred. Please try again.',
+      });
     } finally {
       setLoading(false);
     }
-  }, [selectedImage, setParsedRecipe, addRecipe, handleError, router]);
+  }, [selectedImage, setParsedRecipe, addRecipe, showError, router]);
 
   // Handle URL parsing
   const handleParse = useCallback(
@@ -210,35 +199,53 @@ export default function HomepageSearch() {
       try {
         setLoading(true);
 
-        // Validate URL
+        // Step 0: Check if input looks like a URL (early validation)
+        if (!isUrl(url)) {
+          errorLogger.log('ERR_NOT_A_URL', 'Input is not a URL', url);
+          showInfo({
+            code: 'ERR_NOT_A_URL',
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Step 1: Validate URL format and check if it's a recipe page
         const validUrlResponse = await validateRecipeUrl(url);
 
         if (!validUrlResponse.success) {
-          const errorMessage = handleError(validUrlResponse.error.code);
           errorLogger.log(
             validUrlResponse.error.code,
             validUrlResponse.error.message,
             url,
           );
-          console.error('Parse error:', errorMessage);
+          showError({
+            code: validUrlResponse.error.code,
+            message: validUrlResponse.error.message,
+          });
+          setLoading(false);
           return;
         }
 
         if (!validUrlResponse.isRecipe) {
-          const errorMessage = handleError('ERR_NO_RECIPE_FOUND');
           errorLogger.log('ERR_NO_RECIPE_FOUND', 'No recipe found on this page', url);
-          console.error('Parse error:', errorMessage);
+          showError({
+            code: 'ERR_NO_RECIPE_FOUND',
+          });
+          setLoading(false);
           return;
         }
 
-        // Parse recipe
+        // Step 2: Parse recipe using unified AI-based parser
         const response = await recipeScrape(url);
 
         if (!response.success || response.error) {
           const errorCode = response.error?.code || 'ERR_NO_RECIPE_FOUND';
-          const errorMessage = handleError(errorCode);
           errorLogger.log(errorCode, response.error?.message || 'Parsing failed', url);
-          console.error('Parse error:', errorMessage);
+          showError({
+            code: errorCode,
+            message: response.error?.message,
+          });
+          setLoading(false);
           return;
         }
 
@@ -282,250 +289,176 @@ export default function HomepageSearch() {
 
         // Navigate to recipe page
         router.push('/parsed-recipe-page');
-        setQuery('');
-        setIsExpanded(false);
+        setSearchValue('');
       } catch (err) {
         console.error('[HomepageSearch] Parse error:', err);
         errorLogger.log('ERR_UNKNOWN', 'An unexpected error occurred', url);
+        showError({
+          code: 'ERR_UNKNOWN',
+          message: 'An unexpected error occurred. Please try again.',
+        });
       } finally {
         setLoading(false);
       }
     },
-    [setParsedRecipe, addRecipe, handleError, router],
+    [setParsedRecipe, addRecipe, showError, showInfo, router],
   );
-
-  // Removed handleRecipeSelect - recipe selection is handled by HomepageRecentRecipes component
-
-  // Handle mode switching
-  const handleModeSwitch = (mode: 'url' | 'image') => {
-    setInputMode(mode);
-    setShowAttachmentMenu(false);
-    // Clear states when switching modes
-    if (mode === 'url') {
-      setSelectedImage(null);
-      setImagePreview(null);
-    } else {
-      setQuery('');
-    }
-  };
 
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (inputMode === 'url' && isUrl(query)) {
-      handleParse(query);
-    } else if (inputMode === 'image' && selectedImage) {
+    
+    // Prioritize image if selected
+    if (selectedImage) {
       handleImageParse();
-    }
-  };
-
-  // Clear input
-  const clearInput = () => {
-    if (inputMode === 'url') {
-      setQuery('');
-      inputRef.current?.focus();
-    } else {
-      setSelectedImage(null);
-      setImagePreview(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
-
-  // Handle keyboard navigation (simplified - no dropdown navigation)
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Handle ESC to close
-    if (e.key === 'Escape') {
-      setIsExpanded(false);
-      setQuery('');
       return;
     }
-
-    // Handle Enter to submit
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (inputMode === 'url' && isUrl(query)) {
-        handleParse(query);
-      } else if (inputMode === 'image' && selectedImage) {
-        handleImageParse();
-      }
+    
+    // Otherwise check for URL input
+    if (searchValue.trim()) {
+      handleParse(searchValue);
+      return;
     }
+  };
+
+  // Trigger file input click
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
   };
 
   return (
     <>
       <LoadingAnimation isVisible={loading} />
-      <div 
-        ref={containerRef}
-        className="relative w-full max-w-2xl mx-auto"
-      >
-        <form onSubmit={handleSubmit}>
-          <div
-            className={`
-              bg-white rounded-xl border transition-all duration-200 overflow-hidden
-              ${isExpanded 
-                ? 'border-[#4F46E5] shadow-lg' 
-                : 'border-stone-200 hover:border-stone-300 shadow-sm'
-              }
-            `}
+      <div className="w-full max-w-2xl mx-auto">
+        <form onSubmit={handleSubmit} className="w-full">
+          <div 
+            className={`bg-[#fafaf9] content-stretch flex min-h-[77px] items-center px-[24px] py-[12px] relative rounded-[999px] shrink-0 w-full transition-all group ${
+              isSearchFocused ? 'bg-white shadow-[0_0_0_3px_rgba(0,114,251,0.15)]' : ''
+            }`}
           >
-            <div className="flex items-stretch">
-              {/* Mode Switcher Button with Dropdown */}
-              <div className="relative flex-shrink-0">
-                <button
-                  ref={switcherButtonRef}
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setShowAttachmentMenu(!showAttachmentMenu);
-                  }}
-                  className="flex items-center gap-2.5 px-4 py-4 min-h-[56px] bg-stone-100 hover:bg-stone-200 rounded-l-xl border-r border-stone-200 transition-colors"
-                  aria-label="Input mode options"
-                  aria-expanded={showAttachmentMenu}
-                >
-                  {/* Show current mode icon */}
-                  {inputMode === 'url' ? (
-                    <LinkRound className="w-5 h-5 text-stone-700 flex-shrink-0" />
-                  ) : (
-                    <Gallery className="w-5 h-5 text-stone-700 flex-shrink-0" />
-                  )}
-                  <div className="h-5 w-px bg-stone-300"></div>
-                  <ChevronDown className={`w-5 h-5 text-stone-700 flex-shrink-0 transition-transform ${showAttachmentMenu ? 'rotate-180' : ''}`} />
-                </button>
+            {/* Border overlay - changes color on focus */}
+            <div 
+              aria-hidden="true" 
+              className={`absolute border-2 border-solid inset-0 pointer-events-none rounded-[999px] transition-all ${
+                isSearchFocused ? 'border-[#0072fb]' : 'border-[#e7e5e4]'
+              }`} 
+            />
+            
+            {/* Main Content Area */}
+            <div className="content-stretch flex gap-[12px] items-center relative shrink-0 flex-1">
+              {/* URL Icon Indicator - Hide when image is selected */}
+              {!selectedImage && (
+                <div className="shrink-0">
+                  <Link className={`size-[24px] transition-colors ${isSearchFocused ? 'text-[#0072fb]' : 'text-[#78716c]'}`} />
+                </div>
+              )}
 
-                {/* Mode Switcher Dropdown Menu - styled to match Figma */}
-                {showAttachmentMenu && (
-                  <div 
-                    ref={dropdownMenuRef}
-                    className="absolute top-full left-0 mt-1 bg-white border border-stone-200 rounded-xl shadow-lg z-50 min-w-[200px]"
-                  >
-                    <div className="p-2">
-                      {/* URL Option */}
-                      <button
-                        type="button"
-                        className="w-full flex items-center gap-3 px-3 py-2.5 text-base font-albert text-stone-800 hover:bg-stone-50 rounded-md transition-colors"
-                        onClick={() => handleModeSwitch('url')}
-                      >
-                        <LinkRound className="w-5 h-5 text-stone-700 flex-shrink-0" />
-                        <span>URL</span>
-                      </button>
-                      
-                      {/* Separator */}
-                      <div className="h-px bg-stone-200 my-1"></div>
-                      
-                      {/* Image Option */}
-                      <button
-                        type="button"
-                        className="w-full flex items-center gap-3 px-3 py-2.5 text-base font-albert text-stone-800 hover:bg-stone-50 rounded-md transition-colors"
-                        onClick={() => handleModeSwitch('image')}
-                      >
-                        <Gallery className="w-5 h-5 text-stone-700 flex-shrink-0" />
-                        <span>Image</span>
-                      </button>
-                    </div>
+              {/* Input Field with Image Chip */}
+              <div className="flex-1 flex items-center gap-2">
+                {/* Image Chip - Shows inside search bar when image is selected */}
+                {selectedImage && (
+                  <div className="flex items-center gap-1.5 bg-[#ebf3ff] rounded-full pl-2 pr-3 py-1.5 border border-[#0072fb]/20 animate-in fade-in slide-in-from-left-2 duration-200">
+                    {imagePreviewUrl && (
+                      <img 
+                        src={imagePreviewUrl} 
+                        alt={selectedImage.name}
+                        className="size-[28px] rounded object-cover flex-shrink-0"
+                      />
+                    )}
+                    <span className="font-albert font-medium text-[#0c0a09] text-[13px]">{selectedImage.name}</span>
+                    <span className="font-albert font-normal text-[#78716c] text-[12px]">({(selectedImage.size / 1024).toFixed(1)} KB)</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedImage(null);
+                      }}
+                      className="hover:bg-[#0072fb]/10 rounded-full p-0.5 transition-colors flex-shrink-0"
+                      title="Remove image"
+                    >
+                      <svg className="size-[12px]" fill="none" viewBox="0 0 24 24">
+                        <path stroke="#78716C" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
                   </div>
+                )}
+                
+                {/* URL Input - Only shown when no image is selected */}
+                {!selectedImage && (
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={searchValue}
+                    onChange={handleSearchChange}
+                    onFocus={() => setIsSearchFocused(true)}
+                    onBlur={() => setIsSearchFocused(false)}
+                    placeholder="Enter a recipe URL"
+                    className="font-albert font-normal leading-[1.3] w-full bg-transparent border-none outline-none text-[#0c0a09] text-[16px] placeholder:text-[#78716c]"
+                  />
                 )}
               </div>
 
-              {/* Input Area */}
-              <div className="flex items-center flex-1 px-5 py-4 min-h-[56px]">
-                {/* URL Mode Input */}
-                {inputMode === 'url' && (
-                  <>
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      placeholder="What recipe do you want to simplify?"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      onFocus={handleFocus}
-                      onKeyDown={handleKeyDown}
-                      className="flex-1 bg-transparent font-albert text-base text-stone-800 placeholder:text-stone-500 focus:outline-none w-full"
-                    />
-
-                    {/* Clear Button */}
-                    {query && (
-                      <button
-                        type="button"
-                        onClick={clearInput}
-                        className="ml-4 p-1.5 hover:bg-stone-100 rounded-full transition-colors flex-shrink-0"
-                        aria-label="Clear search"
-                      >
-                        <X className="w-5 h-5 text-stone-600" />
-                      </button>
-                    )}
-
-                    {/* ESC hint */}
-                    {isExpanded && !query && (
-                      <div className="ml-4 flex-shrink-0">
-                        <kbd className="px-2.5 py-1 text-xs font-albert text-stone-500 bg-stone-50 border border-stone-300 rounded-md">
-                          ESC
-                        </kbd>
-                      </div>
-                    )}
-                  </>
+              {/* Right side buttons */}
+              <div className="shrink-0 flex items-center gap-2">
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileInputChange}
+                  className="hidden"
+                />
+                
+                {/* Command+K Shortcut Indicator - Only shown when not focused and no text */}
+                {!isSearchFocused && !searchValue && !selectedImage && (
+                  <div className="flex items-center gap-1 px-2 py-1 bg-[#e7e5e4] rounded border border-[#d6d3d1] animate-in fade-in duration-200">
+                    <kbd className="text-[12px] text-[#57534e] font-albert font-medium">⌘K</kbd>
+                  </div>
                 )}
-
-                {/* Image Mode Input */}
-                {inputMode === 'image' && (
-                  <>
-                    {/* Hidden file input */}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageSelect}
-                      className="hidden"
-                    />
-
-                    {/* Clickable area to trigger file input */}
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={loading}
-                      className="flex-1 text-left font-albert text-base text-stone-800 placeholder:text-stone-500 focus:outline-none w-full"
-                    >
-                      {selectedImage ? (
-                        <span className="text-stone-800">{selectedImage.name}</span>
-                      ) : (
-                        <span className="text-stone-500">Insert your grandma's recipe</span>
-                      )}
-                    </button>
-
-                    {/* Clear Button */}
-                    {selectedImage && (
-                      <button
-                        type="button"
-                        onClick={clearInput}
-                        className="ml-4 p-1.5 hover:bg-stone-100 rounded-full transition-colors flex-shrink-0"
-                        aria-label="Clear image"
-                      >
-                        <X className="w-5 h-5 text-stone-600" />
-                      </button>
-                    )}
-
-                    {/* Parse Button (for images) */}
-                    {selectedImage && (
-                      <button
-                        type="button"
-                        onClick={handleImageParse}
-                        className="ml-4 bg-[#FFA423] hover:bg-[#FF9500] text-white font-albert text-sm px-4 py-2 rounded-lg transition-colors flex-shrink-0"
-                        disabled={loading}
-                      >
-                        Parse Recipe
-                      </button>
-                    )}
-                  </>
+                
+                {/* Clear Text Button - Only shown when typing */}
+                {searchValue && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchValue('')}
+                    className="p-2 transition-all hover:opacity-60"
+                    title="Clear text"
+                  >
+                    <svg className="size-[16px]" fill="none" viewBox="0 0 24 24">
+                      <path stroke="#57534e" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+                
+                {/* Upload Button - Always visible */}
+                <button
+                  type="button"
+                  onClick={triggerFileInput}
+                  className="p-2 transition-all"
+                  title="Upload image"
+                  disabled={loading}
+                >
+                  <Upload className="size-[20px] text-[#78716c] hover:text-[#0072fb] transition-colors" />
+                </button>
+                
+                {/* Submit Button - Only visible when there's valid input */}
+                {(searchValue || selectedImage) && (
+                  <button
+                    type="submit"
+                    className="bg-[#0072fb] hover:bg-[#0066e0] rounded-full px-6 py-2 transition-all animate-in fade-in duration-200"
+                    title="Process recipe"
+                    disabled={loading}
+                  >
+                    <svg className="size-[20px]" fill="none" viewBox="0 0 24 24">
+                      <path stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14m-7-7l7 7-7 7" />
+                    </svg>
+                  </button>
                 )}
               </div>
             </div>
           </div>
         </form>
-        {/* Removed dropdown - HomepageRecentRecipes component handles displaying recent recipes */}
       </div>
     </>
   );
 }
-

@@ -34,7 +34,7 @@ export default function SearchForm({
   
   const { setParsedRecipe } = useRecipe();
   const { addRecipe, recentRecipes } = useParsedRecipes();
-  const { showError, showSuccess } = useToast();
+  const { showError, showSuccess, showInfo } = useToast();
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -233,6 +233,16 @@ export default function SearchForm({
     try {
       setLoading(true);
 
+      // Step 0: Check if input looks like a URL (early validation)
+      if (!isUrl(query)) {
+        errorLogger.log('ERR_NOT_A_URL', 'Input is not a URL', query);
+        showInfo({
+          code: 'ERR_NOT_A_URL',
+        });
+        setLoading(false);
+        return;
+      }
+
       // Step 1: Quick validation to ensure URL contains recipe-related keywords
       // This provides fast feedback before making the full parsing request
       const validUrlResponse = await validateRecipeUrl(query);
@@ -349,6 +359,7 @@ export default function SearchForm({
     addRecipe,
     showError,
     showSuccess,
+    showInfo,
     router,
   ]);
 

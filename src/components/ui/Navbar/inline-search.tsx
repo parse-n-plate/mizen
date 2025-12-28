@@ -13,7 +13,7 @@ import {
 import { errorLogger } from '@/utils/errorLogger';
 import { isUrl } from '@/utils/searchUtils';
 import { addToSearchHistory } from '@/lib/searchHistory';
-import { useRecipeErrorHandler } from '@/hooks/useRecipeErrorHandler';
+import { useToast } from '@/hooks/useToast';
 import LoadingAnimation from '@/components/ui/loading-animation';
 
 /**
@@ -37,7 +37,7 @@ export default function InlineSearch() {
   const { recentRecipes: contextRecipes } = useParsedRecipes();
   const { setParsedRecipe } = useRecipe();
   const { addRecipe } = useParsedRecipes();
-  const { handle: handleError } = useRecipeErrorHandler();
+  const { showError, showInfo } = useToast();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -109,35 +109,53 @@ export default function InlineSearch() {
         setLoading(true);
         setShowRecents(false);
 
-        // Validate URL
+        // Step 0: Check if input looks like a URL (early validation)
+        if (!isUrl(url)) {
+          errorLogger.log('ERR_NOT_A_URL', 'Input is not a URL', url);
+          showInfo({
+            code: 'ERR_NOT_A_URL',
+          });
+          setLoading(false);
+          return;
+        }
+
+        // Step 1: Validate URL format and check if it's a recipe page
         const validUrlResponse = await validateRecipeUrl(url);
 
         if (!validUrlResponse.success) {
-          const errorMessage = handleError(validUrlResponse.error.code);
           errorLogger.log(
             validUrlResponse.error.code,
             validUrlResponse.error.message,
             url,
           );
-          console.error('Parse error:', errorMessage);
+          showError({
+            code: validUrlResponse.error.code,
+            message: validUrlResponse.error.message,
+          });
+          setLoading(false);
           return;
         }
 
         if (!validUrlResponse.isRecipe) {
-          const errorMessage = handleError('ERR_NO_RECIPE_FOUND');
           errorLogger.log('ERR_NO_RECIPE_FOUND', 'No recipe found on this page', url);
-          console.error('Parse error:', errorMessage);
+          showError({
+            code: 'ERR_NO_RECIPE_FOUND',
+          });
+          setLoading(false);
           return;
         }
 
-        // Parse recipe
+        // Step 2: Parse recipe using unified AI-based parser
         const response = await recipeScrape(url);
 
         if (!response.success || response.error) {
           const errorCode = response.error?.code || 'ERR_NO_RECIPE_FOUND';
-          const errorMessage = handleError(errorCode);
           errorLogger.log(errorCode, response.error?.message || 'Parsing failed', url);
-          console.error('Parse error:', errorMessage);
+          showError({
+            code: errorCode,
+            message: response.error?.message,
+          });
+          setLoading(false);
           return;
         }
 
@@ -187,11 +205,15 @@ export default function InlineSearch() {
       } catch (err) {
         console.error('[InlineSearch] Parse error:', err);
         errorLogger.log('ERR_UNKNOWN', 'An unexpected error occurred', url);
+        showError({
+          code: 'ERR_UNKNOWN',
+          message: 'An unexpected error occurred. Please try again.',
+        });
       } finally {
         setLoading(false);
       }
     },
-    [setParsedRecipe, addRecipe, handleError, router],
+    [setParsedRecipe, addRecipe, showError, showInfo, router],
   );
 
   // Handle recipe selection

@@ -13,6 +13,7 @@ import {
 } from '@/utils/recipe-parse';
 import { errorLogger } from '@/utils/errorLogger';
 import { useCommandK } from '@/contexts/CommandKContext';
+import { isUrl } from '@/utils/searchUtils';
 import LoadingAnimation from '@/components/ui/loading-animation';
 import { useToast } from '@/hooks/useToast';
 import EmptyState from '@/components/ui/empty-state';
@@ -26,7 +27,7 @@ export default function NavbarSearch() {
   const [loading, setLoading] = useState(false);
   const { recentRecipes, addRecipe } = useParsedRecipes();
   const { parsedRecipe, setParsedRecipe } = useRecipe();
-  const { showError, showSuccess } = useToast();
+  const { showError, showSuccess, showInfo } = useToast();
   const { open: openCommandK } = useCommandK();
   const router = useRouter();
   const pathname = usePathname();
@@ -147,6 +148,16 @@ export default function NavbarSearch() {
     try {
       setLoading(true);
 
+      // Step 0: Check if input looks like a URL (early validation)
+      if (!isUrl(query)) {
+        errorLogger.log('ERR_NOT_A_URL', 'Input is not a URL', query);
+        showInfo({
+          code: 'ERR_NOT_A_URL',
+        });
+        setLoading(false);
+        return;
+      }
+
       // Step 1: Quick validation to ensure URL contains recipe-related keywords
       const validUrlResponse = await validateRecipeUrl(query);
 
@@ -256,6 +267,7 @@ export default function NavbarSearch() {
     addRecipe,
     showError,
     showSuccess,
+    showInfo,
     router,
   ]);
 
