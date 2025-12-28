@@ -32,7 +32,7 @@
     font-family: var(--font-family-sans);
     line-height: var(--line-height-body);
     color: var(--color-text-body);
-    background-color: #fafaf9; /* stone-50 - consistent landing background */
+    background-color: white; /* White background for landing page */
     overflow-x: hidden;
   }
 
@@ -739,6 +739,11 @@
   .recent-recipe-delete-btn:focus-visible {
     outline: 2px solid #d6d3d1;
     outline-offset: 2px;
+  }
+
+  /* Recipe Card shadow on hover */
+  .recipe-card-hover-shadow:hover {
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
   }
 
   /* Admin drawer and toggle */

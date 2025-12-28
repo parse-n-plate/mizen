@@ -42,24 +42,21 @@ export default function FeaturedRecipesSection({
         </h2>
       </div>
 
-      {/* Recipe Cards Grid */}
+      {/* Recipe Cards Grid - Using a 2-column grid for the new long rectangle layout */}
       {filteredRecipes.length > 0 ? (
-        <div className="space-y-6">
-          {/* First row: up to 3 recipes */}
-          <div className="flex flex-col md:flex-row gap-6 items-stretch w-full">
-            {filteredRecipes.slice(0, 3).map((recipe) => (
-              <RecipeCard key={recipe.id} recipe={recipe} />
-            ))}
-          </div>
-
-          {/* Second row: remaining recipes (if any) */}
-          {filteredRecipes.length > 3 && (
-            <div className="flex flex-col md:flex-row gap-6 items-stretch w-full">
-              {filteredRecipes.slice(3, 6).map((recipe) => (
-                <RecipeCard key={recipe.id} recipe={recipe} />
-              ))}
-            </div>
-          )}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {filteredRecipes.map((recipe) => (
+            <RecipeCard 
+              key={recipe.id} 
+              recipe={{
+                id: recipe.id,
+                title: recipe.name,
+                author: recipe.author,
+                imageUrl: recipe.image,
+                cuisine: [recipe.category]
+              }} 
+            />
+          ))}
         </div>
       ) : (
         // Empty state when no recipes match the filter

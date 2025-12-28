@@ -3,23 +3,18 @@
 import HomepageSkeleton from '@/components/ui/homepage-skeleton';
 import CuisinePills from '@/components/ui/cuisine-pills';
 import RecipeCard, { RecipeCardData } from '@/components/ui/recipe-card';
+import HomepageSearch from '@/components/ui/homepage-search';
+import HomepageRecentRecipes from '@/components/ui/homepage-recent-recipes';
+import HomepageBanner from '@/components/ui/homepage-banner';
 import { useState, useEffect, useMemo, Suspense, use } from 'react';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
-import { useRecipe } from '@/contexts/RecipeContext';
-import { useAdminSettings } from '@/contexts/AdminSettingsContext';
-import { useRouter } from 'next/navigation';
 import type { CuisineType } from '@/components/ui/cuisine-pills';
 
 function HomeContent() {
   const {
     isLoaded,
     recentRecipes,
-    getRecipeById,
-    removeRecipe,
   } = useParsedRecipes();
-  const { settings } = useAdminSettings();
-  const { setParsedRecipe } = useRecipe();
-  const router = useRouter();
   const [selectedCuisine, setSelectedCuisine] = useState<CuisineType>('All');
   const [isPageLoaded, setIsPageLoaded] = useState<boolean>(false);
 
@@ -38,44 +33,20 @@ function HomeContent() {
     setSelectedCuisine(cuisine);
   };
 
-  // Handle recent recipe click - navigate to parsed recipe page
-  const handleRecentRecipeClick = (recipeId: string) => {
-    try {
-      const fullRecipe = getRecipeById(recipeId);
-      if (fullRecipe && fullRecipe.ingredients && fullRecipe.instructions) {
-        setParsedRecipe({
-          title: fullRecipe.title,
-          ingredients: fullRecipe.ingredients,
-          instructions: fullRecipe.instructions,
-          author: fullRecipe.author, // Include author if available
-          sourceUrl: fullRecipe.sourceUrl || fullRecipe.url, // Include source URL if available
-          summary: fullRecipe.description || fullRecipe.summary, // Use AI summary if available, fallback to card summary
-          cuisine: fullRecipe.cuisine, // Include cuisine tags if available
-        });
-        router.push('/parsed-recipe-page');
-      }
-    } catch (error) {
-      console.error('Error loading recipe:', error);
-    }
-  };
-
-  const handleRemoveRecentRecipe = (recipeId: string) => {
-    removeRecipe(recipeId);
-  };
-
   // Convert ParsedRecipe to RecipeCardData format
   const convertToRecipeCardData = (recipe: typeof recentRecipes[0]): RecipeCardData => {
-    // Extract domain name from URL as a simple "author" placeholder
-    let author = 'Recipe';
-    try {
-      if (recipe.url) {
+    // Use actual author from recipe data if available, fallback to URL parsing
+    let author = recipe.author || 'Recipe';
+    
+    if (!recipe.author && recipe.url) {
+      try {
         const urlObj = new URL(recipe.url);
         author = urlObj.hostname.replace('www.', '').split('.')[0];
         // Capitalize first letter
         author = author.charAt(0).toUpperCase() + author.slice(1);
+      } catch {
+        // If URL parsing fails, keep default
       }
-    } catch {
-      // If URL parsing fails, use default
     }
 
     return {
@@ -84,6 +55,9 @@ function HomeContent() {
       author: author,
       imageUrl: recipe.imageUrl, // Optional image support when available
       cuisine: recipe.cuisine, // Include cuisine tags if available
+      prepTimeMinutes: recipe.prepTimeMinutes,
+      cookTimeMinutes: recipe.cookTimeMinutes,
+      totalTimeMinutes: recipe.totalTimeMinutes,
     };
   };
 
@@ -116,52 +90,48 @@ function HomeContent() {
 
   return (
     <div className="bg-white min-h-screen relative flex flex-col">
+      {/* Homepage Banner - Only on landing page */}
+      <HomepageBanner />
 
       <div className="transition-opacity duration-300 ease-in-out opacity-100 relative z-10 flex-1">
         {/* Main Content Container */}
         <div className="max-w-6xl mx-auto px-4 md:px-8 pt-16 md:pt-24 pb-12 md:pb-16 flex flex-col gap-16 md:gap-20">
           {/* Hero Section */}
           <div className={`text-center space-y-5 md:space-y-6 ${isPageLoaded ? 'page-fade-in-up' : 'opacity-0'}`}>
-              <h1 className="font-domine text-[48px] md:text-[56px] font-normal text-black leading-[1.05]">
-                Clean recipes, calm cooking.
-              </h1>
-              <>
-    <p className="font-albert text-[16px] md:text-[17px] text-stone-600 leading-[1.6] max-w-2xl mx-auto">
-        No distractions. No clutter. Just clear, elegant recipes designed<span className="responsive-break"></span> for people who love to cook.
-    </p>
-</>
-          </div>
-
-          {/* Recent Recipes Section */}
-          {displayRecentRecipes.length > 0 && (
-            <div className={`space-y-8 md:space-y-10 ${isPageLoaded ? 'page-fade-in-up page-fade-delay-1' : 'opacity-0'}`}>
-              <div className="space-y-4 md:space-y-5">
-                {/* Header */}
-                <div>
-                  <h2 className="font-domine text-[28px] md:text-[24px] font-normal text-black leading-[1.1] tracking-tight">
-                    Recent Recipes
-                  </h2>
-                </div>
-                <p className="font-albert text-[15px] md:text-[16px] text-stone-500 leading-[1.5]">
-                  Fresh pulls from your kitchen queue
-                </p>
-              </div>
-
-              {/* Recent Recipe Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {displayRecentRecipes.map((recipe) => (
-                  <RecipeCard
-                    key={recipe.id}
-                    recipe={recipe}
-                    showImage={settings.showRecentRecipeImages}
-                    onClick={() => handleRecentRecipeClick(recipe.id)}
-                    showDelete
-                    onDelete={() => handleRemoveRecentRecipe(recipe.id)}
+              <h1 className="font-domine text-[57.6px] sm:text-[67.2px] md:text-[76.8px] font-bold text-black leading-[1.05] flex flex-col items-center justify-center gap-2 md:gap-3">
+                <span className="flex items-center gap-2 md:gap-3">
+                  Clean recipes,
+                  <img 
+                    src="/assets/Illustration Icons/Tomato_Icon.png" 
+                    alt="" 
+                    className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 flex-shrink-0 object-contain"
+                    aria-hidden="true"
                   />
-                ))}
+                </span>
+                <span className="flex items-center gap-2 md:gap-3">
+                  <img 
+                    src="/assets/Illustration Icons/Pan_Icon.png" 
+                    alt="" 
+                    className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 flex-shrink-0 object-contain"
+                    aria-hidden="true"
+                  />
+                  calm cooking.
+                </span>
+              </h1>
+              <p className="font-albert text-[16px] sm:text-[18px] md:text-[20px] text-stone-600 leading-[1.6] max-w-2xl mx-auto">
+                No distractions. No clutter. Just clear, elegant recipes<span className="responsive-break"></span> designed for people who love to cook.
+              </p>
+              
+              {/* Homepage Search Bar */}
+              <div className={`${isPageLoaded ? 'page-fade-in-up page-fade-delay-1' : 'opacity-0'}`}>
+                <HomepageSearch />
               </div>
-            </div>
-          )}
+              
+              {/* Recent Recipes - Under Search Bar */}
+              <div className={`${isPageLoaded ? 'page-fade-in-up page-fade-delay-1' : 'opacity-0'}`}>
+                <HomepageRecentRecipes />
+              </div>
+          </div>
 
           {/* Trending Recipes Section */}
           <div className={`space-y-8 md:space-y-10 ${isPageLoaded ? 'page-fade-in-up page-fade-delay-2' : 'opacity-0'}`}>
@@ -176,8 +146,8 @@ function HomeContent() {
               <CuisinePills onCuisineChange={handleCuisineChange} />
             </div>
 
-            {/* Recipe Cards Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Recipe Cards Grid - Adjusted for horizontal long cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {filteredRecipes.map((recipe) => (
                 <RecipeCard key={recipe.id} recipe={recipe} />
               ))}

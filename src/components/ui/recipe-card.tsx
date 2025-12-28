@@ -1,7 +1,9 @@
 'use client';
 
 import Image from 'next/image';
+import { useState } from 'react';
 import { X } from 'lucide-react';
+import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 
 export interface RecipeCardData {
@@ -10,6 +12,9 @@ export interface RecipeCardData {
   author: string;
   imageUrl?: string;
   cuisine?: string[]; // Array of cuisine names (e.g., ["Italian", "Mediterranean"])
+  prepTimeMinutes?: number;
+  cookTimeMinutes?: number;
+  totalTimeMinutes?: number;
 }
 
 interface RecipeCardProps {
@@ -25,91 +30,87 @@ export default function RecipeCard({
   onClick,
   onDelete,
   showDelete = false,
-  showImage = true,
+  showImage = false, // Default to false as per new design (using cuisine icons instead)
 }: RecipeCardProps) {
-  // All cards use white background (matching updated design)
-  
-  const shouldShowImage = showImage !== false;
+  const [isBookmarked, setIsBookmarked] = useState(false);
+
+  // Get the first cuisine icon if available, otherwise use a default
+  const primaryCuisine = recipe.cuisine && recipe.cuisine.length > 0 ? recipe.cuisine[0] : null;
+  const cuisineIconPath = primaryCuisine ? CUISINE_ICON_MAP[primaryCuisine] : '/assets/Illustration Icons/Pan_Icon.png';
+
+  const handleBookmarkToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsBookmarked(!isBookmarked);
+  };
 
   return (
     <div
-      className="group w-full md:basis-0 md:grow min-h-px md:min-w-px relative rounded-[8px] shrink-0 bg-white transition-all hover:rounded-[24px] cursor-pointer"
+      className="group w-full md:basis-0 md:grow min-h-px md:min-w-px relative rounded-[20px] shrink-0 bg-white transition-all duration-500 ease-in-out hover:rounded-[36px] recipe-card-hover-shadow cursor-pointer"
     >
       {/* Animated border that matches the rounded corners on hover */}
       <div
         aria-hidden="true"
-        className="absolute border border-solid border-stone-200 inset-0 pointer-events-none rounded-[8px] transition-all group-hover:rounded-[24px]"
+        className="absolute border border-solid border-stone-200 inset-0 pointer-events-none rounded-[20px] transition-all duration-500 group-hover:rounded-[36px]"
       />
       
+      {/* Bookmark Button */}
+      <button
+        onClick={handleBookmarkToggle}
+        className="absolute top-4 right-4 z-20 p-1.5 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-stone-300 bg-white/50 backdrop-blur-sm"
+        aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark recipe'}
+      >
+        <Bookmark
+          className={`w-6 h-6 transition-colors duration-200 ${
+            isBookmarked 
+              ? 'fill-stone-500 text-stone-500' 
+              : 'text-stone-300 hover:fill-stone-300'
+          }`}
+        />
+      </button>
+
       <div className="size-full">
         <button
           onClick={onClick}
           className="w-full h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-0 rounded-[inherit]"
         >
-          <div
-            className={`box-border content-stretch flex flex-col ${shouldShowImage ? 'gap-[24px]' : 'gap-[16px]'} items-start p-[24px] relative w-full`}
-          >
-            {/* Recipe Image */}
-            {shouldShowImage && (
-              <div className="aspect-[282.667/204] relative rounded-[8px] shrink-0 w-full overflow-hidden">
-                {recipe.imageUrl ? (
-                  <Image
-                    src={recipe.imageUrl}
-                    alt={recipe.title}
-                    fill
-                    className="absolute inset-0 max-w-none object-50%-50% object-cover pointer-events-none rounded-[8px] size-full transition-transform hover:scale-105"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-stone-200 to-stone-300 flex items-center justify-center rounded-[8px]">
-                    <span className="text-stone-500 font-albert text-sm">No Image</span>
-                  </div>
-                )}
-              </div>
-            )}
+          <div className="box-border flex flex-row items-center gap-[16px] md:gap-[24px] p-[16px] md:p-[20px] relative w-full min-h-[120px]">
+            {/* Cuisine Illustration Icon */}
+            <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
+              <Image
+                src={cuisineIconPath}
+                alt={`${primaryCuisine || 'Recipe'} icon`}
+                fill
+                quality={100}
+                unoptimized={true}
+                className="object-contain pointer-events-none"
+              />
+            </div>
 
             {/* Recipe Info */}
-            <div className="content-stretch flex flex-col font-normal gap-[8px] items-start justify-center overflow-clip relative shrink-0 w-full whitespace-normal break-words">
-              <h3 className="font-domine leading-[1.1] relative text-[24px] text-black text-left line-clamp-1 break-words">
+            <div className="flex-1 flex flex-col gap-[4px] min-w-0 pr-8 items-start">
+              <h3 className="font-domine leading-[1.2] text-[18px] md:text-[22px] text-black text-left line-clamp-1 break-words m-0">
                 {recipe.title}
               </h3>
-              <p className="font-albert leading-[1.4] relative shrink-0 text-[16px] text-stone-700">
-                <span>By </span>
+              
+              <p className="font-albert leading-[1.4] text-[13px] md:text-[15px] text-stone-700 text-left m-0">
+                <span className="text-stone-500">By </span>
                 {recipe.author}
               </p>
-              {/* Cuisine Icons */}
-              {recipe.cuisine && recipe.cuisine.length > 0 && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  {recipe.cuisine.slice(0, 3).map((cuisineName) => {
-                    const iconPath = CUISINE_ICON_MAP[cuisineName];
-                    if (!iconPath) {
-                      console.warn(`[RecipeCard] ⚠️ Missing icon for cuisine: "${cuisineName}". Check cuisineConfig.ts and ensure icon file exists.`);
-                      return null;
-                    }
-                    console.log(`[RecipeCard] 🍽️ Displaying cuisine icon for "${cuisineName}" on recipe "${recipe.title}"`);
-                    return (
-                      <div
-                        key={cuisineName}
-                        className="flex items-center gap-1.5"
-                        title={cuisineName}
-                      >
-                        <Image
-                          src={iconPath}
-                          alt={`${cuisineName} cuisine icon`}
-                          width={20}
-                          height={20}
-                          quality={100}
-                          unoptimized={true}
-                          className="w-5 h-5 object-contain"
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+            </div>
+
+            {/* Right Side: Time Pill */}
+            <div className="flex flex-col justify-end self-stretch pb-1">
+              <div className="pt-2">
+                <span className="font-albert text-[11px] md:text-[13px] text-stone-600 bg-stone-100 px-3 py-1.5 rounded-full whitespace-nowrap border border-stone-200/50">
+                  -- min
+                </span>
+              </div>
             </div>
           </div>
         </button>
       </div>
+      
       {showDelete && (
         <button
           type="button"
