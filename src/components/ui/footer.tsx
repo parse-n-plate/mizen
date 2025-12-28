@@ -31,9 +31,9 @@ export default function Footer() {
                     className="object-contain"
                   />
                 </div>
-                {/* Mi San Plas Title */}
+                {/* Title */}
                 <h2 className="font-domine text-[36px] font-normal leading-[1.1] text-stone-950">
-                  Mi San Plas
+                  Mizen
                 </h2>
               </div>
               {/* Prep, Cook, Plate Subtitle */}
@@ -42,10 +42,10 @@ export default function Footer() {
               </p>
             </div>
 
-            {/* Team Section: Cooked with care by + Avatars */}
+            {/* Team Section: Cooked with love by + Avatars */}
             <div className="flex items-center gap-3 flex-nowrap">
               <p className="font-albert text-[16px] font-normal leading-[1.1] text-stone-500 whitespace-nowrap">
-                Cooked with care by
+                Cooked with love by
               </p>
               {/* Avatar Group - slightly overlapping based on Figma design */}
               <div className="flex items-start justify-start w-full -space-x-2">
