@@ -111,10 +111,74 @@ INGREDIENT NAMES:
 - Do NOT abbreviate, simplify, or modify names
 - If a size is part of the ingredient name (e.g., "6-inch tortillas"), include it in the ingredient name and leave units blank
 
-GROUPS:
-- If ingredients are grouped in HTML (e.g., "For the crust", "For the filling"), preserve those exact group names
-- If no groups exist, use a single group with groupName "Main"
-- Do NOT create groups that don't exist in the HTML
+INGREDIENT GROUPS - MANDATORY GROUPING RULES:
+You MUST create logical ingredient groupings for EVERY recipe. Do NOT default to a single "Main" group unless the recipe truly has no logical way to group ingredients.
+
+STEP 1: DETECT EXPLICIT GROUPINGS IN HTML (if present):
+- Look for explicit group headers: "For the [X]:", "For [X]:", "[X] Ingredients:", "[X]:"
+- Look for section headings (<h2>, <h3>, <h4>) before ingredient lists
+- Look for bold text or visual separators that indicate groups
+- If found, use those exact group names
+
+STEP 2: CREATE LOGICAL GROUPINGS (even if not in HTML):
+If no explicit groupings exist, you MUST analyze the ingredients and create logical groups based on:
+
+A. SAUCE/MARINADE/DRESSING GROUP:
+   - Ingredients used to make sauces, marinades, dressings, or liquid bases
+   - Examples: soy sauce, vinegar, oil, cream, broth, wine, lemon juice, etc.
+   - Group name: "For the sauce", "For the marinade", "For the dressing", etc.
+
+B. MAIN INGREDIENTS GROUP:
+   - Primary proteins, vegetables, or starches that are the main focus
+   - Examples: chicken, beef, pasta, rice, vegetables, tofu, etc.
+   - Group name: "Main ingredients" or recipe-specific like "For the pasta"
+
+C. SEASONING/SPICES GROUP:
+   - Herbs, spices, salt, pepper, and flavor enhancers
+   - Examples: garlic, ginger, salt, pepper, herbs, spices, etc.
+   - Group name: "Seasoning", "Spices", or "For seasoning"
+
+D. GARNISH/TOPPING GROUP:
+   - Ingredients added at the end for garnish or topping
+   - Examples: green onions, cilantro, sesame seeds, cheese, nuts, etc.
+   - Group name: "For garnish", "For serving", "Toppings"
+
+E. BASE/DOUGH/CRUST GROUP:
+   - Ingredients for bases, doughs, crusts, or batters
+   - Examples: flour, eggs, butter, baking powder, etc.
+   - Group name: "For the dough", "For the crust", "For the base"
+
+GROUPING LOGIC:
+1. Analyze ALL ingredients and their typical uses in cooking
+2. Group ingredients that are used together or serve similar purposes
+3. Create 2-4 groups minimum (unless recipe truly has <5 ingredients total)
+4. Use descriptive, recipe-appropriate group names
+5. Each group should have at least 2 ingredients (unless recipe is very small)
+
+OUTPUT RULES:
+- ALWAYS create multiple groups when you have 5+ ingredients
+- NEVER use "Main" unless the recipe has <5 ingredients total
+- Group names should be descriptive and recipe-appropriate
+- Examples: "For the sauce", "Main ingredients", "For garnish", "For the pasta", etc.
+
+EXAMPLES OF PROPER GROUPING:
+Good (logical groupings created):
+[
+  {"groupName": "For the sauce", "ingredients": [gochujang, heavy cream, butter, garlic, sugar]},
+  {"groupName": "Main ingredients", "ingredients": [pasta, pasta water]},
+  {"groupName": "For garnish", "ingredients": [green onions, parmesan]}
+]
+
+Good (explicit groupings detected):
+[
+  {"groupName": "For the sauce", "ingredients": [...]},
+  {"groupName": "For the meatballs", "ingredients": [...]}
+]
+
+Bad (defaulting to Main when logical groups exist):
+[
+  {"groupName": "Main", "ingredients": [all ingredients combined]}
+]
 
 ========================================
 EDGE CASES AND MISSING DATA
@@ -128,7 +192,11 @@ If an ingredient amount is missing:
 - Still include the ingredient name
 
 If ingredient groups are unclear:
-- Use a single group with groupName "Main"
+- You MUST create logical groupings based on ingredient types and uses
+- Categorize by: Sauce/Marinade, Main ingredients, Seasoning/Spices, Garnish/Toppings, Base/Dough
+- Only use "Main" if the recipe has fewer than 5 ingredients total
+- When in doubt, create at least 2 groups based on how ingredients are typically used together
+- Analyze ingredient names to infer their purpose (e.g., "heavy cream" → sauce group, "green onions" → garnish group)
 
 If no valid recipe is found in HTML:
 - Return: ["No recipe found", []]
@@ -144,18 +212,32 @@ FORMAT EXAMPLES (FOR STRUCTURE REFERENCE ONLY)
 WARNING: These examples show the JSON FORMAT and STRUCTURE only.
 DO NOT use these example values. Extract actual values from the HTML provided.
 
-Example showing varied fraction formats:
+Example showing logical ingredient groupings (ALWAYS create groups):
 [
-  "Homemade Bread",
+  "Gochujang Pasta",
   [
     {
-      "groupName": "Main",
+      "groupName": "For the sauce",
       "ingredients": [
-        {"amount": "3 1/2", "units": "cups", "ingredient": "bread flour"},
-        {"amount": "2 1/4", "units": "teaspoons", "ingredient": "active dry yeast"},
-        {"amount": "1/4", "units": "cup", "ingredient": "warm water"},
-        {"amount": "½", "units": "tablespoon", "ingredient": "salt"},
-        {"amount": "as needed", "units": "", "ingredient": "olive oil for brushing"}
+        {"amount": "2", "units": "tablespoons", "ingredient": "unsalted butter"},
+        {"amount": "2", "units": "cloves", "ingredient": "garlic"},
+        {"amount": "2", "units": "tablespoons", "ingredient": "gochujang"},
+        {"amount": "1/2", "units": "cup", "ingredient": "heavy cream"},
+        {"amount": "1", "units": "teaspoon", "ingredient": "sugar"}
+      ]
+    },
+    {
+      "groupName": "Main ingredients",
+      "ingredients": [
+        {"amount": "8", "units": "ounces", "ingredient": "pasta"},
+        {"amount": "1/2", "units": "cup", "ingredient": "pasta water"}
+      ]
+    },
+    {
+      "groupName": "For garnish",
+      "ingredients": [
+        {"amount": "2", "units": "stalks", "ingredient": "green onion"},
+        {"amount": "as needed", "units": "", "ingredient": "parmesan cheese"}
       ]
     }
   ]
