@@ -233,32 +233,33 @@ export default function RecipeCard({
 
   return (
     <div
-      className="group w-full md:basis-0 md:grow min-h-px md:min-w-px relative rounded-[20px] shrink-0 bg-white transition-all duration-500 ease-in-out hover:rounded-[36px] recipe-card-hover-shadow cursor-pointer"
+      className={`group w-full md:basis-0 md:grow min-h-px md:min-w-px relative rounded-[20px] shrink-0 bg-white hover:bg-gray-50 transition-colors duration-200 cursor-pointer overflow-visible ${isMenuOpen ? 'z-[99]' : ''}`}
     >
-      {/* Animated border that matches the rounded corners on hover */}
+      {/* Border */}
       <div
         aria-hidden="true"
-        className="absolute border border-solid border-stone-200 inset-0 pointer-events-none rounded-[20px] transition-all duration-500 group-hover:rounded-[36px]"
+        className="absolute border border-solid border-stone-200 inset-0 pointer-events-none rounded-[20px]"
       />
       
       {/* Bookmark Button */}
       <button
         onClick={handleBookmarkToggle}
-        className="absolute top-4 right-16 z-20 p-1.5 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 bg-white/50 backdrop-blur-sm"
+        className="absolute top-4 right-12 z-20 p-1.5 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 bg-white/50 backdrop-blur-sm"
         aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark recipe'}
       >
         <Bookmark
-          weight="Bold"
-          className={`w-6 h-6 transition-colors duration-200 ${
-            isBookmarked 
-              ? 'fill-stone-500 text-stone-500' 
-              : 'text-stone-300 hover:fill-stone-300'
-          }`}
+          className={`
+            w-5 h-5 transition-colors duration-200
+            ${isBookmarked 
+              ? 'fill-[#78716C] text-[#78716C]' 
+              : 'fill-[#D6D3D1] text-[#D6D3D1] hover:fill-[#A8A29E] hover:text-[#A8A29E]'
+            }
+          `}
         />
       </button>
 
       {/* Ellipsis Menu Button and Dropdown */}
-      <div ref={menuRef} className="absolute top-4 right-4 z-30">
+      <div ref={menuRef} className={`absolute top-4 right-4 ${isMenuOpen ? 'z-[100]' : 'z-30'}`}>
         <button
           ref={buttonRef}
           onClick={handleMenuToggle}
@@ -279,7 +280,7 @@ export default function RecipeCard({
         {isMenuOpen && (
           <div
             ref={dropdownRef}
-            className={`absolute w-60 bg-white rounded-lg border border-stone-200 shadow-xl p-1.5 z-50 animate-in fade-in duration-200 ${
+            className={`absolute w-60 bg-white rounded-lg border border-stone-200 shadow-xl p-1.5 z-[100] animate-in fade-in duration-200 ${
               menuPosition.vertical === 'bottom'
                 ? 'top-[calc(100%+8px)] slide-in-from-top-2'
                 : 'bottom-[calc(100%+8px)] slide-in-from-bottom-2'
@@ -352,12 +353,10 @@ export default function RecipeCard({
             </div>
 
             {/* Right Side: Time Pill */}
-            <div className="flex flex-col justify-end self-stretch pb-1">
-              <div className="pt-2">
-                <span className="font-albert text-[11px] md:text-[13px] text-stone-600 bg-stone-100 px-3 py-1.5 rounded-full whitespace-nowrap border border-stone-200/50">
-                  -- min
-                </span>
-              </div>
+            <div className="flex flex-col justify-end self-stretch">
+              <span className="font-albert text-[11px] md:text-[13px] text-stone-600 bg-stone-100 px-3 py-1.5 rounded-full whitespace-nowrap border border-stone-200/50">
+                -- min
+              </span>
             </div>
           </div>
         </button>

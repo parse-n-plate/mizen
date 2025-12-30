@@ -57,6 +57,26 @@
   * {
     box-sizing: border-box;
   }
+
+  /* Interactive Elements - Pointer Cursor
+     Apply pointer cursor to all true interactive elements:
+     - Links with href attribute
+     - Button elements
+     - Elements with role="button"
+     - Elements with tabindex (excluding -1 which is non-interactive)
+  */
+  a[href],
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [tabindex]:not([tabindex="-1"]) {
+    cursor: pointer;
+  }
+
+  /* Disabled buttons should show not-allowed cursor */
+  button:disabled,
+  [role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
+  }
 }
 
 /* Utility Classes */
@@ -741,10 +761,6 @@
     outline-offset: 2px;
   }
 
-  /* Recipe Card shadow on hover */
-  .recipe-card-hover-shadow:hover {
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
-  }
 
   /* Admin drawer and toggle */
   .admin-drawer-overlay {
