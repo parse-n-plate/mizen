@@ -30,7 +30,7 @@ type UISettingsContextType = {
 const STORAGE_KEY = 'uiSettings';
 
 const defaultSettings: UISettingsState = {
-  ingredientExpandStyle: 'things3',
+  ingredientExpandStyle: 'accordion',
   stepSizing: 'med',
   fontFamily: 'sans',
 };

@@ -24,7 +24,7 @@ export default function ContextPanel({ step, allIngredients }: ContextPanelProps
   };
 
   return (
-    <div className="overflow-y-auto pt-8 px-8 pb-8 bg-[#fafafa] rounded-[12px]">
+    <div className="overflow-y-auto pt-8 px-8 pb-8 bg-[#fafafa] rounded-[12px] cursor-default">
       <AnimatePresence mode="wait">
         <motion.div
           key={step.step} // Use step title as key to trigger re-animation
@@ -32,7 +32,7 @@ export default function ContextPanel({ step, allIngredients }: ContextPanelProps
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.3 }}
-          className="space-y-10"
+          className="space-y-10 cursor-default"
         >
           {/* Ingredients List Section - Detailed View */}
           {adminSettings.showIngredientsForStepList && matchedIngredients.length > 0 && (
