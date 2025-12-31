@@ -92,6 +92,9 @@ export default function SearchForm({
       instructions: recipe.instructions || [],
       author: recipe.author, // Include author if available
       sourceUrl: recipe.sourceUrl, // Include source URL if available
+      prepTimeMinutes: recipe.prepTimeMinutes, // Include prep time if available
+      cookTimeMinutes: recipe.cookTimeMinutes, // Include cook time if available
+      totalTimeMinutes: recipe.totalTimeMinutes, // Include total time if available
     });
     setQuery('');
     setShowDropdown(false);
@@ -168,6 +171,7 @@ export default function SearchForm({
         showError({
           code: errorCode,
           message: response.error?.message,
+          retryAfter: response.error?.retryAfter, // Pass through retry-after timestamp
         });
         return;
       }
@@ -185,6 +189,9 @@ export default function SearchForm({
         summary: response.summary, // Include AI-generated summary if available
         imageData: imagePreview || undefined, // Store base64 image data for preview
         imageFilename: selectedImage.name, // Store original filename
+        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
       });
 
       // Add to recent recipes
@@ -201,6 +208,9 @@ export default function SearchForm({
         author: response.author, // Include author if available
         sourceUrl: response.sourceUrl, // Include source URL if available
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
         imageData: imagePreview || undefined, // Store base64 image data for preview
         imageFilename: selectedImage.name, // Store original filename
       });
@@ -294,6 +304,7 @@ export default function SearchForm({
         showError({
           code: errorCode,
           message: response.error?.message,
+          retryAfter: response.error?.retryAfter, // Pass through retry-after timestamp
         });
         return;
       }
@@ -314,6 +325,9 @@ export default function SearchForm({
         summary: response.summary, // Include AI-generated summary if available
         cuisine: response.cuisine, // Include cuisine tags if available
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
       };
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'search-form.tsx:310',message:'recipeToStore created',data:{hasServings:'servings' in recipeToStore,servings:recipeToStore.servings,servingsType:typeof recipeToStore.servings,servingsValue:recipeToStore.servings,keys:Object.keys(recipeToStore)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
@@ -346,6 +360,9 @@ export default function SearchForm({
         sourceUrl: response.sourceUrl || query, // Include source URL if available
         cuisine: response.cuisine, // Include cuisine tags if available
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
       });
 
       // Show success toast

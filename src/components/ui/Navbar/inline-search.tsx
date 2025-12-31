@@ -154,6 +154,7 @@ export default function InlineSearch() {
           showError({
             code: errorCode,
             message: response.error?.message,
+            retryAfter: response.error?.retryAfter, // Pass through retry-after timestamp
           });
           setLoading(false);
           return;
@@ -169,6 +170,9 @@ export default function InlineSearch() {
           summary: response.summary,
           cuisine: response.cuisine,
           ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+          ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+          ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+          ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
         };
 
         setParsedRecipe(recipeToStore);
@@ -194,6 +198,9 @@ export default function InlineSearch() {
           sourceUrl: response.sourceUrl || url,
           cuisine: response.cuisine,
           ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+          ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+          ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+          ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
         });
 
         // Add to search history
@@ -230,6 +237,9 @@ export default function InlineSearch() {
       imageData: recipe.imageData, // Include image data if available (for uploaded images)
       imageFilename: recipe.imageFilename, // Include image filename if available
       cuisine: recipe.cuisine,
+      prepTimeMinutes: recipe.prepTimeMinutes, // Include prep time if available
+      cookTimeMinutes: recipe.cookTimeMinutes, // Include cook time if available
+      totalTimeMinutes: recipe.totalTimeMinutes, // Include total time if available
     });
     router.push('/parsed-recipe-page');
     setQuery('');

@@ -91,6 +91,22 @@ export default function NavbarSearch() {
     setShowDropdown(isFocused && query.trim() !== '' && !isUrl(query));
   }, [query, isFocused, recentRecipes, searchRecipes]);
 
+  // Handle ESC key to blur/unfocus the search input
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // If ESC is pressed and the search input is focused, blur it
+      if (e.key === 'Escape' && document.activeElement === inputRef.current) {
+        e.preventDefault();
+        inputRef.current?.blur();
+        setIsFocused(false);
+        setShowDropdown(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Handle focus - when on parsed recipe page, clear the displayed URL and allow editing
   const handleFocus = () => {
     setIsFocused(true);
@@ -135,6 +151,9 @@ export default function NavbarSearch() {
       summary: recipe.description || recipe.summary, // Use AI summary if available, fallback to card summary
       imageData: recipe.imageData, // Include image data if available (for uploaded images)
       imageFilename: recipe.imageFilename, // Include image filename if available
+      prepTimeMinutes: recipe.prepTimeMinutes, // Include prep time if available
+      cookTimeMinutes: recipe.cookTimeMinutes, // Include cook time if available
+      totalTimeMinutes: recipe.totalTimeMinutes, // Include total time if available
     });
     setQuery('');
     setShowDropdown(false);
@@ -198,6 +217,7 @@ export default function NavbarSearch() {
         showError({
           code: errorCode,
           message: response.error?.message,
+          retryAfter: response.error?.retryAfter, // Pass through retry-after timestamp
         });
         return;
       }
@@ -214,6 +234,9 @@ export default function NavbarSearch() {
         summary: response.summary, // Include AI-generated summary if available
         cuisine: response.cuisine, // Include cuisine tags if available
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
       };
       
       setParsedRecipe(recipeToStore);
@@ -240,6 +263,9 @@ export default function NavbarSearch() {
         sourceUrl: response.sourceUrl || query, // Include source URL if available
         cuisine: response.cuisine, // Include cuisine tags if available
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
       });
 
       // Show success toast

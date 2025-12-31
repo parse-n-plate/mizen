@@ -76,6 +76,9 @@ export default function HomepageRecentRecipes() {
           cuisine: fullRecipe.cuisine,
           imageData: fullRecipe.imageData, // Include image data if available (for uploaded images)
           imageFilename: fullRecipe.imageFilename, // Include image filename if available
+          prepTimeMinutes: fullRecipe.prepTimeMinutes, // Include prep time if available
+          cookTimeMinutes: fullRecipe.cookTimeMinutes, // Include cook time if available
+          totalTimeMinutes: fullRecipe.totalTimeMinutes, // Include total time if available
         });
         router.push('/parsed-recipe-page');
       }
