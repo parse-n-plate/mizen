@@ -168,6 +168,7 @@ export default function InlineSearch() {
           sourceUrl: response.sourceUrl || url,
           summary: response.summary,
           cuisine: response.cuisine,
+          ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
         };
 
         setParsedRecipe(recipeToStore);
@@ -192,6 +193,7 @@ export default function InlineSearch() {
           author: response.author,
           sourceUrl: response.sourceUrl || url,
           cuisine: response.cuisine,
+          ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
         });
 
         // Add to search history
@@ -225,6 +227,8 @@ export default function InlineSearch() {
       author: recipe.author,
       sourceUrl: recipe.sourceUrl,
       summary: recipe.description || recipe.summary,
+      imageData: recipe.imageData, // Include image data if available (for uploaded images)
+      imageFilename: recipe.imageFilename, // Include image filename if available
       cuisine: recipe.cuisine,
     });
     router.push('/parsed-recipe-page');

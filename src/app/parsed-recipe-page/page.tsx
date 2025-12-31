@@ -155,7 +155,15 @@ export default function ParsedRecipePage({
   const { parsedRecipe, isLoaded } = useRecipe();
   const { recentRecipes, isBookmarked, toggleBookmark } = useParsedRecipes();
   const router = useRouter();
-  const [servings, setServings] = useState<number>(parsedRecipe?.servings || 4);
+  // #region agent log
+  if (parsedRecipe) {
+    fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'parsed-recipe-page/page.tsx:155',message:'parsedRecipe from context',data:{hasServings:'servings' in parsedRecipe,servings:parsedRecipe.servings,servingsType:typeof parsedRecipe.servings,servingsValue:parsedRecipe.servings,hasAuthor:'author' in parsedRecipe,author:parsedRecipe.author,keys:Object.keys(parsedRecipe)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'C'})}).catch(()=>{});
+  }
+  // #endregion
+  const [servings, setServings] = useState<number | undefined>(parsedRecipe?.servings);
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'parsed-recipe-page/page.tsx:158',message:'servings state initialized',data:{servings,servingsType:typeof servings,parsedRecipeServings:parsedRecipe?.servings,parsedRecipeServingsType:typeof parsedRecipe?.servings,parsedRecipeExists:!!parsedRecipe},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'D'})}).catch(()=>{});
+  // #endregion
   const [multiplier, setMultiplier] = useState<string>('1x');
   const [activeTab, setActiveTab] = useState<string>('prep');
   const [copied, setCopied] = useState(false);
@@ -358,17 +366,19 @@ export default function ParsedRecipePage({
 
   // Initialize servings from recipe when loaded
   useEffect(() => {
-    if (parsedRecipe?.servings) {
-      setServings(parsedRecipe.servings);
-    } else {
-      // Default to 4 if not specified, usually a safe bet for recipes
-      setServings(4);
-    }
+    // Only set servings if they exist in the parsed recipe
+    // Don't default to 4 - if servings aren't found, leave as undefined
+    setServings(parsedRecipe?.servings);
   }, [parsedRecipe]);
 
   // Calculate scaled ingredients
   const scaledIngredients = useMemo(() => {
     if (!parsedRecipe || !parsedRecipe.ingredients) return [];
+    
+    // If servings are unknown, return ingredients unscaled
+    if (!parsedRecipe.servings || !servings) {
+      return parsedRecipe.ingredients;
+    }
     
     // Get multiplier value (1x = 1, 2x = 2, 3x = 3)
     const multiplierValue = parseInt(multiplier.replace('x', ''));
@@ -380,7 +390,7 @@ export default function ParsedRecipePage({
     // The context type is slightly different but compatible structure-wise
     return scaleIngredients(
       parsedRecipe.ingredients as any, 
-      parsedRecipe.servings || 4, 
+      parsedRecipe.servings, 
       effectiveServings
     );
   }, [parsedRecipe, servings, multiplier]);
@@ -607,7 +617,7 @@ export default function ParsedRecipePage({
                             parsedRecipe.prepTimeMinutes,
                             parsedRecipe.cookTimeMinutes,
                             parsedRecipe.totalTimeMinutes,
-                            parsedRecipe.servings ?? servings
+                            parsedRecipe.servings
                           )}
                         </p>
                         {/* Cuisine Badges */}
