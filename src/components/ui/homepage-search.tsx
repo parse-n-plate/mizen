@@ -123,6 +123,17 @@ export default function HomepageSearch() {
 
       console.log('[HomepageSearch] Parsing recipe from image:', selectedImage.name);
 
+      // Convert image to base64 for storage
+      // This allows us to display the image preview later
+      const imageDataPromise = new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          resolve(reader.result as string);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(selectedImage);
+      });
+
       // Call the image parsing function
       const response = await parseRecipeFromImage(selectedImage);
 
@@ -140,7 +151,10 @@ export default function HomepageSearch() {
 
       console.log('[HomepageSearch] Successfully parsed recipe from image:', response.title);
 
-      // Store parsed recipe
+      // Wait for image data conversion to complete
+      const imageData = await imageDataPromise;
+
+      // Store parsed recipe with image data
       const recipeToStore = {
         title: response.title,
         ingredients: response.ingredients,
@@ -149,6 +163,8 @@ export default function HomepageSearch() {
         sourceUrl: response.sourceUrl || `image:${selectedImage.name}`,
         summary: response.summary,
         cuisine: response.cuisine,
+        imageData: imageData, // Store base64 image data for preview
+        imageFilename: selectedImage.name, // Store original filename
       };
 
       setParsedRecipe(recipeToStore);

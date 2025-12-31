@@ -31,6 +31,8 @@ export interface ParsedRecipe {
   description?: string;          // NEW: Recipe description
   summary?: string;             // NEW: AI-generated recipe summary (1-2 sentences)
   imageUrl?: string;              // NEW: Recipe image URL
+  imageData?: string;             // NEW: Base64 image data for uploaded images
+  imageFilename?: string;         // NEW: Original filename for uploaded images
   author?: string;                // NEW: Recipe author/source
   publishedDate?: string;         // NEW: Publication date
   sourceUrl?: string;             // NEW: Source URL

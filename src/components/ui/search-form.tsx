@@ -174,14 +174,17 @@ export default function SearchForm({
 
       console.log('[Client] Successfully parsed recipe from image:', response.title);
 
-      // Store parsed recipe in context
+      // Store parsed recipe in context with image data
+      // imagePreview is already a base64 data URL from handleImageSelect
       setParsedRecipe({
         title: response.title,
         ingredients: response.ingredients,
         instructions: response.instructions,
         author: response.author, // Include author if available
-        sourceUrl: response.sourceUrl, // Include source URL if available
+        sourceUrl: response.sourceUrl || `image:${selectedImage.name}`, // Include source URL if available, or use image reference
         summary: response.summary, // Include AI-generated summary if available
+        imageData: imagePreview || undefined, // Store base64 image data for preview
+        imageFilename: selectedImage.name, // Store original filename
       });
 
       // Add to recent recipes

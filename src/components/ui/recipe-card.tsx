@@ -123,11 +123,24 @@ export default function RecipeCard({
   const primaryCuisine = recipe.cuisine && recipe.cuisine.length > 0 ? recipe.cuisine[0] : null;
   const cuisineIconPath = primaryCuisine ? CUISINE_ICON_MAP[primaryCuisine] : '/assets/Illustration Icons/Pan_Icon.png';
 
+  // Handle bookmark toggle - shows confirmation dialog if currently bookmarked
   const handleBookmarkToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Use context function to toggle bookmark state
-    toggleBookmark(recipe.id);
+    
+    // If recipe is currently bookmarked, show confirmation dialog
+    if (isBookmarkedState) {
+      const confirmed = window.confirm(
+        'Are you sure you want to remove this recipe from your bookmarks? You can bookmark it again later.'
+      );
+      
+      if (confirmed) {
+        toggleBookmark(recipe.id);
+      }
+    } else {
+      // If not bookmarked, just add the bookmark directly
+      toggleBookmark(recipe.id);
+    }
   };
 
   // Handle ellipsis menu toggle

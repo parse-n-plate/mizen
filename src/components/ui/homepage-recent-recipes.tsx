@@ -82,10 +82,26 @@ export default function HomepageRecentRecipes() {
     }
   };
 
-  // Handle bookmark toggle - uses context to sync with other components
+  // Handle bookmark toggle - shows confirmation dialog if currently bookmarked
   const handleBookmarkToggle = (e: React.MouseEvent, recipeId: string) => {
     e.stopPropagation(); // Prevent triggering the recipe click
-    toggleBookmark(recipeId);
+    
+    // Check if recipe is currently bookmarked
+    const isCurrentlyBookmarked = isBookmarked(recipeId);
+    
+    if (isCurrentlyBookmarked) {
+      // If bookmarked, show confirmation dialog
+      const confirmed = window.confirm(
+        'Are you sure you want to remove this recipe from your bookmarks? You can bookmark it again later.'
+      );
+      
+      if (confirmed) {
+        toggleBookmark(recipeId);
+      }
+    } else {
+      // If not bookmarked, just add the bookmark directly
+      toggleBookmark(recipeId);
+    }
   };
 
   // Handle individual recipe deletion
