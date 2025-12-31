@@ -43,18 +43,8 @@ export default function HomepageSearch() {
   const { showError, showInfo } = useToast();
   const router = useRouter();
 
-  // Command+K keyboard shortcut handler - focuses the search bar
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  // Note: Command+K handling is now done globally via CommandKContext
+  // This component's input will be focused when Command+K is pressed on the homepage
 
   // Create and cleanup image preview URL
   useEffect(() => {
@@ -163,6 +153,7 @@ export default function HomepageSearch() {
         sourceUrl: response.sourceUrl || `image:${selectedImage.name}`,
         summary: response.summary,
         cuisine: response.cuisine,
+        ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
         imageData: imageData, // Store base64 image data for preview
         imageFilename: selectedImage.name, // Store original filename
       };
@@ -189,6 +180,9 @@ export default function HomepageSearch() {
         author: response.author,
         sourceUrl: response.sourceUrl || `image:${selectedImage.name}`,
         cuisine: response.cuisine,
+        ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+        imageData: imageData, // Store base64 image data for preview
+        imageFilename: selectedImage.name, // Store original filename
       });
 
       // Navigate to recipe page
@@ -274,6 +268,7 @@ export default function HomepageSearch() {
           sourceUrl: response.sourceUrl || url,
           summary: response.summary,
           cuisine: response.cuisine,
+          ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
         };
 
         setParsedRecipe(recipeToStore);
@@ -298,6 +293,7 @@ export default function HomepageSearch() {
           author: response.author,
           sourceUrl: response.sourceUrl || url,
           cuisine: response.cuisine,
+          ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
         });
 
         // Add to search history
@@ -403,6 +399,7 @@ export default function HomepageSearch() {
                 {!selectedImage && (
                   <input
                     ref={searchInputRef}
+                    data-search-input="homepage"
                     type="text"
                     value={searchValue}
                     onChange={handleSearchChange}

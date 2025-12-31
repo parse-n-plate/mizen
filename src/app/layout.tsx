@@ -8,7 +8,6 @@ import { RecipeProvider } from '@/contexts/RecipeContext';
 import { ParsedRecipesProvider } from '@/contexts/ParsedRecipesContext';
 import { TimerProvider } from '@/contexts/TimerContext';
 import { CommandKProvider } from '@/contexts/CommandKContext';
-import CommandKModal from '@/components/ui/command-k-modal';
 import { Toaster } from '@/components/ui/sonner';
 import './globals.css';
 
@@ -49,7 +48,6 @@ export default function RootLayout({
                   <Navbar />
                   {children}
                   <Footer />
-                  <CommandKModal />
                   <Toaster />
                 </CommandKProvider>
               </TimerProvider>

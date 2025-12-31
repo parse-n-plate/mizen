@@ -12,7 +12,7 @@ import {
   validateRecipeUrl,
 } from '@/utils/recipe-parse';
 import { errorLogger } from '@/utils/errorLogger';
-import { useCommandK } from '@/contexts/CommandKContext';
+// Note: Command+K handling is now done globally via CommandKContext
 import { isUrl } from '@/utils/searchUtils';
 import LoadingAnimation from '@/components/ui/loading-animation';
 import { useToast } from '@/hooks/useToast';
@@ -28,7 +28,6 @@ export default function NavbarSearch() {
   const { recentRecipes, addRecipe } = useParsedRecipes();
   const { parsedRecipe, setParsedRecipe } = useRecipe();
   const { showError, showSuccess, showInfo } = useToast();
-  const { open: openCommandK } = useCommandK();
   const router = useRouter();
   const pathname = usePathname();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -134,6 +133,8 @@ export default function NavbarSearch() {
       author: recipe.author, // Include author if available
       sourceUrl: recipe.sourceUrl, // Include source URL if available
       summary: recipe.description || recipe.summary, // Use AI summary if available, fallback to card summary
+      imageData: recipe.imageData, // Include image data if available (for uploaded images)
+      imageFilename: recipe.imageFilename, // Include image filename if available
     });
     setQuery('');
     setShowDropdown(false);
@@ -212,6 +213,7 @@ export default function NavbarSearch() {
         sourceUrl: response.sourceUrl || query, // Use sourceUrl from response or fallback to query URL
         summary: response.summary, // Include AI-generated summary if available
         cuisine: response.cuisine, // Include cuisine tags if available
+        ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
       };
       
       setParsedRecipe(recipeToStore);
@@ -237,6 +239,7 @@ export default function NavbarSearch() {
         author: response.author, // Include author if available
         sourceUrl: response.sourceUrl || query, // Include source URL if available
         cuisine: response.cuisine, // Include cuisine tags if available
+        ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
       });
 
       // Show success toast
@@ -361,6 +364,7 @@ export default function NavbarSearch() {
               ) : (
                 <input
                   ref={inputRef}
+                  data-search-input="navbar"
                   type="text"
                   placeholder={isFocused ? "Enter URL" : "Enter recipe URL"}
                   value={query}
@@ -384,21 +388,13 @@ export default function NavbarSearch() {
             </div>
 
             {/* Keyboard Shortcut Indicator (⌘+K) - shown when not focused or no query, but not on mobile or parsed recipe page showing URL */}
+            {/* Note: Command+K now focuses this search box directly via CommandKContext */}
             {!isFocused && !query && !(isOnParsedRecipePage && parsedRecipe?.sourceUrl) && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  openCommandK();
-                }}
-                className="hidden md:flex ml-2 items-center gap-1 flex-shrink-0 cursor-pointer"
-                aria-label="Open Command K search"
-              >
-                <kbd className="inline-flex items-center px-2 py-1 text-[10px] font-albert text-stone-500 bg-white border border-[#d9d9d9] rounded hover:border-[#4F46E5] transition-colors">
+              <div className="hidden md:flex ml-2 items-center gap-1 flex-shrink-0">
+                <kbd className="inline-flex items-center px-2 py-1 text-[10px] font-albert text-stone-500 bg-white border border-[#d9d9d9] rounded">
                   ⌘K
                 </kbd>
-              </button>
+              </div>
             )}
 
             {/* Clear Button */}
