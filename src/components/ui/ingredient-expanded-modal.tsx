@@ -12,6 +12,7 @@ interface IngredientExpandedModalProps {
   groupName?: string;
   description?: string;
   linkedSteps: number[];
+  stepTitlesMap?: Record<number, string>; // Map of step numbers to step titles
   onStepClick: (stepNumber: number) => void;
   isOpen: boolean;
   onClose: () => void;
@@ -26,6 +27,7 @@ export function IngredientExpandedModal({
   groupName,
   description,
   linkedSteps,
+  stepTitlesMap,
   onStepClick,
   isOpen,
   onClose,
@@ -73,6 +75,7 @@ export function IngredientExpandedModal({
                 groupName={groupName}
                 description={description}
                 linkedSteps={linkedSteps}
+                stepTitlesMap={stepTitlesMap}
                 onStepClick={onStepClick}
                 variant="modal"
                 recipeUrl={recipeUrl}

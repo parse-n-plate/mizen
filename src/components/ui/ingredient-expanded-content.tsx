@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowUpDown, Tag, Calendar, Flag, Edit2 } from 'lucide-react';
+import { ArrowUpDown, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { createIngredientId, getIngredientNotes, saveIngredientNotes } from '@/utils/ingredientNotes';
@@ -14,6 +14,7 @@ interface IngredientExpandedContentProps {
   groupName?: string;
   description?: string;
   linkedSteps: number[];
+  stepTitlesMap?: Record<number, string>; // Map of step numbers to step titles (e.g., { 1: "Cook Beans", 2: "Prepare Sauce" })
   onStepClick: (stepNumber: number) => void;
   variant?: 'accordion' | 'modal' | 'sidepanel' | 'things3';
   recipeUrl?: string; // Optional recipe URL for note persistence
@@ -27,6 +28,7 @@ export function IngredientExpandedContent({
   groupName = 'Main',
   description,
   linkedSteps,
+  stepTitlesMap,
   onStepClick,
   variant = 'things3',
   recipeUrl,
@@ -157,41 +159,42 @@ export function IngredientExpandedContent({
 
       {/* Related Steps Section */}
       <div className="space-y-2">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {linkedSteps.length > 0 ? (
-            linkedSteps.map((stepNum) => (
-              <Button
-                key={stepNum}
-                variant="outline"
-                size="sm"
-                onClick={() => onStepClick(stepNum)}
-                className="h-7 px-3 bg-white hover:bg-stone-50 border-stone-200 text-stone-600 text-xs font-albert rounded-full"
-              >
-                Step {stepNum}
-              </Button>
-            ))
+            linkedSteps.map((stepNum) => {
+              // Get the step title from the map, if available
+              const stepTitle = stepTitlesMap?.[stepNum];
+              // Format button text: "Step 3: Cook Beans and Meats" or just "Step 3" if no title
+              const buttonText = stepTitle 
+                ? `Step ${stepNum}: ${stepTitle}`
+                : `Step ${stepNum}`;
+              
+              return (
+                <Button
+                  key={stepNum}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onStepClick(stepNum)}
+                  className="h-7 px-3 bg-white hover:bg-stone-50 border-stone-200 text-stone-600 text-xs font-albert rounded-full"
+                >
+                  {buttonText}
+                </Button>
+              );
+            })
           ) : (
             <span className="text-xs font-albert text-stone-400 italic">No specific steps mentioned.</span>
           )}
+          
+          {/* Swap Ingredient button - right aligned */}
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-8 text-xs font-albert text-stone-500 hover:text-stone-900 hover:bg-stone-50 gap-2 ml-auto shrink-0"
+          >
+            <ArrowUpDown className="h-3 w-3" />
+            Swap Ingredient
+          </Button>
         </div>
-      </div>
-
-      {/* Action Buttons & Metadata */}
-      <div className="pt-4 flex items-center justify-between border-t border-stone-100">
-        <div className="flex gap-3 text-stone-300">
-          <Tag className="h-4 w-4 hover:text-stone-500 cursor-not-allowed transition-colors" />
-          <Calendar className="h-4 w-4 hover:text-stone-500 cursor-not-allowed transition-colors" />
-          <Flag className="h-4 w-4 hover:text-stone-500 cursor-not-allowed transition-colors" />
-        </div>
-        
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="h-8 text-xs font-albert text-stone-500 hover:text-stone-900 hover:bg-stone-50 gap-2"
-        >
-          <ArrowUpDown className="h-3 w-3" />
-          Swap Ingredient
-        </Button>
       </div>
     </div>
   );

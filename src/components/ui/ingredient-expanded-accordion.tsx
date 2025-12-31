@@ -11,6 +11,7 @@ interface IngredientExpandedAccordionProps {
   groupName?: string;
   description?: string;
   linkedSteps: number[];
+  stepTitlesMap?: Record<number, string>; // Map of step numbers to step titles
   onStepClick: (stepNumber: number) => void;
   isOpen: boolean;
   recipeUrl?: string;
@@ -24,6 +25,7 @@ export function IngredientExpandedAccordion({
   groupName,
   description,
   linkedSteps,
+  stepTitlesMap,
   onStepClick,
   isOpen,
   recipeUrl,
@@ -44,6 +46,7 @@ export function IngredientExpandedAccordion({
           groupName={groupName}
           description={description}
           linkedSteps={linkedSteps}
+          stepTitlesMap={stepTitlesMap}
           onStepClick={onStepClick}
           variant="accordion"
           recipeUrl={recipeUrl}

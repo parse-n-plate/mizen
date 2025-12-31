@@ -18,6 +18,7 @@ interface IngredientDrawerContentProps {
   ingredientName: string;
   ingredientAmount?: string;
   linkedSteps: number[];
+  stepTitlesMap?: Record<number, string>; // Map of step numbers to step titles
   onStepClick: (stepNumber: number) => void;
 }
 
@@ -25,6 +26,7 @@ export function IngredientDrawerContent({
   ingredientName,
   ingredientAmount,
   linkedSteps,
+  stepTitlesMap,
   onStepClick
 }: IngredientDrawerContentProps) {
   // Mock data for the "fun/visual" sections
@@ -107,17 +109,26 @@ export function IngredientDrawerContent({
         </div>
         <div className="flex flex-wrap gap-2">
           {linkedSteps.length > 0 ? (
-            linkedSteps.map((stepNum) => (
-              <Button
-                key={stepNum}
-                variant="outline"
-                size="sm"
-                onClick={() => onStepClick(stepNum)}
-                className="h-9 px-4 bg-white hover:bg-stone-50 border-stone-200 text-stone-600 text-xs font-albert rounded-xl shadow-sm transition-all active:scale-95"
-              >
-                Go to Step {stepNum}
-              </Button>
-            ))
+            linkedSteps.map((stepNum) => {
+              // Get the step title from the map, if available
+              const stepTitle = stepTitlesMap?.[stepNum];
+              // Format button text: "Go to Step 3: Cook Beans and Meats" or just "Go to Step 3" if no title
+              const buttonText = stepTitle 
+                ? `Go to Step ${stepNum}: ${stepTitle}`
+                : `Go to Step ${stepNum}`;
+              
+              return (
+                <Button
+                  key={stepNum}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onStepClick(stepNum)}
+                  className="h-9 px-4 bg-white hover:bg-stone-50 border-stone-200 text-stone-600 text-xs font-albert rounded-xl shadow-sm transition-all active:scale-95"
+                >
+                  {buttonText}
+                </Button>
+              );
+            })
           ) : (
             <div className="flex items-center gap-2 p-4 bg-stone-50 rounded-xl w-full">
               <Lightbulb className="h-4 w-4 text-stone-300" />

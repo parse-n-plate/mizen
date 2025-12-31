@@ -11,6 +11,7 @@ interface IngredientExpandedThings3Props {
   groupName?: string;
   description?: string;
   linkedSteps: number[];
+  stepTitlesMap?: Record<number, string>; // Map of step numbers to step titles
   onStepClick: (stepNumber: number) => void;
   isOpen: boolean;
   recipeUrl?: string;
@@ -24,6 +25,7 @@ export function IngredientExpandedThings3({
   groupName,
   description,
   linkedSteps,
+  stepTitlesMap,
   onStepClick,
   isOpen,
   recipeUrl,
@@ -49,6 +51,7 @@ export function IngredientExpandedThings3({
           groupName={groupName}
           description={description}
           linkedSteps={linkedSteps}
+          stepTitlesMap={stepTitlesMap}
           onStepClick={onStepClick}
           variant="things3"
           recipeUrl={recipeUrl}

@@ -33,7 +33,7 @@ interface IngredientCardProps {
   };
   description?: string; // Future: will be populated from backend
   isLast?: boolean; // Hide divider if this is the last item
-  recipeSteps?: { instruction: string }[];
+  recipeSteps?: { instruction: string; title?: string }[]; // Step data with instruction and optional title
   /** Ingredient group name (e.g., "Main", "Sauce") */
   groupName?: string;
   /** Recipe URL for note persistence */
@@ -133,6 +133,18 @@ export default function IngredientCard({
   const linkedSteps = useMemo(() => {
     return findStepsForIngredient(ingredientNameOnly, recipeSteps);
   }, [ingredientNameOnly, recipeSteps]);
+
+  // Create a map of step numbers to step titles for displaying in buttons
+  const stepTitlesMap = useMemo(() => {
+    const map: Record<number, string> = {};
+    recipeSteps.forEach((step, index) => {
+      // Step numbers are 1-indexed, array indices are 0-indexed
+      const stepNumber = index + 1;
+      // Use title if available, otherwise fallback to empty string (will show just step number)
+      map[stepNumber] = step.title || '';
+    });
+    return map;
+  }, [recipeSteps]);
 
   const handleStepClick = (stepNumber: number) => {
     // Dispatch custom event to navigate to a specific step in the Cook tab
@@ -357,6 +369,7 @@ export default function IngredientCard({
           groupName={groupName}
           description={description}
           linkedSteps={linkedSteps}
+          stepTitlesMap={stepTitlesMap}
           onStepClick={handleStepClick}
           isOpen={isExpanded}
           recipeUrl={recipeUrl}
@@ -372,6 +385,7 @@ export default function IngredientCard({
           groupName={groupName}
           description={description}
           linkedSteps={linkedSteps}
+          stepTitlesMap={stepTitlesMap}
           onStepClick={handleStepClick}
           isOpen={isExpanded}
           recipeUrl={recipeUrl}
@@ -386,6 +400,7 @@ export default function IngredientCard({
         groupName={groupName}
         description={description}
         linkedSteps={linkedSteps}
+        stepTitlesMap={stepTitlesMap}
         onStepClick={handleStepClick}
         isOpen={isExpanded && settings.ingredientExpandStyle === 'modal'}
         onClose={() => onExpandChange ? onExpandChange(false) : setInternalExpanded(false)}
@@ -400,6 +415,7 @@ export default function IngredientCard({
         groupName={groupName}
         description={description}
         linkedSteps={linkedSteps}
+        stepTitlesMap={stepTitlesMap}
         onStepClick={handleStepClick}
         isOpen={isExpanded && settings.ingredientExpandStyle === 'sidepanel'}
         onClose={() => onExpandChange ? onExpandChange(false) : setInternalExpanded(false)}
@@ -411,6 +427,7 @@ export default function IngredientCard({
         ingredientName={ingredientNameOnly}
         ingredientAmount={ingredientAmount}
         linkedSteps={linkedSteps}
+        stepTitlesMap={stepTitlesMap}
         onStepClick={handleStepClick}
         isOpen={isExpanded && settings.ingredientExpandStyle === 'mobile-drawer'}
         onClose={() => onExpandChange ? onExpandChange(false) : setInternalExpanded(false)}
