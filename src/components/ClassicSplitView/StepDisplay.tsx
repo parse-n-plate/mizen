@@ -96,11 +96,11 @@ export default function StepDisplay({ step, currentStep, totalSteps, onNext, onP
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="flex flex-col gap-4"
           >
-            <h2 className={`font-domine text-[#193d34] leading-tight font-bold transition-all duration-300 ${titleSizeMap[stepSizing]}`}>
+            <h2 className={`font-domine text-[#0C0A09] leading-tight font-bold transition-all duration-300 ${titleSizeMap[stepSizing]}`}>
               {step.step}
             </h2>
             <div className="flex flex-col gap-6">
-              <p className={`${settings.fontFamily === 'serif' ? 'font-domine' : 'font-albert'} text-[#193d34]/80 leading-relaxed max-w-2xl transition-all duration-300 ${detailSizeMap[stepSizing]}`}>
+              <p className={`${settings.fontFamily === 'serif' ? 'font-domine' : 'font-albert'} text-[#0C0A09]/80 leading-relaxed max-w-2xl transition-all duration-300 ${detailSizeMap[stepSizing]}`}>
                 {highlightQuantitiesAndIngredients(step.detail, allIngredients)}
               </p>
             </div>

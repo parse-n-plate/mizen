@@ -263,7 +263,7 @@
   }
 
   .yield-stepper-btn:hover:not(:disabled) .yield-stepper-icon {
-    color: #193d34;
+    color: #0C0A09;
   }
 
   /* Center value display */
@@ -283,7 +283,7 @@
     font-family: var(--font-albert);
     font-size: 1.375rem;
     font-weight: 700;
-    color: #193d34;
+    color: #0C0A09;
     line-height: 1;
     min-width: 1.5rem;
     text-align: center;
@@ -349,7 +349,7 @@
 
   /* Active/selected state */
   .yield-multiplier-pill-active {
-    background: #193d34;
+    background: #0C0A09;
     color: white;
     box-shadow: 
       0 2px 4px rgba(25, 61, 52, 0.2),
@@ -458,7 +458,7 @@
   .servings-value {
     font-family: var(--font-albert);
     font-weight: 600;
-    color: #193d34;
+    color: #0C0A09;
     min-width: 20px;
     text-align: center;
   }
@@ -498,12 +498,12 @@
 
   /* Multiplier Button Selected */
   .multiplier-button-selected {
-    background-color: #193d34;
+    background-color: #0C0A09;
     color: white;
   }
 
   .multiplier-button-selected:hover {
-    background-color: #193d34;
+    background-color: #0C0A09;
   }
 
   /* Classic Split View Components */
@@ -525,7 +525,7 @@
     width: 2rem;
     height: 2rem;
     border-radius: 9999px;
-    background-color: #193d34;
+    background-color: #0C0A09;
     color: white;
     display: flex;
     align-items: center;
@@ -610,9 +610,9 @@
   .ingredient-checkbox-input {
     width: 20px;
     height: 20px;
-    border: 2px solid #d6d3d1; /* stone-300 */
+    border: none; /* Removed border - using filled style */
     border-radius: 4px;
-    background-color: white;
+    background-color: #E7E5E4; /* stone-200 - filled background */
     cursor: pointer;
     appearance: none;
     -webkit-appearance: none;
@@ -622,8 +622,8 @@
   }
 
   .ingredient-checkbox-input:checked {
-    background-color: #193d34;
-    border-color: #193d34;
+    background-color: #0C0A09;
+    border: none; /* Removed border for consistency */
   }
 
   .ingredient-checkbox-input:checked::after {
@@ -1243,5 +1243,49 @@
 
   .page-fade-delay-2 {
     animation-delay: 0.3s;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     FOLDER TABS - Modern tab navigation that looks like file folders
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  .folder-tab-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 16px;
+    border-radius: 16px 16px 0 0;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color: transparent;
+    color: #78716C;
+    border: 1px solid transparent;
+    border-bottom: none;
+    position: relative;
+    cursor: pointer;
+    outline: none;
+    margin-bottom: -1px; /* Overlap the bottom border */
+    z-index: 1;
+  }
+
+  .folder-tab-trigger:hover:not([data-state="active"]) {
+    background-color: rgba(231, 229, 228, 0.4);
+    color: #0C0A09;
+  }
+
+  .folder-tab-trigger[data-state="active"] {
+    background-color: #FFFFFF;
+    color: #0C0A09;
+    border-color: #E7E5E4;
+    z-index: 3;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.03);
+  }
+
+  /* Responsive adjustments for folder tabs */
+  @media (max-width: 640px) {
+    .folder-tab-trigger {
+      padding: 0 8px;
+      gap: 4px;
+    }
   }
 }
