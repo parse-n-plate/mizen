@@ -46,6 +46,21 @@ export default function HomepageSearch() {
   // Note: Command+K handling is now done globally via CommandKContext
   // This component's input will be focused when Command+K is pressed on the homepage
 
+  // Handle ESC key to blur/unfocus the search input
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // If ESC is pressed and the search input is focused, blur it
+      if (e.key === 'Escape' && document.activeElement === searchInputRef.current) {
+        e.preventDefault();
+        searchInputRef.current?.blur();
+        setIsSearchFocused(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Create and cleanup image preview URL
   useEffect(() => {
     if (selectedImage) {
@@ -134,6 +149,7 @@ export default function HomepageSearch() {
         showError({
           code: errorCode,
           message: response.error?.message,
+          retryAfter: response.error?.retryAfter, // Pass through retry-after timestamp
         });
         setLoading(false);
         return;
@@ -154,6 +170,9 @@ export default function HomepageSearch() {
         summary: response.summary,
         cuisine: response.cuisine,
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
         imageData: imageData, // Store base64 image data for preview
         imageFilename: selectedImage.name, // Store original filename
       };
@@ -181,6 +200,9 @@ export default function HomepageSearch() {
         sourceUrl: response.sourceUrl || `image:${selectedImage.name}`,
         cuisine: response.cuisine,
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
         imageData: imageData, // Store base64 image data for preview
         imageFilename: selectedImage.name, // Store original filename
       });
@@ -254,6 +276,7 @@ export default function HomepageSearch() {
           showError({
             code: errorCode,
             message: response.error?.message,
+            retryAfter: response.error?.retryAfter, // Pass through retry-after timestamp
           });
           setLoading(false);
           return;
@@ -269,6 +292,9 @@ export default function HomepageSearch() {
           summary: response.summary,
           cuisine: response.cuisine,
           ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+          ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+          ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+          ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
         };
 
         setParsedRecipe(recipeToStore);
@@ -294,6 +320,9 @@ export default function HomepageSearch() {
           sourceUrl: response.sourceUrl || url,
           cuisine: response.cuisine,
           ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+          ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+          ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+          ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
         });
 
         // Add to search history

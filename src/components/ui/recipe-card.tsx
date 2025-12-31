@@ -380,7 +380,15 @@ export default function RecipeCard({
             {/* Right Side: Time Pill */}
             <div className="flex flex-col justify-end self-stretch">
               <span className="font-albert text-[11px] md:text-[13px] text-stone-600 bg-stone-100 px-3 py-1.5 rounded-full whitespace-nowrap border border-stone-200/50">
-                -- min
+                {(() => {
+                  // Calculate display time: prefer total, else sum prep+cook, else show individual
+                  const displayTime = recipe.totalTimeMinutes 
+                    ?? (recipe.prepTimeMinutes && recipe.cookTimeMinutes 
+                      ? recipe.prepTimeMinutes + recipe.cookTimeMinutes 
+                      : recipe.prepTimeMinutes ?? recipe.cookTimeMinutes);
+                  
+                  return displayTime ? `${displayTime} min` : '-- min';
+                })()}
               </span>
             </div>
           </div>
