@@ -165,6 +165,15 @@ export async function POST(req: NextRequest): Promise<Response> {
     console.log(
       `[API /parseRecipeFromImage] Successfully parsed recipe: "${result.data.title}" with ${result.data.ingredients.reduce((sum, g) => sum + g.ingredients.length, 0)} ingredients and ${result.data.instructions.length} instructions`
     );
+    
+    // Log important recipe output information: title, author, and servings
+    console.log('[API /parseRecipeFromImage] 📋 Recipe output summary:', {
+      title: result.data.title || 'N/A',
+      author: result.data.author || 'N/A',
+      servings: result.data.servings || 'N/A',
+      hasAuthor: !!result.data.author,
+      hasServings: !!result.data.servings,
+    });
 
     return NextResponse.json({
       success: true,

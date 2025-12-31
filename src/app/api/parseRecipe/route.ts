@@ -148,6 +148,15 @@ export async function POST(req: NextRequest): Promise<Response> {
       cuisineCount: result.data.cuisine?.length || 0,
     });
     
+    // Log important recipe output information: title, author, and servings
+    console.log('[API /parseRecipe] 📋 Recipe output summary:', {
+      title: result.data.title || 'N/A',
+      author: result.data.author || 'N/A',
+      servings: result.data.servings || 'N/A',
+      hasAuthor: !!result.data.author,
+      hasServings: !!result.data.servings,
+    });
+    
     return NextResponse.json({
       success: true,
       title: result.data.title,
@@ -157,6 +166,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       sourceUrl: result.data.sourceUrl, // Include source URL if available
       summary: result.data.summary, // Include AI-generated summary if available
       cuisine: result.data.cuisine, // Include cuisine tags if available
+      servings: result.data.servings, // Include servings/yield if available
       method: result.method, // Include which method was used (json-ld or ai)
     });
   } catch (error) {

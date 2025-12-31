@@ -13,6 +13,8 @@ export type ParsedRecipe = {
   description?: string; // AI-generated engagement summary
   url: string;
   imageUrl?: string;
+  imageData?: string; // Base64 image data for uploaded images
+  imageFilename?: string; // Original filename for uploaded images
   parsedAt: string;
   // Full recipe data for viewing
   ingredients?: {

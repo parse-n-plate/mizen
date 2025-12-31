@@ -112,6 +112,7 @@ export interface ParsedRecipe {
   publishedDate?: string;
   sourceUrl?: string;
   summary?: string; // AI-generated recipe summary (1-2 sentences)
+  servings?: number; // Number of servings/yield
   ingredients: IngredientGroup[];
   instructions: InstructionStep[];
   cuisine?: string[]; // Cuisine types/tags (e.g., ["Italian", "Mediterranean"])
@@ -332,6 +333,43 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
               author = undefined;
             }
 
+            // Extract servings/yield from JSON-LD
+            // JSON-LD can have yield as a string (e.g., "4 servings") or number (e.g., 4)
+            let servings: number | undefined = undefined;
+            if (recipe.yield || recipe.recipeYield) {
+              const yieldValue = recipe.yield || recipe.recipeYield;
+              
+              // Handle string format like "4 servings" or "4"
+              if (typeof yieldValue === 'string') {
+                // Extract number from string (e.g., "4 servings" -> 4, "Serves 6" -> 6)
+                const numberMatch = yieldValue.match(/\d+/);
+                if (numberMatch) {
+                  servings = parseInt(numberMatch[0], 10);
+                }
+              } 
+              // Handle number format
+              else if (typeof yieldValue === 'number') {
+                servings = yieldValue;
+              }
+              // Handle array format (some sites use ["4 servings"])
+              else if (Array.isArray(yieldValue) && yieldValue.length > 0) {
+                const firstValue = yieldValue[0];
+                if (typeof firstValue === 'string') {
+                  const numberMatch = firstValue.match(/\d+/);
+                  if (numberMatch) {
+                    servings = parseInt(numberMatch[0], 10);
+                  }
+                } else if (typeof firstValue === 'number') {
+                  servings = firstValue;
+                }
+              }
+              
+              // Validate servings is a positive number
+              if (servings && (isNaN(servings) || servings <= 0)) {
+                servings = undefined;
+              }
+            }
+
             const normalizedInstructions = normalizeInstructionSteps(instructions);
 
             // Validate we have complete data
@@ -342,9 +380,15 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
               normalizedInstructions.length > 0
             ) {
               console.log(
-                `[JSON-LD] Found recipe: "${title}" with ${ingredients[0].ingredients.length} ingredients and ${normalizedInstructions.length} instructions${author ? `, author: "${author}"` : ''}`
+                `[JSON-LD] Found recipe: "${title}" with ${ingredients[0].ingredients.length} ingredients and ${normalizedInstructions.length} instructions${author ? `, author: "${author}"` : ''}${servings ? `, servings: ${servings}` : ''}`
               );
-              return { title, ingredients, instructions: normalizedInstructions, author };
+              return { 
+                title, 
+                ingredients, 
+                instructions: normalizedInstructions, 
+                author,
+                ...(servings && { servings })
+              };
             }
           }
         }
@@ -480,6 +524,7 @@ Required JSON structure:
 {
   "title": "string (cleaned recipe title following TITLE EXTRACTION RULES - no prefixes/suffixes)",
   "author": "string (optional - recipe author name if found)",
+  "servings": 4, // Only include if found in HTML - omit if not available
   "cuisine": ["Italian", "Mediterranean"],
   "ingredients": [
     {
@@ -702,6 +747,15 @@ AUTHOR EXTRACTION:
 - Do NOT include author names in instruction text - extract separately
 - If no clear author is found, omit the "author" field (don't use null)
 
+SERVINGS/YIELD EXTRACTION:
+- Extract the number of servings (yield) if clearly visible in the HTML
+- Look for patterns like "Serves 4", "Yield: 6 servings", "Makes 8", "4 servings", etc.
+- Extract ONLY the numeric value (e.g., if HTML says "Serves 4", return 4)
+- Include servings as a number in the JSON output: "servings": 4
+- If servings information is not found or unclear, omit the "servings" field entirely (don't use null, 0, or any default value)
+- NEVER guess or default to a number - only include servings if you can clearly extract it from the HTML
+- Common locations: recipe metadata sections, near prep/cook time, in recipe header
+
 CLEANING (remove these only):
 - Attribution text (e.g., "Recipe courtesy of...") - but extract author name separately
 - Nutritional information
@@ -756,6 +810,7 @@ DO NOT use these example values. Extract actual values from the HTML provided.
 Example showing logical ingredient groupings (ALWAYS create groups):
 {
   "title": "Gochujang Pasta",
+  "servings": 4, // Only include if found in HTML - omit if not available
   "ingredients": [
     {
       "groupName": "For the sauce",
@@ -989,7 +1044,7 @@ ABSOLUTE REQUIREMENTS:
         console.log(
           `[AI Parser] Successfully parsed recipe: "${parsedData.title}" with ${parsedData.ingredients.reduce((sum: number, g: any) => sum + g.ingredients.length, 0)} ingredients and ${normalizedInstructions.length} instructions`
         );
-        // Return recipe with author and cuisine if available
+        // Return recipe with author, servings, and cuisine if available
         const recipe: ParsedRecipe = {
           title: parsedData.title,
           ingredients: parsedData.ingredients,
@@ -998,6 +1053,35 @@ ABSOLUTE REQUIREMENTS:
         if (parsedData.author && typeof parsedData.author === 'string') {
           recipe.author = parsedData.author;
         }
+        
+        // Extract servings if provided by AI
+        if (parsedData.servings !== undefined && parsedData.servings !== null) {
+          // Handle both number and string formats
+          if (typeof parsedData.servings === 'number') {
+            // Validate it's a positive number
+            if (parsedData.servings > 0 && !isNaN(parsedData.servings)) {
+              recipe.servings = parsedData.servings;
+            }
+          } else if (typeof parsedData.servings === 'string') {
+            // Extract number from string (e.g., "4 servings" -> 4)
+            const numberMatch = parsedData.servings.match(/\d+/);
+            if (numberMatch) {
+              const servingsNum = parseInt(numberMatch[0], 10);
+              if (servingsNum > 0 && !isNaN(servingsNum)) {
+                recipe.servings = servingsNum;
+              }
+            }
+          }
+        }
+        
+        // Log important recipe output information: title, author, and servings
+        console.log('[AI Parser] 📋 Recipe output summary:', {
+          title: recipe.title || 'N/A',
+          author: recipe.author || 'N/A',
+          servings: recipe.servings || 'N/A',
+          hasAuthor: !!recipe.author,
+          hasServings: !!recipe.servings,
+        });
         
         // Handle cuisine - normalize to array format and filter to supported cuisines only
         console.log('[AI Parser] 🍽️ Starting cuisine detection for recipe:', parsedData.title);
@@ -1185,11 +1269,13 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
                                     (aiResult.ingredients.length === 1 && aiResult.ingredients[0].groupName !== 'Main');
           
           if (hasBetterGroupings) {
-            // Merge JSON-LD data (title, author, etc.) with AI-detected groupings and cuisine
+            // Merge JSON-LD data (title, author, servings, etc.) with AI-detected groupings and cuisine
             const mergedRecipe: ParsedRecipe = {
               ...jsonLdResult,
               ingredients: aiResult.ingredients, // Use AI-detected groupings
               cuisine: aiResult.cuisine, // Include AI-detected cuisine tags
+              // Preserve servings from JSON-LD if available, otherwise use AI-detected servings
+              ...(jsonLdResult.servings ? { servings: jsonLdResult.servings } : (aiResult.servings ? { servings: aiResult.servings } : {})),
             };
             
             const summary = await generateRecipeSummary(mergedRecipe);
@@ -1218,17 +1304,30 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
         // Continue without cuisine if AI fails
       }
       
-      // Merge JSON-LD data with AI-detected cuisine (and summary if available)
+      // Merge JSON-LD data with AI-detected cuisine and servings (and summary if available)
       console.log('[Recipe Parser] 🔄 Merging JSON-LD + AI results for cuisine detection');
       console.log('[Recipe Parser] JSON-LD result cuisine:', jsonLdResult.cuisine || 'none');
       console.log('[Recipe Parser] AI result cuisine:', aiResult?.cuisine || 'none');
+      console.log('[Recipe Parser] JSON-LD result servings:', jsonLdResult.servings || 'none');
+      console.log('[Recipe Parser] AI result servings:', aiResult?.servings || 'none');
       
       const mergedRecipe: ParsedRecipe = {
         ...jsonLdResult,
         ...(aiResult?.cuisine && aiResult.cuisine.length > 0 && { cuisine: aiResult.cuisine }), // Add cuisine from AI if detected
+        // Preserve servings from JSON-LD if available, otherwise use AI-detected servings
+        ...(jsonLdResult.servings ? { servings: jsonLdResult.servings } : (aiResult?.servings ? { servings: aiResult.servings } : {})),
       };
       
       console.log('[Recipe Parser] ✅ Final merged recipe cuisine:', mergedRecipe.cuisine || 'none');
+      
+      // Log important recipe output information: title, author, and servings
+      console.log('[Recipe Parser] 📋 Merged recipe output summary:', {
+        title: mergedRecipe.title || 'N/A',
+        author: mergedRecipe.author || 'N/A',
+        servings: mergedRecipe.servings || 'N/A',
+        hasAuthor: !!mergedRecipe.author,
+        hasServings: !!mergedRecipe.servings,
+      });
       
       const summary = await generateRecipeSummary(mergedRecipe);
       const recipeWithSummary = {
@@ -1258,6 +1357,16 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
         cuisine: aiResult.cuisine,
       });
       // #endregion
+      
+      // Log important recipe output information: title, author, and servings
+      console.log('[Recipe Parser] 📋 AI-only recipe output summary:', {
+        title: aiResult.title || 'N/A',
+        author: aiResult.author || 'N/A',
+        servings: aiResult.servings || 'N/A',
+        hasAuthor: !!aiResult.author,
+        hasServings: !!aiResult.servings,
+      });
+      
       // Generate summary for AI parsed recipe
       const summary = await generateRecipeSummary(aiResult);
       const recipeWithSummary = {
