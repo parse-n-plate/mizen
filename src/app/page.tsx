@@ -69,24 +69,25 @@ function HomeContent() {
 
   // Convert ParsedRecipe to RecipeCardData format
   const convertToRecipeCardData = (recipe: typeof recentRecipes[0]): RecipeCardData => {
-    // Use actual author from recipe data if available, fallback to URL parsing
-    let author = recipe.author || 'Recipe';
+    // Use actual author from recipe data if available, try URL parsing as fallback
+    // If no author is found, leave it undefined - the card component will handle the empty state
+    let author: string | undefined = recipe.author;
     
-    if (!recipe.author && recipe.url) {
+    if (!author && recipe.url) {
       try {
         const urlObj = new URL(recipe.url);
-        author = urlObj.hostname.replace('www.', '').split('.')[0];
+        const extractedAuthor = urlObj.hostname.replace('www.', '').split('.')[0];
         // Capitalize first letter
-        author = author.charAt(0).toUpperCase() + author.slice(1);
+        author = extractedAuthor.charAt(0).toUpperCase() + extractedAuthor.slice(1);
       } catch {
-        // If URL parsing fails, keep default
+        // If URL parsing fails, author remains undefined
       }
     }
 
     return {
       id: recipe.id,
       title: recipe.title,
-      author: author,
+      author: author, // Can be undefined - card component handles empty state
       imageUrl: recipe.imageUrl, // Optional image support when available
       cuisine: recipe.cuisine, // Include cuisine tags if available
       prepTimeMinutes: recipe.prepTimeMinutes,

@@ -15,7 +15,7 @@ import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 export interface RecipeCardData {
   id: string;
   title: string;
-  author: string;
+  author?: string; // Optional - recipes parsed from images may not have an author
   imageUrl?: string;
   cuisine?: string[]; // Array of cuisine names (e.g., ["Italian", "Mediterranean"])
   prepTimeMinutes?: number;
@@ -371,10 +371,13 @@ export default function RecipeCard({
                 {recipe.title}
               </h3>
               
-              <p className="font-albert leading-[1.4] text-[13px] md:text-[15px] text-stone-700 text-left m-0">
-                <span className="text-stone-500">By </span>
-                {recipe.author}
-              </p>
+              {/* Only show author line if author exists and is not empty */}
+              {recipe.author && recipe.author.trim() !== '' && (
+                <p className="font-albert leading-[1.4] text-[13px] md:text-[15px] text-stone-700 text-left m-0">
+                  <span className="text-stone-500">By </span>
+                  {recipe.author}
+                </p>
+              )}
             </div>
 
             {/* Right Side: Time Pill */}

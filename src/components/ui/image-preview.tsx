@@ -72,17 +72,17 @@ export default function ImagePreview({ imageData, filename = 'recipe-image', cla
         </button>
 
         {/* Filename and Download Button */}
-        <div className="flex flex-col gap-0.5">
+        <div className="flex items-center gap-1.5">
           <span className="font-albert text-[14px] text-stone-600">
             {filename || 'Uploaded image'}
           </span>
           <button
             onClick={handleDownload}
-            className="flex items-center gap-1 text-stone-400 hover:text-[#193d34] transition-colors cursor-pointer group"
+            className="flex items-center justify-center p-1 rounded-md text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all cursor-pointer group"
             aria-label="Download image"
+            title="Download image"
           >
-            <Download className="w-3 h-3" />
-            <span className="font-albert text-[12px]">Download</span>
+            <Download className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
@@ -123,11 +123,11 @@ export default function ImagePreview({ imageData, filename = 'recipe-image', cla
               {/* Download Button Overlay */}
               <button
                 onClick={handleDownload}
-                className="absolute bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center gap-2 transition-colors cursor-pointer"
+                className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center transition-colors cursor-pointer"
                 aria-label="Download image"
+                title="Download image"
               >
-                <Download className="w-4 h-4 text-white" />
-                <span className="font-albert text-sm text-white">Download</span>
+                <Download className="w-5 h-5 text-white" />
               </button>
             </motion.div>
           </motion.div>

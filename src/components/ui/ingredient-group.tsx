@@ -77,7 +77,7 @@ export function IngredientGroup({
         {/* Container for title and progress pie */}
         <div className="flex items-center gap-3 flex-1">
           {/* Group Title */}
-          <h3 className="font-domine text-[18px] text-[#193d34] font-semibold leading-[1.2]">
+          <h3 className="font-domine text-[18px] text-[#0C0A09] font-semibold leading-[1.2]">
             {title}
           </h3>
 
@@ -109,7 +109,7 @@ export function IngredientGroup({
                 percentage={progressPercentage} 
                 size={18} 
                 strokeWidth={1.5}
-                color="#193d34"
+                color="#0C0A09"
               />
             </div>
           )}
@@ -153,7 +153,7 @@ export function IngredientGroup({
             percentage={progressPercentage} 
             size={18} 
             strokeWidth={1.5}
-            color="#193d34"
+            color="#0C0A09"
           />
         </div>
       )}
