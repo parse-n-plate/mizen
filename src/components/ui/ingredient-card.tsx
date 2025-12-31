@@ -283,8 +283,7 @@ export default function IngredientCard({
             <div className="ingredient-list-primary flex items-center justify-between">
               <motion.p 
                 animate={{ 
-                  opacity: isChecked ? 0.5 : 1,
-                  x: isChecked ? 4 : 0
+                  opacity: isChecked ? 0.5 : 1
                 }}
                 className="ingredient-list-name transition-all duration-[180ms]"
               >

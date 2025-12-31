@@ -746,7 +746,7 @@ export default function ParsedRecipePage({
                       transition={{ duration: 0.3, ease: "easeOut" }}
                       className="bg-white cursor-default"
                     >
-                      <div className="p-6 space-y-6">
+                      <div className="space-y-6">
                         {/* Servings Adjuster and Multiplier Container */}
                         {/* Hidden on mobile */}
                         <div className="servings-controls-desktop-only">
@@ -760,9 +760,6 @@ export default function ParsedRecipePage({
 
                         {/* Ingredients */}
                         <div className="bg-white cursor-default">
-                          <h2 className="font-domine text-[20px] text-[#0C0A09] mb-6 leading-[1.1]">
-                            Ingredients
-                          </h2>
                           {Array.isArray(scaledIngredients) &&
                             scaledIngredients.map(
                               (
@@ -859,7 +856,7 @@ export default function ParsedRecipePage({
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.3, ease: "easeOut" }}
-                      className="w-full"
+                      className="w-full -mx-4 md:-mx-8"
                     >
                       <ClassicSplitView
                         title={parsedRecipe.title}
@@ -880,7 +877,7 @@ export default function ParsedRecipePage({
                       transition={{ duration: 0.3, ease: "easeOut" }}
                       className="bg-white"
                     >
-                      <div className="p-6">
+                      <div>
                         <div className="text-center py-12">
                           <div className="text-6xl mb-4">🍽️</div>
                           <p className="font-albert text-[18px] text-stone-500">
