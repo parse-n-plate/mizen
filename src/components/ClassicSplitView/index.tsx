@@ -262,251 +262,242 @@ export default function ClassicSplitView({ steps, title = 'Recipe Steps', allIng
   return (
     <TooltipProvider delayDuration={400} skipDelayDuration={0}>
       <div className="classic-split-view-container bg-white w-full flex flex-col min-h-[calc(100vh-300px)]">
-      {/* Header with View Toggle and Settings */}
-      <div className="px-4 md:px-6 py-3 md:py-4 flex items-center justify-between bg-white sticky top-0 z-20">
-        <div className="flex items-center gap-2 md:gap-4">
-          {view === 'card' && (
-            <button
-              onClick={handleBackToList}
-              className="p-2 -ml-2 rounded-full hover:bg-stone-50 text-stone-500 transition-colors flex items-center justify-center"
-              aria-label="Back to list"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1 md:gap-3">
-          {/* View Selection - Two separate pills for switching */}
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => setView('list')}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all border ${
-                view === 'list' 
-                  ? 'bg-[#0C0A09] text-white border-[#0C0A09] shadow-sm' 
-                  : 'bg-white text-stone-500 border-stone-200 hover:bg-stone-50 hover:text-stone-700'
-              }`}
-            >
-              <List className={`w-4 h-4 ${view === 'list' ? 'text-white' : 'text-stone-400'}`} />
-              <span className="font-albert text-[11px] font-bold uppercase tracking-wider hidden sm:inline">List View</span>
-            </button>
-            
-            <button
-              onClick={() => setView('card')}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all border ${
-                view === 'card' 
-                  ? 'bg-[#0C0A09] text-white border-[#0C0A09] shadow-sm' 
-                  : 'bg-white text-stone-500 border-stone-200 hover:bg-stone-50 hover:text-stone-700'
-              }`}
-            >
-              <Book className={`w-4 h-4 ${view === 'card' ? 'text-white' : 'text-stone-400'}`} />
-              <span className="font-albert text-[11px] font-bold uppercase tracking-wider hidden sm:inline">Focus View</span>
-            </button>
+      {/* Header with View Toggle and Settings - Left aligned */}
+      <div className="w-full bg-white sticky top-0 z-20 border-b border-stone-50">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
+          {/* View Selection - Left aligned, acts as back button in Focus view */}
+          <div className="flex items-center gap-3">
+            <div className="flex bg-stone-100/60 p-1 rounded-full">
+              <button
+                onClick={() => setView('list')}
+                className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all ${
+                  view === 'list' 
+                    ? 'bg-white text-stone-900 shadow-sm' 
+                    : 'text-stone-400 hover:text-stone-600'
+                }`}
+              >
+                <List className="w-3.5 h-3.5" />
+                <span className="font-albert text-[11px] font-bold uppercase tracking-wider">List</span>
+              </button>
+              
+              <button
+                onClick={() => setView('card')}
+                className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all ${
+                  view === 'card' 
+                    ? 'bg-white text-stone-900 shadow-sm' 
+                    : 'text-stone-400 hover:text-stone-600'
+                }`}
+              >
+                <Book className="w-3.5 h-3.5" />
+                <span className="font-albert text-[11px] font-bold uppercase tracking-wider">Focus</span>
+              </button>
+            </div>
           </div>
 
-          {/* Settings Menu */}
-          <div className="relative" ref={settingsRef}>
-            <button
-              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-              className={`p-2 rounded-full transition-colors ${isSettingsOpen ? 'bg-stone-100 text-stone-900' : 'text-stone-500 hover:bg-stone-50'}`}
-              aria-label="Settings"
-            >
-              <MoreHorizontal className="w-5 h-5" />
-            </button>
+          {/* Settings Menu - Right aligned */}
+          <div className="flex items-center gap-3">
+            {/* Settings Menu */}
+            <div className="relative" ref={settingsRef}>
+              <button
+                onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                className={`p-2 rounded-full transition-colors ${isSettingsOpen ? 'bg-stone-100 text-stone-900' : 'text-stone-400 hover:bg-stone-50'}`}
+                aria-label="Settings"
+              >
+                <MoreHorizontal className="w-5 h-5" />
+              </button>
 
-            <AnimatePresence>
-              {isSettingsOpen && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                  className="absolute right-0 mt-2 w-72 bg-white border border-stone-200 rounded-xl shadow-xl z-50 overflow-hidden"
-                >
-                  {/* Search Bar */}
-                  <div className="p-3 border-b border-stone-200">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
-                      <input
-                        ref={searchInputRef}
-                        type="text"
-                        placeholder="Search actions..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="menu-search-input w-full pl-9 pr-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0C0A09]/20 focus:border-[#0C0A09]/30 transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Font Family Selector */}
-                  {showFontSection && (
+              <AnimatePresence>
+                {isSettingsOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                    className="absolute right-0 mt-2 w-72 bg-white border border-stone-200 rounded-xl shadow-xl z-50 overflow-hidden"
+                  >
+                    {/* Search Bar */}
                     <div className="p-3 border-b border-stone-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="menu-section-label text-[11px] font-semibold uppercase tracking-wider text-stone-500">
-                          Font
-                        </span>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                        <input
+                          ref={searchInputRef}
+                          type="text"
+                          placeholder="Search actions..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="menu-search-input w-full pl-9 pr-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0C0A09]/20 focus:border-[#0C0A09]/30 transition-all"
+                        />
                       </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setFontFamily('sans')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border transition-all ${
-                          settings.fontFamily === 'sans'
-                            ? 'bg-[#0C0A09] text-white border-[#0C0A09]'
-                            : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
-                        }`}
-                      >
-                        <span className="font-albert text-[16px] font-medium">Ag</span>
-                        <span className="menu-action-label text-[12px] font-medium">Default</span>
-                      </button>
-                      <button
-                        onClick={() => setFontFamily('serif')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border transition-all ${
-                          settings.fontFamily === 'serif'
-                            ? 'bg-[#0C0A09] text-white border-[#0C0A09]'
-                            : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
-                        }`}
-                      >
-                        <span className="font-domine text-[16px] font-medium">Ag</span>
-                        <span className="menu-action-label text-[12px] font-medium">Serif</span>
-                      </button>
                     </div>
-                    </div>
-                  )}
 
-                  {/* Menu Actions */}
-                  {showMenuActions && (
-                    <div className="py-1">
-                      {filteredMenuItems.length > 0 ? (
-                        filteredMenuItems.map((item) => {
-                          const Icon = item.icon;
-                          const isCopied = (item.id === 'copy-link' && copiedLink) || (item.id === 'copy-recipe' && copiedRecipe);
-                          const isDisabled = item.disabled === true;
-                          
-                          return (
+                    {/* Font Family Selector */}
+                    {showFontSection && (
+                      <div className="p-3 border-b border-stone-200">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="menu-section-label text-[11px] font-semibold uppercase tracking-wider text-stone-500">
+                            Font
+                          </span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setFontFamily('sans')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border transition-all ${
+                              settings.fontFamily === 'sans'
+                                ? 'bg-[#0C0A09] text-white border-[#0C0A09]'
+                                : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
+                            }`}
+                          >
+                            <span className="font-albert text-[16px] font-medium">Ag</span>
+                            <span className="menu-action-label text-[12px] font-medium">Default</span>
+                          </button>
+                          <button
+                            onClick={() => setFontFamily('serif')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border transition-all ${
+                              settings.fontFamily === 'serif'
+                                ? 'bg-[#0C0A09] text-white border-[#0C0A09]'
+                                : 'bg-white text-stone-700 border-stone-200 hover:bg-stone-50'
+                            }`}
+                          >
+                            <span className="font-domine text-[16px] font-medium">Ag</span>
+                            <span className="menu-action-label text-[12px] font-medium">Serif</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Menu Actions */}
+                    {showMenuActions && (
+                      <div className="py-1">
+                        {filteredMenuItems.length > 0 ? (
+                          filteredMenuItems.map((item) => {
+                            const Icon = item.icon;
+                            const isCopied = (item.id === 'copy-link' && copiedLink) || (item.id === 'copy-recipe' && copiedRecipe);
+                            const isDisabled = item.disabled === true;
+                            
+                            return (
+                              <button
+                                key={item.id}
+                                onClick={() => !isDisabled && handleMenuAction(item.action)}
+                                disabled={isDisabled}
+                                className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors group ${
+                                  isDisabled 
+                                    ? 'cursor-not-allowed opacity-50' 
+                                    : 'hover:bg-stone-50'
+                                }`}
+                              >
+                                <Icon className={`w-4 h-4 flex-shrink-0 ${
+                                  isCopied 
+                                    ? 'text-green-600' 
+                                    : isDisabled 
+                                      ? 'text-stone-300' 
+                                      : 'text-stone-500 group-hover:text-stone-700'
+                                }`} />
+                                <span className={`menu-action-label flex-1 text-[14px] ${
+                                  isCopied 
+                                    ? 'text-green-600 font-medium' 
+                                    : isDisabled 
+                                      ? 'text-stone-400' 
+                                      : 'text-stone-700'
+                                }`}>
+                                  {isCopied ? (item.id === 'copy-link' ? 'Link copied' : 'Recipe copied') : item.label}
+                                </span>
+                                {item.shortcut && !isDisabled && (
+                                  <span className="menu-action-label text-[11px] text-stone-400 font-mono">
+                                    {item.shortcut}
+                                  </span>
+                                )}
+                                {isCopied && (
+                                  <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                                )}
+                              </button>
+                            );
+                          })
+                        ) : (
+                          <div className="px-3 py-6 text-center">
+                            <p className="menu-action-label text-[13px] text-stone-400">
+                              {searchQuery ? `No results found for "${searchQuery}"` : 'No actions found'}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Step Sizing */}
+                    {showStepSizingSection && (
+                      <div className="p-3 border-t border-stone-200">
+                        <label className="menu-section-label text-[11px] font-semibold uppercase tracking-wider text-stone-500 block mb-2">
+                          Step Sizing
+                        </label>
+                        <div className="grid grid-cols-3 gap-1 bg-stone-50 p-1 rounded-lg border border-stone-200">
+                          {(['sm', 'med', 'lg'] as const).map((size) => (
                             <button
-                              key={item.id}
-                              onClick={() => !isDisabled && handleMenuAction(item.action)}
-                              disabled={isDisabled}
-                              className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors group ${
-                                isDisabled 
-                                  ? 'cursor-not-allowed opacity-50' 
-                                  : 'hover:bg-stone-50'
+                              key={size}
+                              onClick={() => setStepSizing(size)}
+                              className={`py-1.5 text-[11px] font-bold uppercase rounded-md transition-all ${
+                                settings.stepSizing === size
+                                  ? 'bg-white text-[#0C0A09] shadow-sm ring-1 ring-stone-200'
+                                  : 'text-stone-500 hover:text-stone-700'
                               }`}
                             >
-                              <Icon className={`w-4 h-4 flex-shrink-0 ${
-                                isCopied 
-                                  ? 'text-green-600' 
-                                  : isDisabled 
-                                    ? 'text-stone-300' 
-                                    : 'text-stone-500 group-hover:text-stone-700'
-                              }`} />
-                              <span className={`menu-action-label flex-1 text-[14px] ${
-                                isCopied 
-                                  ? 'text-green-600 font-medium' 
-                                  : isDisabled 
-                                    ? 'text-stone-400' 
-                                    : 'text-stone-700'
-                              }`}>
-                                {isCopied ? (item.id === 'copy-link' ? 'Link copied' : 'Recipe copied') : item.label}
-                              </span>
-                              {item.shortcut && !isDisabled && (
-                                <span className="menu-action-label text-[11px] text-stone-400 font-mono">
-                                  {item.shortcut}
-                                </span>
-                              )}
-                              {isCopied && (
-                                <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
-                              )}
+                              {size}
                             </button>
-                          );
-                        })
-                      ) : (
-                        <div className="px-3 py-6 text-center">
-                          <p className="menu-action-label text-[13px] text-stone-400">
-                            {searchQuery ? `No results found for "${searchQuery}"` : 'No actions found'}
-                          </p>
+                          ))}
                         </div>
-                      )}
-                    </div>
-                  )}
+                      </div>
+                    )}
 
-                  {/* Step Sizing */}
-                  {showStepSizingSection && (
-                    <div className="p-3 border-t border-stone-200">
-                      <label className="menu-section-label text-[11px] font-semibold uppercase tracking-wider text-stone-500 block mb-2">
-                        Step Sizing
-                      </label>
-                    <div className="grid grid-cols-3 gap-1 bg-stone-50 p-1 rounded-lg border border-stone-200">
-                      {(['sm', 'med', 'lg'] as const).map((size) => (
-                        <button
-                          key={size}
-                          onClick={() => setStepSizing(size)}
-                          className={`py-1.5 text-[11px] font-bold uppercase rounded-md transition-all ${
-                            settings.stepSizing === size
-                              ? 'bg-white text-[#0C0A09] shadow-sm ring-1 ring-stone-200'
-                              : 'text-stone-500 hover:text-stone-700'
-                          }`}
-                        >
-                          {size}
-                        </button>
-                      ))}
-                    </div>
-                    </div>
-                  )}
-
-                  {/* Show message when search has no matches in any section */}
-                  {searchQuery && !showFontSection && !showStepSizingSection && !showMenuActions && (
-                    <div className="px-3 py-6 text-center">
-                      <p className="menu-action-label text-[13px] text-stone-400">
-                        No results found for "{searchQuery}"
-                      </p>
-                    </div>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
+                    {/* Show message when search has no matches in any section */}
+                    {searchQuery && !showFontSection && !showStepSizingSection && !showMenuActions && (
+                      <div className="px-3 py-6 text-center">
+                        <p className="menu-action-label text-[13px] text-stone-400">
+                          No results found for "{searchQuery}"
+                        </p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-hidden relative">
-        <AnimatePresence mode="wait">
-          {view === 'list' ? (
-            <motion.div
-              key="list"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -5 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="h-full"
-            >
-              <ListView 
-                steps={steps} 
-                onSelectStep={handleSelectStep}
-                allIngredients={allIngredients}
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="card"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -5 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="h-full"
-            >
-              <CardView 
-                steps={steps}
-                currentStep={currentStep}
-                onNext={handleNextStep}
-                onPrev={handlePrevStep}
-                onBackToList={handleBackToList}
-                allIngredients={allIngredients}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      <AnimatePresence mode="wait">
+        {view === 'list' ? (
+          <motion.div
+            key="list"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="flex-1 overflow-hidden relative"
+          >
+            <ListView 
+              steps={steps} 
+              onSelectStep={handleSelectStep}
+              allIngredients={allIngredients}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="card"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="flex-1 overflow-hidden relative"
+          >
+            <CardView 
+              steps={steps}
+              currentStep={currentStep}
+              onNext={handleNextStep}
+              onPrev={handlePrevStep}
+              onBackToList={handleBackToList}
+              allIngredients={allIngredients}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
     </TooltipProvider>
   );

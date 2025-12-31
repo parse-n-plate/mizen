@@ -44,8 +44,8 @@ export default function ListView({ steps, onSelectStep, allIngredients = [] }: L
   };
 
   return (
-    <div className="h-full overflow-y-auto p-4 md:p-6 bg-white">
-      <div className="space-y-1 pb-12">
+    <div className="h-full overflow-y-auto bg-white">
+      <div className="max-w-6xl mx-auto px-4 md:px-8 py-4 space-y-1 pb-12">
         {steps.map((step, index) => (
           <button
             key={index}
