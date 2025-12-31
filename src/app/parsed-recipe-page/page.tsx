@@ -13,7 +13,6 @@ import ClassicSplitView from '@/components/ClassicSplitView';
 import IngredientCard from '@/components/ui/ingredient-card';
 import { IngredientGroup } from '@/components/ui/ingredient-group';
 import { ServingsControls } from '@/components/ui/servings-controls';
-import { MobileToolbar } from '@/components/ui/mobile-toolbar';
 import { UISettingsProvider } from '@/contexts/UISettingsContext';
 import { AdminPrototypingPanel } from '@/components/ui/admin-prototyping-panel';
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
@@ -462,7 +461,7 @@ export default function ParsedRecipePage({
 
   return (
     <UISettingsProvider>
-      <div className="bg-white min-h-screen relative max-w-full overflow-x-hidden mobile-toolbar-page-padding pb-12 md:pb-16">
+      <div className="bg-white min-h-screen relative max-w-full overflow-x-hidden pb-12 md:pb-16">
         <div className="transition-opacity duration-300 ease-in-out opacity-100">
           {/* Tabs Root - wraps both navigation and content */}
           <Tabs.Root 
@@ -760,7 +759,7 @@ export default function ParsedRecipePage({
                     >
                       <div className="p-6 space-y-6">
                         {/* Servings Adjuster and Multiplier Container */}
-                        {/* Hidden on mobile - available in mobile toolbar instead */}
+                        {/* Hidden on mobile */}
                         <div className="servings-controls-desktop-only">
                           <ServingsControls
                             servings={servings}
@@ -910,13 +909,6 @@ export default function ParsedRecipePage({
             </div>
           </Tabs.Root>
         </div>
-        
-        {/* Mobile Toolbar - Fixed bottom navigation for quick actions */}
-        {/* Only visible on mobile screens (< 768px) */}
-        <MobileToolbar 
-          servings={servings}
-          onServingsChange={handleServingsChange}
-        />
         
         {/* Admin Panel for Prototyping */}
         <AdminPrototypingPanel />
