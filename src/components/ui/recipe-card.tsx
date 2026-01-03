@@ -8,7 +8,6 @@ import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import MenuDotsCircle from '@solar-icons/react/csr/ui/MenuDotsCircle';
 import Pen from '@solar-icons/react/csr/messages/Pen';
 import ClipboardText from '@solar-icons/react/csr/notes/ClipboardText';
-import TrashBinTrash from '@solar-icons/react/csr/ui/TrashBinTrash';
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 
@@ -241,11 +240,22 @@ export default function RecipeCard({
     }
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
+  // Handle unsave recipe - removes recipe from saved/bookmarked recipes
+  const handleUnsave = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsMenuOpen(false);
-    onDelete?.();
+    
+    // If recipe is currently bookmarked, show confirmation dialog before unsaving
+    if (isBookmarkedState) {
+      const confirmed = window.confirm(
+        'Are you sure you want to remove this recipe from your bookmarks? You can bookmark it again later.'
+      );
+      
+      if (confirmed) {
+        toggleBookmark(recipe.id);
+      }
+    }
   };
 
   return (
@@ -335,13 +345,13 @@ export default function RecipeCard({
               </span>
             </button>
 
-            {/* Delete Option */}
+            {/* Unsave Option */}
             <button
-              onClick={handleDelete}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-albert rounded-md"
+              onClick={handleUnsave}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
             >
-              <TrashBinTrash weight="Bold" className="w-4 h-4 text-red-600 flex-shrink-0" />
-              <span className="font-albert font-medium whitespace-nowrap">Delete</span>
+              <Bookmark weight="Bold" className="w-4 h-4 text-stone-500 flex-shrink-0" />
+              <span className="font-albert font-medium whitespace-nowrap">Unsave</span>
             </button>
           </div>
         )}
