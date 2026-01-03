@@ -1,13 +1,21 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
+import { X } from 'lucide-react';
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 
 interface LoadingAnimationProps {
   isVisible: boolean;
   cuisine?: string[];
+  /** 0–100. When provided, the component will reflect real progress instead of the simulated timer. */
+  progress?: number;
+  /** Optional coarse phase signal for step highlighting. */
+  phase?: 'gathering' | 'reading' | 'plating' | 'done';
+  /** Optional callback function called when user clicks the cancel button */
+  onCancel?: () => void;
 }
 
 type StepStatus = 'pending' | 'in_progress' | 'completed';
@@ -19,12 +27,39 @@ interface LoadingStep {
   status: StepStatus;
 }
 
-export default function LoadingAnimation({ isVisible, cuisine }: LoadingAnimationProps) {
+export default function LoadingAnimation({ isVisible, cuisine, progress: externalProgress, phase, onCancel }: LoadingAnimationProps) {
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
   const [progress, setProgress] = useState(0);
   const [hasCuisine, setHasCuisine] = useState(false);
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const animateProgressTo = (target: number, durationMs = 600) => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+
+    const from = progress;
+    const to = Math.max(0, Math.min(100, target));
+    const start = performance.now();
+
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / durationMs);
+      // easeOutCubic
+      const eased = 1 - Math.pow(1 - t, 3);
+      const next = from + (to - from) * eased;
+      setProgress(next);
+      if (t < 1) rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+  };
+
 
   // Define the 3 steps
   const initialSteps: LoadingStep[] = [
@@ -59,32 +94,55 @@ export default function LoadingAnimation({ isVisible, cuisine }: LoadingAnimatio
       setSteps(initialSteps);
       setHasCuisine(false);
       if (timerRef.current) clearTimeout(timerRef.current);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       return;
     }
 
-    // Auto-progress logic for Step 1 and 2
-    const startSequence = async () => {
-      // Step 1 is already in_progress
-      setProgress(15);
+    // If the parent passes real progress or a phase, reflect that instead of faking it.
+    const hasExternal = typeof externalProgress === 'number' || typeof phase === 'string';
 
-      // Move to Step 2 after 2.5s if still loading
-      timerRef.current = setTimeout(() => {
-        setCurrentStepIdx(1);
-        setProgress(45);
-        setSteps(prev => prev.map((s, i) => {
-          if (i === 0) return { ...s, status: 'completed' };
-          if (i === 1) return { ...s, status: 'in_progress' };
-          return s;
-        }));
-      }, 2500);
-    };
+    if (hasExternal) {
+      // Progress
+      const nextProgress = typeof externalProgress === 'number' ? externalProgress : progress;
+      animateProgressTo(nextProgress, 450);
 
-    startSequence();
+      // Phase → step status
+      const phaseToIdx = (p?: LoadingAnimationProps['phase']) => {
+        if (p === 'gathering') return 0;
+        if (p === 'reading') return 1;
+        if (p === 'plating') return 2;
+        if (p === 'done') return 2;
+        return 0;
+      };
+
+      const idx = phaseToIdx(phase);
+      setCurrentStepIdx(idx);
+      setSteps(prev => prev.map((s, i) => {
+        if (i < idx) return { ...s, status: 'completed' };
+        if (i === idx) return { ...s, status: phase === 'done' ? 'completed' : 'in_progress' };
+        return { ...s, status: 'pending' };
+      }));
+
+      return;
+    }
+
+    // Simulated fallback (only when the parent does not provide real progress/phase)
+    setProgress(15);
+
+    timerRef.current = setTimeout(() => {
+      setCurrentStepIdx(1);
+      animateProgressTo(45, 700);
+      setSteps(prev => prev.map((s, i) => {
+        if (i === 0) return { ...s, status: 'completed' };
+        if (i === 1) return { ...s, status: 'in_progress' };
+        return s;
+      }));
+    }, 2500);
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [isVisible]);
+  }, [isVisible, externalProgress, phase]);
 
   // Reactive logic for when cuisine is detected (Parsing Complete)
   useEffect(() => {
@@ -94,7 +152,7 @@ export default function LoadingAnimation({ isVisible, cuisine }: LoadingAnimatio
 
       // Fast forward to Step 3 with reveal
       setCurrentStepIdx(2);
-      setProgress(100);
+      animateProgressTo(100, 700);
       setSteps(prev => prev.map((s, i) => {
         if (i === 0 || i === 1) return { ...s, status: 'completed' };
         if (i === 2) {
@@ -106,12 +164,49 @@ export default function LoadingAnimation({ isVisible, cuisine }: LoadingAnimatio
     }
   }, [cuisine, isVisible, hasCuisine]);
 
-  if (!isVisible) return null;
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
 
-  return (
-    <div className="fixed inset-0 bg-[#FFF] z-[9999] flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-md space-y-12">
-        {/* Header Section */}
+  if (!isVisible) return null;
+  if (!mounted) return null;
+
+  // Handle cancel button click
+  const handleCancel = () => {
+    // Clean up any running timers or animations
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    
+    // Call the onCancel callback if provided
+    if (onCancel) {
+      onCancel();
+    }
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 z-[2147483647] flex items-center justify-center p-4 pointer-events-none">
+      {/* Dialog card */}
+      <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl ring-1 ring-black/10 pointer-events-auto">
+        {/* Cancel Button - positioned in top-right corner */}
+        {onCancel && (
+          <motion.button
+            onClick={handleCancel}
+            className="absolute top-4 right-4 z-10 p-2 rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-50 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-2"
+            aria-label="Cancel loading"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3, duration: 0.3, ease: "easeOut" }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <X className="w-5 h-5" />
+          </motion.button>
+        )}
+        <div className="p-6 sm:p-8">
+          <div className="w-full space-y-12">
+            {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -200,7 +295,10 @@ export default function LoadingAnimation({ isVisible, cuisine }: LoadingAnimatio
             />
           </div>
         </motion.div>
+          </div>  
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
