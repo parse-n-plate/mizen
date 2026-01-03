@@ -9,6 +9,7 @@ import { ParsedRecipesProvider } from '@/contexts/ParsedRecipesContext';
 import { TimerProvider } from '@/contexts/TimerContext';
 import { CommandKProvider } from '@/contexts/CommandKContext';
 import { Toaster } from '@/components/ui/sonner';
+import ImageProtection from '@/components/ImageProtection';
 import './globals.css';
 
 // Default fonts: Domine for headings (serif), Albert Sans for body (sans-serif)
@@ -45,6 +46,7 @@ export default function RootLayout({
             <ParsedRecipesProvider>
               <TimerProvider>
                 <CommandKProvider>
+                  <ImageProtection />
                   <Navbar />
                   {children}
                   <Footer />

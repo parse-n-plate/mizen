@@ -78,6 +78,43 @@
   [role="button"][aria-disabled="true"] {
     cursor: not-allowed;
   }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     IMAGE PROTECTION - Disable dragging and right-click on images
+     Prevents users from dragging images or accessing context menu
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  /* Disable dragging on all images globally */
+  img,
+  [role="img"],
+  picture img {
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    pointer-events: auto; /* Keep pointer events enabled for click interactions */
+  }
+
+  /* Specifically target images by file extension in src attribute */
+  img[src$=".png"],
+  img[src$=".jpg"],
+  img[src$=".jpeg"],
+  img[src$=".svg"],
+  img[src$=".PNG"],
+  img[src$=".JPG"],
+  img[src$=".JPEG"],
+  img[src$=".SVG"] {
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+  }
 }
 
 /* Utility Classes */
