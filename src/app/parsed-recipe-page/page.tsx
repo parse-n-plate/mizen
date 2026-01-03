@@ -2,11 +2,15 @@
 import { useRecipe } from '@/contexts/RecipeContext';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useMemo, use } from 'react';
+import { useEffect, useState, useMemo, use, useRef } from 'react';
 import RecipeSkeleton from '@/components/ui/recipe-skeleton';
 import * as Tabs from '@radix-ui/react-tabs';
 import { ArrowLeft, Link, Copy, Check, Clock } from 'lucide-react';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
+import Settings from '@solar-icons/react/csr/settings/Settings';
+import LinkIcon from '@solar-icons/react/csr/text-formatting/Link';
+import CopyIcon from '@solar-icons/react/csr/ui/Copy';
+import Download from '@solar-icons/react/csr/arrows-action/Download';
 import { motion, AnimatePresence } from 'framer-motion';
 import { scaleIngredients } from '@/utils/ingredientScaler';
 import ClassicSplitView from '@/components/ClassicSplitView';
@@ -173,6 +177,13 @@ export default function ParsedRecipePage({
   const [multiplier, setMultiplier] = useState<string>('1x');
   const [activeTab, setActiveTab] = useState<string>('prep');
   const [copied, setCopied] = useState(false);
+  
+  // Settings popover state
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedPlainText, setCopiedPlainText] = useState(false);
+  const settingsMenuRef = useRef<HTMLDivElement>(null);
+  const settingsButtonRef = useRef<HTMLButtonElement>(null);
 
   // Find the recipe ID by matching sourceUrl with recipes in recentRecipes
   // This is needed because RecipeContext's parsedRecipe doesn't have an ID field
@@ -389,6 +400,117 @@ export default function ParsedRecipePage({
     }
   };
 
+  // Close settings popover when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target as Node)) {
+        if (settingsButtonRef.current && !settingsButtonRef.current.contains(event.target as Node)) {
+          setIsSettingsOpen(false);
+        }
+      }
+    }
+
+    if (isSettingsOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSettingsOpen]);
+
+  // Handle copy link to original recipe
+  const handleCopyLink = async () => {
+    if (!parsedRecipe?.sourceUrl) return;
+    
+    try {
+      await navigator.clipboard.writeText(parsedRecipe.sourceUrl);
+      setCopiedLink(true);
+      setTimeout(() => {
+        setCopiedLink(false);
+        setIsSettingsOpen(false);
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+    }
+  };
+
+  // Handle copy recipe as plain text
+  const handleCopyPlainText = async () => {
+    if (!parsedRecipe) return;
+    
+    // Format recipe as plain text (similar to recipe-card.tsx)
+    let text = '';
+    
+    // Title
+    if (parsedRecipe.title) {
+      text += `${parsedRecipe.title}\n\n`;
+    }
+    
+    // Metadata
+    if (parsedRecipe.author) {
+      text += `By ${parsedRecipe.author}\n`;
+    }
+    if (parsedRecipe.sourceUrl) {
+      text += `Source: ${parsedRecipe.sourceUrl}\n`;
+    }
+    if (parsedRecipe.prepTimeMinutes || parsedRecipe.cookTimeMinutes || parsedRecipe.servings) {
+      text += '\n';
+      if (parsedRecipe.prepTimeMinutes) text += `Prep: ${parsedRecipe.prepTimeMinutes} min\n`;
+      if (parsedRecipe.cookTimeMinutes) text += `Cook: ${parsedRecipe.cookTimeMinutes} min\n`;
+      if (parsedRecipe.servings) text += `Servings: ${parsedRecipe.servings}\n`;
+    }
+    
+    // Ingredients
+    if (scaledIngredients && scaledIngredients.length > 0) {
+      text += '\n--- INGREDIENTS ---\n\n';
+      scaledIngredients.forEach((group) => {
+        if (group.groupName && group.groupName !== 'Main') {
+          text += `${group.groupName}:\n`;
+        }
+        group.ingredients.forEach((ing) => {
+          if (typeof ing === 'string') {
+            text += `  ${ing}\n`;
+          } else {
+            const parts = [];
+            if (ing.amount) parts.push(ing.amount);
+            if (ing.units) parts.push(ing.units);
+            parts.push(ing.ingredient);
+            text += `  ${parts.join(' ')}\n`;
+          }
+        });
+        text += '\n';
+      });
+    }
+    
+    // Instructions
+    if (parsedRecipe.instructions && parsedRecipe.instructions.length > 0) {
+      text += '--- INSTRUCTIONS ---\n\n';
+      parsedRecipe.instructions.forEach((instruction, index) => {
+        if (typeof instruction === 'string') {
+          text += `${index + 1}. ${instruction}\n\n`;
+        } else if (typeof instruction === 'object' && instruction !== null) {
+          const inst = instruction as any;
+          const title = inst.title || inst.step || `Step ${index + 1}`;
+          const detail = inst.detail || inst.text || '';
+          text += `${index + 1}. ${title}\n   ${detail}\n\n`;
+        }
+      });
+    }
+    
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedPlainText(true);
+      setTimeout(() => {
+        setCopiedPlainText(false);
+        setIsSettingsOpen(false);
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy recipe:', err);
+    }
+  };
+
+
   // Redirect if loaded and no recipe
   // Check both state and localStorage to handle race conditions where navigation
   // happens before React state updates complete
@@ -560,24 +682,82 @@ export default function ParsedRecipePage({
                         <h1 className="font-domine text-[32px] md:text-[42px] text-[#0C0A09] leading-[1.15] font-bold flex-1 tracking-tight">
                           {parsedRecipe.title || 'Untitled Recipe'}
                         </h1>
-                        {/* Bookmark Button */}
-                        {recipeId && (
-                          <button
-                            onClick={handleBookmarkToggle}
-                            className="flex-shrink-0 p-2.5 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 bg-white shadow-sm border border-stone-200/50 hover:shadow-md hover:bg-stone-50 cursor-pointer mt-1"
-                            aria-label={isBookmarkedState ? 'Remove bookmark' : 'Bookmark recipe'}
-                          >
-                            <Bookmark
-                              className={`
-                                w-5 h-5 transition-colors duration-200
-                                ${isBookmarkedState 
-                                  ? 'fill-stone-600 text-stone-600' 
-                                  : 'text-stone-400'
-                                }
-                              `}
-                            />
-                          </button>
-                        )}
+                        {/* Bookmark and Settings Buttons */}
+                        <div className="flex items-center gap-2 flex-shrink-0 mt-1">
+                          {/* Bookmark Button */}
+                          {recipeId && (
+                            <button
+                              onClick={handleBookmarkToggle}
+                              className="flex-shrink-0 p-2.5 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 bg-white shadow-sm border border-stone-200/50 hover:shadow-md hover:bg-stone-50 cursor-pointer"
+                              aria-label={isBookmarkedState ? 'Remove bookmark' : 'Bookmark recipe'}
+                            >
+                              <Bookmark
+                                className={`
+                                  w-5 h-5 transition-colors duration-200
+                                  ${isBookmarkedState 
+                                    ? 'fill-stone-600 text-stone-600' 
+                                    : 'text-stone-400'
+                                  }
+                                `}
+                              />
+                            </button>
+                          )}
+                          
+                          {/* Settings Button and Popover */}
+                          <div ref={settingsMenuRef} className={`relative ${isSettingsOpen ? 'z-[100]' : 'z-10'}`}>
+                            <button
+                              ref={settingsButtonRef}
+                              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                              className="flex-shrink-0 p-2.5 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 bg-white shadow-sm border border-stone-200/50 hover:shadow-md hover:bg-stone-50 cursor-pointer"
+                              aria-label="Recipe settings"
+                              aria-expanded={isSettingsOpen}
+                            >
+                              <Settings
+                                className={`w-5 h-5 transition-colors duration-200 ${
+                                  isSettingsOpen 
+                                    ? 'text-stone-600' 
+                                    : 'text-stone-400'
+                                }`}
+                              />
+                            </button>
+
+                            {/* Settings Popover */}
+                            {isSettingsOpen && (
+                              <div className="absolute w-60 bg-white rounded-lg border border-stone-200 shadow-xl p-1.5 z-[100] animate-in fade-in duration-200 top-[calc(100%+8px)] slide-in-from-top-2 right-0">
+                                {/* Copy Link to Original Option */}
+                                <button
+                                  onClick={handleCopyLink}
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
+                                >
+                                  <LinkIcon weight="Bold" className={`w-4 h-4 flex-shrink-0 ${copiedLink ? 'text-green-600' : 'text-stone-500'}`} />
+                                  <span className={`font-albert font-medium whitespace-nowrap ${copiedLink ? 'text-green-600' : ''}`}>
+                                    {copiedLink ? 'Link Copied' : 'Copy Link to Original'}
+                                  </span>
+                                </button>
+
+                                {/* Copy Recipe as Plain Text Option */}
+                                <button
+                                  onClick={handleCopyPlainText}
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
+                                >
+                                  <CopyIcon weight="Bold" className={`w-4 h-4 flex-shrink-0 ${copiedPlainText ? 'text-green-600' : 'text-stone-500'}`} />
+                                  <span className={`font-albert font-medium whitespace-nowrap ${copiedPlainText ? 'text-green-600' : ''}`}>
+                                    {copiedPlainText ? 'Copied to Clipboard' : 'Copy Recipe as Plain Text'}
+                                  </span>
+                                </button>
+
+                                {/* Download Recipe as JPG Option - Disabled for now */}
+                                <button
+                                  disabled
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-400 cursor-not-allowed opacity-50 font-albert rounded-md"
+                                >
+                                  <Download weight="Bold" className="w-4 h-4 text-stone-400 flex-shrink-0" />
+                                  <span className="font-albert font-medium whitespace-nowrap">Download Recipe as JPG</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                       
                       {/* Author and Source URL / Image Preview */}
