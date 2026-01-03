@@ -189,6 +189,10 @@ export async function POST(req: NextRequest): Promise<Response> {
       summary: result.data.summary, // Include AI-generated summary
       author: result.data.author, // Include author if available
       cuisine: result.data.cuisine, // Include cuisine if available
+      servings: result.data.servings, // Include servings/yield if available
+      prepTimeMinutes: result.data.prepTimeMinutes, // Include prep time if available
+      cookTimeMinutes: result.data.cookTimeMinutes, // Include cook time if available
+      totalTimeMinutes: result.data.totalTimeMinutes, // Include total time if available
       imageData: base64DataUrl, // Return the base64 image data for preview
       imageFilename: imageFile.name, // Return the original filename
     });
