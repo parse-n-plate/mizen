@@ -36,6 +36,7 @@
     "framer-motion": "^12.23.25",
     "groq": "^3.93.0",
     "groq-sdk": "^0.25.0",
+    "html2canvas-pro": "^1.6.3",
     "lucide-react": "^0.519.0",
     "next": "^16.1.1",
     "next-themes": "^0.4.6",
