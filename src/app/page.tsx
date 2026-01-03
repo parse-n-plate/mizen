@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import type { CuisineType } from '@/components/ui/cuisine-pills';
 import Image from 'next/image';
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
+import { Search, X } from 'lucide-react';
 
 function HomeContent() {
   const {
@@ -24,6 +25,7 @@ function HomeContent() {
   const { setParsedRecipe } = useRecipe();
   const router = useRouter();
   const [selectedCuisine, setSelectedCuisine] = useState<CuisineType>('All');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [isPageLoaded, setIsPageLoaded] = useState<boolean>(false);
 
   // Trigger onload animation when component mounts and data is loaded
@@ -59,6 +61,7 @@ function HomeContent() {
           prepTimeMinutes: fullRecipe.prepTimeMinutes, // Include prep time if available
           cookTimeMinutes: fullRecipe.cookTimeMinutes, // Include cook time if available
           totalTimeMinutes: fullRecipe.totalTimeMinutes, // Include total time if available
+          servings: fullRecipe.servings, // Include servings if available
         });
         router.push('/parsed-recipe-page');
       }
@@ -101,25 +104,36 @@ function HomeContent() {
     return getBookmarkedRecipes().map(convertToRecipeCardData);
   }, [getBookmarkedRecipes]);
 
-  // Filter bookmarked recipes by selected cuisine
+  // Filter bookmarked recipes by selected cuisine and search query
   const filteredRecipes = useMemo(() => {
     console.log('[Homepage] 🍽️ Filtering bookmarked recipes by cuisine:', selectedCuisine);
+    console.log('[Homepage] 🔍 Search query:', searchQuery);
     console.log('[Homepage] Available bookmarked recipes:', bookmarkedRecipes.map(r => ({ title: r.title, cuisine: r.cuisine })));
     
-    if (selectedCuisine === 'All') {
-      console.log('[Homepage] Showing all bookmarked recipes (All selected)');
-      return bookmarkedRecipes;
+    let filtered = bookmarkedRecipes;
+    
+    // Filter by cuisine
+    if (selectedCuisine !== 'All') {
+      filtered = filtered.filter(recipe => {
+        const hasMatchingCuisine = recipe.cuisine && recipe.cuisine.includes(selectedCuisine);
+        console.log(`[Homepage] Recipe "${recipe.title}": cuisine=${recipe.cuisine}, matches=${hasMatchingCuisine}`);
+        return hasMatchingCuisine;
+      });
     }
     
-    const filtered = bookmarkedRecipes.filter(recipe => {
-      const hasMatchingCuisine = recipe.cuisine && recipe.cuisine.includes(selectedCuisine);
-      console.log(`[Homepage] Recipe "${recipe.title}": cuisine=${recipe.cuisine}, matches=${hasMatchingCuisine}`);
-      return hasMatchingCuisine;
-    });
+    // Filter by search query (title and author)
+    if (searchQuery.trim()) {
+      const queryLower = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(recipe => {
+        const titleMatch = recipe.title.toLowerCase().includes(queryLower);
+        const authorMatch = recipe.author?.toLowerCase().includes(queryLower) || false;
+        return titleMatch || authorMatch;
+      });
+    }
     
-    console.log('[Homepage] Filtered results:', filtered.length, 'bookmarked recipes match', selectedCuisine);
+    console.log('[Homepage] Filtered results:', filtered.length, 'bookmarked recipes match filters');
     return filtered;
-  }, [selectedCuisine, bookmarkedRecipes]);
+  }, [selectedCuisine, searchQuery, bookmarkedRecipes]);
 
   if (!isLoaded) {
     return <HomepageSkeleton />;
@@ -178,7 +192,30 @@ function HomeContent() {
               </h2>
             </div>
 
-            {/* Cuisine Filter Pills now sit below the Trending header */}
+            {/* Search Bar - positioned between header and filter pills */}
+            <div className="mb-4 md:mb-6">
+              <div className="relative w-full">
+                <input
+                  type="text"
+                  placeholder="Search saved recipes..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full h-10 rounded-lg border border-stone-300 bg-white px-4 py-2 pl-10 font-albert text-[14px] text-stone-700 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-300 focus:ring-offset-0 transition-colors"
+                />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 transition-colors"
+                    aria-label="Clear search"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Cuisine Filter Pills now sit below the search bar */}
             <div className="mb-6 md:mb-8">
               <CuisinePills onCuisineChange={handleCuisineChange} />
             </div>
