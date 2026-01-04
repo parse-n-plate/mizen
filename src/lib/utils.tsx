@@ -169,14 +169,17 @@ export function highlightQuantitiesAndIngredients(
     return <>{text}</>;
   }
 
-  // Pattern to match quantities: numbers (including fractions) followed by units
-  const quantityPattern = /(\d+(?:\s+\d+\/\d+|\/\d+)?)\s*(?:of\s+)?(pinch|pinches|tbsp|tbsps|tablespoon|tablespoons|tsp|tsps|teaspoon|teaspoons|cup|cups|g|gram|grams|kg|kilogram|kilograms|oz|ounce|ounces|lb|lbs|pound|pounds|ml|milliliter|milliliters|l|liter|liters|fl\s*oz|fluid\s*ounce|fluid\s*ounces|piece|pieces|slice|slices|stalk|stalks|clove|cloves|head|heads|bunch|bunches|can|cans|package|packages|pack|packs|bottle|bottles|jar|jars|box|boxes|bag|bags|sheet|sheets|strip|strips|fillet|fillets|serving|servings|portion|portions|dash|dashes|drop|drops|splash|splashes|handful|handfuls|sprig|sprigs|leaf|leaves|bulb|bulbs|pod|pods)/gi;
+  // Pattern to match quantities: numbers (including fractions, decimals, and ranges) followed by units
+  // Matches: "2 cups", "2.5 cups", "2 to 2.5 cups", "about 1 to 2 tablespoons", "2-3 cups", etc.
+  // Includes ranges with "to", hyphens, or en dashes, and optional "about" prefix
+  // Note: Put plural forms FIRST in alternation to match them before singular forms (e.g., "cups" before "cup")
+  const quantityPattern = /(?:about\s+)?(\d+(?:\.\d+)?(?:\s+\d+\/\d+|\/\d+)?(?:\s*(?:to|–|-)\s*\d+(?:\.\d+)?(?:\s+\d+\/\d+|\/\d+)?)?)\s*(?:of\s+)?(pinches|pinch|tbsps|tbsp|tablespoons|tablespoon|tsps|tsp|teaspoons|teaspoon|cups|cup|grams|gram|kilograms|kilogram|ounces|ounce|pounds|pound|milliliters|milliliter|liters|liter|fluid\s*ounces|fluid\s*ounce|pieces|piece|slices|slice|stalks|stalk|cloves|clove|heads|head|bunches|bunch|cans|can|packages|package|packs|pack|bottles|bottle|jars|jar|boxes|box|bags|bag|sheets|sheet|strips|strip|fillets|fillet|servings|serving|portions|portion|dashes|dash|drops|drop|splashes|splash|handfuls|handful|sprigs|sprig|leaves|leaf|bulbs|bulb|pods|pod|g|kg|oz|lb|ml|l|fl\s*oz)/gi;
 
-  // Pattern to match time expressions: numbers (including ranges) followed by time units
-  // Matches: "5 minutes", "10 min", "30 seconds", "2-3 minutes", "2–3 minutes" (en dash), "10-15 min", "1 hour", "2 hrs", "45 sec", etc.
-  // Includes ranges like "2-3", "2–3" (en dash), "10-15", etc.
+  // Pattern to match time expressions: numbers (including ranges, decimals, and "to" connectors) followed by time units
+  // Matches: "5 minutes", "10 min", "30 seconds", "2-3 minutes", "2–3 minutes" (en dash), "5 to 7 minutes", "about 5 to 7 minutes", "2.5 minutes", "2 to 2.5 minutes", etc.
+  // Includes ranges with "to", hyphens, or en dashes, and optional "about" prefix
   // Note: Put plural forms FIRST in alternation to match them before singular forms
-  const timePattern = /(\d+(?:[–-]\d+)?(?:\s+\d+\/\d+|\/\d+)?)\s*(minutes|minute|mins|min|seconds|second|secs|sec|hours|hour|hrs|hr|h)/gi;
+  const timePattern = /(?:about\s+)?(\d+(?:\.\d+)?(?:\s+\d+\/\d+|\/\d+)?(?:\s*(?:to|–|-)\s*\d+(?:\.\d+)?(?:\s+\d+\/\d+|\/\d+)?)?)\s*(minutes|minute|mins|min|seconds|second|secs|sec|hours|hour|hrs|hr|h)/gi;
 
   // Find all ingredient matches in the text
   const matchedIngredients = findIngredientsInText(text, allIngredients);
@@ -196,10 +199,20 @@ export function highlightQuantitiesAndIngredients(
   let match;
   const quantityRegex = new RegExp(quantityPattern.source, quantityPattern.flags);
   while ((match = quantityRegex.exec(text)) !== null) {
+    // Check if match starts with "about " and exclude it from the highlighted text
+    let matchText = match[0];
+    let matchStart = match.index;
+    
+    // If the match text starts with "about ", remove it and adjust the start position
+    if (matchText.toLowerCase().startsWith('about ')) {
+      matchText = matchText.substring(6); // Remove "about " (6 characters)
+      matchStart = match.index + 6; // Adjust start position
+    }
+    
     matches.push({
-      start: match.index,
-      end: match.index + match[0].length,
-      text: match[0],
+      start: matchStart,
+      end: matchStart + matchText.length,
+      text: matchText,
       type: 'quantity',
     });
   }
@@ -207,10 +220,20 @@ export function highlightQuantitiesAndIngredients(
   // Find all time matches
   const timeRegex = new RegExp(timePattern.source, timePattern.flags);
   while ((match = timeRegex.exec(text)) !== null) {
+    // Check if match starts with "about " and exclude it from the highlighted text
+    let matchText = match[0];
+    let matchStart = match.index;
+    
+    // If the match text starts with "about ", remove it and adjust the start position
+    if (matchText.toLowerCase().startsWith('about ')) {
+      matchText = matchText.substring(6); // Remove "about " (6 characters)
+      matchStart = match.index + 6; // Adjust start position
+    }
+    
     matches.push({
-      start: match.index,
-      end: match.index + match[0].length,
-      text: match[0],
+      start: matchStart,
+      end: matchStart + matchText.length,
+      text: matchText,
       type: 'time',
     });
   }
