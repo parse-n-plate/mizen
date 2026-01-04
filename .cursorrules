@@ -1,152 +1,42 @@
-# Cursor AI Rules for Parse N' Plate
+# Cursor AI Rules for Mizen
 
-## 👤 User Context
+## 🛠️ Tech Stack Overview
 
-### User Profile
-- Product designer with limited coding experience
-- Prefers detailed explanations over brief technical answers
-- Learning-focused approach to development
+This project uses a modern, maintainable tech stack designed for both developer and designer friendliness:
 
-### Communication Preferences
-- Provide educational context and explanations
-- Break down complex concepts into simple steps
-- Explain reasoning behind decisions
-- Use clear visual signals: ⚠️ 🛑 ⏸️ 📋 ✅
+- **TypeScript** — for strictly typed, safer JavaScript development  
+- **React (functional components & hooks)** — for building dynamic UIs using best practices  
+- **Next.js** — for efficient server-side rendering and project structure  
+- **Solar Icons** — please use the Solar Icons library for all iconography to ensure a consistent, accessible visual language ([Solar Icons Documentation](https://icons.solar/))  
+- **CSS Modules / Tailwind CSS** — utility-first styling (see [globals.css](src/app/globals.css))  
+- **Error Boundaries** — for robust async and error handling in UI
 
-### Code Changes
-- Add detailed comments explaining what and why
-- For large/risky changes:
-  - Use "⚠️ LARGE CHANGE ALERT" or "🛑 HIGH RISK MODIFICATION"
-  - Provide specific warnings
-  - Wait for user confirmation before implementing
-- Always explain each step of code changes
+## User Context & Communication
+- Audience: Product designer, limited coding experience, prefers detailed explanations
+- Communication: Always include educational, step-by-step explanations using clear visual signals (⚠️ 🛑 ⏸️ 📋 ✅)
 
----
+## Coding & Review Guidelines
+- Add clear, detailed comments—explain both what you're doing and why
+- For large/risky changes: signal with ⚠️ or 🛑, explain, and await user confirmation before proceeding
+- Use explicit TypeScript types, avoid `any`, and define interfaces for complex data
+- Use functional React components, hooks, and error boundaries for async ops
 
-## 🏗️ Project Architecture
+## UI Component Rules
+- **Globals CSS:** Always review and update `src/app/globals.css` if you change or add any `/components/ui/` component
+    - Add CSS variables for colors, typography, spacing if needed
+    - Add shared utility/component classes if required
+    - Organize CSS logically (by layer: base, components, utilities)
+- When in doubt, update globals.css for design tokens and shared styles
 
-### Tech Stack
-- **Frontend**: Next.js 15, React 19, TypeScript
-- **Styling**: Tailwind CSS 4, shadcn/ui components
-- **Backend**: Next.js API routes, Python (recipe-scrapers)
-- **AI**: Groq API (Llama models), OpenAI SDK
-- **Storage**: localStorage (client-side)
+## Documentation & Workflow
+- Update docs (`README.md`, etc.) for new features, breaking changes, or complex logic
+- Before large changes: signal, explain, get confirmation
+- After changes: explain updates, suggest testing, remind to update changelogs
 
-### Key Patterns
-- Context API for state management (RecipeContext, ParsedRecipesContext)
-- API routes in `/app/api/` for backend logic
-- Custom hooks in `/hooks/` for reusable logic
-- UI components in `/components/ui/` (shadcn/ui)
-- Utility functions in `/utils/` and `/lib/`
-
----
-
-## 🎨 UI Component Guidelines
-
-### Global CSS Updates
-**ALWAYS update `src/app/globals.css` when creating or updating UI components.**
-
-When working with UI components in `/components/ui/`:
-
-1. **New Components**:
-   - Check if the component needs custom CSS variables, utility classes, or component-specific styles
-   - Add any necessary styles to `globals.css` in the appropriate layer:
-     - `@layer base` - Base element styles
-     - `@layer components` - Component-specific styles
-     - `@layer utilities` - Utility classes
-
-2. **Updating Components**:
-   - Review if style changes require updates to `globals.css`
-   - Add new CSS variables if introducing new design tokens
-   - Add component-specific classes if needed
-   - Update existing styles if component behavior changes
-
-3. **What to Add to globals.css**:
-   - Custom CSS variables for colors, spacing, typography
-   - Component-specific utility classes
-   - Shared component styles (e.g., `.control-card`, `.servings-controls-container`)
-   - Design system tokens that multiple components might use
-
-4. **Organization**:
-   - Follow the existing structure: CSS variables in `:root`, base styles in `@layer base`, utilities in `@layer utilities`, components in `@layer components`
-   - Add comments to group related styles
-   - Keep styles organized by purpose (typography, colors, spacing, components)
-
-**Default Behavior**: When creating or modifying any file in `/components/ui/`, automatically check and update `src/app/globals.css` if needed, even if the user doesn't explicitly request it.
-
----
-
-## 🎯 Code Quality Standards
-
-### TypeScript
-- Always use explicit types
-- Avoid `any` type when possible
-- Define interfaces for complex objects
-
-### React Best Practices
-- Use functional components with hooks
-- Implement proper error boundaries
-- Use loading states for async operations
-- Keep components focused and single-purpose
-
-### Comments
-- Add explanatory comments for complex logic
-- Document function purposes and parameters
-- Include TODO comments for future improvements
-
-### Error Handling
-- Provide user-friendly error messages
-- Log errors appropriately
-- Use try-catch blocks for async operations
-
----
-
-## 📝 Documentation
-
-### When to Update Docs
-- New features require README updates
-- API changes need documentation
-- Complex features need explanation
-- Setup steps change
-
-### Documentation Files
-- `README.md` - Main project documentation
-- `CHANGELOG.md` - Version history
-- `TECHNICAL_SUMMARY.md` - Technical overview
-- `ENVIRONMENT_SETUP.md` - Setup instructions
-- `FONT_SETUP.md` - Typography guide
-
----
-
-## 🔄 Workflow Reminders
-
-1. **Before Large Changes**:
-   - Show warning signal (⚠️ or 🛑)
-   - Explain what will change and why
-   - Wait for user confirmation
-
-2. **After Implementing Changes**:
-   - Remind about changelog if applicable
-   - Suggest testing steps
-   - Explain what was changed in detail
-
-3. **For New Features**:
-   - Add TypeScript types
-   - Add error handling
-   - Include loading states
-   - Update relevant documentation
-   - Add to changelog
-
----
-
-## 🚀 Development Commands
-
-```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run lint         # Run ESLint
-npm run lint:fix     # Fix ESLint issues
-npm run docker:build # Build Docker image
-npm run docker:run   # Run Docker container
-```
+## Development Commands
+- Common scripts:
+    - `npm run dev` — Start dev server
+    - `npm run build` — Build for production
+    - `npm run lint` — Check/fix code
+    - `npm run docker:*` — Docker build/run
 
