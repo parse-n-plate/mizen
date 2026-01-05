@@ -36,6 +36,7 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
   const [mounted, setMounted] = useState(false);
 
   const rafRef = useRef<number | null>(null);
+  const progressRef = useRef<number>(0); // Track current progress for animation
 
   useEffect(() => {
     setMounted(true);
@@ -44,7 +45,8 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
   const animateProgressTo = (target: number, durationMs = 600) => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
 
-    const from = progress;
+    // Use ref to get current progress value (avoids stale closure issues)
+    const from = progressRef.current;
     const to = Math.max(0, Math.min(100, target));
     const start = performance.now();
 
@@ -53,6 +55,7 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
       // easeOutCubic
       const eased = 1 - Math.pow(1 - t, 3);
       const next = from + (to - from) * eased;
+      progressRef.current = next; // Update ref
       setProgress(next);
       if (t < 1) rafRef.current = requestAnimationFrame(tick);
     };
@@ -91,6 +94,7 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
       // Reset when not visible
       setCurrentStepIdx(0);
       setProgress(0);
+      progressRef.current = 0; // Reset ref too
       setSteps(initialSteps);
       setHasCuisine(false);
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -103,7 +107,8 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
 
     if (hasExternal) {
       // Progress
-      const nextProgress = typeof externalProgress === 'number' ? externalProgress : progress;
+      const nextProgress = typeof externalProgress === 'number' ? externalProgress : progressRef.current;
+      progressRef.current = nextProgress; // Sync ref
       animateProgressTo(nextProgress, 450);
 
       // Phase → step status
@@ -128,6 +133,7 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
 
     // Simulated fallback (only when the parent does not provide real progress/phase)
     setProgress(15);
+    progressRef.current = 15; // Update ref too
 
     timerRef.current = setTimeout(() => {
       setCurrentStepIdx(1);
@@ -152,6 +158,7 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
 
       // Fast forward to Step 3 with reveal
       setCurrentStepIdx(2);
+      progressRef.current = progress; // Sync ref before animating
       animateProgressTo(100, 700);
       setSteps(prev => prev.map((s, i) => {
         if (i === 0 || i === 1) return { ...s, status: 'completed' };

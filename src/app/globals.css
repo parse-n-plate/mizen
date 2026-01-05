@@ -84,11 +84,7 @@
   ═══════════════════════════════════════════════════════════════════════════ */
 
   .loading-step-card {
-    background: #ffffff;
-    border: 1px solid #e7e5e4;
-    border-radius: 24px;
-    padding: 32px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    /* Card styling removed - steps now display without card background or border */
   }
 
   .loading-progress-container {
