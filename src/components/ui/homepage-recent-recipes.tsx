@@ -171,7 +171,7 @@ export default function HomepageRecentRecipes() {
       </div>
 
       {/* Recipe List */}
-      <div className="space-y-3 group">
+      <div className="space-y-3">
         {displayRecipes.map((recipe) => {
           const isBookmarkedState = isBookmarked(recipe.id);
           const displayTime = getDisplayTime(recipe);
@@ -258,7 +258,7 @@ export default function HomepageRecentRecipes() {
         
         {/* See More Button - Only shows if more than 5 recipes and not already showing all */}
         {hasMoreThanFive && !showAll && (
-          <div className="pl-4">
+          <div className="pl-4 group">
             <Button
               variant="ghost"
               size="sm"
