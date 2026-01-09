@@ -194,6 +194,15 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
 
   return createPortal(
     <div className="fixed inset-0 z-[2147483647] flex items-center justify-center p-4 pointer-events-none">
+      {/* Blurred background backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+        className="fixed inset-0 bg-white/60 backdrop-blur-sm pointer-events-none"
+        aria-hidden="true"
+      />
       {/* Dialog card */}
       <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl ring-1 ring-black/10 pointer-events-auto">
         {/* Cancel Button - positioned in top-right corner */}
