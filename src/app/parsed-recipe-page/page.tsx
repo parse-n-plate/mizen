@@ -12,6 +12,7 @@ import LinkIcon from '@solar-icons/react/csr/text-formatting/Link';
 import CopyIcon from '@solar-icons/react/csr/ui/Copy';
 import Download from '@solar-icons/react/csr/arrows-action/Download';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSwipeable } from 'react-swipeable';
 import { scaleIngredients } from '@/utils/ingredientScaler';
 import ClassicSplitView from '@/components/ClassicSplitView';
 import IngredientCard from '@/components/ui/ingredient-card';
@@ -199,6 +200,9 @@ export default function ParsedRecipePage({
   const [activeTab, setActiveTab] = useState<string>('prep');
   const [copied, setCopied] = useState(false);
   
+  // Mobile detection for swipe gestures
+  const [isMobile, setIsMobile] = useState(false);
+  
   // Settings popover state
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -278,6 +282,58 @@ export default function ParsedRecipePage({
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []); // Empty dependency array means this runs once on mount
+
+  // Mobile detection for swipe gestures
+  useEffect(() => {
+    // Check if window is available (client-side only)
+    if (typeof window === 'undefined') return;
+    
+    // Initial check
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Check on mount
+    checkMobile();
+    
+    // Listen for resize events
+    window.addEventListener('resize', checkMobile);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
+
+  // Swipe handlers for mobile tab navigation
+  const handleSwipeLeft = () => {
+    // Swipe left: navigate to next tab (prep → cook → plate)
+    if (activeTab === 'prep') {
+      setActiveTab('cook');
+    } else if (activeTab === 'cook') {
+      setActiveTab('plate');
+    }
+    // If already on plate, do nothing (stop at edge)
+  };
+
+  const handleSwipeRight = () => {
+    // Swipe right: navigate to previous tab (plate → cook → prep)
+    if (activeTab === 'plate') {
+      setActiveTab('cook');
+    } else if (activeTab === 'cook') {
+      setActiveTab('prep');
+    }
+    // If already on prep, do nothing (stop at edge)
+  };
+
+  // Configure swipe handlers for mobile only
+  // useSwipeable will recreate handlers when callbacks change
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: isMobile ? handleSwipeLeft : undefined,
+    onSwipedRight: isMobile ? handleSwipeRight : undefined,
+    preventScrollOnSwipe: true,
+    trackMouse: false, // Only track touch events, not mouse
+  });
 
   // --- Persistence & Progress State ---
   const recipeKey = useMemo(() => {
@@ -1073,7 +1129,10 @@ export default function ParsedRecipePage({
             </div>
 
             {/* Main Content - Tab Content Sections */}
-            <div className="max-w-6xl mx-auto px-4 md:px-8 pt-8 md:pt-12">
+            <div 
+              {...swipeHandlers}
+              className="max-w-6xl mx-auto px-4 md:px-8 pt-8 md:pt-12"
+            >
               <AnimatePresence mode="wait">
                 {/* Prep Tab Content */}
                 {activeTab === 'prep' && (
@@ -1220,7 +1279,15 @@ export default function ParsedRecipePage({
                     >
                       <div>
                         <div className="text-center py-12">
-                          <div className="text-6xl mb-4">🍽️</div>
+                          <div className="flex justify-center items-center mb-4">
+                            <img 
+                              src="/assets/icons/Plate_Icon.png"
+                              alt="Plate icon"
+                              className="w-16 h-16 md:w-20 md:h-20 object-contain"
+                              aria-hidden="true"
+                              draggable="false"
+                            />
+                          </div>
                           <p className="font-albert text-[18px] text-stone-500">
                             Coming soon...
                           </p>
