@@ -1,13 +1,59 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ChevronRight, ChevronLeft, MousePointer2 } from 'lucide-react';
+import { ChevronRight, ChevronLeft, MousePointer2, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminSettings } from '@/contexts/AdminSettingsContext';
+import LoadingAnimation from '@/components/ui/loading-animation';
+import { Button } from '@/components/ui/button';
 
 export function AdminPrototypingPanel() {
   const [isOpen, setIsOpen] = useState(false);
+  const [showLoadingAnimation, setShowLoadingAnimation] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingPhase, setLoadingPhase] = useState<'gathering' | 'reading' | 'plating' | 'done' | undefined>(undefined);
   const { settings: adminSettings, toggleShowIngredientsForStepList } = useAdminSettings();
+
+  // Function to trigger loading animation for 5 seconds with progress simulation
+  const triggerLoadingAnimation = () => {
+    setShowLoadingAnimation(true);
+    setLoadingProgress(0);
+    setLoadingPhase('gathering');
+
+    // Simulate progress over 5 seconds
+    const startTime = Date.now();
+    const duration = 5000; // 5 seconds
+
+    const updateProgress = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(100, (elapsed / duration) * 100);
+      setLoadingProgress(progress);
+
+      // Update phase based on progress
+      if (progress < 33) {
+        setLoadingPhase('gathering');
+      } else if (progress < 66) {
+        setLoadingPhase('reading');
+      } else if (progress < 100) {
+        setLoadingPhase('plating');
+      } else {
+        setLoadingPhase('done');
+      }
+
+      if (progress < 100) {
+        requestAnimationFrame(updateProgress);
+      } else {
+        // Hide after completion
+        setTimeout(() => {
+          setShowLoadingAnimation(false);
+          setLoadingProgress(0);
+          setLoadingPhase(undefined);
+        }, 500);
+      }
+    };
+
+    requestAnimationFrame(updateProgress);
+  };
 
   return (
     <div 
@@ -57,7 +103,35 @@ export function AdminPrototypingPanel() {
             </button>
           </div>
         </div>
+
+        {/* Loading Animation Test Section */}
+        <div className="space-y-3 pt-4 border-t border-stone-100">
+          <h3 className="text-[10px] font-albert font-bold uppercase tracking-widest text-stone-400">Animation Tests</h3>
+          
+          {/* Button to trigger loading animation */}
+          <Button
+            onClick={triggerLoadingAnimation}
+            disabled={showLoadingAnimation}
+            className="w-full bg-stone-900 hover:bg-stone-800 text-white text-xs font-albert font-medium py-2"
+            aria-label="Trigger loading animation for 5 seconds"
+          >
+            <Play className="h-3 w-3 mr-2" />
+            Test Loading Animation
+          </Button>
+          {showLoadingAnimation && (
+            <p className="text-[10px] font-albert text-stone-400 text-center">
+              Animation will run for 5 seconds
+            </p>
+          )}
+        </div>
       </div>
+
+      {/* Loading Animation Component */}
+      <LoadingAnimation 
+        isVisible={showLoadingAnimation}
+        progress={loadingProgress}
+        phase={loadingPhase}
+      />
     </div>
   );
 }
