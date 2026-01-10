@@ -49,10 +49,6 @@ function RecipeListItem({
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Get cuisine icon
-  const primaryCuisine = recipe.cuisine && recipe.cuisine.length > 0 ? recipe.cuisine[0] : null;
-  const cuisineIconPath = primaryCuisine ? CUISINE_ICON_MAP[primaryCuisine] : '/assets/Illustration Icons/Pan_Icon.png';
   
   // Format time display
   const formatTime = (minutes?: number) => {
@@ -61,13 +57,14 @@ function RecipeListItem({
   };
   
   // Determine which time to show (prefer totalTime, fallback to cookTime, then prepTime)
+  // Returns null if no time data is available (so we can conditionally render the pill)
   const displayTime = recipe.totalTimeMinutes 
     ? formatTime(recipe.totalTimeMinutes)
     : recipe.cookTimeMinutes 
     ? formatTime(recipe.cookTimeMinutes)
     : recipe.prepTimeMinutes 
     ? formatTime(recipe.prepTimeMinutes)
-    : '-- min';
+    : null;
 
   // Calculate menu position based on available viewport space
   useEffect(() => {
@@ -242,16 +239,7 @@ function RecipeListItem({
   return (
     <div className="relative">
       <div className="flex items-center gap-4 py-4 px-4 -mx-4 group hover:bg-stone-50 rounded-lg transition-colors">
-        {/* Cuisine Icon */}
-        <div className="flex-shrink-0">
-          <Image
-            src={cuisineIconPath}
-            alt={primaryCuisine || 'Recipe'}
-            width={40}
-            height={40}
-            className="w-10 h-10 object-contain"
-          />
-        </div>
+        {/* Cuisine Icon - Removed for saved recipes list view */}
         
         {/* Recipe Info - Clickable */}
         <button
@@ -272,12 +260,14 @@ function RecipeListItem({
         
         {/* Right Side: Time Pill, Bookmark, More Options */}
         <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Time Display in Pill */}
-          <div className="px-3 py-1.5 bg-stone-100 rounded-full">
-            <p className="font-albert text-[14px] text-stone-700">
-              {displayTime}
-            </p>
-          </div>
+          {/* Time Display in Pill - only show if time data is available */}
+          {displayTime && (
+            <div className="px-3 py-1.5 bg-stone-100 rounded-full">
+              <p className="font-albert text-[14px] text-stone-700">
+                {displayTime}
+              </p>
+            </div>
+          )}
           
           {/* Bookmark Button */}
           <button
@@ -642,6 +632,7 @@ function HomeContent() {
                     key={recipe.id} 
                     recipe={recipe} 
                     onClick={() => handleRecipeClick(recipe.id)}
+                    showCuisineIcon={false}
                   />
                 ))}
               </div>

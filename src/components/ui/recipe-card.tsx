@@ -30,6 +30,7 @@ interface RecipeCardProps {
   onCopy?: () => void;
   showDelete?: boolean;
   showImage?: boolean;
+  showCuisineIcon?: boolean; // Controls visibility of cuisine icon image
 }
 
 export default function RecipeCard({
@@ -40,6 +41,7 @@ export default function RecipeCard({
   onCopy,
   showDelete = false,
   showImage = false, // Default to false as per new design (using cuisine icons instead)
+  showCuisineIcon = true, // Default to true - show cuisine icon unless explicitly hidden
 }: RecipeCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [copiedRecipe, setCopiedRecipe] = useState(false);
@@ -363,17 +365,19 @@ export default function RecipeCard({
           className="w-full h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-0 rounded-[inherit]"
         >
           <div className="box-border flex flex-row items-center gap-[16px] md:gap-[24px] p-[16px] md:p-[20px] relative w-full min-h-[120px]">
-            {/* Cuisine Illustration Icon */}
-            <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
-              <Image
-                src={cuisineIconPath}
-                alt={`${primaryCuisine || 'Recipe'} icon`}
-                fill
-                quality={100}
-                unoptimized={true}
-                className="object-contain pointer-events-none"
-              />
-            </div>
+            {/* Cuisine Illustration Icon - conditionally rendered based on showCuisineIcon prop */}
+            {showCuisineIcon && (
+              <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
+                <Image
+                  src={cuisineIconPath}
+                  alt={`${primaryCuisine || 'Recipe'} icon`}
+                  fill
+                  quality={100}
+                  unoptimized={true}
+                  className="object-contain pointer-events-none"
+                />
+              </div>
+            )}
 
             {/* Recipe Info */}
             <div className="flex-1 flex flex-col gap-[4px] min-w-0 pr-8 items-start">
@@ -390,20 +394,23 @@ export default function RecipeCard({
               )}
             </div>
 
-            {/* Right Side: Time Pill */}
-            <div className="flex flex-col justify-end self-stretch">
-              <span className="font-albert text-[11px] md:text-[13px] text-stone-600 bg-stone-100 px-3 py-1.5 rounded-full whitespace-nowrap border border-stone-200/50">
-                {(() => {
-                  // Calculate display time: prefer total, else sum prep+cook, else show individual
-                  const displayTime = recipe.totalTimeMinutes 
-                    ?? (recipe.prepTimeMinutes && recipe.cookTimeMinutes 
-                      ? recipe.prepTimeMinutes + recipe.cookTimeMinutes 
-                      : recipe.prepTimeMinutes ?? recipe.cookTimeMinutes);
-                  
-                  return displayTime ? `${displayTime} min` : '-- min';
-                })()}
-              </span>
-            </div>
+            {/* Right Side: Time Pill - only show if time data is available */}
+            {(() => {
+              // Calculate display time: prefer total, else sum prep+cook, else show individual
+              const displayTime = recipe.totalTimeMinutes 
+                ?? (recipe.prepTimeMinutes && recipe.cookTimeMinutes 
+                  ? recipe.prepTimeMinutes + recipe.cookTimeMinutes 
+                  : recipe.prepTimeMinutes ?? recipe.cookTimeMinutes);
+              
+              // Only render the pill if there's actual time data
+              return displayTime ? (
+                <div className="flex flex-col justify-end self-stretch">
+                  <span className="font-albert text-[11px] md:text-[13px] text-stone-600 bg-stone-100 px-3 py-1.5 rounded-full whitespace-nowrap border border-stone-200/50">
+                    {displayTime} min
+                  </span>
+                </div>
+              ) : null;
+            })()}
           </div>
         </button>
       </div>
