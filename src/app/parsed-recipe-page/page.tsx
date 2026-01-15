@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo, use, useRef } from 'react';
 import RecipeSkeleton from '@/components/ui/recipe-skeleton';
 import * as Tabs from '@radix-ui/react-tabs';
-import { ArrowLeft, Link, Copy, Check, Clock, Trash2 } from 'lucide-react';
+import { ArrowLeft, Copy, Check, Clock, Trash2 } from 'lucide-react';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import Settings from '@solar-icons/react/csr/settings/Settings';
 import LinkIcon from '@solar-icons/react/csr/text-formatting/Link';
@@ -14,10 +14,13 @@ import Download from '@solar-icons/react/csr/arrows-action/Download';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSwipeable } from 'react-swipeable';
 import { scaleIngredients } from '@/utils/ingredientScaler';
+import { convertIngredientGroupUnits, type UnitSystem } from '@/utils/unitConverter';
 import ClassicSplitView from '@/components/ClassicSplitView';
 import IngredientCard from '@/components/ui/ingredient-card';
 import { IngredientGroup } from '@/components/ui/ingredient-group';
 import { ServingsControls } from '@/components/ui/servings-controls';
+import { IngredientsHeader } from '@/components/ui/ingredients-header';
+import { ScaleModal } from '@/components/ui/scale-modal';
 import { UISettingsProvider } from '@/contexts/UISettingsContext';
 import { AdminPrototypingPanel } from '@/components/ui/admin-prototyping-panel';
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
@@ -199,6 +202,12 @@ export default function ParsedRecipePage({
   const [multiplier, setMultiplier] = useState<string>('1x');
   const [activeTab, setActiveTab] = useState<string>('prep');
   const [copied, setCopied] = useState(false);
+
+  // Unit system and scale modal state
+  const [unitSystem, setUnitSystem] = useState<UnitSystem>('original');
+  const [isScaleModalOpen, setIsScaleModalOpen] = useState(false);
+  const [customMultiplier, setCustomMultiplier] = useState<number>(1);
+  const [ingredientScaleOverrides, setIngredientScaleOverrides] = useState<Record<string, number>>({});
   
   // Mobile detection for swipe gestures
   const [isMobile, setIsMobile] = useState(false);
@@ -341,6 +350,12 @@ export default function ParsedRecipePage({
     return `recipe-progress-${parsedRecipe.title || 'untitled'}-${parsedRecipe.sourceUrl || ''}`;
   }, [parsedRecipe]);
 
+  // Generate unique key for this recipe's scale settings
+  const scaleSettingsKey = useMemo(() => {
+    if (!parsedRecipe) return '';
+    return `recipe-scale-${parsedRecipe.title || 'untitled'}-${parsedRecipe.sourceUrl || ''}`;
+  }, [parsedRecipe]);
+
   // Map of groupName -> array of checked ingredient names
   const [checkedIngredients, setCheckedIngredients] = useState<Record<string, string[]>>({});
   // Map of groupName -> isCollapsed (true = collapsed)
@@ -370,6 +385,29 @@ export default function ParsedRecipePage({
     const data = { checked: checkedIngredients, collapsed: collapsedGroups };
     localStorage.setItem(recipeKey, JSON.stringify(data));
   }, [recipeKey, checkedIngredients, collapsedGroups]);
+
+  // Load scale settings from localStorage
+  useEffect(() => {
+    if (!scaleSettingsKey) return;
+    const saved = localStorage.getItem(scaleSettingsKey);
+    if (saved) {
+      try {
+        const { unitSystem: savedUnitSystem, customMultiplier: savedCustomMultiplier, ingredientScaleOverrides: savedOverrides } = JSON.parse(saved);
+        if (savedUnitSystem) setUnitSystem(savedUnitSystem);
+        if (savedCustomMultiplier !== undefined) setCustomMultiplier(savedCustomMultiplier);
+        if (savedOverrides) setIngredientScaleOverrides(savedOverrides);
+      } catch (e) {
+        console.error('Error loading scale settings:', e);
+      }
+    }
+  }, [scaleSettingsKey]);
+
+  // Save scale settings to localStorage
+  useEffect(() => {
+    if (!scaleSettingsKey) return;
+    const data = { unitSystem, customMultiplier, ingredientScaleOverrides };
+    localStorage.setItem(scaleSettingsKey, JSON.stringify(data));
+  }, [scaleSettingsKey, unitSystem, customMultiplier, ingredientScaleOverrides]);
 
   const handleIngredientCheck = (groupName: string, ingredientName: string, isChecked: boolean) => {
     setCheckedIngredients(prev => {
@@ -640,26 +678,36 @@ export default function ParsedRecipePage({
   // Calculate scaled ingredients
   const scaledIngredients = useMemo(() => {
     if (!parsedRecipe || !parsedRecipe.ingredients) return [];
-    
-    // If servings are unknown, return ingredients unscaled
+
+    // If servings are unknown, return ingredients unscaled (but still apply unit conversion)
     if (!parsedRecipe.servings || !servings) {
-      return parsedRecipe.ingredients;
+      const unscaled = parsedRecipe.ingredients;
+      // Apply unit conversion even if not scaling
+      return convertIngredientGroupUnits(unscaled as any, unitSystem);
     }
-    
+
     // Get multiplier value (1x = 1, 2x = 2, 3x = 3)
     const multiplierValue = parseInt(multiplier.replace('x', ''));
-    
-    // Calculate effective servings: base servings * multiplier
-    const effectiveServings = servings * multiplierValue;
-    
+
+    // Calculate effective servings: base servings * multiplier * customMultiplier
+    const effectiveServings = servings * multiplierValue * customMultiplier;
+
     // Cast the ingredients to the expected type for the scaler
     // The context type is slightly different but compatible structure-wise
-    return scaleIngredients(
-      parsedRecipe.ingredients as any, 
-      parsedRecipe.servings, 
+    let scaled = scaleIngredients(
+      parsedRecipe.ingredients as any,
+      parsedRecipe.servings,
       effectiveServings
     );
-  }, [parsedRecipe, servings, multiplier]);
+
+    // Apply ingredient-specific overrides (not yet implemented in this iteration)
+    // TODO: Apply ingredientScaleOverrides here if needed
+
+    // Apply unit conversion
+    scaled = convertIngredientGroupUnits(scaled as any, unitSystem);
+
+    return scaled;
+  }, [parsedRecipe, servings, multiplier, customMultiplier, unitSystem, ingredientScaleOverrides]);
 
   // Servings change handler - passed to ServingsControls component
   const handleServingsChange = (newServings: number) => {
@@ -908,7 +956,7 @@ export default function ParsedRecipePage({
                                   className="font-albert text-[15px] md:text-[16px] text-stone-500 hover:text-stone-800 transition-colors flex items-center gap-1.5 cursor-pointer underline-offset-4 hover:underline decoration-stone-300"
                                   aria-label={`View original recipe on ${getDomainFromUrl(parsedRecipe.sourceUrl)}`}
                                 >
-                                  <Link className="w-3.5 h-3.5 text-stone-400" />
+                                  <LinkIcon className="w-3.5 h-3.5 text-stone-400" />
                                   {getDomainFromUrl(parsedRecipe.sourceUrl)}
                                 </a>
                                 
@@ -1145,18 +1193,12 @@ export default function ParsedRecipePage({
                       className="bg-white cursor-default"
                     >
                       <div className="space-y-6">
-                        {/* Servings Adjuster and Multiplier Container */}
-                        {/* Hidden on mobile */}
-                        <div className="servings-controls-desktop-only">
-                          <ServingsControls
-                            servings={servings}
-                            onServingsChange={handleServingsChange}
-                            multiplier={multiplier}
-                            onMultiplierChange={handleMultiplierChange}
-                            originalServings={originalServings}
-                            onResetServings={handleResetServings}
-                          />
-                        </div>
+                        {/* Ingredients Header with Scale and Units Controls */}
+                        <IngredientsHeader
+                          onScaleClick={() => setIsScaleModalOpen(true)}
+                          unitSystem={unitSystem}
+                          onUnitSystemChange={setUnitSystem}
+                        />
 
                         {/* Ingredients */}
                         <div className="bg-white cursor-default">
@@ -1256,13 +1298,15 @@ export default function ParsedRecipePage({
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.3, ease: "easeOut" }}
-                      className="w-full -mx-4 md:-mx-8"
+                      className="w-full -mx-4 md:-mx-8 flex flex-col items-center"
                     >
-                      <ClassicSplitView
-                        title={parsedRecipe.title}
-                        allIngredients={flattenedIngredients}
-                        steps={normalizedSteps}
-                      />
+                      <div className="w-full max-w-[700px]">
+                        <ClassicSplitView
+                          title={parsedRecipe.title}
+                          allIngredients={flattenedIngredients}
+                          steps={normalizedSteps}
+                        />
+                      </div>
                     </motion.div>
                   </Tabs.Content>
                 )}
@@ -1277,10 +1321,10 @@ export default function ParsedRecipePage({
                       transition={{ duration: 0.3, ease: "easeOut" }}
                       className="bg-white"
                     >
-                      <div>
+                      <div className="max-w-[700px] mx-auto">
                         <div className="text-center py-12">
                           <div className="flex justify-center items-center mb-4">
-                            <img 
+                            <img
                               src="/assets/icons/Plate_Icon.png"
                               alt="Plate icon"
                               className="w-16 h-16 md:w-20 md:h-20 object-contain"
@@ -1303,7 +1347,22 @@ export default function ParsedRecipePage({
             </div>
           </Tabs.Root>
         </div>
-        
+
+        {/* Scale Modal */}
+        <ScaleModal
+          isOpen={isScaleModalOpen}
+          onClose={() => setIsScaleModalOpen(false)}
+          servings={servings || originalServings || 1}
+          onServingsChange={handleServingsChange}
+          customMultiplier={customMultiplier}
+          onCustomMultiplierChange={setCustomMultiplier}
+          ingredientGroups={parsedRecipe?.ingredients || []}
+          ingredientScaleOverrides={ingredientScaleOverrides}
+          onIngredientScaleOverridesChange={setIngredientScaleOverrides}
+          originalServings={originalServings || 1}
+          onResetServings={handleResetServings}
+        />
+
         {/* Admin Panel for Prototyping */}
         <AdminPrototypingPanel />
       </div>
