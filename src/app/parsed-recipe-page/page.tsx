@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo, use, useRef } from 'react';
 import RecipeSkeleton from '@/components/ui/recipe-skeleton';
 import * as Tabs from '@radix-ui/react-tabs';
-import { ArrowLeft, Link, Copy, Check, Clock, Trash2 } from 'lucide-react';
+import { ArrowLeft, Copy, Check, Clock, Trash2 } from 'lucide-react';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import Settings from '@solar-icons/react/csr/settings/Settings';
 import LinkIcon from '@solar-icons/react/csr/text-formatting/Link';
@@ -908,7 +908,7 @@ export default function ParsedRecipePage({
                                   className="font-albert text-[15px] md:text-[16px] text-stone-500 hover:text-stone-800 transition-colors flex items-center gap-1.5 cursor-pointer underline-offset-4 hover:underline decoration-stone-300"
                                   aria-label={`View original recipe on ${getDomainFromUrl(parsedRecipe.sourceUrl)}`}
                                 >
-                                  <Link className="w-3.5 h-3.5 text-stone-400" />
+                                  <LinkIcon className="w-3.5 h-3.5 text-stone-400" />
                                   {getDomainFromUrl(parsedRecipe.sourceUrl)}
                                 </a>
                                 
