@@ -53,7 +53,7 @@ export default function RecipeCard({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { getRecipeById, isBookmarked, toggleBookmark } = useParsedRecipes();
-  
+
   // Get bookmark state from context
   const isBookmarkedState = isBookmarked(recipe.id);
 
@@ -128,13 +128,13 @@ export default function RecipeCard({
   const handleBookmarkToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // If recipe is currently bookmarked, show confirmation dialog
     if (isBookmarkedState) {
       const confirmed = window.confirm(
         'Are you sure you want to remove this recipe from your bookmarks? You can bookmark it again later.'
       );
-      
+
       if (confirmed) {
         toggleBookmark(recipe.id);
       }
@@ -247,13 +247,13 @@ export default function RecipeCard({
     e.preventDefault();
     e.stopPropagation();
     setIsMenuOpen(false);
-    
+
     // If recipe is currently bookmarked, show confirmation dialog before unsaving
     if (isBookmarkedState) {
       const confirmed = window.confirm(
         'Are you sure you want to remove this recipe from your bookmarks? You can bookmark it again later.'
       );
-      
+
       if (confirmed) {
         toggleBookmark(recipe.id);
       }

@@ -105,7 +105,7 @@ export function ParsedRecipesProvider({ children }: { children: ReactNode }) {
   const toggleBookmark = (id: string) => {
     try {
       const isCurrentlyBookmarked = bookmarkedRecipeIds.includes(id);
-      
+
       if (isCurrentlyBookmarked) {
         // Remove bookmark
         removeBookmarkFromStorage(id);

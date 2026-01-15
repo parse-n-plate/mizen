@@ -90,14 +90,14 @@ export function useToast() {
         duration: 4000,
       });
     }
-    
+
     // Handle options object (for error codes like ERR_NOT_A_URL)
     const { code = ERROR_CODES.ERR_UNKNOWN, message } = messageOrOptions;
     const errorDetails = getErrorDetails(code);
     const userMessage = message || errorDetails.userMessage;
     // Use detailed explanation as description
     const descriptionText = errorDetails.detailedExplanation;
-    
+
     return toast.info(userMessage, {
       description: descriptionText,
       duration: 5000,
