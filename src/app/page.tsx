@@ -2,7 +2,7 @@
 
 import HomepageSkeleton from '@/components/ui/homepage-skeleton';
 import CuisinePills from '@/components/ui/cuisine-pills';
-import RecipeCard, { RecipeCardData } from '@/components/ui/recipe-card';
+import { RecipeCardData } from '@/components/ui/recipe-card';
 import HomepageSearch from '@/components/ui/homepage-search';
 import HomepageRecentRecipes from '@/components/ui/homepage-recent-recipes';
 import HomepageBanner from '@/components/ui/homepage-banner';
@@ -13,8 +13,7 @@ import { useRouter } from 'next/navigation';
 import type { CuisineType } from '@/components/ui/cuisine-pills';
 import Image from 'next/image';
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
-import { Search, X, LayoutGrid } from 'lucide-react';
-import List from '@solar-icons/react/csr/list/List';
+import { Search, X } from 'lucide-react';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import MenuDotsCircle from '@solar-icons/react/csr/ui/MenuDotsCircle';
 import Pen from '@solar-icons/react/csr/messages/Pen';
@@ -372,7 +371,6 @@ function HomeContent() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isPageLoaded, setIsPageLoaded] = useState<boolean>(false);
   const [isSearchFocused, setIsSearchFocused] = useState<boolean>(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Trigger onload animation when component mounts and data is loaded
   useEffect(() => {
@@ -588,34 +586,6 @@ function HomeContent() {
                   </div>
                 </div>
 
-                {/* View Toggle Buttons */}
-                <div className="flex items-center gap-1 bg-stone-100/60 p-1 rounded-full">
-                  {/* Grid View Button */}
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`flex items-center justify-center w-8 h-8 rounded-full transition-all ${
-                      viewMode === 'grid' 
-                        ? 'bg-white text-stone-900 shadow-sm' 
-                        : 'text-stone-400 hover:text-stone-600'
-                    }`}
-                    aria-label="Grid view"
-                  >
-                    <LayoutGrid className="w-4 h-4" />
-                  </button>
-                  
-                  {/* List View Button */}
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`flex items-center justify-center w-8 h-8 rounded-full transition-all ${
-                      viewMode === 'list' 
-                        ? 'bg-white text-stone-900 shadow-sm' 
-                        : 'text-stone-400 hover:text-stone-600'
-                    }`}
-                    aria-label="List view"
-                  >
-                    <List className="w-4 h-4" />
-                  </button>
-                </div>
               </div>
             </div>
 
@@ -624,43 +594,30 @@ function HomeContent() {
               <CuisinePills onCuisineChange={handleCuisineChange} />
             </div>
 
-            {/* Recipe Cards - Grid or List View */}
-            {viewMode === 'grid' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {filteredRecipes.map((recipe) => (
-                  <RecipeCard 
-                    key={recipe.id} 
-                    recipe={recipe} 
-                    onClick={() => handleRecipeClick(recipe.id)}
-                    showCuisineIcon={false}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col">
-                {filteredRecipes.map((recipe, index) => (
-                  <RecipeListItem
-                    key={recipe.id}
-                    recipe={recipe}
-                    onClick={() => handleRecipeClick(recipe.id)}
-                    isBookmarked={isBookmarked(recipe.id)}
-                    onBookmarkToggle={() => {
-                      if (isBookmarked(recipe.id)) {
-                        const confirmed = window.confirm(
-                          'Are you sure you want to remove this recipe from your bookmarks? You can bookmark it again later.'
-                        );
-                        if (confirmed) {
-                          toggleBookmark(recipe.id);
-                        }
-                      } else {
+            {/* Recipe List View */}
+            <div className="flex flex-col">
+              {filteredRecipes.map((recipe, index) => (
+                <RecipeListItem
+                  key={recipe.id}
+                  recipe={recipe}
+                  onClick={() => handleRecipeClick(recipe.id)}
+                  isBookmarked={isBookmarked(recipe.id)}
+                  onBookmarkToggle={() => {
+                    if (isBookmarked(recipe.id)) {
+                      const confirmed = window.confirm(
+                        'Are you sure you want to remove this recipe from your bookmarks? You can bookmark it again later.'
+                      );
+                      if (confirmed) {
                         toggleBookmark(recipe.id);
                       }
-                    }}
-                    getRecipeById={getRecipeById}
-                  />
-                ))}
-              </div>
-            )}
+                    } else {
+                      toggleBookmark(recipe.id);
+                    }
+                  }}
+                  getRecipeById={getRecipeById}
+                />
+              ))}
+            </div>
 
             {/* Show message if no recipes match filter (but only if there are bookmarked recipes available) */}
             {filteredRecipes.length === 0 && bookmarkedRecipes.length > 0 && (
