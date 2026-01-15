@@ -53,7 +53,7 @@ export function ScaleModal({
 
   const handleCustomMultiplierInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value);
-    if (!isNaN(value) && value >= 0.1 && value <= 10) {
+    if (!isNaN(value) && value >= 0.5 && value <= 10) {
       onCustomMultiplierChange(value);
     }
   };
@@ -78,7 +78,7 @@ export function ScaleModal({
 
   const handleIngredientInputChange = (ingredientKey: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value);
-    if (!isNaN(value) && value >= 0.1 && value <= 10) {
+    if (!isNaN(value) && value >= 0.5 && value <= 10) {
       onIngredientScaleOverridesChange({
         ...ingredientScaleOverrides,
         [ingredientKey]: value,
@@ -163,18 +163,15 @@ export function ScaleModal({
                 <Tabs.Content value="amount" className="outline-none">
                   <div className="space-y-4">
                     <div>
-                      <label className="block font-albert text-sm font-medium text-stone-700 mb-2">
-                        Custom Multiplier
-                      </label>
                       <p className="font-albert text-xs text-stone-500 mb-4">
-                        Scale the entire recipe between 0.1x and 10x
+                        Scale the entire recipe between 0.5x and 10x
                       </p>
                       <div className="flex items-center gap-4">
                         <div className="flex-1">
                           <Slider
-                            min={0.1}
+                            min={0.5}
                             max={10}
-                            step={0.1}
+                            step={0.5}
                             value={[customMultiplier]}
                             onValueChange={handleCustomMultiplierSliderChange}
                             className="w-full"
@@ -182,9 +179,9 @@ export function ScaleModal({
                         </div>
                         <input
                           type="number"
-                          min="0.1"
+                          min="0.5"
                           max="10"
-                          step="0.1"
+                          step="0.5"
                           value={customMultiplier}
                           onChange={handleCustomMultiplierInputChange}
                           className="w-20 font-albert text-sm px-3 py-2 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-300 focus:border-transparent text-center"
@@ -198,9 +195,6 @@ export function ScaleModal({
                 <Tabs.Content value="serving" className="outline-none">
                   <div className="space-y-4">
                     <div>
-                      <label className="block font-albert text-sm font-medium text-stone-700 mb-2">
-                        Servings
-                      </label>
                       <p className="font-albert text-xs text-stone-500 mb-4">
                         Adjust the number of servings for this recipe
                       </p>
@@ -244,9 +238,6 @@ export function ScaleModal({
                     {!selectedIngredientKey ? (
                       /* Ingredient Selection View */
                       <div>
-                        <label className="block font-albert text-sm font-medium text-stone-700 mb-2">
-                          Select Ingredient
-                        </label>
                         <p className="font-albert text-xs text-stone-500 mb-4">
                           Choose an ingredient to adjust its scale multiplier
                         </p>
@@ -306,14 +297,14 @@ export function ScaleModal({
                                 Scale Multiplier
                               </label>
                               <p className="font-albert text-xs text-stone-500 mb-4">
-                                Adjust between 0.1x and 10x
+                                Adjust between 0.5x and 10x
                               </p>
                               <div className="flex items-center gap-4">
                                 <div className="flex-1">
                                   <Slider
-                                    min={0.1}
+                                    min={0.5}
                                     max={10}
-                                    step={0.1}
+                                    step={0.5}
                                     value={[ingredientScaleOverrides[selectedIngredientKey] || 1]}
                                     onValueChange={(values) => handleIngredientSliderChange(selectedIngredientKey, values)}
                                     className="w-full"
@@ -321,9 +312,9 @@ export function ScaleModal({
                                 </div>
                                 <input
                                   type="number"
-                                  min="0.1"
+                                  min="0.5"
                                   max="10"
-                                  step="0.1"
+                                  step="0.5"
                                   value={ingredientScaleOverrides[selectedIngredientKey] || ''}
                                   onChange={(e) => handleIngredientInputChange(selectedIngredientKey, e)}
                                   placeholder="1.0"
