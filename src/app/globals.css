@@ -462,13 +462,42 @@
   .yield-multiplier-pill-active {
     background: #0C0A09;
     color: white;
-    box-shadow: 
+    box-shadow:
       0 2px 4px rgba(25, 61, 52, 0.2),
       0 1px 2px rgba(25, 61, 52, 0.15);
   }
 
   .yield-multiplier-pill-active:hover {
     background: #1e4a3f;
+  }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+     INGREDIENTS HEADER STYLES
+  ───────────────────────────────────────────────────────────────────────── */
+
+  .ingredients-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 0;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #e7e5e4;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .ingredients-header-title {
+    font-family: var(--font-domine);
+    font-size: 1.125rem; /* 18px */
+    font-weight: 600;
+    color: #0C0A09;
+  }
+
+  .ingredients-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   /* ─────────────────────────────────────────────────────────────────────────
@@ -677,6 +706,7 @@
     display: flex;
     flex-direction: column;
     width: 100%;
+    max-width: 700px;
     background-color: white;
     border-radius: 8px;
   }
@@ -685,6 +715,13 @@
     position: relative;
     width: 100%;
     cursor: default; /* Container divs should not show pointer cursor - only buttons/links inside should */
+  }
+
+  /* Ingredient Group - Add max-width constraint */
+  .ingredient-group {
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .ingredient-list-divider {
@@ -1168,6 +1205,9 @@
   /* Hide servings controls on mobile */
   .servings-controls-desktop-only {
     display: block;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   @media (max-width: 767px) {
