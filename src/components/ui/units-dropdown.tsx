@@ -21,10 +21,10 @@ export function UnitsDropdown({ unitSystem, onUnitSystemChange }: UnitsDropdownP
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className="p-2.5 rounded-full bg-white shadow-sm border border-stone-200/50 hover:shadow-md hover:bg-stone-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-stone-300 focus:ring-offset-2"
+          className="p-2.5 rounded-full bg-transparent border-0 shadow-none hover:shadow-none hover:bg-stone-100 transition-colors focus:outline-none focus:ring-2 focus:ring-stone-300 focus:ring-offset-2 data-[state=open]:bg-stone-100"
           aria-label="Unit settings"
         >
-          <Settings className="w-5 h-5 text-stone-400" />
+          <Settings className="w-5 h-5 text-stone-400 hover:text-stone-700 transition-colors data-[state=open]:text-stone-700" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[180px]">

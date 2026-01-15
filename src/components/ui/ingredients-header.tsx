@@ -22,10 +22,10 @@ export function IngredientsHeader({
       <div className="ingredients-header-controls">
         <button
           onClick={onScaleClick}
-          className="p-2.5 rounded-full bg-white shadow-sm border border-stone-200/50 hover:shadow-md hover:bg-stone-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-stone-300 focus:ring-offset-2"
+          className="p-2.5 rounded-full bg-transparent border-0 shadow-none hover:shadow-none hover:bg-stone-100 transition-colors focus:outline-none focus:ring-2 focus:ring-stone-300 focus:ring-offset-2"
           aria-label="Scale recipe"
         >
-          <Scale className="w-5 h-5 text-stone-400" />
+          <Scale className="w-5 h-5 text-stone-400 hover:text-stone-700 transition-colors" />
         </button>
         <UnitsDropdown
           unitSystem={unitSystem}
