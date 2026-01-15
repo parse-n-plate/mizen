@@ -70,7 +70,7 @@ export function IngredientGroup({
       <button
         type="button"
         onClick={handleToggle}
-        className="w-full flex items-center justify-between py-3 pl-2 pr-0 group cursor-pointer transition-colors duration-[180ms] hover:opacity-80 relative"
+        className="w-full flex items-center py-3 pl-2 pr-0 group cursor-pointer transition-colors duration-[180ms] hover:opacity-80 relative"
         aria-expanded={isExpanded}
         aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${title} ingredient group`}
       >
@@ -83,7 +83,7 @@ export function IngredientGroup({
 
           {/* Progress Pie - Inline Layout (right next to title) */}
           {pieLayout === 'inline' && (
-            <div 
+            <div
               className="flex items-center gap-2 flex-shrink-0 cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation(); // Prevent triggering the expand/collapse button
@@ -105,24 +105,24 @@ export function IngredientGroup({
               aria-label={`${checkedCount === totalCount ? 'Uncheck' : 'Check'} all ingredients in ${title}`}
               title={`${checkedCount === totalCount ? 'Uncheck' : 'Check'} all ingredients in ${title}`}
             >
-              <ProgressPie 
-                percentage={progressPercentage} 
-                size={18} 
+              <ProgressPie
+                percentage={progressPercentage}
+                size={18}
                 strokeWidth={1.5}
                 color="#0C0A09"
               />
             </div>
           )}
-        </div>
 
-        {/* Chevron Icon - Right aligned, rotates when expanded, fades in on hover */}
-        <motion.div
-          animate={{ rotate: isExpanded ? 0 : -90 }}
-          transition={{ duration: 0.2, ease: 'easeInOut' }}
-          className="flex-shrink-0 ingredient-group-chevron"
-        >
-          <ChevronDown className="w-5 h-5 text-stone-400 group-hover:text-stone-600 transition-colors duration-[180ms]" />
-        </motion.div>
+          {/* Chevron Icon - After progress pie, rotates when expanded, fades in on hover */}
+          <motion.div
+            animate={{ rotate: isExpanded ? 0 : -90 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className="flex-shrink-0 ingredient-group-chevron"
+          >
+            <ChevronDown className="w-5 h-5 text-stone-400 group-hover:text-stone-600 transition-colors duration-[180ms]" />
+          </motion.div>
+        </div>
       </button>
 
       {/* Progress Pie - Below Layout (shown when inline is not used) */}
