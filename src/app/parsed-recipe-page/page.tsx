@@ -967,7 +967,7 @@ export default function ParsedRecipePage({
                           <div className="flex items-center gap-2 bg-stone-200/30 px-3 py-1.5 rounded-lg border border-stone-200/50">
                             <Clock className="w-4 h-4 text-stone-500" />
                             <p className="font-albert text-[14px] md:text-[15px] text-stone-700 leading-none font-medium">
-                              <span className="text-stone-500">Prep</span> {parsedRecipe.prepTimeMinutes}min
+                              <span className="text-stone-500">Prep</span> {parsedRecipe.prepTimeMinutes} min
                             </p>
                           </div>
                         )}
@@ -977,7 +977,7 @@ export default function ParsedRecipePage({
                           <div className="flex items-center gap-2 bg-stone-200/30 px-3 py-1.5 rounded-lg border border-stone-200/50">
                             <Clock className="w-4 h-4 text-stone-500" />
                             <p className="font-albert text-[14px] md:text-[15px] text-stone-700 leading-none font-medium">
-                              <span className="text-stone-500">Cook</span> {parsedRecipe.cookTimeMinutes}min
+                              <span className="text-stone-500">Cook</span> {parsedRecipe.cookTimeMinutes} min
                             </p>
                           </div>
                         )}
