@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowUpDown, Edit2 } from 'lucide-react';
+import { Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { createIngredientId, getIngredientNotes, saveIngredientNotes } from '@/utils/ingredientNotes';
@@ -122,7 +122,7 @@ export function IngredientExpandedContent({
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             className={cn(
-              "w-full min-h-[60px] p-2 bg-white rounded-lg border border-stone-300",
+              "w-full min-h-[60px] p-2 bg-[#F6F6F4] rounded-lg border border-stone-300",
               "text-stone-900 text-sm font-albert",
               "focus:outline-none focus:ring-2 focus:ring-[#FFBA25] focus:border-transparent",
               "resize-none transition-all duration-200",
@@ -180,7 +180,7 @@ export function IngredientExpandedContent({
                   variant="outline"
                   size="sm"
                   onClick={() => onStepClick(stepNum)}
-                  className="h-7 px-3 bg-white hover:bg-stone-50 border-stone-200 text-stone-600 text-xs font-albert rounded-full"
+                  className="h-7 px-3 bg-[#F6F6F4] hover:bg-stone-50 border-stone-200 text-stone-600 text-xs font-albert rounded-full"
                 >
                   {buttonText}
                 </Button>
@@ -189,16 +189,6 @@ export function IngredientExpandedContent({
           ) : (
             <span className="text-xs font-albert text-stone-400 italic">No specific steps mentioned.</span>
           )}
-          
-          {/* Swap Ingredient button - right aligned */}
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-8 text-xs font-albert text-stone-500 hover:text-stone-900 hover:bg-stone-50 gap-2 ml-auto shrink-0"
-          >
-            <ArrowUpDown className="h-3 w-3" />
-            Swap Ingredient
-          </Button>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowUpDown, ChefHat } from 'lucide-react';
+import { ChefHat } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { findStepsForIngredient } from '@/utils/ingredientMatcher';
@@ -248,11 +248,11 @@ export default function IngredientCard({
 
   return (
     <div className="relative">
-      <motion.div 
+      <motion.div
         id={`ingredient-${ingredientNameOnly.toLowerCase().replace(/\s+/g, '-')}`}
         onClick={toggleExpand}
         className={cn(
-          "ingredient-list-item group cursor-default",
+          "ingredient-list-item group cursor-pointer",
           isChecked ? 'is-checked' : '',
           isExpanded && settings.ingredientExpandStyle === 'things3' ? "bg-stone-50/50 shadow-sm rounded-xl border border-stone-100 -mx-1 px-1" : ""
         )}
@@ -344,18 +344,6 @@ export default function IngredientCard({
               )}
             </AnimatePresence>
           </div>
-
-          {/* Swap icon on the right */}
-          <button
-            type="button"
-            className="ingredient-list-swap-button cursor-pointer"
-            aria-label={`Reorder ${ingredientText}`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-center">
-              <ArrowUpDown className="ingredient-list-swap-icon" />
-            </div>
-          </button>
         </div>
       </motion.div>
 
