@@ -472,32 +472,207 @@
   }
 
   /* ─────────────────────────────────────────────────────────────────────────
-     INGREDIENTS HEADER STYLES
+     INGREDIENTS HEADER STYLES - Updated for Figma Design
   ───────────────────────────────────────────────────────────────────────── */
 
   .ingredients-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    width: 100%;
     padding: 1rem 0;
-    margin-bottom: 1.5rem;
-    border-bottom: 1px solid #e7e5e4;
     max-width: 700px;
     margin-left: auto;
     margin-right: auto;
+    gap: 1rem; /* Ensures space between left and right sections */
+  }
+
+  /* Left section: Title + Menu icon */
+  .ingredients-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
   }
 
   .ingredients-header-title {
     font-family: var(--font-domine);
-    font-size: 1.125rem; /* 18px */
-    font-weight: 600;
-    color: #0C0A09;
+    font-size: 1.5rem; /* 24px per Figma */
+    font-weight: 700;
+    color: #292524; /* stone-800 */
+    line-height: 1.1;
+    margin: 0;
+  }
+
+  /* Ellipsis menu button - positioned right after title, matches Cook tab styling */
+  .ingredients-header-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem; /* p-2 equivalent */
+    background: transparent;
+    border: none;
+    border-radius: 9999px; /* rounded-full */
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #a8a29e; /* text-stone-400 */
+  }
+
+  .ingredients-header-menu-btn:hover {
+    background: #fafaf9; /* hover:bg-stone-50 */
+  }
+
+  .ingredients-header-menu-btn[data-state="open"] {
+    background: #f5f5f4; /* bg-stone-100 */
+    color: #0c0a09; /* text-stone-900 */
+  }
+
+  /* Servings dropdown button - styled to match Figma design */
+  .ingredients-header-servings-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    background: #f5f5f4; /* light gray background - matches Figma */
+    border: none;
+    border-radius: 0.5rem; /* softly rounded corners */
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: var(--font-albert);
+    font-size: 0.875rem; /* 14px */
+    color: #292524; /* dark gray text */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02); /* subtle shadow */
+    flex-shrink: 0; /* Prevents button from shrinking */
+    margin-left: auto; /* Ensures it stays on the right */
+  }
+
+  .ingredients-header-servings-btn:hover {
+    background: #e7e5e4; /* slightly darker on hover */
+  }
+
+  .ingredients-header-servings-btn:focus-visible {
+    outline: 2px solid #d6d3d1;
+    outline-offset: 2px;
+  }
+
+  .ingredients-header-servings-text {
+    font-weight: 500;
+    white-space: nowrap;
+    color: #292524;
+  }
+
+  /* Make User icons filled - only target User icons, not chevron */
+  .user-icon-wrapper svg {
+    fill: currentColor;
   }
 
   .ingredients-header-controls {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+  }
+  
+  /* ─────────────────────────────────────────────────────────────────────────
+     SERVINGS SLIDER CARD STYLES - Matches Figma Design
+  ───────────────────────────────────────────────────────────────────────── */
+  
+  .ingredients-header-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .servings-slider-card {
+    background: white;
+    border-radius: 1.5rem; /* 24px */
+    border: 1px solid #f5f5f4; /* stone-100 */
+    padding: 1.5rem;
+    box-shadow: 0px 4px 14px 0px rgba(0, 0, 0, 0.04);
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  .servings-slider-label {
+    font-family: var(--font-albert);
+    font-size: 1rem;
+    font-weight: 600;
+    color: #78716c; /* stone-500 */
+    text-transform: capitalize;
+    line-height: 1;
+    margin-bottom: 1.5rem;
+  }
+  
+  .servings-slider-row {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+  
+  .servings-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #f5f5f4; /* stone-100 */
+    border-radius: 0.5rem;
+    flex-shrink: 0;
+  }
+  
+  .servings-indicator-text {
+    font-family: var(--font-albert);
+    font-size: 1rem;
+    color: #78716c; /* stone-500 */
+    white-space: nowrap;
+  }
+  
+  .servings-indicator-value {
+    font-weight: 600;
+    color: #292524; /* stone-800 */
+  }
+  
+  .servings-slider-track-container {
+    flex: 1;
+    position: relative;
+    height: 2.25rem;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  
+  .servings-slider-track {
+    width: 100%;
+    height: 0.375rem;
+    background: #e7e5e4; /* stone-200 */
+    border-radius: 9999px;
+    position: relative;
+  }
+  
+  .servings-slider-fill {
+    height: 100%;
+    background: #0088ff;
+    border-radius: 9999px;
+    transition: width 50ms ease-out;
+  }
+  
+  .servings-slider-handle {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 2.25rem;
+    height: 2.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    transition: left 50ms ease-out;
+    z-index: 1;
+  }
+  
+  .servings-slider-handle:active {
+    cursor: grabbing;
   }
 
   /* ─────────────────────────────────────────────────────────────────────────
@@ -714,7 +889,7 @@
   .ingredient-list-item {
     position: relative;
     width: 100%;
-    cursor: default; /* Container divs should not show pointer cursor - only buttons/links inside should */
+    cursor: pointer; /* Clickable to expand ingredient details */
   }
 
   /* Ingredient Group - Add max-width constraint */
@@ -831,47 +1006,6 @@
   .ingredient-list-item.is-checked .ingredient-list-description {
     text-decoration: line-through;
     color: #a8a29e; /* stone-400 */
-  }
-
-  /* Swap Button - Only visible on hover */
-  .ingredient-list-swap-button {
-    position: absolute;
-    right: 8px;
-    top: 50%; /* Center vertically */
-    transform: translateY(-50%); /* Center vertically */
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 8px;
-    flex-shrink: 0;
-    opacity: 0; /* Hidden by default */
-  }
-
-  .ingredient-list-item:hover .ingredient-list-swap-button {
-    opacity: 1; /* Visible on hover */
-  }
-
-  /* When checked, cross out the swap button (optional, or hide it) */
-  /* Based on user request "on click have it crossed out", applying line-through to the button doesn't make sense visually. 
-     Assuming the user meant the ingredient text is crossed out when checked. 
-     If the user meant the swap button itself should be crossed out, that's unusual.
-     Interpreting "on click have it crossed out" as referring to the checklist item.
-  */
-
-  .ingredient-list-swap-button:hover {
-    background-color: #f5f5f4; /* stone-100 */
-  }
-
-  .ingredient-list-swap-icon {
-    width: 16px;
-    height: 16px;
-    color: #78716c; /* stone-500 */
   }
 
   /* Recent recipe card delete control */
@@ -1405,13 +1539,12 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 0 16px;
+    padding: 0 8px;
     border-radius: 16px 16px 0 0;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     background-color: transparent;
     color: #78716C;
-    border: 1px solid transparent;
-    border-bottom: none;
+    border: none;
     position: relative;
     cursor: pointer;
     outline: none;
@@ -1425,9 +1558,9 @@
   }
 
   .folder-tab-trigger[data-state="active"] {
-    background-color: #FFFFFF;
+    background-color: white;
     color: #0C0A09;
-    border-color: #E7E5E4;
+    border-color: transparent;
     z-index: 3;
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.03);
   }
@@ -1435,7 +1568,7 @@
   /* Responsive adjustments for folder tabs */
   @media (max-width: 640px) {
     .folder-tab-trigger {
-      padding: 0 8px;
+      padding: 0 4px;
       gap: 4px;
     }
   }
