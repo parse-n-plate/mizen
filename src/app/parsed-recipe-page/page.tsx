@@ -18,9 +18,7 @@ import { convertIngredientGroupUnits, type UnitSystem } from '@/utils/unitConver
 import ClassicSplitView from '@/components/ClassicSplitView';
 import IngredientCard from '@/components/ui/ingredient-card';
 import { IngredientGroup } from '@/components/ui/ingredient-group';
-import { ServingsControls } from '@/components/ui/servings-controls';
 import { IngredientsHeader } from '@/components/ui/ingredients-header';
-import { ScaleModal } from '@/components/ui/scale-modal';
 import { UISettingsProvider } from '@/contexts/UISettingsContext';
 import { AdminPrototypingPanel } from '@/components/ui/admin-prototyping-panel';
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
@@ -205,7 +203,6 @@ export default function ParsedRecipePage({
 
   // Unit system and scale modal state
   const [unitSystem, setUnitSystem] = useState<UnitSystem>('original');
-  const [isScaleModalOpen, setIsScaleModalOpen] = useState(false);
   const [customMultiplier, setCustomMultiplier] = useState<number>(1);
   const [ingredientScaleOverrides, setIngredientScaleOverrides] = useState<Record<string, number>>({});
   
@@ -806,279 +803,275 @@ export default function ParsedRecipePage({
             <div className="bg-[#FAFAF9]">
               {/* Main Content Container with max-width */}
               <div className="max-w-6xl mx-auto px-4 md:px-8 pt-6 md:pt-10 pb-0">
-                {/* Header Section with Navigation */}
-                <div className="w-full mb-6 md:mb-10">
-                  <div className="flex flex-col gap-4">
-                    {/* Responsive Navigation: Back to Home breadcrumb */}
-                    <div className="flex gap-3 items-center justify-between">
-                      {/* Desktop: Back to Home breadcrumb */}
-                      <button
-                        onClick={() => router.push('/')}
-                        className="hidden md:flex items-center gap-2 text-stone-500 hover:text-stone-800 transition-colors cursor-pointer group"
-                        aria-label="Back to Home"
-                      >
-                        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-                        <span className="font-albert text-[14px] font-medium">Back to Home</span>
-                      </button>
+                {/* Top Navigation Bar - Back arrow on left, Bookmark/Settings on right */}
+                <div className="w-full mb-6 md:mb-8">
+                  <div className="flex items-center justify-between">
+                    {/* Back Button - Visible on all screen sizes */}
+                    <button
+                      onClick={() => router.push('/')}
+                      className="flex items-center gap-2 text-stone-600 hover:text-stone-800 transition-colors cursor-pointer group"
+                      aria-label="Back to Home"
+                    >
+                      <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
+                      {/* Desktop: Show "Back to Home" text */}
+                      <span className="hidden md:inline font-albert text-[14px] font-medium">Back to Home</span>
+                    </button>
+                    
+                    {/* Bookmark and Settings Buttons */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {/* Bookmark Button */}
+                      {recipeId && (
+                        <button
+                          onClick={handleBookmarkToggle}
+                          className="flex-shrink-0 p-2 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 cursor-pointer"
+                          aria-label={isBookmarkedState ? 'Remove bookmark' : 'Bookmark recipe'}
+                        >
+                          <Bookmark
+                            className={`
+                              w-6 h-6 transition-colors duration-200
+                              ${isBookmarkedState
+                                ? 'fill-stone-600 text-stone-600'
+                                : 'text-stone-400 hover:text-stone-600'
+                              }
+                            `}
+                          />
+                        </button>
+                      )}
+                      
+                      {/* Settings Button and Popover */}
+                      <div ref={settingsMenuRef} className={`relative ${isSettingsOpen ? 'z-[100]' : 'z-10'}`}>
+                        <button
+                          ref={settingsButtonRef}
+                          onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                          className="flex-shrink-0 p-2 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 cursor-pointer"
+                          aria-label="Recipe settings"
+                          aria-expanded={isSettingsOpen}
+                        >
+                          <Settings
+                            weight="Bold"
+                            className={`w-6 h-6 transition-colors duration-200 ${
+                              isSettingsOpen
+                                ? 'text-stone-600'
+                                : 'text-stone-400 hover:text-stone-600'
+                            }`}
+                          />
+                        </button>
+
+                        {/* Settings Popover */}
+                        {isSettingsOpen && (
+                          <div className="absolute w-60 bg-white rounded-lg border border-stone-200 shadow-xl p-1.5 z-[100] animate-in fade-in duration-200 top-[calc(100%+8px)] slide-in-from-top-2 right-0">
+                            {/* Copy Link to Original Option */}
+                            <button
+                              onClick={handleCopyLink}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
+                            >
+                              <LinkIcon weight="Bold" className={`w-4 h-4 flex-shrink-0 ${copiedLink ? 'text-green-600' : 'text-stone-500'}`} />
+                              <span className={`font-albert font-medium whitespace-nowrap ${copiedLink ? 'text-green-600' : ''}`}>
+                                {copiedLink ? 'Link Copied' : 'Copy Link to Original'}
+                              </span>
+                            </button>
+
+                            {/* Copy Recipe as Plain Text Option */}
+                            <button
+                              onClick={handleCopyPlainText}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
+                            >
+                              <CopyIcon weight="Bold" className={`w-4 h-4 flex-shrink-0 ${copiedPlainText ? 'text-green-600' : 'text-stone-500'}`} />
+                              <span className={`font-albert font-medium whitespace-nowrap ${copiedPlainText ? 'text-green-600' : ''}`}>
+                                {copiedPlainText ? 'Copied to Clipboard' : 'Copy Recipe as Plain Text'}
+                              </span>
+                            </button>
+
+                            {/* Download Recipe as JPG Option - Disabled for now */}
+                            <button
+                              disabled
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-400 cursor-not-allowed opacity-50 font-albert rounded-md"
+                            >
+                              <Download weight="Bold" className="w-4 h-4 text-stone-400 flex-shrink-0" />
+                              <span className="font-albert font-medium whitespace-nowrap">Download Recipe as JPG</span>
+                            </button>
+
+                            {/* Divider before delete option */}
+                            <div className="h-px bg-stone-200 my-1" />
+
+                            {/* Delete Recipe Option */}
+                            {recipeId && (
+                              <button
+                                onClick={handleDeleteRecipe}
+                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-albert rounded-md"
+                              >
+                                <Trash2 className="w-4 h-4 flex-shrink-0" />
+                                <span className="font-albert font-medium whitespace-nowrap">Delete Recipe</span>
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Recipe Info Section */}
+                {/* Recipe Info Section - Reordered to match Figma layout */}
                 <div className="w-full pb-8 md:pb-12">
-                  <div className="flex flex-col gap-6">
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-start justify-between gap-4">
-                        <h1 className="font-domine text-[32px] md:text-[42px] text-[#0C0A09] leading-[1.15] font-bold flex-1 tracking-tight">
-                          {parsedRecipe.title || 'Untitled Recipe'}
-                        </h1>
-                        {/* Bookmark and Settings Buttons */}
-                        <div className="flex items-center gap-2 flex-shrink-0 mt-1">
-                          {/* Bookmark Button */}
-                          {recipeId && (
-                            <button
-                              onClick={handleBookmarkToggle}
-                              className="flex-shrink-0 p-2.5 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 bg-white shadow-sm border border-stone-200/50 hover:shadow-md hover:bg-stone-50 cursor-pointer"
-                              aria-label={isBookmarkedState ? 'Remove bookmark' : 'Bookmark recipe'}
-                            >
-                              <Bookmark
-                                className={`
-                                  w-5 h-5 transition-colors duration-200
-                                  ${isBookmarkedState 
-                                    ? 'fill-stone-600 text-stone-600' 
-                                    : 'text-stone-400'
-                                  }
-                                `}
-                              />
-                            </button>
-                          )}
-                          
-                          {/* Settings Button and Popover */}
-                          <div ref={settingsMenuRef} className={`relative ${isSettingsOpen ? 'z-[100]' : 'z-10'}`}>
-                            <button
-                              ref={settingsButtonRef}
-                              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                              className="flex-shrink-0 p-2.5 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 bg-white shadow-sm border border-stone-200/50 hover:shadow-md hover:bg-stone-50 cursor-pointer"
-                              aria-label="Recipe settings"
-                              aria-expanded={isSettingsOpen}
-                            >
-                              <Settings
-                                className={`w-5 h-5 transition-colors duration-200 ${
-                                  isSettingsOpen 
-                                    ? 'text-stone-600' 
-                                    : 'text-stone-400'
-                                }`}
-                              />
-                            </button>
-
-                            {/* Settings Popover */}
-                            {isSettingsOpen && (
-                              <div className="absolute w-60 bg-white rounded-lg border border-stone-200 shadow-xl p-1.5 z-[100] animate-in fade-in duration-200 top-[calc(100%+8px)] slide-in-from-top-2 right-0">
-                                {/* Copy Link to Original Option */}
-                                <button
-                                  onClick={handleCopyLink}
-                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
-                                >
-                                  <LinkIcon weight="Bold" className={`w-4 h-4 flex-shrink-0 ${copiedLink ? 'text-green-600' : 'text-stone-500'}`} />
-                                  <span className={`font-albert font-medium whitespace-nowrap ${copiedLink ? 'text-green-600' : ''}`}>
-                                    {copiedLink ? 'Link Copied' : 'Copy Link to Original'}
-                                  </span>
-                                </button>
-
-                                {/* Copy Recipe as Plain Text Option */}
-                                <button
-                                  onClick={handleCopyPlainText}
-                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
-                                >
-                                  <CopyIcon weight="Bold" className={`w-4 h-4 flex-shrink-0 ${copiedPlainText ? 'text-green-600' : 'text-stone-500'}`} />
-                                  <span className={`font-albert font-medium whitespace-nowrap ${copiedPlainText ? 'text-green-600' : ''}`}>
-                                    {copiedPlainText ? 'Copied to Clipboard' : 'Copy Recipe as Plain Text'}
-                                  </span>
-                                </button>
-
-                                {/* Download Recipe as JPG Option - Disabled for now */}
-                                <button
-                                  disabled
-                                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-400 cursor-not-allowed opacity-50 font-albert rounded-md"
-                                >
-                                  <Download weight="Bold" className="w-4 h-4 text-stone-400 flex-shrink-0" />
-                                  <span className="font-albert font-medium whitespace-nowrap">Download Recipe as JPG</span>
-                                </button>
-
-                                {/* Divider before delete option */}
-                                <div className="h-px bg-stone-200 my-1" />
-
-                                {/* Delete Recipe Option */}
-                                {recipeId && (
-                                  <button
-                                    onClick={handleDeleteRecipe}
-                                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-albert rounded-md"
-                                  >
-                                    <Trash2 className="w-4 h-4 flex-shrink-0" />
-                                    <span className="font-albert font-medium whitespace-nowrap">Delete Recipe</span>
-                                  </button>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Author and Source URL / Image Preview */}
-                      {(parsedRecipe.author?.trim() || parsedRecipe.sourceUrl || parsedRecipe.imageData) && (
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {parsedRecipe.author?.trim() && (
-                            <p className="font-albert text-[15px] md:text-[16px] text-stone-500 leading-[1.4] font-medium">
-                              <span className="text-stone-400 font-normal">by</span> {parsedRecipe.author.trim()}
-                            </p>
-                          )}
-                          {/* Show ImagePreview for uploaded images, otherwise show source URL link */}
-                          {parsedRecipe.imageData && parsedRecipe.sourceUrl?.startsWith('image:') ? (
-                            <>
-                              {parsedRecipe.author?.trim() && (
-                                <span className="text-stone-300 mx-1">•</span>
-                              )}
-                              <ImagePreview
-                                imageData={parsedRecipe.imageData}
-                                filename={parsedRecipe.imageFilename || 'recipe-image'}
-                              />
-                            </>
-                          ) : parsedRecipe.sourceUrl ? (
-                            <>
-                              {parsedRecipe.author?.trim() && (
-                                <span className="text-stone-300 mx-1">•</span>
-                              )}
-                              <div className="flex items-center gap-1 group">
-                                <a
-                                  href={parsedRecipe.sourceUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="font-albert text-[15px] md:text-[16px] text-stone-500 hover:text-stone-800 transition-colors flex items-center gap-1.5 cursor-pointer underline-offset-4 hover:underline decoration-stone-300"
-                                  aria-label={`View original recipe on ${getDomainFromUrl(parsedRecipe.sourceUrl)}`}
-                                >
-                                  <LinkIcon className="w-3.5 h-3.5 text-stone-400" />
-                                  {getDomainFromUrl(parsedRecipe.sourceUrl)}
-                                </a>
-                                
-                                {/* Simple Copy Button - slides out from under URL on hover */}
-                                <button
-                                  className="opacity-0 group-hover:opacity-100 translate-x-[-8px] group-hover:translate-x-0 transition-all duration-150 p-1 flex items-center justify-center cursor-pointer ml-1"
-                                  onClick={() => handleCopy(parsedRecipe.sourceUrl || '')}
-                                  title="Copy recipe URL"
-                                >
-                                  <AnimatePresence mode="wait">
-                                    {copied ? (
-                                      <motion.div
-                                        key="check"
-                                        initial={{ scale: 0.5, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        exit={{ scale: 0.5, opacity: 0 }}
-                                        transition={{ duration: 0.1 }}
-                                      >
-                                        <Check className="w-3.5 h-3.5 text-green-600" />
-                                      </motion.div>
-                                    ) : (
-                                      <motion.div
-                                        key="copy"
-                                        initial={{ scale: 0.5, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        exit={{ scale: 0.5, opacity: 0 }}
-                                        transition={{ duration: 0.1 }}
-                                      >
-                                        <Copy className="w-3.5 h-3.5 text-stone-400" />
-                                      </motion.div>
-                                    )}
-                                  </AnimatePresence>
-                                </button>
-                              </div>
-                            </>
-                          ) : null}
-                        </div>
-                      )}
-                      
-                      {/* AI-Generated Summary */}
-                      {parsedRecipe.summary?.trim() && (
-                        <div className="mt-1 relative">
-                          <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-stone-200/50 rounded-full hidden md:block" />
-                          <p className="font-albert text-[16px] md:text-[17px] text-stone-600 leading-[1.6] italic md:pl-5 max-w-3xl">
-                            {parsedRecipe.summary.trim()}
-                          </p>
-                        </div>
-                      )}
-                    </div>
+                  <div className="flex flex-col gap-4 md:gap-5">
+                    {/* Recipe Title - Full width, on its own line */}
+                    <h1 className="font-domine text-[32px] md:text-[42px] text-[#0C0A09] leading-[1.15] font-bold tracking-tight">
+                      {parsedRecipe.title || 'Untitled Recipe'}
+                    </h1>
                     
-                    {/* Time, Servings and Cuisine */}
-                    <div className="flex items-center gap-4 flex-wrap border-t border-stone-200/40 pt-6">
-                      <div className="flex items-center gap-4 flex-wrap">
-                        {/* Prep Time Pill */}
+                    {/* Author - Below title */}
+                    {parsedRecipe.author?.trim() && (
+                      <p className="font-albert text-[15px] md:text-[16px] text-stone-500 leading-[1.4] font-medium">
+                        <span className="text-stone-400 font-normal">by</span> {parsedRecipe.author.trim()}
+                      </p>
+                    )}
+                    
+                    {/* AI-Generated Summary/Description - Below author */}
+                    {parsedRecipe.summary?.trim() && (
+                      <p className="font-albert text-[16px] md:text-[17px] text-stone-600 leading-[1.6] italic max-w-3xl">
+                        {parsedRecipe.summary.trim()}
+                      </p>
+                    )}
+                    
+                    {/* Source URL / Image Preview - Below description */}
+                    {(parsedRecipe.sourceUrl || parsedRecipe.imageData) && (
+                      <div className="flex items-center gap-1 group">
+                        {/* Show ImagePreview for uploaded images, otherwise show source URL link */}
+                        {parsedRecipe.imageData && parsedRecipe.sourceUrl?.startsWith('image:') ? (
+                          <ImagePreview
+                            imageData={parsedRecipe.imageData}
+                            filename={parsedRecipe.imageFilename || 'recipe-image'}
+                          />
+                        ) : parsedRecipe.sourceUrl ? (
+                          <>
+                            <a
+                              href={parsedRecipe.sourceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-albert text-[15px] md:text-[16px] text-stone-500 hover:text-stone-800 transition-colors flex items-center gap-1.5 cursor-pointer underline-offset-4 hover:underline decoration-stone-300"
+                              aria-label={`View original recipe on ${getDomainFromUrl(parsedRecipe.sourceUrl)}`}
+                            >
+                              <LinkIcon className="w-3.5 h-3.5 text-stone-400" />
+                              {getDomainFromUrl(parsedRecipe.sourceUrl)}
+                            </a>
+                            
+                            {/* Simple Copy Button - slides out from under URL on hover */}
+                            <button
+                              className="opacity-0 group-hover:opacity-100 translate-x-[-8px] group-hover:translate-x-0 transition-all duration-150 p-1 flex items-center justify-center cursor-pointer ml-1"
+                              onClick={() => handleCopy(parsedRecipe.sourceUrl || '')}
+                              title="Copy recipe URL"
+                            >
+                              <AnimatePresence mode="wait">
+                                {copied ? (
+                                  <motion.div
+                                    key="check"
+                                    initial={{ scale: 0.5, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 0.5, opacity: 0 }}
+                                    transition={{ duration: 0.1 }}
+                                  >
+                                    <Check className="w-3.5 h-3.5 text-green-600" />
+                                  </motion.div>
+                                ) : (
+                                  <motion.div
+                                    key="copy"
+                                    initial={{ scale: 0.5, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 0.5, opacity: 0 }}
+                                    transition={{ duration: 0.1 }}
+                                  >
+                                    <Copy className="w-3.5 h-3.5 text-stone-400" />
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </button>
+                          </>
+                        ) : null}
+                      </div>
+                    )}
+                    
+                    {/* Time, Servings and Cuisine - Below source link, no border-top */}
+                    <div className="flex items-center gap-3 flex-wrap pt-2">
+                      {/* Time and Servings Cards - Vertical layout with label on top, value below */}
+                      <div className="flex items-center gap-3 flex-wrap">
+                        {/* Prep Time Card */}
                         {parsedRecipe.prepTimeMinutes !== undefined && parsedRecipe.prepTimeMinutes !== null && parsedRecipe.prepTimeMinutes > 0 && (
-                          <div className="flex items-center gap-2 bg-stone-200/30 px-3 py-1.5 rounded-lg border border-stone-200/50">
-                            <Clock className="w-4 h-4 text-stone-500" />
-                            <p className="font-albert text-[14px] md:text-[15px] text-stone-700 leading-none font-medium">
-                              <span className="text-stone-500">Prep</span> {parsedRecipe.prepTimeMinutes} min
+                          <div className="flex flex-col bg-stone-200/30 px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
+                            <p className="font-albert text-[12px] md:text-[13px] text-stone-500 leading-tight mb-0.5">
+                              Prep
+                            </p>
+                            <p className="font-albert text-[15px] md:text-[16px] text-stone-700 leading-tight font-semibold">
+                              {parsedRecipe.prepTimeMinutes} min
                             </p>
                           </div>
                         )}
                         
-                        {/* Cook Time Pill */}
+                        {/* Cook Time Card */}
                         {parsedRecipe.cookTimeMinutes !== undefined && parsedRecipe.cookTimeMinutes !== null && parsedRecipe.cookTimeMinutes > 0 && (
-                          <div className="flex items-center gap-2 bg-stone-200/30 px-3 py-1.5 rounded-lg border border-stone-200/50">
-                            <Clock className="w-4 h-4 text-stone-500" />
-                            <p className="font-albert text-[14px] md:text-[15px] text-stone-700 leading-none font-medium">
-                              <span className="text-stone-500">Cook</span> {parsedRecipe.cookTimeMinutes} min
+                          <div className="flex flex-col bg-stone-200/30 px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
+                            <p className="font-albert text-[12px] md:text-[13px] text-stone-500 leading-tight mb-0.5">
+                              Cooking
+                            </p>
+                            <p className="font-albert text-[15px] md:text-[16px] text-stone-700 leading-tight font-semibold">
+                              {parsedRecipe.cookTimeMinutes} min
                             </p>
                           </div>
                         )}
                         
-                        {/* Total Time Pill - only show if prep and cook aren't both available */}
+                        {/* Total Time Card - only show if prep and cook aren't both available */}
                         {parsedRecipe.totalTimeMinutes !== undefined && parsedRecipe.totalTimeMinutes !== null && parsedRecipe.totalTimeMinutes > 0 && !parsedRecipe.prepTimeMinutes && !parsedRecipe.cookTimeMinutes && (
-                          <div className="flex items-center gap-2 bg-stone-200/30 px-3 py-1.5 rounded-lg border border-stone-200/50">
-                            <Clock className="w-4 h-4 text-stone-500" />
-                            <p className="font-albert text-[14px] md:text-[15px] text-stone-700 leading-none font-medium">
-                              <span className="text-stone-500">Total</span> {formatMinutesAsHours(parsedRecipe.totalTimeMinutes)}
+                          <div className="flex flex-col bg-stone-200/30 px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
+                            <p className="font-albert text-[12px] md:text-[13px] text-stone-500 leading-tight mb-0.5">
+                              Total
+                            </p>
+                            <p className="font-albert text-[15px] md:text-[16px] text-stone-700 leading-tight font-semibold">
+                              {formatMinutesAsHours(parsedRecipe.totalTimeMinutes)}
                             </p>
                           </div>
                         )}
                         
-                        {/* Servings Pill */}
+                        {/* Servings Card */}
                         {parsedRecipe.servings !== undefined && parsedRecipe.servings !== null && parsedRecipe.servings > 0 && (
-                          <div className="flex items-center gap-2 bg-stone-200/30 px-3 py-1.5 rounded-lg border border-stone-200/50">
-                            <p className="font-albert text-[14px] md:text-[15px] text-stone-700 leading-none font-medium">
-                              <span className="text-stone-500">Servings</span> {parsedRecipe.servings}
+                          <div className="flex flex-col bg-stone-200/30 px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
+                            <p className="font-albert text-[12px] md:text-[13px] text-stone-500 leading-tight mb-0.5">
+                              Servings
                             </p>
-                          </div>
-                        )}
-
-                        {/* Cuisine Badges */}
-                        {parsedRecipe.cuisine && parsedRecipe.cuisine.length > 0 && (
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {parsedRecipe.cuisine.map((cuisineName) => {
-                              const iconPath = CUISINE_ICON_MAP[cuisineName];
-                              if (!iconPath) return null;
-                              return (
-                                <div
-                                  key={cuisineName}
-                                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white shadow-sm border border-stone-200/60 hover:border-stone-300 transition-colors"
-                                  title={cuisineName}
-                                >
-                                  <Image
-                                    src={iconPath}
-                                    alt={`${cuisineName} cuisine icon`}
-                                    width={18}
-                                    height={18}
-                                    quality={100}
-                                    unoptimized={true}
-                                    className="w-4.5 h-4.5 object-contain"
-                                  />
-                                  <span className="font-albert text-[14px] font-medium text-stone-700">
-                                    {cuisineName}
-                                  </span>
-                                </div>
-                              );
-                            })}
+                            <p className="font-albert text-[15px] md:text-[16px] text-stone-700 leading-tight font-semibold">
+                              {parsedRecipe.servings}
+                            </p>
                           </div>
                         )}
                       </div>
+
+                      {/* Cuisine Badges */}
+                      {parsedRecipe.cuisine && parsedRecipe.cuisine.length > 0 && (
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {parsedRecipe.cuisine.map((cuisineName) => {
+                            const iconPath = CUISINE_ICON_MAP[cuisineName];
+                            if (!iconPath) return null;
+                            return (
+                              <div
+                                key={cuisineName}
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-stone-200/30 border border-stone-200/50 hover:border-stone-300 transition-colors"
+                                title={cuisineName}
+                              >
+                                <Image
+                                  src={iconPath}
+                                  alt={`${cuisineName} cuisine icon`}
+                                  width={18}
+                                  height={18}
+                                  quality={100}
+                                  unoptimized={true}
+                                  className="w-4.5 h-4.5 object-contain"
+                                />
+                                <span className="font-albert text-[14px] font-medium text-stone-700">
+                                  {cuisineName}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1087,21 +1080,19 @@ export default function ParsedRecipePage({
               {/* Tabs Navigation - Edge-to-edge on mobile/tablet, padded on desktop */}
               <div className="w-full">
                 {/* Tab List Container - Responsive padding: edge-to-edge on mobile/tablet, padded on desktop */}
-                <div className="px-4 md:px-8">
+                <div className="md:px-8">
                   <div className="max-w-6xl mx-auto">
-                    <Tabs.List className="flex items-end w-full relative gap-1 md:gap-2">
+                    <Tabs.List className="flex items-end w-full relative">
                       <Tabs.Trigger
                         value="prep"
                         className="folder-tab-trigger group flex-1 h-[58px] md:h-[64px]"
                       >
-                        <motion.div 
-                          whileHover={{ scale: 1.1, rotate: -5 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="relative shrink-0 w-8 h-8 md:w-9 md:h-9"
+                        <motion.div
+                          className="relative shrink-0 w-8 h-8 md:w-9 md:h-9 group-hover:scale-110 group-hover:rotate-[-5deg] transition-transform duration-200"
                         >
-                          <img 
-                            alt="Prep icon" 
-                            className={`absolute inset-0 w-full h-full object-contain transition-all duration-300 ${activeTab === 'prep' ? 'drop-shadow-sm' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
+                          <img
+                            alt="Prep icon"
+                            className={`absolute inset-0 w-full h-full object-contain transition-all duration-300 ${activeTab === 'prep' ? '' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
                             src="/assets/icons/Prep_Icon.png"
                           />
                         </motion.div>
@@ -1120,14 +1111,12 @@ export default function ParsedRecipePage({
                         value="cook"
                         className="folder-tab-trigger group flex-1 h-[58px] md:h-[64px]"
                       >
-                        <motion.div 
-                          whileHover={{ scale: 1.1, rotate: 5 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="relative shrink-0 w-8 h-8 md:w-9 md:h-9"
+                        <motion.div
+                          className="relative shrink-0 w-8 h-8 md:w-9 md:h-9 group-hover:scale-110 group-hover:rotate-[5deg] transition-transform duration-200"
                         >
-                          <img 
-                            alt="Cook icon" 
-                            className={`absolute inset-0 w-full h-full object-contain transition-all duration-300 ${activeTab === 'cook' ? 'drop-shadow-sm' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
+                          <img
+                            alt="Cook icon"
+                            className={`absolute inset-0 w-full h-full object-contain transition-all duration-300 ${activeTab === 'cook' ? '' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
                             src="/assets/icons/Cook_Icon.png"
                           />
                         </motion.div>
@@ -1146,14 +1135,12 @@ export default function ParsedRecipePage({
                         value="plate"
                         className="folder-tab-trigger group flex-1 h-[58px] md:h-[64px]"
                       >
-                        <motion.div 
-                          whileHover={{ scale: 1.1, rotate: -3 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="relative shrink-0 w-8 h-8 md:w-9 md:h-9"
+                        <motion.div
+                          className="relative shrink-0 w-8 h-8 md:w-9 md:h-9 group-hover:scale-110 group-hover:rotate-[-3deg] transition-transform duration-200"
                         >
-                          <img 
-                            alt="Plate icon" 
-                            className={`absolute inset-0 w-full h-full object-contain transition-all duration-300 ${activeTab === 'plate' ? 'drop-shadow-sm' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
+                          <img
+                            alt="Plate icon"
+                            className={`absolute inset-0 w-full h-full object-contain transition-all duration-300 ${activeTab === 'plate' ? '' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
                             src="/assets/icons/Plate_Icon.png"
                           />
                         </motion.div>
@@ -1173,7 +1160,7 @@ export default function ParsedRecipePage({
                 </div>
               </div>
               {/* Full-width border underneath header */}
-              <div className="w-full border-b border-[#E7E5E4]"></div>
+              <div className="w-full"></div>
             </div>
 
             {/* Main Content - Tab Content Sections */}
@@ -1192,12 +1179,14 @@ export default function ParsedRecipePage({
                       transition={{ duration: 0.3, ease: "easeOut" }}
                       className="bg-white cursor-default"
                     >
-                      <div className="space-y-6">
-                        {/* Ingredients Header with Scale and Units Controls */}
+                      <div className="max-w-[700px] mx-auto space-y-6">
+                        {/* Ingredients Header with Servings Slider */}
                         <IngredientsHeader
-                          onScaleClick={() => setIsScaleModalOpen(true)}
                           unitSystem={unitSystem}
                           onUnitSystemChange={setUnitSystem}
+                          servings={servings}
+                          originalServings={originalServings}
+                          onServingsChange={handleServingsChange}
                         />
 
                         {/* Ingredients */}
@@ -1347,21 +1336,6 @@ export default function ParsedRecipePage({
             </div>
           </Tabs.Root>
         </div>
-
-        {/* Scale Modal */}
-        <ScaleModal
-          isOpen={isScaleModalOpen}
-          onClose={() => setIsScaleModalOpen(false)}
-          servings={servings || originalServings || 1}
-          onServingsChange={handleServingsChange}
-          customMultiplier={customMultiplier}
-          onCustomMultiplierChange={setCustomMultiplier}
-          ingredientGroups={parsedRecipe?.ingredients || []}
-          ingredientScaleOverrides={ingredientScaleOverrides}
-          onIngredientScaleOverridesChange={setIngredientScaleOverrides}
-          originalServings={originalServings || 1}
-          onResetServings={handleResetServings}
-        />
 
         {/* Admin Panel for Prototyping */}
         <AdminPrototypingPanel />
