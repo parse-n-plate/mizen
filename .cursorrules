@@ -7,7 +7,7 @@ This project uses a modern, maintainable tech stack designed for both developer 
 - **TypeScript** — for strictly typed, safer JavaScript development  
 - **React (functional components & hooks)** — for building dynamic UIs using best practices  
 - **Next.js** — for efficient server-side rendering and project structure  
-- **Solar Icons** — please use the Solar Icons library for all iconography to ensure a consistent, accessible visual language ([Solar Icons Documentation](https://icons.solar/))  
+- **Solar Icons** — please use the Solar Icons library for all iconography to ensure a consistent, accessible visual language. **Default to the filled version** of icons unless specifically requested otherwise ([Solar Icons Documentation](https://icons.solar/))  
 - **CSS Modules / Tailwind CSS** — utility-first styling (see [globals.css](src/app/globals.css))  
 - **Error Boundaries** — for robust async and error handling in UI
 
