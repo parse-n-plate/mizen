@@ -43,7 +43,7 @@ export function IngredientExpandedThings3({
       transition={{ type: 'spring', damping: 25, stiffness: 200 }}
       className="overflow-hidden"
     >
-      <div className="bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-stone-100 mx-1 mb-2">
+      <div className="bg-[#F6F6F4] rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-stone-100 mx-1 mb-2">
         <IngredientExpandedContent
           ingredientName={ingredientName}
           ingredientAmount={ingredientAmount}
