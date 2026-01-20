@@ -82,11 +82,71 @@ export function IngredientGroup({
           </h3>
 
           {/* Progress Pie - Inline Layout (right next to title) */}
+          {/* Only show when at least one checkbox is checked */}
           {pieLayout === 'inline' && (
-            <div
-              className="flex items-center gap-2 flex-shrink-0 cursor-pointer"
+            <AnimatePresence>
+              {checkedCount > 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  className="flex items-center gap-2 flex-shrink-0 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent triggering the expand/collapse button
+                    if (onToggleAll) {
+                      onToggleAll();
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (onToggleAll) {
+                        onToggleAll();
+                      }
+                    }
+                  }}
+                  aria-label={`${checkedCount === totalCount ? 'Uncheck' : 'Check'} all ingredients in ${title}`}
+                  title={`${checkedCount === totalCount ? 'Uncheck' : 'Check'} all ingredients in ${title}`}
+                >
+                  <ProgressPie
+                    percentage={progressPercentage}
+                    size={18}
+                    strokeWidth={1.5}
+                    color="#0C0A09"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
+
+          {/* Chevron Icon - After progress pie, rotates when expanded, fades in on hover */}
+          <motion.div
+            animate={{ rotate: isExpanded ? 0 : -90 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className="flex-shrink-0 ingredient-group-chevron"
+          >
+            <ChevronDown className="w-5 h-5 text-stone-400 group-hover:text-stone-600 transition-colors duration-[180ms]" />
+          </motion.div>
+        </div>
+      </button>
+
+      {/* Progress Pie - Below Layout (shown when inline is not used) */}
+      {/* Only show when at least one checkbox is checked */}
+      {pieLayout === 'below' && (
+        <AnimatePresence>
+          {checkedCount > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="flex items-center gap-2 px-8 pb-2 cursor-pointer"
               onClick={(e) => {
-                e.stopPropagation(); // Prevent triggering the expand/collapse button
+                e.stopPropagation();
                 if (onToggleAll) {
                   onToggleAll();
                 }
@@ -105,57 +165,15 @@ export function IngredientGroup({
               aria-label={`${checkedCount === totalCount ? 'Uncheck' : 'Check'} all ingredients in ${title}`}
               title={`${checkedCount === totalCount ? 'Uncheck' : 'Check'} all ingredients in ${title}`}
             >
-              <ProgressPie
-                percentage={progressPercentage}
-                size={18}
+              <ProgressPie 
+                percentage={progressPercentage} 
+                size={18} 
                 strokeWidth={1.5}
                 color="#0C0A09"
               />
-            </div>
+            </motion.div>
           )}
-
-          {/* Chevron Icon - After progress pie, rotates when expanded, fades in on hover */}
-          <motion.div
-            animate={{ rotate: isExpanded ? 0 : -90 }}
-            transition={{ duration: 0.2, ease: 'easeInOut' }}
-            className="flex-shrink-0 ingredient-group-chevron"
-          >
-            <ChevronDown className="w-5 h-5 text-stone-400 group-hover:text-stone-600 transition-colors duration-[180ms]" />
-          </motion.div>
-        </div>
-      </button>
-
-      {/* Progress Pie - Below Layout (shown when inline is not used) */}
-      {pieLayout === 'below' && (
-        <div 
-          className="flex items-center gap-2 px-8 pb-2 cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation();
-            if (onToggleAll) {
-              onToggleAll();
-            }
-          }}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              e.stopPropagation();
-              if (onToggleAll) {
-                onToggleAll();
-              }
-            }
-          }}
-          aria-label={`${checkedCount === totalCount ? 'Uncheck' : 'Check'} all ingredients in ${title}`}
-          title={`${checkedCount === totalCount ? 'Uncheck' : 'Check'} all ingredients in ${title}`}
-        >
-          <ProgressPie 
-            percentage={progressPercentage} 
-            size={18} 
-            strokeWidth={1.5}
-            color="#0C0A09"
-          />
-        </div>
+        </AnimatePresence>
       )}
 
       {/* Collapsible Content - Ingredient List */}
