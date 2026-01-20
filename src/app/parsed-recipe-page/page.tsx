@@ -1030,14 +1030,14 @@ export default function ParsedRecipePage({
                           </div>
                         )}
                         
-                        {/* Servings Card */}
-                        {parsedRecipe.servings !== undefined && parsedRecipe.servings !== null && parsedRecipe.servings > 0 && (
+                        {/* Servings Card - shows current servings (updated when scaled) */}
+                        {servings !== undefined && servings !== null && servings > 0 && (
                           <div className="flex flex-col bg-stone-200/30 px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
                             <p className="font-albert text-[12px] md:text-[13px] text-stone-500 leading-tight mb-0.5">
                               Servings
                             </p>
                             <p className="font-albert text-[15px] md:text-[16px] text-stone-700 leading-tight font-semibold">
-                              {parsedRecipe.servings}
+                              {servings}
                             </p>
                           </div>
                         )}
