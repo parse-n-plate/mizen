@@ -566,6 +566,12 @@
     fill: currentColor;
   }
 
+  /* Ensure chevron-down arrow has no fill (outline only) */
+  .ingredients-header-servings-btn .lucide-chevron-down,
+  .ingredients-header-servings-btn svg.lucide {
+    fill: none !important;
+  }
+
   .ingredients-header-controls {
     display: flex;
     align-items: center;
@@ -583,6 +589,7 @@
     max-width: 700px;
     margin-left: auto;
     margin-right: auto;
+    overflow: visible; /* Allow shadow to be visible */
   }
   
   .servings-slider-card {
@@ -614,11 +621,21 @@
   .servings-indicator {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: flex-start;
+    gap: 0.5rem; /* Space between icon and text */
     padding: 0.75rem 1rem;
     background: #f5f5f4; /* stone-100 */
     border-radius: 0.5rem;
+    border: 1px solid transparent;
     flex-shrink: 0;
+    transition: border-color 0.2s ease;
+  }
+  
+  /* Blue outline when input is focused - thinner */
+  .servings-indicator:focus-within {
+    border-color: #0088ff;
+    outline: 1px solid #0088ff;
+    outline-offset: 0;
   }
   
   .servings-indicator-text {
@@ -626,11 +643,76 @@
     font-size: 1rem;
     color: #78716c; /* stone-500 */
     white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px; /* 4px gap between "Serves" and number */
   }
   
-  .servings-indicator-value {
+  /* Custom servings input styling - constrained to fit 3 digits */
+  .servings-indicator-input {
+    font-family: var(--font-albert);
+    font-size: 1rem;
     font-weight: 600;
     color: #292524; /* stone-800 */
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 0;
+    margin: 0;
+    margin-left: 0; /* No margin - directly adjacent to "Serves" */
+    width: 3ch; /* Constrained to exactly 3 character widths */
+    min-width: 3ch;
+    max-width: 3ch;
+    text-align: left;
+    caret-color: #0088ff; /* Blue cursor */
+    transition: color 0.2s ease;
+    display: inline-block;
+    box-sizing: content-box; /* Hug content, don't include padding in width */
+  }
+  
+  .servings-indicator-input:focus {
+    color: #0088ff; /* Blue number when focused */
+  }
+  
+  .servings-indicator-input::placeholder {
+    color: #a8a29e; /* stone-400 */
+    font-weight: 500;
+  }
+  
+  /* Remove number input spinners */
+  .servings-indicator-input::-webkit-outer-spin-button,
+  .servings-indicator-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  .servings-indicator-input[type="number"] {
+    -moz-appearance: textfield;
+  }
+  
+  /* Reset button styling */
+  .servings-reset-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #a8a29e; /* stone-400 */
+    transition: color 0.2s ease;
+    flex-shrink: 0;
+    margin-left: 0.25rem; /* Space between input and reset button (reduced by 4px) */
+  }
+  
+  .servings-reset-btn:hover {
+    color: #78716c; /* stone-500 - darker on hover */
+  }
+  
+  .servings-reset-btn:focus-visible {
+    outline: 2px solid #0088ff;
+    outline-offset: 2px;
+    border-radius: 0.25rem;
   }
   
   .servings-slider-track-container {
@@ -942,6 +1024,7 @@
     -moz-appearance: none;
     position: relative;
     flex-shrink: 0;
+    transform: translateY(-1px); /* Nudge checkbox up slightly for better visual centering */
   }
 
   .ingredient-checkbox-input:checked {
