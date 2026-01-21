@@ -8,6 +8,64 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Converts text fractions like "1/2" to Unicode fraction symbols like "½"
+ * Handles common cooking fractions and mixed numbers like "1 1/2"
+ * 
+ * @param text - The text containing fractions to convert
+ * @returns The text with fractions replaced by Unicode symbols
+ * 
+ * @example
+ * convertTextFractionsToSymbols("1/2 cup") // returns "½ cup"
+ * convertTextFractionsToSymbols("1 1/2 cups") // returns "1½ cups"
+ * convertTextFractionsToSymbols("3/4 teaspoon") // returns "¾ teaspoon"
+ */
+export function convertTextFractionsToSymbols(text: string): string {
+  if (!text) return text;
+  
+  // Map of common fractions to their Unicode symbols
+  const fractionMap: Record<string, string> = {
+    '1/2': '½',
+    '1/3': '⅓',
+    '2/3': '⅔',
+    '1/4': '¼',
+    '3/4': '¾',
+    '1/5': '⅕',
+    '2/5': '⅖',
+    '3/5': '⅗',
+    '4/5': '⅘',
+    '1/6': '⅙',
+    '5/6': '⅚',
+    '1/8': '⅛',
+    '3/8': '⅜',
+    '5/8': '⅝',
+    '7/8': '⅞',
+  };
+
+  // Replace fractions with their Unicode symbols
+  // Pattern matches optional number followed by space and fraction, or just fraction
+  // Examples: "1 1/2", "1/2", "3/4"
+  let result = text;
+  
+  // First pass: Convert standalone fractions (not preceded by a digit without space)
+  // This handles cases like "1/2 cup" or "at 350°F for 1/2 hour"
+  Object.entries(fractionMap).forEach(([fraction, symbol]) => {
+    // Match fraction that's either at start, after space/non-digit, or after punctuation
+    // But not after a digit without space (to preserve mixed numbers for next pass)
+    const standalonePattern = new RegExp(`(?<=^|\\s|[^\\d])${fraction.replace('/', '\\/')}(?=\\s|$|[^\\d\\/])`, 'g');
+    result = result.replace(standalonePattern, symbol);
+  });
+  
+  // Second pass: Convert mixed numbers like "1 1/2" to "1½"
+  // This removes the space between the whole number and the fraction
+  Object.entries(fractionMap).forEach(([fraction, symbol]) => {
+    const mixedNumberPattern = new RegExp(`(\\d+)\\s+${fraction.replace('/', '\\/')}`, 'g');
+    result = result.replace(mixedNumberPattern, `$1${symbol}`);
+  });
+  
+  return result;
+}
+
 export function formatRelativeTime(dateString: string): string {
   const now = new Date();
   const date = new Date(dateString);
@@ -168,6 +226,9 @@ export function highlightQuantitiesAndIngredients(
   if (!text) {
     return <>{text}</>;
   }
+
+  // Convert text fractions to Unicode symbols first
+  text = convertTextFractionsToSymbols(text);
 
   // Pattern to match quantities: numbers (including fractions, decimals, and ranges) followed by units
   // Matches: "2 cups", "2.5 cups", "2 to 2.5 cups", "about 1 to 2 tablespoons", "2-3 cups", etc.
