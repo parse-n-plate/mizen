@@ -25,6 +25,7 @@ import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 import Image from 'next/image';
 import ImagePreview from '@/components/ui/image-preview';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { convertTextFractionsToSymbols } from '@/lib/utils';
 
 // Helper function to extract domain from URL for display
 const getDomainFromUrl = (url: string): string => {
@@ -112,6 +113,7 @@ const extractStepTitle = (text: string): string => {
 };
 
 // Helper function to format ingredient
+// Converts text fractions to Unicode symbols (1/2 → ½)
 const formatIngredient = (
   ingredient: string | { amount?: string; units?: string; ingredient: string } | null | undefined,
 ): string => {
@@ -122,14 +124,14 @@ const formatIngredient = (
 
   // Handle string ingredients
   if (typeof ingredient === 'string') {
-    return ingredient;
+    return convertTextFractionsToSymbols(ingredient);
   }
 
   // Handle object ingredients
   if (typeof ingredient === 'object') {
     // Check if it's an array (shouldn't happen, but handle it)
     if (Array.isArray(ingredient)) {
-      return ingredient.join(', ');
+      return convertTextFractionsToSymbols(ingredient.join(', '));
     }
 
     // Handle ingredient objects with proper structure
@@ -137,9 +139,9 @@ const formatIngredient = (
     if ('ingredient' in ingredient && ingredient.ingredient) {
       const parts = [];
       
-      // Add amount if it exists and is valid
+      // Add amount if it exists and is valid (convert fractions to symbols)
       if (ingredient.amount && ingredient.amount.trim() && ingredient.amount !== 'as much as you like') {
-        parts.push(ingredient.amount.trim());
+        parts.push(convertTextFractionsToSymbols(ingredient.amount.trim()));
       }
       
       // Add units if they exist
@@ -147,8 +149,8 @@ const formatIngredient = (
         parts.push(ingredient.units.trim());
       }
       
-      // Always add the ingredient name
-      parts.push(ingredient.ingredient.trim());
+      // Always add the ingredient name (convert fractions to symbols)
+      parts.push(convertTextFractionsToSymbols(ingredient.ingredient.trim()));
       
       return parts.join(' ');
     }
@@ -156,13 +158,13 @@ const formatIngredient = (
     // If it's an object but doesn't match expected structure, try to extract what we can
     // This handles edge cases where the structure might be different
     if ('ingredient' in ingredient) {
-      return String(ingredient.ingredient || '');
+      return convertTextFractionsToSymbols(String(ingredient.ingredient || ''));
     }
   }
 
   // Fallback: try to convert to string safely
   try {
-    return String(ingredient);
+    return convertTextFractionsToSymbols(String(ingredient));
   } catch {
     return '';
   }
@@ -595,16 +597,16 @@ export default function ParsedRecipePage({
       });
     }
     
-    // Instructions
+    // Instructions (convert fractions to symbols)
     if (parsedRecipe.instructions && parsedRecipe.instructions.length > 0) {
       text += '--- INSTRUCTIONS ---\n\n';
       parsedRecipe.instructions.forEach((instruction, index) => {
         if (typeof instruction === 'string') {
-          text += `${index + 1}. ${instruction}\n\n`;
+          text += `${index + 1}. ${convertTextFractionsToSymbols(instruction)}\n\n`;
         } else if (typeof instruction === 'object' && instruction !== null) {
           const inst = instruction as any;
-          const title = inst.title || inst.step || `Step ${index + 1}`;
-          const detail = inst.detail || inst.text || '';
+          const title = convertTextFractionsToSymbols(inst.title || inst.step || `Step ${index + 1}`);
+          const detail = convertTextFractionsToSymbols(inst.detail || inst.text || '');
           text += `${index + 1}. ${title}\n   ${detail}\n\n`;
         }
       });
@@ -1031,7 +1033,8 @@ export default function ParsedRecipePage({
                         )}
                         
                         {/* Servings Card - shows current servings (updated when scaled) */}
-                        {servings !== undefined && servings !== null && servings > 0 && (
+                        {/* Only show if originalServings is defined (we know the actual serving count) */}
+                        {originalServings !== undefined && originalServings !== null && originalServings > 0 && servings !== undefined && servings !== null && servings > 0 && (
                           <div className="flex flex-col bg-stone-200/30 px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
                             <p className="font-albert text-[12px] md:text-[13px] text-stone-500 leading-tight mb-0.5">
                               Servings

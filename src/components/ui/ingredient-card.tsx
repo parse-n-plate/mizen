@@ -10,7 +10,7 @@ import { IngredientExpandedModal } from './ingredient-expanded-modal';
 import { IngredientExpandedSidePanel } from './ingredient-expanded-sidepanel';
 import { IngredientExpandedThings3 } from './ingredient-expanded-things3';
 import { IngredientExpandedDrawer } from './ingredient-expanded-drawer';
-import { cn } from '@/lib/utils';
+import { cn, convertTextFractionsToSymbols } from '@/lib/utils';
 
 /**
  * IngredientCard Component (Linear List Style)
@@ -153,19 +153,20 @@ export default function IngredientCard({
   };
 
   // Format the ingredient text (combines amount, units, and ingredient name)
+  // Also converts text fractions to Unicode symbols (1/2 → ½)
   const formatIngredientText = (): string => {
     // Handle string ingredients
     if (typeof ingredient === 'string') {
-      return ingredient;
+      return convertTextFractionsToSymbols(ingredient);
     }
 
     // Handle object ingredients
     if (typeof ingredient === 'object' && ingredient !== null) {
       const parts: string[] = [];
       
-      // Add amount if it exists and is valid
+      // Add amount if it exists and is valid (convert fractions to symbols)
       if (ingredient.amount && ingredient.amount.trim() && ingredient.amount !== 'as much as you like') {
-        parts.push(ingredient.amount.trim());
+        parts.push(convertTextFractionsToSymbols(ingredient.amount.trim()));
       }
       
       // Add units if they exist
@@ -173,10 +174,10 @@ export default function IngredientCard({
         parts.push(ingredient.units.trim());
       }
       
-      // Add ingredient name
+      // Add ingredient name (convert fractions in case they appear in the name)
       const ingredientName = ingredient.ingredient && ingredient.ingredient.trim();
       if (ingredientName) {
-        parts.push(ingredientName);
+        parts.push(convertTextFractionsToSymbols(ingredientName));
       }
       
       return parts.join(' ');
@@ -193,12 +194,15 @@ export default function IngredientCard({
       const parsed = parseIngredientString(ingredient.ingredient);
       if (parsed.amount) {
         // Return amount with unit if unit exists, otherwise just amount
-        return parsed.unit ? `${parsed.amount} ${parsed.unit}` : parsed.amount;
+        // Convert fractions to symbols
+        const amountWithSymbols = convertTextFractionsToSymbols(parsed.amount);
+        return parsed.unit ? `${amountWithSymbols} ${parsed.unit}` : amountWithSymbols;
       }
     }
     
+    // Convert fractions to symbols in the computed amount
     const computed = `${ingredient.amount || ''} ${ingredient.units || ''}`.trim();
-    return computed;
+    return convertTextFractionsToSymbols(computed);
   }, [ingredient]);
 
   // Extract units separately for note storage
