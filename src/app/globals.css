@@ -702,7 +702,7 @@
     color: #a8a29e; /* stone-400 */
     transition: color 0.2s ease;
     flex-shrink: 0;
-    margin-left: 0.25rem; /* Space between input and reset button (reduced by 4px) */
+    margin-left: -1rem; /* Bring closer to the gray textbox (reduces the 1.5rem gap by 4px more) */
   }
   
   .servings-reset-btn:hover {
