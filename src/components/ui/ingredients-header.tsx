@@ -40,34 +40,79 @@ export function IngredientsHeader({
   const [servingsInputValue, setServingsInputValue] = useState<string>('');
   const servingsInputRef = useRef<HTMLInputElement>(null);
   
-  // Format servings display - show "Serves X" or "Serves ?" if undefined
-  const servingsDisplay = servings !== undefined ? servings : '?';
+  // Determine mode: multiplier mode when originalServings is undefined
+  const isMultiplierMode = originalServings === undefined;
   
-  // Calculate slider percentage (1-10 range for servings)
+  // Slider configuration - dual mode based on whether originalServings is defined
   const minServings = 1;
-  const maxServings = 10;
   const maxAllowedServings = 99;
-  const currentServings = servings ?? originalServings ?? 2;
-  const percentage = ((Math.min(currentServings, maxServings) - minServings) / (maxServings - minServings)) * 100;
   
-  // Sync input value with servings
+  // Calculate slider range based on mode
+  let sliderMin: number;
+  let sliderMax: number;
+  let currentValue: number;
+  
+  if (isMultiplierMode) {
+    // Multiplier Mode: x0.5 to x4 range
+    sliderMin = 0.5;  // x0.5
+    sliderMax = 4;    // x4
+    currentValue = servings ?? 1; // Default to x1 if undefined
+  } else {
+    // Servings Mode: fixed offset +/- 5 from original
+    const offset = 5;
+    sliderMin = Math.max(1, originalServings - offset);
+    sliderMax = originalServings + offset;
+    currentValue = servings ?? originalServings;
+  }
+  
+  // Calculate slider percentage based on current value in range
+  const sliderRange = sliderMax - sliderMin;
+  const percentage = sliderRange > 0 
+    ? Math.max(0, Math.min(100, ((currentValue - sliderMin) / sliderRange) * 100))
+    : 50; // Fallback to center if range is invalid
+  
+  // Format display text based on mode
+  const servingsDisplay = isMultiplierMode 
+    ? `x${currentValue % 1 === 0 ? currentValue : currentValue.toFixed(1)}` // Show decimals for 0.5
+    : (servings !== undefined ? servings : '?');
+  
+  // Sync input value with servings/multiplier
   useEffect(() => {
     if (servings !== undefined) {
       setServingsInputValue(servings.toString());
+    } else if (isMultiplierMode) {
+      // Default to x1 in multiplier mode
+      setServingsInputValue('1');
     }
-  }, [servings]);
+  }, [servings, isMultiplierMode]);
   
   // Handle servings input change
   const handleServingsInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    // Allow empty string for editing, or valid numbers up to 99
-    if (value === '' || /^\d+$/.test(value)) {
-      const numValue = parseInt(value, 10);
-      // Only update if within valid range or empty
-      if (value === '' || (numValue >= minServings && numValue <= maxAllowedServings)) {
-        setServingsInputValue(value);
-        if (!isNaN(numValue) && numValue >= minServings && onServingsChange) {
-          onServingsChange(numValue);
+    
+    if (isMultiplierMode) {
+      // Multiplier mode: allow decimals (e.g., 0.5, 1.5, 2.0)
+      // Pattern: allows numbers with optional decimal point and one decimal place
+      if (value === '' || /^\d*\.?\d*$/.test(value)) {
+        const numValue = parseFloat(value);
+        // Allow empty, or values between 0.5 and 4 (or up to maxAllowedServings for flexibility)
+        if (value === '' || (!isNaN(numValue) && numValue >= sliderMin && numValue <= Math.max(sliderMax, maxAllowedServings))) {
+          setServingsInputValue(value);
+          if (!isNaN(numValue) && numValue >= sliderMin && onServingsChange) {
+            onServingsChange(numValue);
+          }
+        }
+      }
+    } else {
+      // Servings mode: integers only
+      if (value === '' || /^\d+$/.test(value)) {
+        const numValue = parseInt(value, 10);
+        // Only update if within valid range or empty
+        if (value === '' || (numValue >= minServings && numValue <= maxAllowedServings)) {
+          setServingsInputValue(value);
+          if (!isNaN(numValue) && numValue >= minServings && onServingsChange) {
+            onServingsChange(numValue);
+          }
         }
       }
     }
@@ -75,35 +120,74 @@ export function IngredientsHeader({
   
   // Handle servings input blur - validate and set value
   const handleServingsInputBlur = () => {
-    const numValue = parseInt(servingsInputValue, 10);
-    if (isNaN(numValue) || numValue < minServings) {
-      // Reset to current servings if invalid
-      setServingsInputValue(currentServings.toString());
-    } else if (onServingsChange) {
-      onServingsChange(numValue);
+    if (isMultiplierMode) {
+      const numValue = parseFloat(servingsInputValue);
+      if (isNaN(numValue) || numValue < sliderMin) {
+        // Reset to current value if invalid
+        setServingsInputValue(currentValue.toString());
+      } else if (onServingsChange) {
+        // Round to nearest 0.5 increment, then clamp to valid range
+        const roundedValue = Math.round(numValue * 2) / 2;
+        const clampedValue = Math.max(sliderMin, Math.min(sliderMax, roundedValue));
+        onServingsChange(clampedValue);
+        // Update input to show the rounded value
+        setServingsInputValue(clampedValue % 1 === 0 ? clampedValue.toString() : clampedValue.toFixed(1));
+      }
+    } else {
+      const numValue = parseInt(servingsInputValue, 10);
+      if (isNaN(numValue) || numValue < minServings) {
+        // Reset to current value if invalid
+        setServingsInputValue(currentValue.toString());
+      } else if (onServingsChange) {
+        onServingsChange(numValue);
+      }
     }
   };
   
-  // Check if servings have been changed from original
-  const hasChanged = originalServings !== undefined && servings !== undefined && servings !== originalServings;
+  // Check if value has been changed from original/default
+  const hasChanged = isMultiplierMode
+    ? (servings !== undefined && servings !== 1)  // In multiplier mode, changed if not x1
+    : (originalServings !== undefined && servings !== undefined && servings !== originalServings);  // In servings mode, changed if not original
   
-  // Handle reset to original servings
+  // Handle reset to original/default value
   const handleResetServings = () => {
-    if (originalServings !== undefined && onServingsChange) {
+    if (isMultiplierMode) {
+      // Reset to x1 in multiplier mode
+      if (onServingsChange) {
+        onServingsChange(1);
+        setServingsInputValue('1');
+      }
+    } else if (originalServings !== undefined && onServingsChange) {
+      // Reset to original servings in servings mode
       onServingsChange(originalServings);
       setServingsInputValue(originalServings.toString());
     }
   };
 
-  // Handle slider interaction
+  // Handle slider interaction - converts slider position to servings/multiplier
   const updateServingsFromPosition = (clientX: number) => {
     if (!sliderRef.current || !onServingsChange) return;
     
     const rect = sliderRef.current.getBoundingClientRect();
     const x = clientX - rect.left;
     const percent = Math.max(0, Math.min(100, (x / rect.width) * 100));
-    const newServings = Math.round(minServings + (percent / 100) * (maxServings - minServings));
-    onServingsChange(newServings);
+    
+    // Convert percentage to value using the calculated slider range
+    const sliderRange = sliderMax - sliderMin;
+    let newValue: number;
+    
+    if (isMultiplierMode) {
+      // In multiplier mode, snap to 0.5 increments (0.5, 1.0, 1.5, 2.0, etc.)
+      newValue = sliderMin + (percent / 100) * sliderRange;
+      newValue = Math.round(newValue * 2) / 2; // Round to nearest 0.5
+    } else {
+      // In servings mode, round to integers
+      newValue = Math.round(sliderMin + (percent / 100) * sliderRange);
+    }
+    
+    // Clamp to valid range
+    const clampedValue = Math.max(sliderMin, Math.min(sliderMax, newValue));
+    onServingsChange(clampedValue);
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -183,21 +267,23 @@ export function IngredientsHeader({
           </DropdownMenu>
         </div>
         
-        {/* Servings Button - toggles slider card */}
+        {/* Servings/Scale Button - toggles slider card */}
         <button
           onClick={() => setIsSliderOpen(!isSliderOpen)}
           className="ingredients-header-servings-btn"
-          aria-label="Adjust servings"
+          aria-label={isMultiplierMode ? "Adjust scale" : "Adjust servings"}
           aria-expanded={isSliderOpen}
         >
           <ChevronDown 
             className={`w-4 h-4 text-stone-500 transition-transform duration-200 ${isSliderOpen ? 'rotate-180' : ''}`} 
           />
-          <span className="user-icon-wrapper">
-            <User weight="Bold" className="w-4 h-4 text-stone-600" />
-          </span>
+          {!isMultiplierMode && (
+            <span className="user-icon-wrapper">
+              <User weight="Bold" className="w-4 h-4 text-stone-600" />
+            </span>
+          )}
           <span className="ingredients-header-servings-text">
-            Serves {servingsDisplay}
+            {isMultiplierMode ? `Scale ${servingsDisplay}` : `Serves ${servingsDisplay}`}
           </span>
         </button>
       </div>
@@ -218,16 +304,18 @@ export function IngredientsHeader({
             style={{ overflow: 'visible' }}
           >
             <div className="servings-slider-card">
-              <p className="servings-slider-label">Servings</p>
+              <p className="servings-slider-label">{isMultiplierMode ? 'Scale' : 'Servings'}</p>
               
               <div className="servings-slider-row">
-                {/* Current servings indicator - editable input */}
+                {/* Current servings/scale indicator - editable input */}
                 <div className="servings-indicator">
-                  <span className="user-icon-wrapper">
-                    <User weight="Bold" className="w-5 h-5 text-stone-500" />
-                  </span>
+                  {!isMultiplierMode && (
+                    <span className="user-icon-wrapper">
+                      <User weight="Bold" className="w-5 h-5 text-stone-500" />
+                    </span>
+                  )}
                   <span className="servings-indicator-text">
-                    Serves
+                    {isMultiplierMode ? 'x' : 'Serves'}
                     <input
                       ref={servingsInputRef}
                       type="text"
@@ -237,23 +325,24 @@ export function IngredientsHeader({
                       onChange={handleServingsInputChange}
                       onBlur={handleServingsInputBlur}
                       className="servings-indicator-input"
-                      aria-label="Number of servings"
+                      aria-label={isMultiplierMode ? "Multiplier value" : "Number of servings"}
                       min={minServings}
                       max={maxAllowedServings}
                     />
-                    {/* Reset button - appears when value has changed */}
-                    {hasChanged && (
-                      <button
-                        onClick={handleResetServings}
-                        className="servings-reset-btn"
-                        aria-label="Reset to original servings"
-                        type="button"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
                   </span>
                 </div>
+                
+                {/* Reset button - appears when value has changed, positioned outside gray box to the right */}
+                {hasChanged && (
+                  <button
+                    onClick={handleResetServings}
+                    className="servings-reset-btn"
+                    aria-label={isMultiplierMode ? "Reset to x1" : "Reset to original servings"}
+                    type="button"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
                 
                 {/* Slider track */}
                 <div 
