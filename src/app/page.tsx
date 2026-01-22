@@ -257,8 +257,35 @@ function RecipeListItem({
           </div>
         </button>
         
-        {/* Right Side: Time Pill, Bookmark, More Options */}
+        {/* Right Side: Cuisine Tags, Time Pill, Bookmark, More Options */}
         <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Cuisine Tags - Display as small metadata badges to the left of time pills */}
+          {recipe.cuisine && recipe.cuisine.length > 0 && (
+            <div className="flex items-center gap-1.5">
+              {recipe.cuisine.map((cuisine, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-stone-100 border border-stone-200 rounded-full font-albert text-[12px] text-stone-600"
+                >
+                  {/* Cuisine Icon - Small 16x16 icon */}
+                  {CUISINE_ICON_MAP[cuisine] && (
+                    <Image
+                      src={CUISINE_ICON_MAP[cuisine]}
+                      alt={`${cuisine} icon`}
+                      width={16}
+                      height={16}
+                      quality={100}
+                      unoptimized={true}
+                      className="w-4 h-4 object-contain flex-shrink-0"
+                      draggable={false}
+                    />
+                  )}
+                  <span>{cuisine}</span>
+                </span>
+              ))}
+            </div>
+          )}
+          
           {/* Time Display in Pill - only show if time data is available */}
           {displayTime && (
             <div className="px-3 py-1.5 bg-stone-100 rounded-full">

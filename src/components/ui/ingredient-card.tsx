@@ -283,56 +283,66 @@ export default function IngredientCard({
 
           {/* Ingredient details in the center */}
           <div className="ingredient-list-text-content">
-            {/* Primary text: Ingredient name with amount/units */}
-            <div className="ingredient-list-primary flex items-center justify-between">
-              <motion.p 
-                animate={{ 
-                  opacity: isChecked ? 0.5 : 1
-                }}
-                className="ingredient-list-name transition-all duration-[180ms]"
-              >
-                {/* Render amount/unit in black and ingredient name in gray, or ingredient name in bold black with parentheses in gray if no amount */}
-                {typeof ingredient === 'string' ? (
-                  (() => {
-                    // Split string ingredients: main name in bold, parentheses in gray
-                    const parenMatch = ingredientText.match(/^([^(]+?)\s*(\(.+\))$/);
-                    if (parenMatch) {
-                      return (
-                        <>
-                          <span className="text-stone-900 font-bold">{parenMatch[1].trim()}</span>
-                          <span className="text-stone-600"> {parenMatch[2]}</span>
-                        </>
-                      );
-                    }
-                    return <span className="text-stone-900 font-bold">{ingredientText}</span>;
-                  })()
-                ) : (
-                  <>
-                    {ingredientAmount ? (
-                      // Has amount/unit: show amount in bold black, name in gray
+            {/* Primary text: Ingredient name with amount/units - matching cook mode format */}
+            <motion.div 
+              animate={{ 
+                opacity: isChecked ? 0.5 : 1
+              }}
+              className="ingredient-list-primary flex items-baseline gap-3 transition-all duration-[180ms]"
+            >
+              {/* Format: ingredient name first (medium, stone-800, 16px), then amount/units (regular, stone-400, 14px) */}
+              {typeof ingredient === 'string' ? (
+                (() => {
+                  // For string ingredients, try to parse to separate name and amount
+                  const parsed = parseIngredientString(ingredientText);
+                  if (parsed.amount) {
+                    // Has amount: show name first, then amount/unit
+                    const amountDisplay = parsed.unit ? `${parsed.amount} ${parsed.unit}` : parsed.amount;
+                    return (
                       <>
-                        <span className="text-stone-900 font-bold">{ingredientAmount} </span>
-                        <span className="text-stone-600">{ingredientNameOnly}</span>
+                        <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{parsed.name}</p>
+                        <p className="font-albert text-[14px] text-stone-400">{amountDisplay}</p>
                       </>
-                    ) : (
-                      // No amount/unit: show main name in bold black, parentheses in gray
-                      (() => {
-                        const parenMatch = ingredientText.match(/^([^(]+?)\s*(\(.+\))$/);
-                        if (parenMatch) {
-                          return (
-                            <>
-                              <span className="text-stone-900 font-bold">{parenMatch[1].trim()}</span>
-                              <span className="text-stone-600"> {parenMatch[2]}</span>
-                            </>
-                          );
-                        }
-                        return <span className="text-stone-900 font-bold">{ingredientText}</span>;
-                      })()
-                    )}
-                  </>
-                )}
-              </motion.p>
-            </div>
+                    );
+                  }
+                  // No amount found: show full text as name (check for parentheses)
+                  const parenMatch = ingredientText.match(/^([^(]+?)\s*(\(.+\))$/);
+                  if (parenMatch) {
+                    return (
+                      <>
+                        <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{parenMatch[1].trim()}</p>
+                        <p className="font-albert text-[14px] text-stone-400">{parenMatch[2]}</p>
+                      </>
+                    );
+                  }
+                  return <p className="font-albert font-medium text-[16px] text-stone-800">{ingredientText}</p>;
+                })()
+              ) : (
+                <>
+                  {ingredientAmount ? (
+                    // Has amount/unit: show name first, then amount/unit
+                    <>
+                      <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{ingredientNameOnly}</p>
+                      <p className="font-albert text-[14px] text-stone-400">{ingredientAmount}</p>
+                    </>
+                  ) : (
+                    // No amount/unit: show main name, check for parentheses
+                    (() => {
+                      const parenMatch = ingredientText.match(/^([^(]+?)\s*(\(.+\))$/);
+                      if (parenMatch) {
+                        return (
+                          <>
+                            <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{parenMatch[1].trim()}</p>
+                            <p className="font-albert text-[14px] text-stone-400">{parenMatch[2]}</p>
+                          </>
+                        );
+                      }
+                      return <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{ingredientText}</p>;
+                    })()
+                  )}
+                </>
+              )}
+            </motion.div>
 
             {/* Secondary text: Description (hidden when empty) */}
             <AnimatePresence>
