@@ -116,6 +116,12 @@ export interface ParsedRecipe {
   ingredients: IngredientGroup[];
   instructions: InstructionStep[];
   cuisine?: string[]; // Cuisine types/tags (e.g., ["Italian", "Mediterranean"])
+  // Storage guidance - generated during initial parse
+  storageGuide?: string; // Storage instructions (e.g., "Store in airtight container in fridge")
+  shelfLife?: {
+    fridge?: number | null;  // Days in fridge (null if not fridge-safe)
+    freezer?: number | null; // Days in freezer (null if not freezer-friendly)
+  };
 }
 
 /**
@@ -596,7 +602,12 @@ Required JSON structure:
       "ingredients": ["ingredient 1", "ingredient 2"],
       "tips": "Optional tip for this step"
     }
-  ]
+  ],
+  "storageGuide": "2-3 sentences on how to store leftovers properly based on the dish type",
+  "shelfLife": {
+    "fridge": 3,
+    "freezer": 30
+  }
 }
 
 CRITICAL: ingredients and instructions MUST be arrays, NEVER null.
@@ -1006,6 +1017,44 @@ INGREDIENT-BASED DETECTION QUICK REFERENCE:
 - soy sauce, hoisin → ["Chinese"]
 
 ========================================
+📦 STORAGE GUIDANCE - REQUIRED FIELD 📦
+========================================
+THIS IS A REQUIRED FIELD. You MUST generate storage guidance for EVERY recipe.
+
+STORGE GUIDE RULES:
+- Provide 2-3 concise sentences on how to store leftovers properly
+- Be specific to the dish type (e.g., soups vs baked goods vs salads)
+- Include container recommendations when relevant (airtight container, covered bowl, etc.)
+- Mention any special handling (cool before storing, keep dressing separate, etc.)
+
+EXAMPLES:
+- Soup/Stew: "Store in an airtight container in the refrigerator. The flavors will develop further overnight. Reheat gently on the stovetop."
+- Pasta: "Store pasta and sauce separately in airtight containers in the fridge. Reheat with a splash of water or broth to restore moisture."
+- Salad: "Store undressed salad in a sealed container lined with paper towel. Keep dressing separate and add just before serving."
+- Baked goods: "Store in an airtight container at room temperature for up to 3 days. For longer storage, freeze in a freezer-safe bag."
+- Meat dishes: "Refrigerate in an airtight container within 2 hours of cooking. Reheat thoroughly to 165°F (74°C) before serving."
+
+SHELF LIFE RULES:
+- "fridge": Number of days the dish will stay fresh in the refrigerator (typically 2-5 days for most cooked dishes)
+- "freezer": Number of days in the freezer (typically 30-90 days), or null if the dish doesn't freeze well
+- Base estimates on the PRIMARY ingredients and dish type
+
+SHELF LIFE QUICK REFERENCE:
+- Soups/stews: fridge 3-4 days, freezer 60-90 days
+- Cooked pasta: fridge 3-5 days, freezer 30-60 days (sauce freezes better than pasta)
+- Cooked rice: fridge 3-4 days, freezer 30 days
+- Cooked meat: fridge 3-4 days, freezer 60-90 days
+- Salads (undressed): fridge 2-3 days, freezer null (don't freeze)
+- Baked goods: fridge 5-7 days (or room temp), freezer 60-90 days
+- Cream-based dishes: fridge 2-3 days, freezer null (may separate)
+- Fried foods: fridge 2-3 days, freezer 30 days (will lose crispiness)
+
+OUTPUT FORMAT:
+- "storageGuide": "2-3 sentences of practical storage advice"
+- "shelfLife": { "fridge": <number>, "freezer": <number or null> }
+- NEVER skip these fields - always include them in your JSON response
+
+========================================
 FINAL REMINDER
 ========================================
 Output ONLY the JSON object. No markdown, no code blocks, no explanations, no text before or after.
@@ -1015,6 +1064,8 @@ ABSOLUTE REQUIREMENTS:
 - ingredients: MUST be an array [] (never null)
 - instructions: MUST be an array [] (never null)
 - cuisine: MUST be an array [] (REQUIRED FIELD - analyze every recipe, can be empty [] if truly uncertain)
+- storageGuide: MUST be a string with 2-3 sentences of storage advice (REQUIRED FIELD)
+- shelfLife: MUST be an object with "fridge" and "freezer" properties (REQUIRED FIELD)
 - Each instruction MUST be an object: {"title": "Summary", "detail": "Full text"}
 - If you find ingredients in the HTML, extract them
 - If you find instructions in the HTML, extract them as objects with title and detail
@@ -1025,7 +1076,12 @@ ABSOLUTE REQUIREMENTS:
 - For fusion recipes (e.g., Korean pasta, Mexican-Italian fusion), include BOTH cuisines
 - Return empty array [] only if you truly cannot determine the cuisine
 - NEVER skip the "cuisine" field - it must always be present in your JSON response
-- The recipe data exists in the HTML - extract it carefully, including cuisine analysis`,
+
+📦 STORAGE GUIDANCE IS MANDATORY:
+- ALWAYS generate storage guidance based on the dish type and ingredients
+- ALWAYS estimate shelf life based on the recipe type
+- NEVER skip the "storageGuide" or "shelfLife" fields - they must always be present in your JSON response
+- The recipe data exists in the HTML - extract it carefully, including storage analysis`,
         },
         {
           role: 'user',
@@ -1131,13 +1187,30 @@ ABSOLUTE REQUIREMENTS:
           }
         }
         
-        // Log important recipe output information: title, author, and servings
+        // Extract storage guidance if provided by AI
+        if (parsedData.storageGuide && typeof parsedData.storageGuide === 'string') {
+          recipe.storageGuide = parsedData.storageGuide.trim();
+          console.log('[AI Parser] 📦 Storage guide extracted:', recipe.storageGuide.substring(0, 50) + '...');
+        }
+        
+        // Extract shelf life if provided by AI
+        if (parsedData.shelfLife && typeof parsedData.shelfLife === 'object') {
+          recipe.shelfLife = {
+            fridge: typeof parsedData.shelfLife.fridge === 'number' ? parsedData.shelfLife.fridge : null,
+            freezer: typeof parsedData.shelfLife.freezer === 'number' ? parsedData.shelfLife.freezer : null,
+          };
+          console.log('[AI Parser] 📦 Shelf life extracted:', recipe.shelfLife);
+        }
+        
+        // Log important recipe output information: title, author, servings, and storage
         console.log('[AI Parser] 📋 Recipe output summary:', {
           title: recipe.title || 'N/A',
           author: recipe.author || 'N/A',
           servings: recipe.servings || 'N/A',
           hasAuthor: !!recipe.author,
           hasServings: !!recipe.servings,
+          hasStorageGuide: !!recipe.storageGuide,
+          hasShelfLife: !!recipe.shelfLife,
         });
         
         // Handle cuisine - normalize to array format and filter to supported cuisines only

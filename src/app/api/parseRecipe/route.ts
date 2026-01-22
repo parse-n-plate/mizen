@@ -173,6 +173,8 @@ export async function POST(req: NextRequest): Promise<Response> {
       prepTimeMinutes: result.data.prepTimeMinutes, // Include prep time if available
       cookTimeMinutes: result.data.cookTimeMinutes, // Include cook time if available
       totalTimeMinutes: result.data.totalTimeMinutes, // Include total time if available
+      storageGuide: result.data.storageGuide, // Include storage instructions if available
+      shelfLife: result.data.shelfLife, // Include shelf life info if available
       method: result.method, // Include which method was used (json-ld or ai)
     });
   } catch (error) {
