@@ -1066,7 +1066,7 @@
 
   /* Darken background on hover */
   .ingredient-list-item:hover .ingredient-list-content {
-    background-color: #fafaf9; /* stone-50 */
+    background-color: var(--color-background-cream); /* stone-50 - using design token */
   }
 
   .ingredient-list-checkbox {
