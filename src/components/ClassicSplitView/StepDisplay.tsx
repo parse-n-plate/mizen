@@ -62,29 +62,29 @@ export default function StepDisplay({ step, currentStep, totalSteps, onNext, onP
     };
   }, [currentStep, totalSteps, onNext, onPrev]); // Re-run if these values change
 
-  // Sizing maps shifted: sm -> old med, med -> old lg, lg -> new step
+  // Sizing maps reduced by one: lg -> med, med -> sm, sm -> smaller
   const titleSizeMap = {
-    sm: 'text-[36px] md:text-[42px]',
-    med: 'text-[44px] md:text-[52px]',
-    lg: 'text-[52px] md:text-[62px]',
+    sm: 'text-[32px] md:text-[38px]',
+    med: 'text-[36px] md:text-[42px]',
+    lg: 'text-[44px] md:text-[52px]',
   };
 
   const detailSizeMap = {
-    sm: 'text-[19px]',
-    med: 'text-[24px]',
-    lg: 'text-[30px]',
+    sm: 'text-[17px]',
+    med: 'text-[19px]',
+    lg: 'text-[24px]',
   };
 
   const paddingMap = {
-    sm: 'pt-8 pb-8',
-    med: 'pt-12 pb-12',
-    lg: 'pt-16 pb-16',
+    sm: 'pt-6 pb-6',
+    med: 'pt-8 pb-8',
+    lg: 'pt-12 pb-12',
   };
 
   const gapMap = {
-    sm: 'gap-10',
-    med: 'gap-14',
-    lg: 'gap-20',
+    sm: 'gap-8',
+    med: 'gap-10',
+    lg: 'gap-14',
   };
 
   return (

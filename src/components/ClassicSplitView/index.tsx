@@ -469,7 +469,7 @@ export default function ClassicSplitView({ steps, title = 'Recipe Steps', allIng
                             <button
                               key={size}
                               onClick={() => setStepSizing(size)}
-                              className={`py-1.5 text-[11px] font-bold uppercase rounded-md transition-all ${
+                              className={`py-1.5 text-[11px] font-bold uppercase rounded-md transition-all font-albert ${
                                 settings.stepSizing === size
                                   ? 'bg-white text-[#0C0A09] shadow-sm ring-1 ring-stone-200'
                                   : 'text-stone-500 hover:text-stone-700'
