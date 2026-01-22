@@ -1,13 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { MousePointer2, Play, X } from 'lucide-react';
+import { MousePointer2, Play, X, ShoppingBasket } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminSettings } from '@/contexts/AdminSettingsContext';
 import LoadingAnimation from '@/components/ui/loading-animation';
 import { Button } from '@/components/ui/button';
 
-export function AdminPrototypingPanel() {
+interface AdminPrototypingPanelProps {
+  /** Optional callback when ingredients button is clicked */
+  onIngredientsClick?: () => void;
+}
+
+export function AdminPrototypingPanel({ onIngredientsClick }: AdminPrototypingPanelProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
   const [showLoadingAnimation, setShowLoadingAnimation] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -75,28 +80,53 @@ export function AdminPrototypingPanel() {
 
   return (
     <>
-      {/* Subtle floating trigger button - only visible when panel is closed */}
+      {/* Floating buttons container - only visible when panel is closed */}
       {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className={cn(
-            "fixed bottom-6 right-6 z-[99]",
-            "w-10 h-10 rounded-full",
-            "bg-stone-900/60 backdrop-blur-sm",
-            "border border-stone-700/40",
-            "flex items-center justify-center",
-            "text-white/70 hover:text-white",
-            "hover:bg-stone-900/80",
-            "transition-all duration-200",
-            "shadow-lg hover:shadow-xl",
-            "opacity-60 hover:opacity-100",
-            "group"
+        <div className="fixed bottom-6 right-6 z-[99] flex items-center gap-2">
+          {/* Ingredients Button - positioned to the left of prototype button */}
+          {onIngredientsClick && (
+            <button
+              onClick={onIngredientsClick}
+              className={cn(
+                "w-10 h-10 rounded-full",
+                "bg-stone-900/60 backdrop-blur-sm",
+                "border border-stone-700/40",
+                "flex items-center justify-center",
+                "text-white/70 hover:text-white",
+                "hover:bg-stone-900/80",
+                "transition-all duration-200",
+                "shadow-lg hover:shadow-xl",
+                "opacity-60 hover:opacity-100",
+                "group"
+              )}
+              aria-label="Go to Ingredients"
+              title="Go to Ingredients"
+            >
+              <ShoppingBasket className="h-4 w-4 transition-transform group-hover:scale-110" />
+            </button>
           )}
-          aria-label="Open Prototype Lab (Cmd/Ctrl + Shift + P)"
-          title="Open Prototype Lab (Cmd/Ctrl + Shift + P)"
-        >
-          <MousePointer2 className="h-4 w-4 transition-transform group-hover:scale-110" />
-        </button>
+          
+          {/* Prototype Lab Button - shifted left to make room for ingredients button */}
+          <button
+            onClick={() => setIsOpen(true)}
+            className={cn(
+              "w-10 h-10 rounded-full",
+              "bg-stone-900/60 backdrop-blur-sm",
+              "border border-stone-700/40",
+              "flex items-center justify-center",
+              "text-white/70 hover:text-white",
+              "hover:bg-stone-900/80",
+              "transition-all duration-200",
+              "shadow-lg hover:shadow-xl",
+              "opacity-60 hover:opacity-100",
+              "group"
+            )}
+            aria-label="Open Prototype Lab (Cmd/Ctrl + Shift + P)"
+            title="Open Prototype Lab (Cmd/Ctrl + Shift + P)"
+          >
+            <MousePointer2 className="h-4 w-4 transition-transform group-hover:scale-110" />
+          </button>
+        </div>
       )}
 
       {/* Modal Backdrop - appears when modal is open */}

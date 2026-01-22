@@ -71,6 +71,7 @@ export default function HomepageRecentRecipes() {
       const fullRecipe = getRecipeById(recipeId);
       if (fullRecipe && fullRecipe.ingredients && fullRecipe.instructions) {
         setParsedRecipe({
+          id: fullRecipe.id, // Include recipe ID for syncing
           title: fullRecipe.title,
           ingredients: fullRecipe.ingredients,
           instructions: fullRecipe.instructions,
@@ -84,6 +85,7 @@ export default function HomepageRecentRecipes() {
           cookTimeMinutes: fullRecipe.cookTimeMinutes, // Include cook time if available
           totalTimeMinutes: fullRecipe.totalTimeMinutes, // Include total time if available
           servings: fullRecipe.servings, // Include servings if available
+          plate: fullRecipe.plate, // Include plate data if available
         });
         router.push('/parsed-recipe-page');
       }

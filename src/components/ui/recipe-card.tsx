@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Camera } from 'lucide-react';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import MenuDotsCircle from '@solar-icons/react/csr/ui/MenuDotsCircle';
 import Pen from '@solar-icons/react/csr/messages/Pen';
@@ -20,6 +20,7 @@ export interface RecipeCardData {
   prepTimeMinutes?: number;
   cookTimeMinutes?: number;
   totalTimeMinutes?: number;
+  platePhotoData?: string; // Base64 user plate photo
 }
 
 interface RecipeCardProps {
@@ -271,7 +272,18 @@ export default function RecipeCard({
         aria-hidden="true"
         className="absolute border border-solid border-stone-200 inset-0 pointer-events-none rounded-[20px]"
       />
-      
+
+      {/* Photo Indicator Badge - shown when plate photo exists */}
+      {recipe.platePhotoData && (
+        <div
+          className="absolute top-4 left-4 z-20 bg-[#0088ff] text-white px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm"
+          aria-label="Has plate photo"
+        >
+          <Camera className="w-3.5 h-3.5" />
+          <span className="font-albert text-[11px] font-medium">Cooked</span>
+        </div>
+      )}
+
       {/* Bookmark Button */}
       <button
         onPointerDownCapture={(e) => e.stopPropagation()}
@@ -365,18 +377,30 @@ export default function RecipeCard({
           className="w-full h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-0 rounded-[inherit]"
         >
           <div className="box-border flex flex-row items-center gap-[16px] md:gap-[24px] p-[16px] md:p-[20px] relative w-full min-h-[120px]">
-            {/* Cuisine Illustration Icon - conditionally rendered based on showCuisineIcon prop */}
-            {showCuisineIcon && (
+            {/* Plate Photo or Cuisine Icon */}
+            {recipe.platePhotoData ? (
+              // Show plate photo if available
               <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
-                <Image
-                  src={cuisineIconPath}
-                  alt={`${primaryCuisine || 'Recipe'} icon`}
-                  fill
-                  quality={100}
-                  unoptimized={true}
-                  className="object-contain pointer-events-none"
+                <img
+                  src={recipe.platePhotoData}
+                  alt="Your dish"
+                  className="w-full h-full object-cover rounded-[12px] border-2 border-stone-200 pointer-events-none"
                 />
               </div>
+            ) : (
+              // Show cuisine icon if no plate photo and showCuisineIcon is true
+              showCuisineIcon && (
+                <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
+                  <Image
+                    src={cuisineIconPath}
+                    alt={`${primaryCuisine || 'Recipe'} icon`}
+                    fill
+                    quality={100}
+                    unoptimized={true}
+                    className="object-contain pointer-events-none"
+                  />
+                </div>
+              )
             )}
 
             {/* Recipe Info */}

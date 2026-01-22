@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useState, useRef, useEffect } from "react"
 import User from "@solar-icons/react/csr/users/User"
+import Magnifer from "@solar-icons/react/csr/search/Magnifer"
 import { ChevronDown, MoreHorizontal, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
@@ -20,6 +21,8 @@ interface IngredientsHeaderProps {
   servings?: number;
   originalServings?: number;
   onServingsChange?: (servings: number) => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
 }
 
 export function IngredientsHeader({
@@ -28,9 +31,13 @@ export function IngredientsHeader({
   servings,
   originalServings,
   onServingsChange,
+  searchQuery = '',
+  onSearchChange,
 }: IngredientsHeaderProps) {
   // State to toggle the servings slider card
   const [isSliderOpen, setIsSliderOpen] = useState(false);
+  // State to track unit dropdown menu open state for animation
+  const [isUnitMenuOpen, setIsUnitMenuOpen] = useState(false);
   
   // Track slider dragging state
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -239,7 +246,7 @@ export function IngredientsHeader({
         <div className="ingredients-header-left">
           <h2 className="ingredients-header-title">Ingredients</h2>
           {/* Ellipsis menu icon - opens unit type options */}
-          <DropdownMenu>
+          <DropdownMenu open={isUnitMenuOpen} onOpenChange={setIsUnitMenuOpen}>
             <DropdownMenuTrigger asChild>
               <button
                 className="ingredients-header-menu-btn"
@@ -248,22 +255,26 @@ export function IngredientsHeader({
                 <MoreHorizontal className="w-5 h-5 text-stone-400" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[180px]">
-              <DropdownMenuRadioGroup 
-                value={unitSystem} 
-                onValueChange={(value) => onUnitSystemChange(value as UnitSystem)}
-              >
-                <DropdownMenuRadioItem value="original">
-                  Original
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="metric">
-                  Metric
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="imperial">
-                  Imperial
-                </DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
+            <AnimatePresence>
+              {isUnitMenuOpen && (
+                <DropdownMenuContent align="start" className="w-[180px]">
+                  <DropdownMenuRadioGroup 
+                    value={unitSystem} 
+                    onValueChange={(value) => onUnitSystemChange(value as UnitSystem)}
+                  >
+                    <DropdownMenuRadioItem value="original">
+                      Original
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="metric">
+                      Metric
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="imperial">
+                      Imperial
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              )}
+            </AnimatePresence>
           </DropdownMenu>
         </div>
         
@@ -373,6 +384,23 @@ export function IngredientsHeader({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Search Bar - positioned directly under the header */}
+      {onSearchChange && (
+        <div className="ingredients-search-container">
+          <div className="ingredients-search-wrapper">
+            <Magnifer className="ingredients-search-icon" />
+            <input
+              type="text"
+              placeholder="Search ingredients"
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="ingredients-search-input"
+              aria-label="Search ingredients"
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

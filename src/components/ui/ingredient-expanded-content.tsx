@@ -88,7 +88,7 @@ export function IngredientExpandedContent({
     setIsEditing(true);
   };
 
-  // Handle key press (Escape to cancel, Enter+Shift for new line, Enter alone to save)
+  // Handle key press (Escape to cancel, Shift+Enter for new line, Enter alone to save)
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Escape') {
       // Cancel editing and restore previous value
@@ -96,9 +96,15 @@ export function IngredientExpandedContent({
       if (textareaRef.current) {
         textareaRef.current.value = notes;
       }
+    } else if (e.key === 'Enter' && !e.shiftKey) {
+      // Enter alone (without Shift) saves and exits editing mode
+      e.preventDefault(); // Prevent default newline behavior
+      setIsEditing(false);
+      if (textareaRef.current) {
+        handleSaveNotes(textareaRef.current.value);
+      }
     }
-    // Let Enter work normally for multi-line text
-    // Shift+Enter also works normally
+    // Shift+Enter allows normal newline behavior (no preventDefault)
   };
 
   // Determine display text and placeholder
