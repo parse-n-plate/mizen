@@ -13,7 +13,7 @@ import { useRouter } from 'next/navigation';
 import type { CuisineType } from '@/components/ui/cuisine-pills';
 import Image from 'next/image';
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
-import { Search, X } from 'lucide-react';
+import { Search, X, Camera } from 'lucide-react';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import MenuDotsCircle from '@solar-icons/react/csr/ui/MenuDotsCircle';
 import Pen from '@solar-icons/react/csr/messages/Pen';
@@ -371,6 +371,7 @@ function HomeContent() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isPageLoaded, setIsPageLoaded] = useState<boolean>(false);
   const [isSearchFocused, setIsSearchFocused] = useState<boolean>(false);
+  const [showCookedOnly, setShowCookedOnly] = useState<boolean>(false);
 
   // Trigger onload animation when component mounts and data is loaded
   useEffect(() => {
@@ -393,6 +394,7 @@ function HomeContent() {
       const fullRecipe = getRecipeById(recipeId);
       if (fullRecipe && fullRecipe.ingredients && fullRecipe.instructions) {
         setParsedRecipe({
+          id: fullRecipe.id, // Include recipe ID for syncing
           title: fullRecipe.title,
           ingredients: fullRecipe.ingredients,
           instructions: fullRecipe.instructions,
@@ -406,6 +408,7 @@ function HomeContent() {
           cookTimeMinutes: fullRecipe.cookTimeMinutes, // Include cook time if available
           totalTimeMinutes: fullRecipe.totalTimeMinutes, // Include total time if available
           servings: fullRecipe.servings, // Include servings if available
+          plate: fullRecipe.plate, // Include plate data if available
         });
         router.push('/parsed-recipe-page');
       }
@@ -419,7 +422,7 @@ function HomeContent() {
     // Use actual author from recipe data if available, try URL parsing as fallback
     // If no author is found, leave it undefined - the card component will handle the empty state
     let author: string | undefined = recipe.author;
-    
+
     if (!author && recipe.url) {
       try {
         const urlObj = new URL(recipe.url);
@@ -440,22 +443,43 @@ function HomeContent() {
       prepTimeMinutes: recipe.prepTimeMinutes,
       cookTimeMinutes: recipe.cookTimeMinutes,
       totalTimeMinutes: recipe.totalTimeMinutes,
+      platePhotoData: recipe.plate?.photoData, // Include plate photo if available
     };
   };
 
   // Get bookmarked recipes for the Saved Recipes section
   const bookmarkedRecipes = useMemo(() => {
-    return getBookmarkedRecipes().map(convertToRecipeCardData);
+    const recipes = getBookmarkedRecipes();
+    console.log('[Homepage] 📚 Loading bookmarked recipes:', {
+      count: recipes.length,
+      recipesWithPhotos: recipes.filter(r => r.plate?.photoData).length,
+      recipes: recipes.map(r => ({
+        id: r.id,
+        title: r.title,
+        hasPlate: !!r.plate,
+        hasPhoto: !!r.plate?.photoData,
+        photoLength: r.plate?.photoData?.length || 0,
+      })),
+    });
+    return recipes.map(convertToRecipeCardData);
   }, [getBookmarkedRecipes]);
 
-  // Filter bookmarked recipes by selected cuisine and search query
+  // Filter bookmarked recipes by selected cuisine, search query, and cooked status
   const filteredRecipes = useMemo(() => {
     console.log('[Homepage] 🍽️ Filtering bookmarked recipes by cuisine:', selectedCuisine);
     console.log('[Homepage] 🔍 Search query:', searchQuery);
-    console.log('[Homepage] Available bookmarked recipes:', bookmarkedRecipes.map(r => ({ title: r.title, cuisine: r.cuisine })));
-    
+    console.log('[Homepage] 📸 Show cooked only:', showCookedOnly);
+    console.log('[Homepage] Available bookmarked recipes:', bookmarkedRecipes.map(r => ({ title: r.title, cuisine: r.cuisine, hasPlatePhoto: !!r.platePhotoData })));
+
     let filtered = bookmarkedRecipes;
-    
+
+    // Filter by cooked status (plate photo existence)
+    if (showCookedOnly) {
+      filtered = filtered.filter(recipe => {
+        return !!recipe.platePhotoData;
+      });
+    }
+
     // Filter by cuisine (only if a cuisine is selected)
     if (selectedCuisine !== null) {
       filtered = filtered.filter(recipe => {
@@ -464,7 +488,7 @@ function HomeContent() {
         return hasMatchingCuisine;
       });
     }
-    
+
     // Filter by search query (title and author)
     if (searchQuery.trim()) {
       const queryLower = searchQuery.toLowerCase().trim();
@@ -474,10 +498,10 @@ function HomeContent() {
         return titleMatch || authorMatch;
       });
     }
-    
+
     console.log('[Homepage] Filtered results:', filtered.length, 'bookmarked recipes match filters');
     return filtered;
-  }, [selectedCuisine, searchQuery, bookmarkedRecipes]);
+  }, [selectedCuisine, searchQuery, showCookedOnly, bookmarkedRecipes]);
 
   if (!isLoaded) {
     return <HomepageSkeleton />;
@@ -592,6 +616,27 @@ function HomeContent() {
             {/* Cuisine Filter Pills now sit below the search bar */}
             <div className="mb-6 md:mb-8">
               <CuisinePills onCuisineChange={handleCuisineChange} />
+            </div>
+
+            {/* Cooked Dishes Only Toggle */}
+            <div className="mb-6 md:mb-8 flex items-center gap-2">
+              <button
+                onClick={() => setShowCookedOnly(!showCookedOnly)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full font-albert text-[14px] font-medium transition-all ${
+                  showCookedOnly
+                    ? 'bg-[#0088ff] text-white shadow-sm'
+                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                }`}
+                aria-label={showCookedOnly ? 'Show all recipes' : 'Show cooked dishes only'}
+              >
+                <Camera className="w-4 h-4" />
+                <span>Cooked dishes only</span>
+              </button>
+              {showCookedOnly && (
+                <span className="font-albert text-[13px] text-stone-500">
+                  Showing recipes you've cooked
+                </span>
+              )}
             </div>
 
             {/* Recipe List View */}

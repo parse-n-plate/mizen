@@ -26,6 +26,10 @@ import Image from 'next/image';
 import ImagePreview from '@/components/ui/image-preview';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { convertTextFractionsToSymbols } from '@/lib/utils';
+import PlatePhotoCapture from '@/components/ui/plate-photo-capture';
+import PlatingGuidanceCard from '@/components/ui/plating-guidance-card';
+import StorageGuidanceCard from '@/components/ui/storage-guidance-card';
+import IngredientsOverlay from '@/components/ui/ingredients-overlay';
 
 // Helper function to extract domain from URL for display
 const getDomainFromUrl = (url: string): string => {
@@ -184,7 +188,7 @@ export default function ParsedRecipePage({
   // eslint-disable-next-line react-hooks/rules-of-hooks
   if (searchParams) use(searchParams);
   
-  const { parsedRecipe, isLoaded } = useRecipe();
+  const { parsedRecipe, setParsedRecipe, isLoaded } = useRecipe();
   const { recentRecipes, isBookmarked, toggleBookmark, removeRecipe } = useParsedRecipes();
   const router = useRouter();
   // #region agent log
@@ -217,6 +221,9 @@ export default function ParsedRecipePage({
   const [copiedPlainText, setCopiedPlainText] = useState(false);
   const settingsMenuRef = useRef<HTMLDivElement>(null);
   const settingsButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Ingredients overlay state
+  const [isIngredientsOverlayOpen, setIsIngredientsOverlayOpen] = useState(false);
 
   // Find the recipe ID by matching sourceUrl with recipes in recentRecipes
   // This is needed because RecipeContext's parsedRecipe doesn't have an ID field
@@ -362,6 +369,8 @@ export default function ParsedRecipePage({
   // Track which ingredient is currently expanded (accordion behavior - only one at a time)
   // Format: "groupName:ingredientName" or null if none expanded
   const [expandedIngredient, setExpandedIngredient] = useState<string | null>(null);
+  // Search query for filtering ingredients
+  const [ingredientSearchQuery, setIngredientSearchQuery] = useState<string>('');
 
   // Load persistence from localStorage
   useEffect(() => {
@@ -707,6 +716,46 @@ export default function ParsedRecipePage({
 
     return scaled;
   }, [parsedRecipe, servings, multiplier, customMultiplier, unitSystem, ingredientScaleOverrides]);
+
+  // Filter ingredients based on search query (searches name, amount, and units)
+  const filteredIngredients = useMemo(() => {
+    if (!ingredientSearchQuery.trim()) {
+      return scaledIngredients;
+    }
+
+    const queryLower = ingredientSearchQuery.toLowerCase().trim();
+    
+    return scaledIngredients.map((group) => {
+      const filteredGroupIngredients = group.ingredients.filter((ingredient) => {
+        // Handle string format (just ingredient name)
+        if (typeof ingredient === 'string') {
+          return ingredient.toLowerCase().includes(queryLower);
+        }
+        
+        // Handle object format - search across name, amount, and units
+        const ingredientName = (ingredient.ingredient || '').toLowerCase();
+        const amount = (ingredient.amount || '').toLowerCase();
+        const units = (ingredient.units || '').toLowerCase();
+        
+        // Check if search query matches any part of the ingredient
+        return (
+          ingredientName.includes(queryLower) ||
+          amount.includes(queryLower) ||
+          units.includes(queryLower)
+        );
+      });
+
+      // Only include groups that have matching ingredients
+      if (filteredGroupIngredients.length === 0) {
+        return null;
+      }
+
+      return {
+        ...group,
+        ingredients: filteredGroupIngredients,
+      };
+    }).filter((group): group is NonNullable<typeof group> => group !== null);
+  }, [scaledIngredients, ingredientSearchQuery]);
 
   // Servings change handler - passed to ServingsControls component
   const handleServingsChange = (newServings: number) => {
@@ -1190,12 +1239,14 @@ export default function ParsedRecipePage({
                           servings={servings}
                           originalServings={originalServings}
                           onServingsChange={handleServingsChange}
+                          searchQuery={ingredientSearchQuery}
+                          onSearchChange={setIngredientSearchQuery}
                         />
 
                         {/* Ingredients */}
                         <div className="bg-white cursor-default">
-                          {Array.isArray(scaledIngredients) &&
-                            scaledIngredients.map(
+                          {Array.isArray(filteredIngredients) &&
+                            filteredIngredients.map(
                               (
                                 group: {
                                   groupName: string;
@@ -1313,24 +1364,202 @@ export default function ParsedRecipePage({
                       transition={{ duration: 0.3, ease: "easeOut" }}
                       className="bg-white"
                     >
-                      <div className="max-w-[700px] mx-auto">
-                        <div className="text-center py-12">
-                          <div className="flex justify-center items-center mb-4">
-                            <img
-                              src="/assets/icons/Plate_Icon.png"
-                              alt="Plate icon"
-                              className="w-16 h-16 md:w-20 md:h-20 object-contain"
-                              aria-hidden="true"
-                              draggable="false"
-                            />
-                          </div>
-                          <p className="font-albert text-[18px] text-stone-500">
-                            Coming soon...
-                          </p>
-                          <p className="font-albert text-[16px] text-stone-500 mt-2">
-                            Plating suggestions and serving tips will be available here.
-                          </p>
-                        </div>
+                      <div className="max-w-[700px] mx-auto space-y-6">
+                        {/* Plating Suggestions */}
+                        <PlatingGuidanceCard
+                          platingNotes={parsedRecipe.plate?.platingNotes}
+                          servingVessel={parsedRecipe.plate?.servingVessel}
+                          servingTemp={parsedRecipe.plate?.servingTemp}
+                          onNotesChange={(notes) => {
+                            setParsedRecipe({
+                              ...parsedRecipe,
+                              id: parsedRecipe.id || recipeId || undefined,
+                              plate: {
+                                ...parsedRecipe.plate,
+                                platingNotes: notes,
+                              },
+                            });
+                          }}
+                        />
+
+                        {/* Storage Guidance - use top-level storage from initial parse, fallback to plate for backward compat */}
+                        <StorageGuidanceCard
+                          storageGuide={parsedRecipe.storageGuide || parsedRecipe.plate?.storageGuide}
+                          shelfLife={parsedRecipe.shelfLife || parsedRecipe.plate?.shelfLife}
+                          storedAt={parsedRecipe.plate?.storedAt}
+                          onMarkAsStored={() => {
+                            setParsedRecipe({
+                              ...parsedRecipe,
+                              id: parsedRecipe.id || recipeId || undefined,
+                              plate: {
+                                ...parsedRecipe.plate,
+                                storedAt: new Date().toISOString(),
+                              },
+                            });
+                          }}
+                          onResetStorage={() => {
+                            setParsedRecipe({
+                              ...parsedRecipe,
+                              id: parsedRecipe.id || recipeId || undefined,
+                              plate: {
+                                ...parsedRecipe.plate,
+                                storedAt: undefined,
+                              },
+                            });
+                          }}
+                        />
+
+                        {/* Photo Capture Section */}
+                        <PlatePhotoCapture
+                          photos={(() => {
+                            // Use new photos array if available, otherwise migrate legacy photoData
+                            const existingPhotos = parsedRecipe.plate?.photos || [];
+
+                            // If we have legacy photoData but no photos array, migrate it
+                            if (existingPhotos.length === 0 && parsedRecipe.plate?.photoData) {
+                              return [{
+                                data: parsedRecipe.plate.photoData,
+                                filename: parsedRecipe.plate.photoFilename || 'dish.jpg',
+                                capturedAt: parsedRecipe.plate.capturedAt || new Date().toISOString(),
+                              }];
+                            }
+
+                            return existingPhotos;
+                          })()}
+                          recipeTitle={parsedRecipe.title}
+                          recipeAuthor={parsedRecipe.author}
+                          cuisine={parsedRecipe.cuisine}
+                          onShare={() => {
+                            // Track share
+                            const sharedAt = parsedRecipe.plate?.sharedAt || [];
+                            const shareCount = (parsedRecipe.plate?.shareCount || 0) + 1;
+                            setParsedRecipe({
+                              ...parsedRecipe,
+                              id: parsedRecipe.id || recipeId || undefined,
+                              plate: {
+                                ...parsedRecipe.plate,
+                                sharedAt: [...sharedAt, new Date().toISOString()],
+                                shareCount,
+                              },
+                            });
+                          }}
+                          onPhotoCapture={async (photoData, filename, rating) => {
+                            console.log('[RecipePage] 📸 Photo captured:', {
+                              parsedRecipeId: parsedRecipe.id,
+                              computedRecipeId: recipeId,
+                              hasRecipeId: !!parsedRecipe.id || !!recipeId,
+                              photoDataLength: photoData.length,
+                              filename,
+                            });
+
+                            // Get existing photos array or migrate legacy data
+                            const existingPhotos = parsedRecipe.plate?.photos || [];
+                            const legacyPhoto = parsedRecipe.plate?.photoData && !existingPhotos.length
+                              ? [{
+                                  data: parsedRecipe.plate.photoData,
+                                  filename: parsedRecipe.plate.photoFilename || 'dish.jpg',
+                                  capturedAt: parsedRecipe.plate.capturedAt || new Date().toISOString(),
+                                }]
+                              : [];
+
+                            const currentPhotos = existingPhotos.length > 0 ? existingPhotos : legacyPhoto;
+
+                            // Add new photo to the array with rating
+                            const newPhoto = {
+                              data: photoData,
+                              filename,
+                              capturedAt: new Date().toISOString(),
+                              rating, // Include rating from the flow
+                            };
+                            const updatedPhotos = [...currentPhotos, newPhoto];
+
+                            // Immediately update with new photo
+                            setParsedRecipe({
+                              ...parsedRecipe,
+                              id: parsedRecipe.id || recipeId || undefined,
+                              plate: {
+                                ...parsedRecipe.plate,
+                                photos: updatedPhotos,
+                                // Clear legacy fields after migration
+                                photoData: undefined,
+                                photoFilename: undefined,
+                                capturedAt: undefined,
+                              },
+                            });
+
+                            // Generate AI guidance only for first photo
+                            if (currentPhotos.length === 0) {
+                              try {
+                                const response = await fetch('/api/generatePlatingGuidance', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    recipeTitle: parsedRecipe.title,
+                                    ingredients: parsedRecipe.ingredients,
+                                    instructions: parsedRecipe.instructions,
+                                  }),
+                                });
+
+                                if (response.ok) {
+                                  const { data } = await response.json();
+                                  console.log('[RecipePage] 🤖 AI guidance generated:', data);
+
+                                  // Update recipe with AI-generated guidance
+                                  setParsedRecipe({
+                                    ...parsedRecipe,
+                                    id: parsedRecipe.id || recipeId || undefined,
+                                    plate: {
+                                      ...parsedRecipe.plate,
+                                      photos: updatedPhotos,
+                                      platingNotes: data.platingNotes,
+                                      servingVessel: data.servingVessel,
+                                      servingTemp: data.servingTemp,
+                                      storageGuide: data.storageGuide,
+                                      shelfLife: data.shelfLife,
+                                    },
+                                  });
+                                }
+                              } catch (error) {
+                                console.error('[RecipePage] ❌ Failed to generate AI guidance:', error);
+                                // Photo is already saved, just continue without AI guidance
+                              }
+                            }
+                          }}
+                          onPhotoRemove={(index) => {
+                            // Get current photos array
+                            const existingPhotos = parsedRecipe.plate?.photos || [];
+
+                            // Remove photo at index
+                            const updatedPhotos = existingPhotos.filter((_, i) => i !== index);
+
+                            setParsedRecipe({
+                              ...parsedRecipe,
+                              id: parsedRecipe.id || recipeId || undefined,
+                              plate: {
+                                ...parsedRecipe.plate,
+                                photos: updatedPhotos,
+                              },
+                            });
+                          }}
+                          onPhotoRatingUpdate={(index, rating) => {
+                            // Get current photos array
+                            const existingPhotos = parsedRecipe.plate?.photos || [];
+
+                            // Update photo rating at index
+                            const updatedPhotos = existingPhotos.map((photo, i) => 
+                              i === index ? { ...photo, rating } : photo
+                            );
+
+                            setParsedRecipe({
+                              ...parsedRecipe,
+                              id: parsedRecipe.id || recipeId || undefined,
+                              plate: {
+                                ...parsedRecipe.plate,
+                                photos: updatedPhotos,
+                              },
+                            });
+                          }}
+                        />
                       </div>
                     </motion.div>
                   </Tabs.Content>
@@ -1341,7 +1570,16 @@ export default function ParsedRecipePage({
         </div>
 
         {/* Admin Panel for Prototyping */}
-        <AdminPrototypingPanel />
+        <AdminPrototypingPanel 
+          onIngredientsClick={() => setIsIngredientsOverlayOpen(true)}
+        />
+
+        {/* Ingredients Overlay - Modal (desktop) / Drawer (mobile) */}
+        <IngredientsOverlay
+          isOpen={isIngredientsOverlayOpen}
+          onClose={() => setIsIngredientsOverlayOpen(false)}
+          ingredients={scaledIngredients}
+        />
       </div>
       </TooltipProvider>
     </UISettingsProvider>
