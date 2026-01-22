@@ -333,8 +333,8 @@ export default function InlineSearch() {
             className={`
               bg-stone-100 rounded-md border transition-all duration-200
               ${isExpanded 
-                ? 'border-[#4F46E5] shadow-sm' 
-                : 'border-stone-200 hover:border-stone-300'
+                ? 'border-stone-400 shadow-sm' 
+                : 'border-stone-200 hover:border-stone-300 hover:bg-stone-50'
               }
             `}
           >
@@ -346,7 +346,7 @@ export default function InlineSearch() {
               <input
                 ref={inputRef}
                 type="text"
-                placeholder={isExpanded ? "Search recipes or enter URL..." : "Enter recipe URL..."}
+                placeholder={isExpanded ? "Enter recipe URL" : "Enter recipe URL"}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={handleFocus}
@@ -401,19 +401,19 @@ export default function InlineSearch() {
                   className={`
                     w-full text-left p-3 rounded-md transition-colors group
                     ${selectedIndex === index 
-                      ? 'bg-[#4F46E5] text-white' 
+                      ? 'bg-stone-50 text-stone-900' 
                       : 'hover:bg-stone-50'
                     }
                   `}
                   onMouseEnter={() => setSelectedIndex(index)}
                 >
                   <div className={`font-albert font-medium text-sm truncate ${
-                    selectedIndex === index ? 'text-white' : 'text-stone-800'
+                    selectedIndex === index ? 'text-stone-900' : 'text-stone-800'
                   }`}>
                     {recipe.title}
                   </div>
                   <div className={`font-albert text-xs mt-1 line-clamp-1 ${
-                    selectedIndex === index ? 'text-white/80' : 'text-stone-500'
+                    selectedIndex === index ? 'text-stone-600' : 'text-stone-500'
                   }`}>
                     {recipe.summary || recipe.description}
                   </div>
