@@ -13,7 +13,7 @@ import {
 } from '@/utils/recipe-parse';
 import { errorLogger } from '@/utils/errorLogger';
 // Note: Command+K handling is now done globally via CommandKContext
-import { isUrl } from '@/utils/searchUtils';
+import { isUrl, normalizeUrl } from '@/utils/searchUtils';
 import LoadingAnimation from '@/components/ui/loading-animation';
 import { useToast } from '@/hooks/useToast';
 import EmptyState from '@/components/ui/empty-state';
@@ -57,15 +57,8 @@ export default function NavbarSearch() {
     }
   };
 
-  // Check if query looks like a URL
-  const isUrl = (text: string) => {
-    return (
-      text.includes('http') ||
-      text.includes('www.') ||
-      text.includes('.com') ||
-      text.includes('.org')
-    );
-  };
+  // Note: isUrl is now imported from @/utils/searchUtils
+  // It supports domain patterns like "allrecipes.com/recipe" without the http prefix
 
   // Search through cached recipes
   const searchRecipes = useCallback(
@@ -180,15 +173,19 @@ export default function NavbarSearch() {
         return;
       }
 
+      // Normalize the URL by adding protocol/www if missing
+      // This enables users to type "allrecipes.com/recipe" instead of full URL
+      const normalizedUrl = normalizeUrl(query);
+
       // Step 1: Quick validation to ensure URL contains recipe-related keywords
-      const validUrlResponse = await validateRecipeUrl(query);
+      const validUrlResponse = await validateRecipeUrl(normalizedUrl);
 
       if (!validUrlResponse.success) {
         setLoading(false);
         errorLogger.log(
           validUrlResponse.error.code,
           validUrlResponse.error.message,
-          query,
+          normalizedUrl,
         );
         showError({
           code: validUrlResponse.error.code,
@@ -202,7 +199,7 @@ export default function NavbarSearch() {
         errorLogger.log(
           'ERR_NO_RECIPE_FOUND',
           'No recipe found on this page',
-          query,
+          normalizedUrl,
         );
         showError({
           code: 'ERR_NO_RECIPE_FOUND',
@@ -212,13 +209,13 @@ export default function NavbarSearch() {
 
       // Step 2: Parse recipe using unified AI-based parser
       console.log('[Navbar] Calling unified recipe parser...');
-      const response = await recipeScrape(query);
+      const response = await recipeScrape(normalizedUrl);
 
       // Check if parsing failed
       if (!response.success || response.error) {
         setLoading(false);
         const errorCode = response.error?.code || 'ERR_NO_RECIPE_FOUND';
-        errorLogger.log(errorCode, response.error?.message || 'Parsing failed', query);
+        errorLogger.log(errorCode, response.error?.message || 'Parsing failed', normalizedUrl);
         showError({
           code: errorCode,
           message: response.error?.message,
@@ -240,7 +237,7 @@ export default function NavbarSearch() {
         ingredients: response.ingredients,
         instructions: response.instructions,
         author: response.author, // Include author if available
-        sourceUrl: response.sourceUrl || query, // Use sourceUrl from response or fallback to query URL
+        sourceUrl: response.sourceUrl || normalizedUrl, // Use sourceUrl from response or fallback to normalized URL
         summary: response.summary, // Include AI-generated summary if available
         cuisine: response.cuisine, // Include cuisine tags if available
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
@@ -266,11 +263,11 @@ export default function NavbarSearch() {
         title: response.title,
         summary: recipeSummary,
         description: response.summary, // Store the AI-generated summary
-        url: query,
+        url: normalizedUrl,
         ingredients: response.ingredients,
         instructions: response.instructions,
         author: response.author, // Include author if available
-        sourceUrl: response.sourceUrl || query, // Include source URL if available
+        sourceUrl: response.sourceUrl || normalizedUrl, // Include source URL if available
         cuisine: response.cuisine, // Include cuisine tags if available
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
         ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
@@ -294,7 +291,7 @@ export default function NavbarSearch() {
       errorLogger.log(
         'ERR_UNKNOWN',
         'An unexpected error occurred during parsing',
-        query,
+        query.trim(),
       );
       showError({
         code: 'ERR_UNKNOWN',
