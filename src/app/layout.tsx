@@ -9,6 +9,7 @@ import { ParsedRecipesProvider } from '@/contexts/ParsedRecipesContext';
 import { TimerProvider } from '@/contexts/TimerContext';
 import { CommandKProvider } from '@/contexts/CommandKContext';
 import { Toaster } from '@/components/ui/sonner';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import ImageProtection from '@/components/ImageProtection';
 import './globals.css';
 
@@ -65,6 +66,7 @@ export default function RootLayout({
                   {children}
                   <Footer />
                   <Toaster />
+                  <SpeedInsights />
                 </CommandKProvider>
               </TimerProvider>
             </ParsedRecipesProvider>
