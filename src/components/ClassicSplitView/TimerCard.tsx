@@ -23,9 +23,9 @@ export default function TimerCard({ time }: TimerCardProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 shrink-0 bg-stone-50 rounded-full flex items-center justify-center border border-stone-100">
-            <Clock className="w-4.5 h-4.5 text-[#193d34]" />
+            <Clock className="w-4.5 h-4.5 text-[#0C0A09]" />
           </div>
-          <p className="font-albert font-bold text-[18px] text-[#193d34] tracking-tight">
+          <p className="font-albert font-bold text-[18px] text-[#0C0A09] tracking-tight">
             Timers
           </p>
         </div>
@@ -39,7 +39,7 @@ export default function TimerCard({ time }: TimerCardProps) {
             <p className="font-albert text-[16px] text-stone-500 font-medium">
               Step Timer
             </p>
-            <p className="font-domine text-[20px] text-[#193d34] font-bold">
+            <p className="font-domine text-[20px] text-[#0C0A09] font-bold">
               {time} minutes
             </p>
           </div>

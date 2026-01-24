@@ -24,6 +24,7 @@ export default function SearchForm({
 }: SearchFormProps) {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
+  const [detectedCuisine, setDetectedCuisine] = useState<string[] | undefined>(undefined);
   const [isFocused, setIsFocused] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchResults, setSearchResults] = useState<ParsedRecipe[]>([]);
@@ -31,6 +32,9 @@ export default function SearchForm({
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [inputMode, setInputMode] = useState<'url' | 'image'>('url'); // Toggle between URL and image mode
+  // Loading progress tracking
+  const [loadingProgress, setLoadingProgress] = useState<number>(0);
+  const [loadingPhase, setLoadingPhase] = useState<'gathering' | 'reading' | 'plating' | 'done' | undefined>(undefined);
   
   const { setParsedRecipe } = useRecipe();
   const { addRecipe, recentRecipes } = useParsedRecipes();
@@ -92,6 +96,10 @@ export default function SearchForm({
       instructions: recipe.instructions || [],
       author: recipe.author, // Include author if available
       sourceUrl: recipe.sourceUrl, // Include source URL if available
+      prepTimeMinutes: recipe.prepTimeMinutes, // Include prep time if available
+      cookTimeMinutes: recipe.cookTimeMinutes, // Include cook time if available
+      totalTimeMinutes: recipe.totalTimeMinutes, // Include total time if available
+      servings: recipe.servings, // Include servings if available
     });
     setQuery('');
     setShowDropdown(false);
@@ -155,33 +163,63 @@ export default function SearchForm({
 
     try {
       setLoading(true);
+      setLoadingProgress(0);
+      setLoadingPhase('gathering');
 
       console.log('[Client] Parsing recipe from image:', selectedImage.name);
       
+      // Update progress: Gathering Resources phase (0-30%)
+      setLoadingProgress(10);
+      setLoadingPhase('gathering');
+      
       // Call the new image parsing function
       const response = await parseRecipeFromImage(selectedImage);
+      
+      // Update progress: Start Reading the Recipe phase (30-90%)
+      setLoadingProgress(30);
+      setLoadingPhase('reading');
 
       // Check if parsing failed
       if (!response.success || response.error) {
+        setLoading(false);
+        setLoadingProgress(0);
+        setLoadingPhase(undefined);
         const errorCode = response.error?.code || 'ERR_NO_RECIPE_FOUND';
         errorLogger.log(errorCode, response.error?.message || 'Image parsing failed', selectedImage.name);
         showError({
           code: errorCode,
           message: response.error?.message,
+          retryAfter: response.error?.retryAfter, // Pass through retry-after timestamp
         });
         return;
       }
 
       console.log('[Client] Successfully parsed recipe from image:', response.title);
 
-      // Store parsed recipe in context
+      // Update progress: Parsing complete, start Plating phase (90-100%)
+      setLoadingProgress(90);
+      setLoadingPhase('plating');
+
+      // Store detected cuisine for the loading animation reveal
+      if (response.cuisine) {
+        setDetectedCuisine(response.cuisine);
+      }
+
+      // Store parsed recipe in context with image data
+      // imagePreview is already a base64 data URL from handleImageSelect
       setParsedRecipe({
         title: response.title,
         ingredients: response.ingredients,
         instructions: response.instructions,
         author: response.author, // Include author if available
-        sourceUrl: response.sourceUrl, // Include source URL if available
+        sourceUrl: response.sourceUrl || `image:${selectedImage.name}`, // Include source URL if available, or use image reference
         summary: response.summary, // Include AI-generated summary if available
+        imageData: imagePreview || undefined, // Store base64 image data for preview
+        imageFilename: selectedImage.name, // Store original filename
+        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
+        ...(response.servings !== undefined && { servings: response.servings }), // Include servings if available
       });
 
       // Add to recent recipes
@@ -197,13 +235,28 @@ export default function SearchForm({
         instructions: response.instructions,
         author: response.author, // Include author if available
         sourceUrl: response.sourceUrl, // Include source URL if available
+        ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
+        imageData: imagePreview || undefined, // Store base64 image data for preview
+        imageFilename: selectedImage.name, // Store original filename
       });
+
+      // Update progress: Complete (100%)
+      setLoadingProgress(100);
+      setLoadingPhase('done');
 
       // Show success toast
       showSuccess('Recipe parsed successfully!', 'Navigating to recipe page...');
 
-      // Navigate to parsed recipe page
-      router.push('/parsed-recipe-page');
+      // Wait a moment for the loading animation to show the reveal before navigating
+      setTimeout(() => {
+        setLoading(false);
+        setLoadingProgress(0);
+        setLoadingPhase(undefined);
+        router.push('/parsed-recipe-page');
+      }, 1500);
     } catch (err) {
       console.error('[Client] Image parse error:', err);
       errorLogger.log(
@@ -215,8 +268,12 @@ export default function SearchForm({
         code: 'ERR_UNKNOWN',
         message: 'An unexpected error occurred. Please try again.',
       });
-    } finally {
       setLoading(false);
+      setLoadingProgress(0);
+      setLoadingPhase(undefined);
+    } finally {
+      // setLoading(false) is now handled after a delay in the success path
+      // or immediately if there was an error that returned early
     }
   }, [
     selectedImage,
@@ -232,6 +289,8 @@ export default function SearchForm({
 
     try {
       setLoading(true);
+      setLoadingProgress(0);
+      setLoadingPhase('gathering');
 
       // Step 0: Check if input looks like a URL (early validation)
       if (!isUrl(query)) {
@@ -240,14 +299,26 @@ export default function SearchForm({
           code: 'ERR_NOT_A_URL',
         });
         setLoading(false);
+        setLoadingProgress(0);
+        setLoadingPhase(undefined);
         return;
       }
+
+      // Update progress: Gathering Resources phase (0-30%)
+      setLoadingProgress(10);
+      setLoadingPhase('gathering');
 
       // Step 1: Quick validation to ensure URL contains recipe-related keywords
       // This provides fast feedback before making the full parsing request
       const validUrlResponse = await validateRecipeUrl(query);
+      
+      // Update progress: Validation complete (20%)
+      setLoadingProgress(20);
 
       if (!validUrlResponse.success) {
+        setLoading(false);
+        setLoadingProgress(0);
+        setLoadingPhase(undefined);
         errorLogger.log(
           validUrlResponse.error.code,
           validUrlResponse.error.message,
@@ -261,6 +332,9 @@ export default function SearchForm({
       }
 
       if (!validUrlResponse.isRecipe) {
+        setLoading(false);
+        setLoadingProgress(0);
+        setLoadingPhase(undefined);
         errorLogger.log(
           'ERR_NO_RECIPE_FOUND',
           'No recipe found on this page',
@@ -272,6 +346,10 @@ export default function SearchForm({
         return;
       }
 
+      // Update progress: Start Reading the Recipe phase (30-90%)
+      setLoadingProgress(30);
+      setLoadingPhase('reading');
+
       // Step 2: Parse recipe using unified AI-based parser
       // This handles all the complexity internally:
       // - Fetches and cleans HTML
@@ -280,19 +358,39 @@ export default function SearchForm({
       // - Returns consistently structured data
       console.log('[Client] Calling unified recipe parser...');
       const response = await recipeScrape(query);
+      
+      // Update progress: Parsing complete (85%)
+      setLoadingProgress(85);
 
       // Check if parsing failed
       if (!response.success || response.error) {
+        setLoading(false);
+        setLoadingProgress(0);
+        setLoadingPhase(undefined);
         const errorCode = response.error?.code || 'ERR_NO_RECIPE_FOUND';
         errorLogger.log(errorCode, response.error?.message || 'Parsing failed', query);
         showError({
           code: errorCode,
           message: response.error?.message,
+          retryAfter: response.error?.retryAfter, // Pass through retry-after timestamp
         });
         return;
       }
 
       console.log('[Client] Successfully parsed recipe:', response.title);
+      
+      // Update progress: Start Plating phase (90-100%)
+      setLoadingProgress(90);
+      setLoadingPhase('plating');
+      
+      // Store detected cuisine for the loading animation reveal
+      if (response.cuisine) {
+        setDetectedCuisine(response.cuisine);
+      }
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'search-form.tsx:298',message:'API response received',data:{hasServings:'servings' in response,servings:response.servings,servingsType:typeof response.servings,servingsValue:response.servings,hasAuthor:'author' in response,author:response.author,responseKeys:Object.keys(response)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
 
       // Step 3: Store parsed recipe in context
       // The new parser already returns data in the correct grouped format
@@ -304,7 +402,14 @@ export default function SearchForm({
         sourceUrl: response.sourceUrl || query, // Use sourceUrl from response or fallback to query URL
         summary: response.summary, // Include AI-generated summary if available
         cuisine: response.cuisine, // Include cuisine tags if available
+        ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
       };
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'search-form.tsx:310',message:'recipeToStore created',data:{hasServings:'servings' in recipeToStore,servings:recipeToStore.servings,servingsType:typeof recipeToStore.servings,servingsValue:recipeToStore.servings,keys:Object.keys(recipeToStore)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       
       // Store recipe first (this writes to localStorage synchronously)
       setParsedRecipe(recipeToStore);
@@ -332,13 +437,20 @@ export default function SearchForm({
         author: response.author, // Include author if available
         sourceUrl: response.sourceUrl || query, // Include source URL if available
         cuisine: response.cuisine, // Include cuisine tags if available
+        ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
       });
 
       // Show success toast
       showSuccess('Recipe parsed successfully!', 'Navigating to recipe page...');
 
-      // Step 5: Navigate to the parsed recipe page
-      router.push('/parsed-recipe-page');
+      // Wait a moment for the loading animation to show the reveal before navigating
+      setTimeout(() => {
+        setLoading(false);
+        router.push('/parsed-recipe-page');
+      }, 1500);
     } catch (err) {
       console.error('[Client] Parse error:', err);
       errorLogger.log(
@@ -350,8 +462,12 @@ export default function SearchForm({
         code: 'ERR_UNKNOWN',
         message: 'An unexpected error occurred. Please try again.',
       });
-    } finally {
       setLoading(false);
+      setLoadingProgress(0);
+      setLoadingPhase(undefined);
+    } finally {
+      // setLoading(false) is now handled after a delay in the success path
+      // or immediately if there was an error that returned early
     }
   }, [
     query,
@@ -405,9 +521,24 @@ export default function SearchForm({
     }, 100);
   };
 
+  // Handle cancel loading
+  const handleCancelLoading = () => {
+    setLoading(false);
+    setLoadingProgress(0);
+    setLoadingPhase(undefined);
+    setDetectedCuisine(undefined);
+    // Note: API calls will continue but UI will stop showing loading state
+  };
+
   return (
     <>
-      <LoadingAnimation isVisible={loading} />
+      <LoadingAnimation 
+        isVisible={loading} 
+        cuisine={detectedCuisine} 
+        progress={loadingProgress}
+        phase={loadingPhase}
+        onCancel={handleCancelLoading} 
+      />
       <div className="relative w-full">
         {/* URL Input Mode */}
         {inputMode === 'url' && (
@@ -566,6 +697,7 @@ export default function SearchForm({
                     src={imagePreview}
                     alt="Recipe preview"
                     className="w-full h-auto max-h-96 object-contain bg-stone-50"
+                    draggable="false"
                   />
                 </div>
 

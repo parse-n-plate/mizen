@@ -9,6 +9,7 @@ interface IngredientExpandedDrawerProps {
   ingredientName: string;
   ingredientAmount?: string;
   linkedSteps: number[];
+  stepTitlesMap?: Record<number, string>; // Map of step numbers to step titles
   onStepClick: (stepNumber: number) => void;
   isOpen: boolean;
   onClose: () => void;
@@ -18,6 +19,7 @@ export function IngredientExpandedDrawer({
   ingredientName,
   ingredientAmount,
   linkedSteps,
+  stepTitlesMap,
   onStepClick,
   isOpen,
   onClose
@@ -82,6 +84,7 @@ export function IngredientExpandedDrawer({
                 ingredientName={ingredientName}
                 ingredientAmount={ingredientAmount}
                 linkedSteps={linkedSteps}
+                stepTitlesMap={stepTitlesMap}
                 onStepClick={onStepClick}
               />
             </div>

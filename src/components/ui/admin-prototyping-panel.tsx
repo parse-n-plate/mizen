@@ -1,64 +1,243 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ChevronRight, ChevronLeft, MousePointer2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MousePointer2, Play, X, ShoppingBasket } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAdminSettings } from '@/contexts/AdminSettingsContext';
+import LoadingAnimation from '@/components/ui/loading-animation';
+import { Button } from '@/components/ui/button';
 
-export function AdminPrototypingPanel() {
+interface AdminPrototypingPanelProps {
+  /** Optional callback when ingredients button is clicked */
+  onIngredientsClick?: () => void;
+}
+
+export function AdminPrototypingPanel({ onIngredientsClick }: AdminPrototypingPanelProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
+  const [showLoadingAnimation, setShowLoadingAnimation] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingPhase, setLoadingPhase] = useState<'gathering' | 'reading' | 'plating' | 'done' | undefined>(undefined);
   const { settings: adminSettings, toggleShowIngredientsForStepList } = useAdminSettings();
 
+  // Add keyboard shortcut support (Cmd/Ctrl + Shift + P)
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Check for Cmd (Mac) or Ctrl (Windows/Linux) + Shift + P
+      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === 'P') {
+        event.preventDefault();
+        setIsOpen((prev) => !prev);
+      }
+      // Also support Escape to close
+      if (event.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
+  // Function to trigger loading animation for 5 seconds with progress simulation
+  const triggerLoadingAnimation = () => {
+    setShowLoadingAnimation(true);
+    setLoadingProgress(0);
+    setLoadingPhase('gathering');
+
+    // Simulate progress over 5 seconds
+    const startTime = Date.now();
+    const duration = 5000; // 5 seconds
+
+    const updateProgress = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(100, (elapsed / duration) * 100);
+      setLoadingProgress(progress);
+
+      // Update phase based on progress
+      if (progress < 33) {
+        setLoadingPhase('gathering');
+      } else if (progress < 66) {
+        setLoadingPhase('reading');
+      } else if (progress < 100) {
+        setLoadingPhase('plating');
+      } else {
+        setLoadingPhase('done');
+      }
+
+      if (progress < 100) {
+        requestAnimationFrame(updateProgress);
+      } else {
+        // Hide after completion
+        setTimeout(() => {
+          setShowLoadingAnimation(false);
+          setLoadingProgress(0);
+          setLoadingPhase(undefined);
+        }, 500);
+      }
+    };
+
+    requestAnimationFrame(updateProgress);
+  };
+
   return (
-    <div 
-      className={cn(
-        "fixed right-0 top-1/2 -translate-y-1/2 bg-white border border-r-0 border-[#E0E0E0] shadow-xl transition-transform duration-300 z-[100] rounded-l-xl flex",
-        isOpen ? "translate-x-0" : "translate-x-[calc(100%-24px)]"
-      )}
-    >
-      {/* Toggle Handle */}
-      <div 
-        className="w-6 flex items-center justify-center bg-stone-900 text-white rounded-l-xl cursor-pointer hover:bg-stone-800 transition-colors"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {isOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-      </div>
-
-      <div className="w-64 p-4 space-y-6">
-        <div className="flex items-center gap-2 pb-2 border-b border-stone-100">
-          <MousePointer2 className="h-4 w-4 text-[#FFBA25]" />
-          <h2 className="font-domine font-bold text-stone-900">Prototype Lab</h2>
-        </div>
-
-        {/* Toggle Controls Section */}
-        <div className="space-y-3">
-          <h3 className="text-[10px] font-albert font-bold uppercase tracking-widest text-stone-400">Display Options</h3>
-          
-          {/* Toggle for Ingredients List */}
-          <div className="flex items-center justify-between p-2 rounded-lg hover:bg-stone-50 transition-colors">
-            <div className="flex flex-col">
-              <span className="text-xs font-albert font-medium text-stone-900">Ingredients for Step</span>
-              <span className="text-[10px] font-albert text-stone-400 mt-0.5">Show ingredients list in context panel</span>
-            </div>
+    <>
+      {/* Floating buttons container - only visible when panel is closed */}
+      {!isOpen && (
+        <div className="fixed bottom-6 right-6 z-[99] flex items-center gap-2">
+          {/* Ingredients Button - positioned to the left of prototype button */}
+          {onIngredientsClick && (
             <button
-              onClick={toggleShowIngredientsForStepList}
+              onClick={onIngredientsClick}
               className={cn(
-                "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#193d34]/20 focus:ring-offset-2",
-                adminSettings.showIngredientsForStepList ? "bg-stone-900" : "bg-stone-200"
+                "w-10 h-10 rounded-full",
+                "bg-stone-900/60 backdrop-blur-sm",
+                "border border-stone-700/40",
+                "flex items-center justify-center",
+                "text-white/70 hover:text-white",
+                "hover:bg-stone-900/80",
+                "transition-all duration-200",
+                "shadow-lg hover:shadow-xl",
+                "opacity-60 hover:opacity-100",
+                "group"
               )}
-              aria-label="Toggle ingredients for step list"
+              aria-label="Go to Ingredients"
+              title="Go to Ingredients"
             >
-              <span
-                className={cn(
-                  "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                  adminSettings.showIngredientsForStepList ? "translate-x-6" : "translate-x-1"
-                )}
-              />
+              <ShoppingBasket className="h-4 w-4 transition-transform group-hover:scale-110" />
             </button>
+          )}
+          
+          {/* Prototype Lab Button - shifted left to make room for ingredients button */}
+          <button
+            onClick={() => setIsOpen(true)}
+            className={cn(
+              "w-10 h-10 rounded-full",
+              "bg-stone-900/60 backdrop-blur-sm",
+              "border border-stone-700/40",
+              "flex items-center justify-center",
+              "text-white/70 hover:text-white",
+              "hover:bg-stone-900/80",
+              "transition-all duration-200",
+              "shadow-lg hover:shadow-xl",
+              "opacity-60 hover:opacity-100",
+              "group"
+            )}
+            aria-label="Open Prototype Lab (Cmd/Ctrl + Shift + P)"
+            title="Open Prototype Lab (Cmd/Ctrl + Shift + P)"
+          >
+            <MousePointer2 className="h-4 w-4 transition-transform group-hover:scale-110" />
+          </button>
+        </div>
+      )}
+
+      {/* Modal Backdrop - appears when modal is open */}
+      {isOpen && (
+        <div
+          className={cn(
+            "fixed inset-0 z-[100]",
+            "bg-black/40 backdrop-blur-sm",
+            "animate-in fade-in duration-200"
+          )}
+          onClick={() => setIsOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Centered Modal - completely hidden when closed */}
+      {isOpen && (
+        <div 
+          className={cn(
+            "fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[101]",
+            "bg-white border border-[#E0E0E0]",
+            "shadow-2xl",
+            "rounded-xl",
+            "w-[90vw] max-w-md",
+            "max-h-[85vh] overflow-y-auto",
+            "animate-in fade-in zoom-in-95 duration-200"
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="p-6 space-y-6">
+            {/* Header with close button */}
+            <div className="flex items-center justify-between pb-2 border-b border-stone-100">
+              <div className="flex items-center gap-2">
+                <MousePointer2 className="h-4 w-4 text-[#FFBA25]" />
+                <h2 className="font-domine font-bold text-stone-900">Prototype Lab</h2>
+              </div>
+              <button
+                onClick={() => setIsOpen(false)}
+                className={cn(
+                  "w-6 h-6 rounded-full",
+                  "flex items-center justify-center",
+                  "text-stone-400 hover:text-stone-900",
+                  "hover:bg-stone-100",
+                  "transition-colors"
+                )}
+                aria-label="Close Prototype Lab"
+                title="Close (Esc)"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Toggle Controls Section */}
+            <div className="space-y-3">
+              <h3 className="text-[10px] font-albert font-bold uppercase tracking-widest text-stone-400">Display Options</h3>
+              
+              {/* Toggle for Ingredients List */}
+              <div className="flex items-center justify-between p-2 rounded-lg hover:bg-stone-50 transition-colors">
+                <div className="flex flex-col">
+                  <span className="text-xs font-albert font-medium text-stone-900">Ingredients for Step</span>
+                  <span className="text-[10px] font-albert text-stone-400 mt-0.5">Show ingredients list in context panel</span>
+                </div>
+                <button
+                  onClick={toggleShowIngredientsForStepList}
+                  className={cn(
+                    "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#0C0A09]/20 focus:ring-offset-2",
+                    adminSettings.showIngredientsForStepList ? "bg-stone-900" : "bg-stone-200"
+                  )}
+                  aria-label="Toggle ingredients for step list"
+                >
+                  <span
+                    className={cn(
+                      "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                      adminSettings.showIngredientsForStepList ? "translate-x-6" : "translate-x-1"
+                    )}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* Loading Animation Test Section */}
+            <div className="space-y-3 pt-4 border-t border-stone-100">
+              <h3 className="text-[10px] font-albert font-bold uppercase tracking-widest text-stone-400">Animation Tests</h3>
+              
+              {/* Button to trigger loading animation */}
+              <Button
+                onClick={triggerLoadingAnimation}
+                disabled={showLoadingAnimation}
+                className="w-full bg-stone-900 hover:bg-stone-800 text-white text-xs font-albert font-medium py-2"
+                aria-label="Trigger loading animation for 5 seconds"
+              >
+                <Play className="h-3 w-3 mr-2" />
+                Test Loading Animation
+              </Button>
+              {showLoadingAnimation && (
+                <p className="text-[10px] font-albert text-stone-400 text-center">
+                  Animation will run for 5 seconds
+                </p>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      )}
+
+      {/* Loading Animation Component */}
+      <LoadingAnimation 
+        isVisible={showLoadingAnimation}
+        progress={loadingProgress}
+        phase={loadingPhase}
+      />
+    </>
   );
 }
 

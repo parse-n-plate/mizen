@@ -39,6 +39,12 @@ export default function RecentRecipesList() {
           sourceUrl: fullRecipe.sourceUrl || fullRecipe.url, // Include source URL if available
           summary: fullRecipe.description || fullRecipe.summary, // Use AI summary if available, fallback to card summary
           cuisine: fullRecipe.cuisine, // Include cuisine tags if available
+          imageData: fullRecipe.imageData, // Include image data if available (for uploaded images)
+          imageFilename: fullRecipe.imageFilename, // Include image filename if available
+          prepTimeMinutes: fullRecipe.prepTimeMinutes, // Include prep time if available
+          cookTimeMinutes: fullRecipe.cookTimeMinutes, // Include cook time if available
+          totalTimeMinutes: fullRecipe.totalTimeMinutes, // Include total time if available
+          servings: fullRecipe.servings, // Include servings if available
         });
 
         // Navigate to the parsed recipe page

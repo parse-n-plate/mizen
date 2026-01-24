@@ -3,6 +3,7 @@ export interface ErrorResponse {
   error: {
     code: string;
     message: string;
+    retryAfter?: number; // Timestamp (milliseconds) when to retry after rate limit
   };
 }
 
@@ -12,9 +13,9 @@ export interface EnhancedErrorInfo {
   suggestions: string[];
 }
 
-export const formatError = (code: string, message: string): ErrorResponse => ({
+export const formatError = (code: string, message: string, retryAfter?: number): ErrorResponse => ({
   success: false,
-  error: { code, message },
+  error: { code, message, ...(retryAfter && { retryAfter }) },
 });
 
 // Predefined error codes and messages

@@ -7,6 +7,7 @@ interface ShowErrorOptions {
   code?: string;
   message?: string;
   retry?: () => void;
+  retryAfter?: number; // Timestamp (milliseconds) when to retry after rate limit
 }
 
 /**
@@ -15,18 +16,49 @@ interface ShowErrorOptions {
  */
 export function useToast() {
   const showError = (options: ShowErrorOptions) => {
-    const { code = ERROR_CODES.ERR_UNKNOWN, message, retry } = options;
+    const { code = ERROR_CODES.ERR_UNKNOWN, message, retry, retryAfter } = options;
     const errorDetails = getErrorDetails(code);
     
     // Use provided message or fallback to user-friendly message
     const userMessage = message || errorDetails.userMessage;
-    // Use detailed explanation as description
-    const description = errorDetails.detailedExplanation;
+    
+    // Build description with retry time if available (for rate limit errors)
+    let description = errorDetails.detailedExplanation;
+    if (code === ERROR_CODES.ERR_RATE_LIMIT && retryAfter) {
+      const retryDate = new Date(retryAfter);
+      const now = new Date();
+      const secondsUntilRetry = Math.ceil((retryAfter - now.getTime()) / 1000);
+      
+      // Format retry time nicely
+      let retryTimeText: string;
+      if (secondsUntilRetry <= 0) {
+        retryTimeText = 'You can try again now.';
+      } else if (secondsUntilRetry < 60) {
+        retryTimeText = `Try again in ${secondsUntilRetry} second${secondsUntilRetry !== 1 ? 's' : ''}.`;
+      } else {
+        const minutes = Math.floor(secondsUntilRetry / 60);
+        const seconds = secondsUntilRetry % 60;
+        if (seconds === 0) {
+          retryTimeText = `Try again in ${minutes} minute${minutes !== 1 ? 's' : ''}.`;
+        } else {
+          retryTimeText = `Try again in ${minutes} minute${minutes !== 1 ? 's' : ''} and ${seconds} second${seconds !== 1 ? 's' : ''}.`;
+        }
+      }
+      
+      // Format the time (e.g., "at 2:45 PM")
+      const timeString = retryDate.toLocaleTimeString([], { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
+      
+      description = `${errorDetails.detailedExplanation} ${retryTimeText} (at ${timeString})`;
+    }
 
     // Create the toast with title and description
     return toast.error(userMessage, {
       description,
-      duration: 5000,
+      duration: code === ERROR_CODES.ERR_RATE_LIMIT && retryAfter ? 10000 : 5000, // Show rate limit toasts longer
       action: retry
         ? {
             label: 'Retry',
@@ -58,14 +90,14 @@ export function useToast() {
         duration: 4000,
       });
     }
-    
+
     // Handle options object (for error codes like ERR_NOT_A_URL)
     const { code = ERROR_CODES.ERR_UNKNOWN, message } = messageOrOptions;
     const errorDetails = getErrorDetails(code);
     const userMessage = message || errorDetails.userMessage;
     // Use detailed explanation as description
     const descriptionText = errorDetails.detailedExplanation;
-    
+
     return toast.info(userMessage, {
       description: descriptionText,
       duration: 5000,

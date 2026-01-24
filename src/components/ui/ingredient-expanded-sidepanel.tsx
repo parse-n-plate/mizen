@@ -12,6 +12,7 @@ interface IngredientExpandedSidePanelProps {
   groupName?: string;
   description?: string;
   linkedSteps: number[];
+  stepTitlesMap?: Record<number, string>; // Map of step numbers to step titles
   onStepClick: (stepNumber: number) => void;
   isOpen: boolean;
   onClose: () => void;
@@ -26,6 +27,7 @@ export function IngredientExpandedSidePanel({
   groupName,
   description,
   linkedSteps,
+  stepTitlesMap,
   onStepClick,
   isOpen,
   onClose,
@@ -75,6 +77,7 @@ export function IngredientExpandedSidePanel({
                 groupName={groupName}
                 description={description}
                 linkedSteps={linkedSteps}
+                stepTitlesMap={stepTitlesMap}
                 onStepClick={onStepClick}
                 variant="sidepanel"
                 recipeUrl={recipeUrl}

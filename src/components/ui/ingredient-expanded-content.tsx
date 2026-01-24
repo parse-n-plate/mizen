@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowUpDown, Tag, Calendar, Flag, Edit2 } from 'lucide-react';
+import { Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { createIngredientId, getIngredientNotes, saveIngredientNotes } from '@/utils/ingredientNotes';
@@ -14,6 +14,7 @@ interface IngredientExpandedContentProps {
   groupName?: string;
   description?: string;
   linkedSteps: number[];
+  stepTitlesMap?: Record<number, string>; // Map of step numbers to step titles (e.g., { 1: "Cook Beans", 2: "Prepare Sauce" })
   onStepClick: (stepNumber: number) => void;
   variant?: 'accordion' | 'modal' | 'sidepanel' | 'things3';
   recipeUrl?: string; // Optional recipe URL for note persistence
@@ -27,6 +28,7 @@ export function IngredientExpandedContent({
   groupName = 'Main',
   description,
   linkedSteps,
+  stepTitlesMap,
   onStepClick,
   variant = 'things3',
   recipeUrl,
@@ -86,7 +88,7 @@ export function IngredientExpandedContent({
     setIsEditing(true);
   };
 
-  // Handle key press (Escape to cancel, Enter+Shift for new line, Enter alone to save)
+  // Handle key press (Escape to cancel, Shift+Enter for new line, Enter alone to save)
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Escape') {
       // Cancel editing and restore previous value
@@ -94,9 +96,15 @@ export function IngredientExpandedContent({
       if (textareaRef.current) {
         textareaRef.current.value = notes;
       }
+    } else if (e.key === 'Enter' && !e.shiftKey) {
+      // Enter alone (without Shift) saves and exits editing mode
+      e.preventDefault(); // Prevent default newline behavior
+      setIsEditing(false);
+      if (textareaRef.current) {
+        handleSaveNotes(textareaRef.current.value);
+      }
     }
-    // Let Enter work normally for multi-line text
-    // Shift+Enter also works normally
+    // Shift+Enter allows normal newline behavior (no preventDefault)
   };
 
   // Determine display text and placeholder
@@ -120,7 +128,7 @@ export function IngredientExpandedContent({
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             className={cn(
-              "w-full min-h-[60px] p-2 bg-white rounded-lg border border-stone-300",
+              "w-full min-h-[60px] p-2 bg-[#F6F6F4] rounded-lg border border-stone-300",
               "text-stone-900 text-sm font-albert",
               "focus:outline-none focus:ring-2 focus:ring-[#FFBA25] focus:border-transparent",
               "resize-none transition-all duration-200",
@@ -157,41 +165,37 @@ export function IngredientExpandedContent({
 
       {/* Related Steps Section */}
       <div className="space-y-2">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {linkedSteps.length > 0 ? (
-            linkedSteps.map((stepNum) => (
-              <Button
-                key={stepNum}
-                variant="outline"
-                size="sm"
-                onClick={() => onStepClick(stepNum)}
-                className="h-7 px-3 bg-white hover:bg-stone-50 border-stone-200 text-stone-600 text-xs font-albert rounded-full"
-              >
-                Step {stepNum}
-              </Button>
-            ))
+            linkedSteps.map((stepNum) => {
+              // Get the step title from the map, if available
+              const stepTitle = stepTitlesMap?.[stepNum];
+              // Check if stepTitle is meaningful (not just "Step X" repeated)
+              // If stepTitle exists and is different from just the step number, include it
+              const hasMeaningfulTitle = stepTitle && 
+                stepTitle.trim() !== `Step ${stepNum}` && 
+                stepTitle.trim() !== `step ${stepNum}`;
+              // Format button text: "Step 3: Cook Beans and Meats" or just "Step 3" if no meaningful title
+              const buttonText = hasMeaningfulTitle
+                ? `Step ${stepNum}: ${stepTitle}`
+                : `Step ${stepNum}`;
+              
+              return (
+                <Button
+                  key={stepNum}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onStepClick(stepNum)}
+                  className="h-7 px-3 bg-[#F6F6F4] hover:bg-stone-50 border-stone-200 text-stone-600 text-xs font-albert rounded-full"
+                >
+                  {buttonText}
+                </Button>
+              );
+            })
           ) : (
             <span className="text-xs font-albert text-stone-400 italic">No specific steps mentioned.</span>
           )}
         </div>
-      </div>
-
-      {/* Action Buttons & Metadata */}
-      <div className="pt-4 flex items-center justify-between border-t border-stone-100">
-        <div className="flex gap-3 text-stone-300">
-          <Tag className="h-4 w-4 hover:text-stone-500 cursor-not-allowed transition-colors" />
-          <Calendar className="h-4 w-4 hover:text-stone-500 cursor-not-allowed transition-colors" />
-          <Flag className="h-4 w-4 hover:text-stone-500 cursor-not-allowed transition-colors" />
-        </div>
-        
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="h-8 text-xs font-albert text-stone-500 hover:text-stone-900 hover:bg-stone-50 gap-2"
-        >
-          <ArrowUpDown className="h-3 w-3" />
-          Swap Ingredient
-        </Button>
       </div>
     </div>
   );

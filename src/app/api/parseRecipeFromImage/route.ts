@@ -112,7 +112,13 @@ export async function POST(req: NextRequest): Promise<Response> {
       let errorMessage = 'Could not extract recipe from image';
 
       if (result.error) {
-        if (result.error.includes('API key') || result.error.includes('configured')) {
+        if (result.error === 'ERR_RATE_LIMIT' || result.error.includes('rate limit') || result.error.includes('quota')) {
+          errorCode = ERROR_CODES.ERR_RATE_LIMIT;
+          errorMessage = 'Too many requests';
+          // Pass through retry-after timestamp if available
+          const retryAfter = result.retryAfter;
+          return NextResponse.json(formatError(errorCode, errorMessage, retryAfter));
+        } else if (result.error.includes('API key') || result.error.includes('configured')) {
           errorCode = ERROR_CODES.ERR_AI_PARSE_FAILED;
           errorMessage = 'AI service not configured';
         } else if (result.error.includes('No recipe found')) {
@@ -165,12 +171,30 @@ export async function POST(req: NextRequest): Promise<Response> {
     console.log(
       `[API /parseRecipeFromImage] Successfully parsed recipe: "${result.data.title}" with ${result.data.ingredients.reduce((sum, g) => sum + g.ingredients.length, 0)} ingredients and ${result.data.instructions.length} instructions`
     );
+    
+    // Log important recipe output information: title, author, and servings
+    console.log('[API /parseRecipeFromImage] 📋 Recipe output summary:', {
+      title: result.data.title || 'N/A',
+      author: result.data.author || 'N/A',
+      servings: result.data.servings || 'N/A',
+      hasAuthor: !!result.data.author,
+      hasServings: !!result.data.servings,
+    });
 
     return NextResponse.json({
       success: true,
       title: result.data.title,
       ingredients: result.data.ingredients,
       instructions: result.data.instructions,
+      summary: result.data.summary, // Include AI-generated summary
+      author: result.data.author, // Include author if available
+      cuisine: result.data.cuisine, // Include cuisine if available
+      servings: result.data.servings, // Include servings/yield if available
+      prepTimeMinutes: result.data.prepTimeMinutes, // Include prep time if available
+      cookTimeMinutes: result.data.cookTimeMinutes, // Include cook time if available
+      totalTimeMinutes: result.data.totalTimeMinutes, // Include total time if available
+      imageData: base64DataUrl, // Return the base64 image data for preview
+      imageFilename: imageFile.name, // Return the original filename
     });
   } catch (error) {
     console.error('[API /parseRecipeFromImage] Unexpected error:', error);

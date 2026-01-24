@@ -8,8 +8,8 @@ import { RecipeProvider } from '@/contexts/RecipeContext';
 import { ParsedRecipesProvider } from '@/contexts/ParsedRecipesContext';
 import { TimerProvider } from '@/contexts/TimerContext';
 import { CommandKProvider } from '@/contexts/CommandKContext';
-import CommandKModal from '@/components/ui/command-k-modal';
 import { Toaster } from '@/components/ui/sonner';
+import ImageProtection from '@/components/ImageProtection';
 import './globals.css';
 
 // Default fonts: Domine for headings (serif), Albert Sans for body (sans-serif)
@@ -28,6 +28,20 @@ const albertSans = Albert_Sans({
 export const metadata: Metadata = {
   title: 'Parse and Plate',
   description: 'Ad free recipes',
+  icons: {
+    // Standard favicons for browsers
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    // Apple touch icon for iOS devices
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+    // Note: Android icons are configured in site.webmanifest
+  },
+  manifest: '/site.webmanifest',
 };
 
 export default function RootLayout({
@@ -46,10 +60,10 @@ export default function RootLayout({
             <ParsedRecipesProvider>
               <TimerProvider>
                 <CommandKProvider>
+                  <ImageProtection />
                   <Navbar />
                   {children}
                   <Footer />
-                  <CommandKModal />
                   <Toaster />
                 </CommandKProvider>
               </TimerProvider>

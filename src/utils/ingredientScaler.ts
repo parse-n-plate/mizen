@@ -33,20 +33,21 @@ const FRACTION_MAP: Record<string, number> = {
 };
 
 // Decimal to fraction map for common cooking measurements
+// Now using Unicode fraction symbols instead of text fractions
 const DECIMAL_TO_FRACTION: Record<string, string> = {
-  '0.25': '1/4',
-  '0.33': '1/3',
-  '0.5': '1/2',
-  '0.66': '2/3',
-  '0.75': '3/4',
-  '0.125': '1/8',
-  '0.375': '3/8',
-  '0.625': '5/8',
-  '0.875': '7/8',
-  '0.2': '1/5',
-  '0.4': '2/5',
-  '0.6': '3/5',
-  '0.8': '4/5',
+  '0.25': '¼',
+  '0.33': '⅓',
+  '0.5': '½',
+  '0.66': '⅔',
+  '0.75': '¾',
+  '0.125': '⅛',
+  '0.375': '⅜',
+  '0.625': '⅝',
+  '0.875': '⅞',
+  '0.2': '⅕',
+  '0.4': '⅖',
+  '0.6': '⅗',
+  '0.8': '⅘',
 };
 
 /**
@@ -112,13 +113,13 @@ export function parseAmount(amountStr: string): number | null {
 
 /**
  * Format a number back into a readable string
- * Prefers fractions for common cooking values
+ * Prefers Unicode fraction symbols for common cooking values (½, ¼, ¾, etc.)
  */
 export function formatAmount(amount: number): string {
   if (amount === 0) return '0';
   
-  // Handle very small numbers
-  if (amount < 0.01) return '< 1/8';
+  // Handle very small numbers - using Unicode fraction symbol
+  if (amount < 0.01) return '< ⅛';
 
   const whole = Math.floor(amount);
   const decimal = amount - whole;
@@ -132,16 +133,17 @@ export function formatAmount(amount: number): string {
   const roundedDecimal = Math.round(decimal * 1000) / 1000;
   
   // Try to find exact match first
+  // Note: Unicode fractions are concatenated directly with no space for mixed numbers (e.g., "1½" not "1 ½")
   for (const [dec, frac] of Object.entries(DECIMAL_TO_FRACTION)) {
     if (Math.abs(parseFloat(dec) - decimal) < 0.02) {
-      return whole > 0 ? `${whole} ${frac}` : frac;
+      return whole > 0 ? `${whole}${frac}` : frac;
     }
   }
 
-  // Fallback: generic fraction formatting (simplified)
+  // Fallback: generic fraction formatting (simplified) using Unicode symbols
   // 1/3 ≈ 0.333
-  if (Math.abs(decimal - 1/3) < 0.05) return whole > 0 ? `${whole} 1/3` : '1/3';
-  if (Math.abs(decimal - 2/3) < 0.05) return whole > 0 ? `${whole} 2/3` : '2/3';
+  if (Math.abs(decimal - 1/3) < 0.05) return whole > 0 ? `${whole}⅓` : '⅓';
+  if (Math.abs(decimal - 2/3) < 0.05) return whole > 0 ? `${whole}⅔` : '⅔';
   
   // If no fraction match, return decimal formatted to max 2 places
   // Remove trailing zeros

@@ -11,6 +11,7 @@ interface IngredientExpandedThings3Props {
   groupName?: string;
   description?: string;
   linkedSteps: number[];
+  stepTitlesMap?: Record<number, string>; // Map of step numbers to step titles
   onStepClick: (stepNumber: number) => void;
   isOpen: boolean;
   recipeUrl?: string;
@@ -24,6 +25,7 @@ export function IngredientExpandedThings3({
   groupName,
   description,
   linkedSteps,
+  stepTitlesMap,
   onStepClick,
   isOpen,
   recipeUrl,
@@ -41,7 +43,7 @@ export function IngredientExpandedThings3({
       transition={{ type: 'spring', damping: 25, stiffness: 200 }}
       className="overflow-hidden"
     >
-      <div className="bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-stone-100 mx-1 mb-2">
+      <div className="bg-[#F6F6F4] rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-stone-100 mx-1 mb-2">
         <IngredientExpandedContent
           ingredientName={ingredientName}
           ingredientAmount={ingredientAmount}
@@ -49,6 +51,7 @@ export function IngredientExpandedThings3({
           groupName={groupName}
           description={description}
           linkedSteps={linkedSteps}
+          stepTitlesMap={stepTitlesMap}
           onStepClick={onStepClick}
           variant="things3"
           recipeUrl={recipeUrl}

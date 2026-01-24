@@ -88,6 +88,9 @@ export async function POST(req: NextRequest): Promise<Response> {
         if (result.error === 'ERR_RATE_LIMIT' || result.error.includes('rate limit') || result.error.includes('quota')) {
           errorCode = ERROR_CODES.ERR_RATE_LIMIT;
           errorMessage = 'Too many requests';
+          // Pass through retry-after timestamp if available
+          const retryAfter = result.retryAfter;
+          return NextResponse.json(formatError(errorCode, errorMessage, retryAfter));
         } else if (result.error === 'ERR_API_UNAVAILABLE' || result.error.includes('service unavailable')) {
           errorCode = ERROR_CODES.ERR_API_UNAVAILABLE;
           errorMessage = 'Service temporarily unavailable';
@@ -176,6 +179,10 @@ export async function POST(req: NextRequest): Promise<Response> {
       sourceUrl: result.data.sourceUrl,
       summary: result.data.summary, // Include AI-generated summary
       cuisine: result.data.cuisine, // Include cuisine tags if available
+      servings: result.data.servings, // Include servings/yield if available
+      prepTimeMinutes: result.data.prepTimeMinutes, // Include prep time if available
+      cookTimeMinutes: result.data.cookTimeMinutes, // Include cook time if available
+      totalTimeMinutes: result.data.totalTimeMinutes, // Include total time if available
     });
   } catch (error) {
     console.error('[API /recipeScraperPython] Unexpected error:', error);

@@ -2,22 +2,34 @@
 import { useRecipe } from '@/contexts/RecipeContext';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useMemo, use } from 'react';
+import { useEffect, useState, useMemo, use, useRef } from 'react';
 import RecipeSkeleton from '@/components/ui/recipe-skeleton';
 import * as Tabs from '@radix-ui/react-tabs';
-import { ArrowLeft, Link, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Copy, Check, Clock, Trash2 } from 'lucide-react';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
+import Settings from '@solar-icons/react/csr/settings/Settings';
+import LinkIcon from '@solar-icons/react/csr/text-formatting/Link';
+import CopyIcon from '@solar-icons/react/csr/ui/Copy';
+import Download from '@solar-icons/react/csr/arrows-action/Download';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSwipeable } from 'react-swipeable';
 import { scaleIngredients } from '@/utils/ingredientScaler';
+import { convertIngredientGroupUnits, type UnitSystem } from '@/utils/unitConverter';
 import ClassicSplitView from '@/components/ClassicSplitView';
 import IngredientCard from '@/components/ui/ingredient-card';
 import { IngredientGroup } from '@/components/ui/ingredient-group';
-import { ServingsControls } from '@/components/ui/servings-controls';
-import { MobileToolbar } from '@/components/ui/mobile-toolbar';
+import { IngredientsHeader } from '@/components/ui/ingredients-header';
 import { UISettingsProvider } from '@/contexts/UISettingsContext';
 import { AdminPrototypingPanel } from '@/components/ui/admin-prototyping-panel';
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 import Image from 'next/image';
+import ImagePreview from '@/components/ui/image-preview';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { convertTextFractionsToSymbols } from '@/lib/utils';
+import PlatePhotoCapture from '@/components/ui/plate-photo-capture';
+import PlatingGuidanceCard from '@/components/ui/plating-guidance-card';
+import StorageGuidanceCard from '@/components/ui/storage-guidance-card';
+import IngredientsOverlay from '@/components/ui/ingredients-overlay';
 
 // Helper function to extract domain from URL for display
 const getDomainFromUrl = (url: string): string => {
@@ -27,6 +39,27 @@ const getDomainFromUrl = (url: string): string => {
   } catch {
     return url;
   }
+};
+
+// Helper function to format minutes as hours and minutes
+// Converts minutes to a readable format: "11h 15min" for 675 minutes, or "45min" for less than 60 minutes
+const formatMinutesAsHours = (minutes: number): string => {
+  // If less than 60 minutes, just show minutes
+  if (minutes < 60) {
+    return `${minutes}min`;
+  }
+  
+  // Calculate hours and remaining minutes
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  
+  // If there are remaining minutes, show both hours and minutes
+  if (remainingMinutes > 0) {
+    return `${hours}h ${remainingMinutes}min`;
+  }
+  
+  // If it's exactly a whole number of hours, just show hours
+  return `${hours}h`;
 };
 
 // Helper function to format time display
@@ -59,7 +92,9 @@ const formatTimeDisplay = (
     parts.push(`${servings} servings`);
   }
   
-  return parts.join(' • ');
+  // Return formatted string, or "Time not specified" if no time or servings data
+  const result = parts.join(' • ');
+  return result || 'Time not specified';
 };
 
 // Helper function to extract step title from instruction text
@@ -82,6 +117,7 @@ const extractStepTitle = (text: string): string => {
 };
 
 // Helper function to format ingredient
+// Converts text fractions to Unicode symbols (1/2 → ½)
 const formatIngredient = (
   ingredient: string | { amount?: string; units?: string; ingredient: string } | null | undefined,
 ): string => {
@@ -92,14 +128,14 @@ const formatIngredient = (
 
   // Handle string ingredients
   if (typeof ingredient === 'string') {
-    return ingredient;
+    return convertTextFractionsToSymbols(ingredient);
   }
 
   // Handle object ingredients
   if (typeof ingredient === 'object') {
     // Check if it's an array (shouldn't happen, but handle it)
     if (Array.isArray(ingredient)) {
-      return ingredient.join(', ');
+      return convertTextFractionsToSymbols(ingredient.join(', '));
     }
 
     // Handle ingredient objects with proper structure
@@ -107,9 +143,9 @@ const formatIngredient = (
     if ('ingredient' in ingredient && ingredient.ingredient) {
       const parts = [];
       
-      // Add amount if it exists and is valid
+      // Add amount if it exists and is valid (convert fractions to symbols)
       if (ingredient.amount && ingredient.amount.trim() && ingredient.amount !== 'as much as you like') {
-        parts.push(ingredient.amount.trim());
+        parts.push(convertTextFractionsToSymbols(ingredient.amount.trim()));
       }
       
       // Add units if they exist
@@ -117,8 +153,8 @@ const formatIngredient = (
         parts.push(ingredient.units.trim());
       }
       
-      // Always add the ingredient name
-      parts.push(ingredient.ingredient.trim());
+      // Always add the ingredient name (convert fractions to symbols)
+      parts.push(convertTextFractionsToSymbols(ingredient.ingredient.trim()));
       
       return parts.join(' ');
     }
@@ -126,13 +162,13 @@ const formatIngredient = (
     // If it's an object but doesn't match expected structure, try to extract what we can
     // This handles edge cases where the structure might be different
     if ('ingredient' in ingredient) {
-      return String(ingredient.ingredient || '');
+      return convertTextFractionsToSymbols(String(ingredient.ingredient || ''));
     }
   }
 
   // Fallback: try to convert to string safely
   try {
-    return String(ingredient);
+    return convertTextFractionsToSymbols(String(ingredient));
   } catch {
     return '';
   }
@@ -152,13 +188,42 @@ export default function ParsedRecipePage({
   // eslint-disable-next-line react-hooks/rules-of-hooks
   if (searchParams) use(searchParams);
   
-  const { parsedRecipe, isLoaded } = useRecipe();
-  const { recentRecipes, isBookmarked, toggleBookmark } = useParsedRecipes();
+  const { parsedRecipe, setParsedRecipe, isLoaded } = useRecipe();
+  const { recentRecipes, isBookmarked, toggleBookmark, removeRecipe } = useParsedRecipes();
   const router = useRouter();
-  const [servings, setServings] = useState<number>(parsedRecipe?.servings || 4);
+  // #region agent log
+  if (parsedRecipe) {
+    fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'parsed-recipe-page/page.tsx:155',message:'parsedRecipe from context',data:{hasServings:'servings' in parsedRecipe,servings:parsedRecipe.servings,servingsType:typeof parsedRecipe.servings,servingsValue:parsedRecipe.servings,hasAuthor:'author' in parsedRecipe,author:parsedRecipe.author,keys:Object.keys(parsedRecipe)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'C'})}).catch(()=>{});
+  }
+  // #endregion
+  // Store original servings from recipe (never changes) - use useMemo to preserve it
+  const originalServings = useMemo(() => parsedRecipe?.servings, [parsedRecipe?.servings]);
+  
+  const [servings, setServings] = useState<number | undefined>(parsedRecipe?.servings);
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'parsed-recipe-page/page.tsx:158',message:'servings state initialized',data:{servings,servingsType:typeof servings,parsedRecipeServings:parsedRecipe?.servings,parsedRecipeServingsType:typeof parsedRecipe?.servings,parsedRecipeExists:!!parsedRecipe},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'D'})}).catch(()=>{});
+  // #endregion
   const [multiplier, setMultiplier] = useState<string>('1x');
   const [activeTab, setActiveTab] = useState<string>('prep');
   const [copied, setCopied] = useState(false);
+
+  // Unit system and scale modal state
+  const [unitSystem, setUnitSystem] = useState<UnitSystem>('original');
+  const [customMultiplier, setCustomMultiplier] = useState<number>(1);
+  const [ingredientScaleOverrides, setIngredientScaleOverrides] = useState<Record<string, number>>({});
+  
+  // Mobile detection for swipe gestures
+  const [isMobile, setIsMobile] = useState(false);
+  
+  // Settings popover state
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedPlainText, setCopiedPlainText] = useState(false);
+  const settingsMenuRef = useRef<HTMLDivElement>(null);
+  const settingsButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Ingredients overlay state
+  const [isIngredientsOverlayOpen, setIsIngredientsOverlayOpen] = useState(false);
 
   // Find the recipe ID by matching sourceUrl with recipes in recentRecipes
   // This is needed because RecipeContext's parsedRecipe doesn't have an ID field
@@ -173,21 +238,128 @@ export default function ParsedRecipePage({
   // Check if current recipe is bookmarked
   const isBookmarkedState = recipeId ? isBookmarked(recipeId) : false;
 
-  // Handle bookmark toggle
+  // Handle bookmark toggle - shows confirmation dialog if currently bookmarked
   const handleBookmarkToggle = () => {
-    if (recipeId) {
-      toggleBookmark(recipeId);
-    } else {
+    if (!recipeId) {
       // If recipe doesn't exist in recentRecipes yet, we can't bookmark it
       // This shouldn't happen in normal flow, but handle gracefully
       console.warn('Cannot bookmark recipe: recipe not found in recent recipes');
+      return;
+    }
+
+    // If recipe is currently bookmarked, show confirmation dialog
+    if (isBookmarkedState) {
+      const confirmed = window.confirm(
+        'Are you sure you want to remove this recipe from your bookmarks? You can bookmark it again later.'
+      );
+      
+      if (confirmed) {
+        toggleBookmark(recipeId);
+      }
+    } else {
+      // If not bookmarked, just add the bookmark directly
+      toggleBookmark(recipeId);
     }
   };
+
+  // Keyboard shortcuts for tab navigation
+  // Command+1: Prep, Command+2: Cook, Command+3: Plate
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Check if Command (Mac) or Ctrl (Windows/Linux) is pressed
+      const isModifierPressed = event.metaKey || event.ctrlKey;
+      
+      // Only handle shortcuts if modifier is pressed and not typing in an input/textarea
+      if (isModifierPressed && !(event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement)) {
+        // Command+1: Switch to Prep tab
+        if (event.key === '1') {
+          event.preventDefault();
+          setActiveTab('prep');
+        }
+        // Command+2: Switch to Cook tab
+        else if (event.key === '2') {
+          event.preventDefault();
+          setActiveTab('cook');
+        }
+        // Command+3: Switch to Plate tab
+        else if (event.key === '3') {
+          event.preventDefault();
+          setActiveTab('plate');
+        }
+      }
+    };
+
+    // Add event listener when component mounts
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup: remove event listener when component unmounts
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []); // Empty dependency array means this runs once on mount
+
+  // Mobile detection for swipe gestures
+  useEffect(() => {
+    // Check if window is available (client-side only)
+    if (typeof window === 'undefined') return;
+    
+    // Initial check
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Check on mount
+    checkMobile();
+    
+    // Listen for resize events
+    window.addEventListener('resize', checkMobile);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
+
+  // Swipe handlers for mobile tab navigation
+  const handleSwipeLeft = () => {
+    // Swipe left: navigate to next tab (prep → cook → plate)
+    if (activeTab === 'prep') {
+      setActiveTab('cook');
+    } else if (activeTab === 'cook') {
+      setActiveTab('plate');
+    }
+    // If already on plate, do nothing (stop at edge)
+  };
+
+  const handleSwipeRight = () => {
+    // Swipe right: navigate to previous tab (plate → cook → prep)
+    if (activeTab === 'plate') {
+      setActiveTab('cook');
+    } else if (activeTab === 'cook') {
+      setActiveTab('prep');
+    }
+    // If already on prep, do nothing (stop at edge)
+  };
+
+  // Configure swipe handlers for mobile only
+  // useSwipeable will recreate handlers when callbacks change
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: isMobile ? handleSwipeLeft : undefined,
+    onSwipedRight: isMobile ? handleSwipeRight : undefined,
+    preventScrollOnSwipe: true,
+    trackMouse: false, // Only track touch events, not mouse
+  });
 
   // --- Persistence & Progress State ---
   const recipeKey = useMemo(() => {
     if (!parsedRecipe) return '';
     return `recipe-progress-${parsedRecipe.title || 'untitled'}-${parsedRecipe.sourceUrl || ''}`;
+  }, [parsedRecipe]);
+
+  // Generate unique key for this recipe's scale settings
+  const scaleSettingsKey = useMemo(() => {
+    if (!parsedRecipe) return '';
+    return `recipe-scale-${parsedRecipe.title || 'untitled'}-${parsedRecipe.sourceUrl || ''}`;
   }, [parsedRecipe]);
 
   // Map of groupName -> array of checked ingredient names
@@ -197,6 +369,8 @@ export default function ParsedRecipePage({
   // Track which ingredient is currently expanded (accordion behavior - only one at a time)
   // Format: "groupName:ingredientName" or null if none expanded
   const [expandedIngredient, setExpandedIngredient] = useState<string | null>(null);
+  // Search query for filtering ingredients
+  const [ingredientSearchQuery, setIngredientSearchQuery] = useState<string>('');
 
   // Load persistence from localStorage
   useEffect(() => {
@@ -219,6 +393,29 @@ export default function ParsedRecipePage({
     const data = { checked: checkedIngredients, collapsed: collapsedGroups };
     localStorage.setItem(recipeKey, JSON.stringify(data));
   }, [recipeKey, checkedIngredients, collapsedGroups]);
+
+  // Load scale settings from localStorage
+  useEffect(() => {
+    if (!scaleSettingsKey) return;
+    const saved = localStorage.getItem(scaleSettingsKey);
+    if (saved) {
+      try {
+        const { unitSystem: savedUnitSystem, customMultiplier: savedCustomMultiplier, ingredientScaleOverrides: savedOverrides } = JSON.parse(saved);
+        if (savedUnitSystem) setUnitSystem(savedUnitSystem);
+        if (savedCustomMultiplier !== undefined) setCustomMultiplier(savedCustomMultiplier);
+        if (savedOverrides) setIngredientScaleOverrides(savedOverrides);
+      } catch (e) {
+        console.error('Error loading scale settings:', e);
+      }
+    }
+  }, [scaleSettingsKey]);
+
+  // Save scale settings to localStorage
+  useEffect(() => {
+    if (!scaleSettingsKey) return;
+    const data = { unitSystem, customMultiplier, ingredientScaleOverrides };
+    localStorage.setItem(scaleSettingsKey, JSON.stringify(data));
+  }, [scaleSettingsKey, unitSystem, customMultiplier, ingredientScaleOverrides]);
 
   const handleIngredientCheck = (groupName: string, ingredientName: string, isChecked: boolean) => {
     setCheckedIngredients(prev => {
@@ -326,6 +523,142 @@ export default function ParsedRecipePage({
     }
   };
 
+  // Close settings popover when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target as Node)) {
+        if (settingsButtonRef.current && !settingsButtonRef.current.contains(event.target as Node)) {
+          setIsSettingsOpen(false);
+        }
+      }
+    }
+
+    if (isSettingsOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSettingsOpen]);
+
+  // Handle copy link to original recipe
+  const handleCopyLink = async () => {
+    if (!parsedRecipe?.sourceUrl) return;
+    
+    try {
+      await navigator.clipboard.writeText(parsedRecipe.sourceUrl);
+      setCopiedLink(true);
+      setTimeout(() => {
+        setCopiedLink(false);
+        setIsSettingsOpen(false);
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+    }
+  };
+
+  // Handle copy recipe as plain text
+  const handleCopyPlainText = async () => {
+    if (!parsedRecipe) return;
+    
+    // Format recipe as plain text (similar to recipe-card.tsx)
+    let text = '';
+    
+    // Title
+    if (parsedRecipe.title) {
+      text += `${parsedRecipe.title}\n\n`;
+    }
+    
+    // Metadata
+    if (parsedRecipe.author) {
+      text += `By ${parsedRecipe.author}\n`;
+    }
+    if (parsedRecipe.sourceUrl) {
+      text += `Source: ${parsedRecipe.sourceUrl}\n`;
+    }
+    if (parsedRecipe.prepTimeMinutes || parsedRecipe.cookTimeMinutes || parsedRecipe.servings) {
+      text += '\n';
+      if (parsedRecipe.prepTimeMinutes) text += `Prep: ${parsedRecipe.prepTimeMinutes} min\n`;
+      if (parsedRecipe.cookTimeMinutes) text += `Cook: ${parsedRecipe.cookTimeMinutes} min\n`;
+      if (parsedRecipe.servings) text += `Servings: ${parsedRecipe.servings}\n`;
+    }
+    
+    // Ingredients
+    if (scaledIngredients && scaledIngredients.length > 0) {
+      text += '\n--- INGREDIENTS ---\n\n';
+      scaledIngredients.forEach((group) => {
+        if (group.groupName && group.groupName !== 'Main') {
+          text += `${group.groupName}:\n`;
+        }
+        group.ingredients.forEach((ing) => {
+          if (typeof ing === 'string') {
+            text += `  ${ing}\n`;
+          } else {
+            const parts = [];
+            if (ing.amount) parts.push(ing.amount);
+            if (ing.units) parts.push(ing.units);
+            parts.push(ing.ingredient);
+            text += `  ${parts.join(' ')}\n`;
+          }
+        });
+        text += '\n';
+      });
+    }
+    
+    // Instructions (convert fractions to symbols)
+    if (parsedRecipe.instructions && parsedRecipe.instructions.length > 0) {
+      text += '--- INSTRUCTIONS ---\n\n';
+      parsedRecipe.instructions.forEach((instruction, index) => {
+        if (typeof instruction === 'string') {
+          text += `${index + 1}. ${convertTextFractionsToSymbols(instruction)}\n\n`;
+        } else if (typeof instruction === 'object' && instruction !== null) {
+          const inst = instruction as any;
+          const title = convertTextFractionsToSymbols(inst.title || inst.step || `Step ${index + 1}`);
+          const detail = convertTextFractionsToSymbols(inst.detail || inst.text || '');
+          text += `${index + 1}. ${title}\n   ${detail}\n\n`;
+        }
+      });
+    }
+    
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedPlainText(true);
+      setTimeout(() => {
+        setCopiedPlainText(false);
+        setIsSettingsOpen(false);
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy recipe:', err);
+    }
+  };
+
+  // Handle delete recipe - shows confirmation dialog before deleting
+  const handleDeleteRecipe = () => {
+    if (!recipeId) {
+      // If recipe doesn't exist in recentRecipes, we can't delete it
+      console.warn('Cannot delete recipe: recipe not found in recent recipes');
+      return;
+    }
+
+    // Show confirmation dialog before deleting
+    const confirmed = window.confirm(
+      'Are you sure you want to delete this recipe? This action cannot be undone.'
+    );
+
+    if (confirmed) {
+      // Remove recipe from storage and context
+      removeRecipe(recipeId);
+      
+      // Close the settings menu
+      setIsSettingsOpen(false);
+      
+      // Navigate back to home page after deletion
+      router.push('/');
+    }
+  };
+
+
   // Redirect if loaded and no recipe
   // Check both state and localStorage to handle race conditions where navigation
   // happens before React state updates complete
@@ -345,32 +678,84 @@ export default function ParsedRecipePage({
 
   // Initialize servings from recipe when loaded
   useEffect(() => {
-    if (parsedRecipe?.servings) {
-      setServings(parsedRecipe.servings);
-    } else {
-      // Default to 4 if not specified, usually a safe bet for recipes
-      setServings(4);
-    }
+    // Only set servings if they exist in the parsed recipe
+    // Don't default to 4 - if servings aren't found, leave as undefined
+    setServings(parsedRecipe?.servings);
   }, [parsedRecipe]);
 
   // Calculate scaled ingredients
   const scaledIngredients = useMemo(() => {
     if (!parsedRecipe || !parsedRecipe.ingredients) return [];
-    
+
+    // If servings are unknown, return ingredients unscaled (but still apply unit conversion)
+    if (!parsedRecipe.servings || !servings) {
+      const unscaled = parsedRecipe.ingredients;
+      // Apply unit conversion even if not scaling
+      return convertIngredientGroupUnits(unscaled as any, unitSystem);
+    }
+
     // Get multiplier value (1x = 1, 2x = 2, 3x = 3)
     const multiplierValue = parseInt(multiplier.replace('x', ''));
-    
-    // Calculate effective servings: base servings * multiplier
-    const effectiveServings = servings * multiplierValue;
-    
+
+    // Calculate effective servings: base servings * multiplier * customMultiplier
+    const effectiveServings = servings * multiplierValue * customMultiplier;
+
     // Cast the ingredients to the expected type for the scaler
     // The context type is slightly different but compatible structure-wise
-    return scaleIngredients(
-      parsedRecipe.ingredients as any, 
-      parsedRecipe.servings || 4, 
+    let scaled = scaleIngredients(
+      parsedRecipe.ingredients as any,
+      parsedRecipe.servings,
       effectiveServings
     );
-  }, [parsedRecipe, servings, multiplier]);
+
+    // Apply ingredient-specific overrides (not yet implemented in this iteration)
+    // TODO: Apply ingredientScaleOverrides here if needed
+
+    // Apply unit conversion
+    scaled = convertIngredientGroupUnits(scaled as any, unitSystem);
+
+    return scaled;
+  }, [parsedRecipe, servings, multiplier, customMultiplier, unitSystem, ingredientScaleOverrides]);
+
+  // Filter ingredients based on search query (searches name, amount, and units)
+  const filteredIngredients = useMemo(() => {
+    if (!ingredientSearchQuery.trim()) {
+      return scaledIngredients;
+    }
+
+    const queryLower = ingredientSearchQuery.toLowerCase().trim();
+    
+    return scaledIngredients.map((group) => {
+      const filteredGroupIngredients = group.ingredients.filter((ingredient) => {
+        // Handle string format (just ingredient name)
+        if (typeof ingredient === 'string') {
+          return ingredient.toLowerCase().includes(queryLower);
+        }
+        
+        // Handle object format - search across name, amount, and units
+        const ingredientName = (ingredient.ingredient || '').toLowerCase();
+        const amount = (ingredient.amount || '').toLowerCase();
+        const units = (ingredient.units || '').toLowerCase();
+        
+        // Check if search query matches any part of the ingredient
+        return (
+          ingredientName.includes(queryLower) ||
+          amount.includes(queryLower) ||
+          units.includes(queryLower)
+        );
+      });
+
+      // Only include groups that have matching ingredients
+      if (filteredGroupIngredients.length === 0) {
+        return null;
+      }
+
+      return {
+        ...group,
+        ingredients: filteredGroupIngredients,
+      };
+    }).filter((group): group is NonNullable<typeof group> => group !== null);
+  }, [scaledIngredients, ingredientSearchQuery]);
 
   // Servings change handler - passed to ServingsControls component
   const handleServingsChange = (newServings: number) => {
@@ -380,6 +765,14 @@ export default function ParsedRecipePage({
   // Multiplier change handler - passed to ServingsControls component
   const handleMultiplierChange = (newMultiplier: string) => {
     setMultiplier(newMultiplier);
+  };
+
+  // Reset to original servings handler - resets both servings and multiplier
+  const handleResetServings = () => {
+    if (originalServings !== undefined) {
+      setServings(originalServings);
+      setMultiplier('1x');
+    }
   };
 
   // Memoize normalized steps for bidirectional linking
@@ -448,181 +841,289 @@ export default function ParsedRecipePage({
 
   return (
     <UISettingsProvider>
-      <div className="bg-white min-h-screen relative max-w-full overflow-x-hidden mobile-toolbar-page-padding pb-12 md:pb-16">
-        <div className="transition-opacity duration-300 ease-in-out opacity-100">
-          {/* Tabs Root - wraps both navigation and content */}
-          <Tabs.Root 
-            value={activeTab} 
-            onValueChange={setActiveTab} 
-            className="w-full"
-          >
-            {/* Header Section with #F8F8F4 Background */}
-            <div className="bg-[#f8f8f4]">
+      <TooltipProvider>
+        <div className="bg-white min-h-screen relative max-w-full overflow-x-hidden pb-12 md:pb-16">
+          <div className="transition-opacity duration-300 ease-in-out opacity-100">
+            {/* Tabs Root - wraps both navigation and content */}
+            <Tabs.Root 
+              value={activeTab} 
+              onValueChange={setActiveTab} 
+              className="w-full"
+            >
+            {/* Header Section with #FAFAF9 Background */}
+            <div className="bg-[#FAFAF9]">
               {/* Main Content Container with max-width */}
-              <div className="max-w-6xl mx-auto px-4 md:px-8 pt-8 md:pt-12 pb-0">
-                {/* Header Section with Navigation */}
-                <div className="w-full mb-8">
-                  <div className="flex flex-col gap-4">
-                    {/* Responsive Navigation: Back to Home breadcrumb */}
-                    <div className="flex gap-3 items-center justify-between">
-                      {/* Desktop: Back to Home breadcrumb */}
-                      <button
-                        onClick={() => router.push('/')}
-                        className="hidden md:flex items-center gap-2 text-stone-500 hover:text-stone-700 transition-colors cursor-pointer"
-                        aria-label="Back to Home"
-                      >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span className="font-albert text-[14px]">Back to Home</span>
-                      </button>
+              <div className="max-w-6xl mx-auto px-4 md:px-8 pt-6 md:pt-10 pb-0">
+                {/* Top Navigation Bar - Back arrow on left, Bookmark/Settings on right */}
+                <div className="w-full mb-6 md:mb-8">
+                  <div className="flex items-center justify-between">
+                    {/* Back Button - Visible on all screen sizes */}
+                    <button
+                      onClick={() => router.push('/')}
+                      className="flex items-center gap-2 text-stone-600 hover:text-stone-800 transition-colors cursor-pointer group"
+                      aria-label="Back to Home"
+                    >
+                      <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
+                      {/* Desktop: Show "Back to Home" text */}
+                      <span className="hidden md:inline font-albert text-[14px] font-medium">Back to Home</span>
+                    </button>
+                    
+                    {/* Bookmark and Settings Buttons */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {/* Bookmark Button */}
+                      {recipeId && (
+                        <button
+                          onClick={handleBookmarkToggle}
+                          className="flex-shrink-0 p-2 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 cursor-pointer"
+                          aria-label={isBookmarkedState ? 'Remove bookmark' : 'Bookmark recipe'}
+                        >
+                          <Bookmark
+                            className={`
+                              w-6 h-6 transition-colors duration-200
+                              ${isBookmarkedState
+                                ? 'fill-stone-600 text-stone-600'
+                                : 'text-stone-400 hover:text-stone-600'
+                              }
+                            `}
+                          />
+                        </button>
+                      )}
+                      
+                      {/* Settings Button and Popover */}
+                      <div ref={settingsMenuRef} className={`relative ${isSettingsOpen ? 'z-[100]' : 'z-10'}`}>
+                        <button
+                          ref={settingsButtonRef}
+                          onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                          className="flex-shrink-0 p-2 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 cursor-pointer"
+                          aria-label="Recipe settings"
+                          aria-expanded={isSettingsOpen}
+                        >
+                          <Settings
+                            weight="Bold"
+                            className={`w-6 h-6 transition-colors duration-200 ${
+                              isSettingsOpen
+                                ? 'text-stone-600'
+                                : 'text-stone-400 hover:text-stone-600'
+                            }`}
+                          />
+                        </button>
+
+                        {/* Settings Popover */}
+                        {isSettingsOpen && (
+                          <div className="absolute w-60 bg-white rounded-lg border border-stone-200 shadow-xl p-1.5 z-[100] animate-in fade-in duration-200 top-[calc(100%+8px)] slide-in-from-top-2 right-0">
+                            {/* Copy Link to Original Option */}
+                            <button
+                              onClick={handleCopyLink}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
+                            >
+                              <LinkIcon weight="Bold" className={`w-4 h-4 flex-shrink-0 ${copiedLink ? 'text-green-600' : 'text-stone-500'}`} />
+                              <span className={`font-albert font-medium whitespace-nowrap ${copiedLink ? 'text-green-600' : ''}`}>
+                                {copiedLink ? 'Link Copied' : 'Copy Link to Original'}
+                              </span>
+                            </button>
+
+                            {/* Copy Recipe as Plain Text Option */}
+                            <button
+                              onClick={handleCopyPlainText}
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
+                            >
+                              <CopyIcon weight="Bold" className={`w-4 h-4 flex-shrink-0 ${copiedPlainText ? 'text-green-600' : 'text-stone-500'}`} />
+                              <span className={`font-albert font-medium whitespace-nowrap ${copiedPlainText ? 'text-green-600' : ''}`}>
+                                {copiedPlainText ? 'Copied to Clipboard' : 'Copy Recipe as Plain Text'}
+                              </span>
+                            </button>
+
+                            {/* Download Recipe as JPG Option - Disabled for now */}
+                            <button
+                              disabled
+                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-400 cursor-not-allowed opacity-50 font-albert rounded-md"
+                            >
+                              <Download weight="Bold" className="w-4 h-4 text-stone-400 flex-shrink-0" />
+                              <span className="font-albert font-medium whitespace-nowrap">Download Recipe as JPG</span>
+                            </button>
+
+                            {/* Divider before delete option */}
+                            <div className="h-px bg-stone-200 my-1" />
+
+                            {/* Delete Recipe Option */}
+                            {recipeId && (
+                              <button
+                                onClick={handleDeleteRecipe}
+                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-albert rounded-md"
+                              >
+                                <Trash2 className="w-4 h-4 flex-shrink-0" />
+                                <span className="font-albert font-medium whitespace-nowrap">Delete Recipe</span>
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Recipe Info Section */}
-                <div className="w-full pt-6 pb-0">
-                  <div className="flex flex-col gap-3">
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-start justify-between gap-4">
-                        <h1 className="font-domine text-[36px] text-[#193d34] leading-[1.2] font-bold flex-1">
-                          {parsedRecipe.title || 'Beef Udon'}
-                        </h1>
-                        {/* Bookmark Button */}
-                        {recipeId && (
-                          <button
-                            onClick={handleBookmarkToggle}
-                            className="flex-shrink-0 p-2 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 bg-white/50 backdrop-blur-sm hover:bg-white/80 cursor-pointer"
-                            aria-label={isBookmarkedState ? 'Remove bookmark' : 'Bookmark recipe'}
-                          >
-                            <Bookmark
-                              className={`
-                                w-6 h-6 transition-colors duration-200
-                                ${isBookmarkedState 
-                                  ? 'fill-[#78716C] text-[#78716C]' 
-                                  : 'fill-[#D6D3D1] text-[#D6D3D1] hover:fill-[#A8A29E] hover:text-[#A8A29E]'
-                                }
-                              `}
-                            />
-                          </button>
+                {/* Recipe Info Section - Reordered to match Figma layout */}
+                <div className="w-full pb-8 md:pb-12">
+                  <div className="flex flex-col gap-4 md:gap-5">
+                    {/* Recipe Title - Full width, on its own line */}
+                    <h1 className="font-domine text-[32px] md:text-[42px] text-[#0C0A09] leading-[1.15] font-bold tracking-tight">
+                      {parsedRecipe.title || 'Untitled Recipe'}
+                    </h1>
+                    
+                    {/* Author - Below title */}
+                    {parsedRecipe.author?.trim() && (
+                      <p className="font-albert text-[15px] md:text-[16px] text-stone-500 leading-[1.4] font-medium">
+                        <span className="text-stone-400 font-normal">by</span> {parsedRecipe.author.trim()}
+                      </p>
+                    )}
+                    
+                    {/* AI-Generated Summary/Description - Below author */}
+                    {parsedRecipe.summary?.trim() && (
+                      <p className="font-albert text-[16px] md:text-[17px] text-stone-600 leading-[1.6] italic max-w-3xl">
+                        {parsedRecipe.summary.trim()}
+                      </p>
+                    )}
+                    
+                    {/* Source URL / Image Preview - Below description */}
+                    {(parsedRecipe.sourceUrl || parsedRecipe.imageData) && (
+                      <div className="flex items-center gap-1 group">
+                        {/* Show ImagePreview for uploaded images, otherwise show source URL link */}
+                        {parsedRecipe.imageData && parsedRecipe.sourceUrl?.startsWith('image:') ? (
+                          <ImagePreview
+                            imageData={parsedRecipe.imageData}
+                            filename={parsedRecipe.imageFilename || 'recipe-image'}
+                          />
+                        ) : parsedRecipe.sourceUrl ? (
+                          <>
+                            <a
+                              href={parsedRecipe.sourceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-albert text-[15px] md:text-[16px] text-stone-500 hover:text-stone-800 transition-colors flex items-center gap-1.5 cursor-pointer underline-offset-4 hover:underline decoration-stone-300"
+                              aria-label={`View original recipe on ${getDomainFromUrl(parsedRecipe.sourceUrl)}`}
+                            >
+                              <LinkIcon className="w-3.5 h-3.5 text-stone-400" />
+                              {getDomainFromUrl(parsedRecipe.sourceUrl)}
+                            </a>
+                            
+                            {/* Simple Copy Button - slides out from under URL on hover */}
+                            <button
+                              className="opacity-0 group-hover:opacity-100 translate-x-[-8px] group-hover:translate-x-0 transition-all duration-150 p-1 flex items-center justify-center cursor-pointer ml-1"
+                              onClick={() => handleCopy(parsedRecipe.sourceUrl || '')}
+                              title="Copy recipe URL"
+                            >
+                              <AnimatePresence mode="wait">
+                                {copied ? (
+                                  <motion.div
+                                    key="check"
+                                    initial={{ scale: 0.5, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 0.5, opacity: 0 }}
+                                    transition={{ duration: 0.1 }}
+                                  >
+                                    <Check className="w-3.5 h-3.5 text-green-600" />
+                                  </motion.div>
+                                ) : (
+                                  <motion.div
+                                    key="copy"
+                                    initial={{ scale: 0.5, opacity: 0 }}
+                                    animate={{ scale: 1, opacity: 1 }}
+                                    exit={{ scale: 0.5, opacity: 0 }}
+                                    transition={{ duration: 0.1 }}
+                                  >
+                                    <Copy className="w-3.5 h-3.5 text-stone-400" />
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </button>
+                          </>
+                        ) : null}
+                      </div>
+                    )}
+                    
+                    {/* Time, Servings and Cuisine - Below source link, no border-top */}
+                    <div className="flex items-center gap-3 flex-wrap pt-2">
+                      {/* Time and Servings Cards - Vertical layout with label on top, value below */}
+                      <div className="flex items-center gap-3 flex-wrap">
+                        {/* Prep Time Card */}
+                        {parsedRecipe.prepTimeMinutes !== undefined && parsedRecipe.prepTimeMinutes !== null && parsedRecipe.prepTimeMinutes > 0 && (
+                          <div className="flex flex-col bg-stone-200/30 px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
+                            <p className="font-albert text-[12px] md:text-[13px] text-stone-500 leading-tight mb-0.5">
+                              Prep
+                            </p>
+                            <p className="font-albert text-[15px] md:text-[16px] text-stone-700 leading-tight font-semibold">
+                              {parsedRecipe.prepTimeMinutes} min
+                            </p>
+                          </div>
+                        )}
+                        
+                        {/* Cook Time Card */}
+                        {parsedRecipe.cookTimeMinutes !== undefined && parsedRecipe.cookTimeMinutes !== null && parsedRecipe.cookTimeMinutes > 0 && (
+                          <div className="flex flex-col bg-stone-200/30 px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
+                            <p className="font-albert text-[12px] md:text-[13px] text-stone-500 leading-tight mb-0.5">
+                              Cooking
+                            </p>
+                            <p className="font-albert text-[15px] md:text-[16px] text-stone-700 leading-tight font-semibold">
+                              {parsedRecipe.cookTimeMinutes} min
+                            </p>
+                          </div>
+                        )}
+                        
+                        {/* Total Time Card - only show if prep and cook aren't both available */}
+                        {parsedRecipe.totalTimeMinutes !== undefined && parsedRecipe.totalTimeMinutes !== null && parsedRecipe.totalTimeMinutes > 0 && !parsedRecipe.prepTimeMinutes && !parsedRecipe.cookTimeMinutes && (
+                          <div className="flex flex-col bg-stone-200/30 px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
+                            <p className="font-albert text-[12px] md:text-[13px] text-stone-500 leading-tight mb-0.5">
+                              Total
+                            </p>
+                            <p className="font-albert text-[15px] md:text-[16px] text-stone-700 leading-tight font-semibold">
+                              {formatMinutesAsHours(parsedRecipe.totalTimeMinutes)}
+                            </p>
+                          </div>
+                        )}
+                        
+                        {/* Servings Card - shows current servings (updated when scaled) */}
+                        {/* Only show if originalServings is defined (we know the actual serving count) */}
+                        {originalServings !== undefined && originalServings !== null && originalServings > 0 && servings !== undefined && servings !== null && servings > 0 && (
+                          <div className="flex flex-col bg-stone-200/30 px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
+                            <p className="font-albert text-[12px] md:text-[13px] text-stone-500 leading-tight mb-0.5">
+                              Servings
+                            </p>
+                            <p className="font-albert text-[15px] md:text-[16px] text-stone-700 leading-tight font-semibold">
+                              {servings}
+                            </p>
+                          </div>
                         )}
                       </div>
-                      
-                      {/* Author and Source URL */}
-                      {(parsedRecipe.author?.trim() || parsedRecipe.sourceUrl) && (
+
+                      {/* Cuisine Badges */}
+                      {parsedRecipe.cuisine && parsedRecipe.cuisine.length > 0 && (
                         <div className="flex items-center gap-2 flex-wrap">
-                          {parsedRecipe.author?.trim() && (
-                            <p className="font-albert text-[16px] text-stone-400 leading-[1.4]">
-                              by {parsedRecipe.author.trim()}
-                            </p>
-                          )}
-                          {parsedRecipe.sourceUrl && (
-                            <>
-                              {parsedRecipe.author?.trim() && (
-                                <span className="text-stone-400">•</span>
-                              )}
-                              <div className="flex items-center gap-1 group">
-                                <a
-                                  href={parsedRecipe.sourceUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="font-albert text-[16px] text-stone-400 hover:text-[#193d34] transition-colors flex items-center gap-1 cursor-pointer"
-                                  aria-label={`View original recipe on ${getDomainFromUrl(parsedRecipe.sourceUrl)}`}
-                                >
-                                  <Link className="w-3 h-3" />
-                                  {getDomainFromUrl(parsedRecipe.sourceUrl)}
-                                </a>
-                                
-                                {/* Simple Copy Button - slides out from under URL on hover */}
-                                <button
-                                  className="opacity-0 group-hover:opacity-100 translate-x-[-8px] group-hover:translate-x-0 transition-all duration-150 p-1 flex items-center justify-center cursor-pointer"
-                                  onClick={() => handleCopy(parsedRecipe.sourceUrl || '')}
-                                  title="Copy recipe URL"
-                                >
-                                  <AnimatePresence mode="wait">
-                                    {copied ? (
-                                      <motion.div
-                                        key="check"
-                                        initial={{ scale: 0.5, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        exit={{ scale: 0.5, opacity: 0 }}
-                                        transition={{ duration: 0.1 }}
-                                      >
-                                        <Check className="w-3.5 h-3.5 text-green-600" />
-                                      </motion.div>
-                                    ) : (
-                                      <motion.div
-                                        key="copy"
-                                        initial={{ scale: 0.5, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        exit={{ scale: 0.5, opacity: 0 }}
-                                        transition={{ duration: 0.1 }}
-                                      >
-                                        <Copy className="w-3.5 h-3.5 text-stone-400" />
-                                      </motion.div>
-                                    )}
-                                  </AnimatePresence>
-                                </button>
+                          {parsedRecipe.cuisine.map((cuisineName) => {
+                            const iconPath = CUISINE_ICON_MAP[cuisineName];
+                            if (!iconPath) return null;
+                            return (
+                              <div
+                                key={cuisineName}
+                                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-stone-200/30 border border-stone-200/50 hover:border-stone-300 transition-colors"
+                                title={cuisineName}
+                              >
+                                <Image
+                                  src={iconPath}
+                                  alt={`${cuisineName} cuisine icon`}
+                                  width={18}
+                                  height={18}
+                                  quality={100}
+                                  unoptimized={true}
+                                  className="w-4.5 h-4.5 object-contain"
+                                />
+                                <span className="font-albert text-[14px] font-medium text-stone-700">
+                                  {cuisineName}
+                                </span>
                               </div>
-                            </>
-                          )}
+                            );
+                          })}
                         </div>
                       )}
-                      
-                      {/* AI-Generated Summary */}
-                      {parsedRecipe.summary?.trim() && (
-                        <p className="font-albert text-[16px] text-stone-600 leading-[1.5] italic">
-                          {parsedRecipe.summary.trim()}
-                        </p>
-                      )}
-                    </div>
-                    
-                    {/* Time and Servings */}
-                    <div className="flex flex-col gap-2.5">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-albert text-[16px] text-stone-500 leading-[1.4]">
-                          {formatTimeDisplay(
-                            parsedRecipe.prepTimeMinutes,
-                            parsedRecipe.cookTimeMinutes,
-                            parsedRecipe.totalTimeMinutes,
-                            parsedRecipe.servings ?? servings
-                          )}
-                        </p>
-                        {/* Cuisine Badges */}
-                        {parsedRecipe.cuisine && parsedRecipe.cuisine.length > 0 && (
-                          <>
-                            <span className="text-stone-400">•</span>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              {parsedRecipe.cuisine.map((cuisineName) => {
-                                const iconPath = CUISINE_ICON_MAP[cuisineName];
-                                if (!iconPath) {
-                                  console.warn(`[ParsedRecipePage] ⚠️ Missing icon for cuisine: "${cuisineName}". Check cuisineConfig.ts and ensure icon file exists.`);
-                                  return null;
-                                }
-                                console.log(`[ParsedRecipePage] 🍽️ Displaying cuisine badge for "${cuisineName}" on recipe "${parsedRecipe.title}"`);
-                                return (
-                                  <div
-                                    key={cuisineName}
-                                    className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-stone-100 border border-stone-200"
-                                    title={cuisineName}
-                                  >
-                                    <Image
-                                      src={iconPath}
-                                      alt={`${cuisineName} cuisine icon`}
-                                      width={16}
-                                      height={16}
-                                      quality={100}
-                                      unoptimized={true}
-                                      className="w-4 h-4 object-contain"
-                                    />
-                                    <span className="font-albert text-[14px] text-stone-700">
-                                      {cuisineName}
-                                    </span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </>
-                        )}
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -631,97 +1132,94 @@ export default function ParsedRecipePage({
               {/* Tabs Navigation - Edge-to-edge on mobile/tablet, padded on desktop */}
               <div className="w-full">
                 {/* Tab List Container - Responsive padding: edge-to-edge on mobile/tablet, padded on desktop */}
-                <div className="px-0 lg:px-8">
+                <div className="md:px-8">
                   <div className="max-w-6xl mx-auto">
-                    <Tabs.List className="flex items-start w-full relative">
+                    <Tabs.List className="flex items-end w-full relative">
                       <Tabs.Trigger
                         value="prep"
-                        className="group flex-1 h-[58px] flex items-center justify-center gap-2 px-0 py-0 relative transition-all duration-300 outline-none cursor-pointer"
+                        className="folder-tab-trigger group flex-1 h-[58px] md:h-[64px]"
                       >
-                        <motion.div 
-                          whileHover={{ scale: 1.1, rotate: -5 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="relative shrink-0 w-9 h-9"
+                        <motion.div
+                          className="relative shrink-0 w-8 h-8 md:w-9 md:h-9 group-hover:scale-110 group-hover:rotate-[-5deg] transition-transform duration-200"
                         >
-                          <img 
-                            alt="Prep icon" 
-                            className={`absolute inset-0 w-full h-full object-contain transition-all duration-300 ${activeTab === 'prep' ? 'drop-shadow-sm' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
+                          <img
+                            alt="Prep icon"
+                            className={`absolute inset-0 w-full h-full object-contain transition-all duration-300 ${activeTab === 'prep' ? '' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
                             src="/assets/icons/Prep_Icon.png"
                           />
                         </motion.div>
-                        <span className={`font-albert font-medium text-[16px] transition-colors duration-300 ${activeTab === 'prep' ? 'text-[#193d34]' : 'text-[#79716b] group-hover:text-[#193d34]'}`}>
-                          Prep
-                        </span>
-                        {activeTab === 'prep' && (
-                          <motion.div 
-                            layoutId="activeTab"
-                            className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#193d34] z-10"
-                            transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                          />
-                        )}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className={`font-albert font-medium text-[15px] md:text-[16px] transition-colors duration-300 ${activeTab === 'prep' ? 'text-[#0C0A09]' : 'text-[#79716b] group-hover:text-[#0C0A09]'}`}>
+                              Prep
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            <span>⌘1</span>
+                          </TooltipContent>
+                        </Tooltip>
                       </Tabs.Trigger>
                       <Tabs.Trigger
                         value="cook"
-                        className="group flex-1 h-[58px] flex items-center justify-center gap-2 px-0 py-0 relative transition-all duration-300 outline-none cursor-pointer"
+                        className="folder-tab-trigger group flex-1 h-[58px] md:h-[64px]"
                       >
-                        <motion.div 
-                          whileHover={{ scale: 1.1, rotate: 5 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="relative shrink-0 w-9 h-9"
+                        <motion.div
+                          className="relative shrink-0 w-8 h-8 md:w-9 md:h-9 group-hover:scale-110 group-hover:rotate-[5deg] transition-transform duration-200"
                         >
-                          <img 
-                            alt="Cook icon" 
-                            className={`absolute inset-0 w-full h-full object-contain transition-all duration-300 ${activeTab === 'cook' ? 'drop-shadow-sm' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
+                          <img
+                            alt="Cook icon"
+                            className={`absolute inset-0 w-full h-full object-contain transition-all duration-300 ${activeTab === 'cook' ? '' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
                             src="/assets/icons/Cook_Icon.png"
                           />
                         </motion.div>
-                        <span className={`font-albert font-medium text-[16px] transition-colors duration-300 ${activeTab === 'cook' ? 'text-[#193d34]' : 'text-[#79716b] group-hover:text-[#193d34]'}`}>
-                          Cook
-                        </span>
-                        {activeTab === 'cook' && (
-                          <motion.div 
-                            layoutId="activeTab"
-                            className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#193d34] z-10"
-                            transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                          />
-                        )}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className={`font-albert font-medium text-[15px] md:text-[16px] transition-colors duration-300 ${activeTab === 'cook' ? 'text-[#0C0A09]' : 'text-[#79716b] group-hover:text-[#0C0A09]'}`}>
+                              Cook
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            <span>⌘2</span>
+                          </TooltipContent>
+                        </Tooltip>
                       </Tabs.Trigger>
                       <Tabs.Trigger
                         value="plate"
-                        className="group flex-1 h-[58px] flex items-center justify-center gap-2 px-0 py-0 relative transition-all duration-300 outline-none cursor-pointer"
+                        className="folder-tab-trigger group flex-1 h-[58px] md:h-[64px]"
                       >
-                        <motion.div 
-                          whileHover={{ scale: 1.1, rotate: -3 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="relative shrink-0 w-9 h-9"
+                        <motion.div
+                          className="relative shrink-0 w-8 h-8 md:w-9 md:h-9 group-hover:scale-110 group-hover:rotate-[-3deg] transition-transform duration-200"
                         >
-                          <img 
-                            alt="Plate icon" 
-                            className={`absolute inset-0 w-full h-full object-contain transition-all duration-300 ${activeTab === 'plate' ? 'drop-shadow-sm' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
+                          <img
+                            alt="Plate icon"
+                            className={`absolute inset-0 w-full h-full object-contain transition-all duration-300 ${activeTab === 'plate' ? '' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
                             src="/assets/icons/Plate_Icon.png"
                           />
                         </motion.div>
-                        <span className={`font-albert font-medium text-[16px] transition-colors duration-300 ${activeTab === 'plate' ? 'text-[#193d34]' : 'text-[#79716b] group-hover:text-[#193d34]'}`}>
-                          Plate
-                        </span>
-                        {activeTab === 'plate' && (
-                          <motion.div 
-                            layoutId="activeTab"
-                            className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#193d34] z-10"
-                            transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                          />
-                        )}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className={`font-albert font-medium text-[15px] md:text-[16px] transition-colors duration-300 ${activeTab === 'plate' ? 'text-[#0C0A09]' : 'text-[#79716b] group-hover:text-[#0C0A09]'}`}>
+                              Plate
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top">
+                            <span>⌘3</span>
+                          </TooltipContent>
+                        </Tooltip>
                       </Tabs.Trigger>
                     </Tabs.List>
                   </div>
                 </div>
               </div>
               {/* Full-width border underneath header */}
-              <div className="w-full border-b border-[#E7E5E4]"></div>
+              <div className="w-full"></div>
             </div>
 
             {/* Main Content - Tab Content Sections */}
-            <div className="max-w-6xl mx-auto px-4 md:px-8">
+            <div 
+              {...swipeHandlers}
+              className="max-w-6xl mx-auto px-4 md:px-8 pt-8 md:pt-12"
+            >
               <AnimatePresence mode="wait">
                 {/* Prep Tab Content */}
                 {activeTab === 'prep' && (
@@ -733,25 +1231,22 @@ export default function ParsedRecipePage({
                       transition={{ duration: 0.3, ease: "easeOut" }}
                       className="bg-white cursor-default"
                     >
-                      <div className="p-6 space-y-6">
-                        {/* Servings Adjuster and Multiplier Container */}
-                        {/* Hidden on mobile - available in mobile toolbar instead */}
-                        <div className="servings-controls-desktop-only">
-                          <ServingsControls
-                            servings={servings}
-                            onServingsChange={handleServingsChange}
-                            multiplier={multiplier}
-                            onMultiplierChange={handleMultiplierChange}
-                          />
-                        </div>
+                      <div className="max-w-[700px] mx-auto space-y-6">
+                        {/* Ingredients Header with Servings Slider */}
+                        <IngredientsHeader
+                          unitSystem={unitSystem}
+                          onUnitSystemChange={setUnitSystem}
+                          servings={servings}
+                          originalServings={originalServings}
+                          onServingsChange={handleServingsChange}
+                          searchQuery={ingredientSearchQuery}
+                          onSearchChange={setIngredientSearchQuery}
+                        />
 
                         {/* Ingredients */}
                         <div className="bg-white cursor-default">
-                          <h2 className="font-domine text-[20px] text-[#193d34] mb-6 leading-[1.1]">
-                            Ingredients
-                          </h2>
-                          {Array.isArray(scaledIngredients) &&
-                            scaledIngredients.map(
+                          {Array.isArray(filteredIngredients) &&
+                            filteredIngredients.map(
                               (
                                 group: {
                                   groupName: string;
@@ -811,7 +1306,7 @@ export default function ParsedRecipePage({
                                                   ingredient={ingredient}
                                                   description={undefined}
                                                   isLast={isLast}
-                                                  recipeSteps={normalizedSteps.map(s => ({ instruction: s.detail }))}
+                                                  recipeSteps={normalizedSteps.map(s => ({ instruction: s.detail, title: s.step }))}
                                                   groupName={groupName}
                                                   recipeUrl={parsedRecipe?.sourceUrl}
                                                   checked={isChecked}
@@ -846,13 +1341,15 @@ export default function ParsedRecipePage({
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.3, ease: "easeOut" }}
-                      className="w-full"
+                      className="w-full -mx-4 md:-mx-8 flex flex-col items-center"
                     >
-                      <ClassicSplitView
-                        title={parsedRecipe.title}
-                        allIngredients={flattenedIngredients}
-                        steps={normalizedSteps}
-                      />
+                      <div className="w-full max-w-[700px]">
+                        <ClassicSplitView
+                          title={parsedRecipe.title}
+                          allIngredients={flattenedIngredients}
+                          steps={normalizedSteps}
+                        />
+                      </div>
                     </motion.div>
                   </Tabs.Content>
                 )}
@@ -865,18 +1362,204 @@ export default function ParsedRecipePage({
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.3, ease: "easeOut" }}
-                      className="bg-white border-t border-stone-200"
+                      className="bg-white"
                     >
-                      <div className="p-6">
-                        <div className="text-center py-12">
-                          <div className="text-6xl mb-4">🍽️</div>
-                          <p className="font-albert text-[18px] text-stone-500">
-                            Coming soon...
-                          </p>
-                          <p className="font-albert text-[16px] text-stone-500 mt-2">
-                            Plating suggestions and serving tips will be available here.
-                          </p>
-                        </div>
+                      <div className="max-w-[700px] mx-auto space-y-6">
+                        {/* Plating Suggestions */}
+                        <PlatingGuidanceCard
+                          platingNotes={parsedRecipe.plate?.platingNotes}
+                          servingVessel={parsedRecipe.plate?.servingVessel}
+                          servingTemp={parsedRecipe.plate?.servingTemp}
+                          onNotesChange={(notes) => {
+                            setParsedRecipe({
+                              ...parsedRecipe,
+                              id: parsedRecipe.id || recipeId || undefined,
+                              plate: {
+                                ...parsedRecipe.plate,
+                                platingNotes: notes,
+                              },
+                            });
+                          }}
+                        />
+
+                        {/* Storage Guidance - use top-level storage from initial parse, fallback to plate for backward compat */}
+                        <StorageGuidanceCard
+                          storageGuide={parsedRecipe.storageGuide || parsedRecipe.plate?.storageGuide}
+                          shelfLife={parsedRecipe.shelfLife || parsedRecipe.plate?.shelfLife}
+                          storedAt={parsedRecipe.plate?.storedAt}
+                          onMarkAsStored={() => {
+                            setParsedRecipe({
+                              ...parsedRecipe,
+                              id: parsedRecipe.id || recipeId || undefined,
+                              plate: {
+                                ...parsedRecipe.plate,
+                                storedAt: new Date().toISOString(),
+                              },
+                            });
+                          }}
+                          onResetStorage={() => {
+                            setParsedRecipe({
+                              ...parsedRecipe,
+                              id: parsedRecipe.id || recipeId || undefined,
+                              plate: {
+                                ...parsedRecipe.plate,
+                                storedAt: undefined,
+                              },
+                            });
+                          }}
+                        />
+
+                        {/* Photo Capture Section */}
+                        <PlatePhotoCapture
+                          photos={(() => {
+                            // Use new photos array if available, otherwise migrate legacy photoData
+                            const existingPhotos = parsedRecipe.plate?.photos || [];
+
+                            // If we have legacy photoData but no photos array, migrate it
+                            if (existingPhotos.length === 0 && parsedRecipe.plate?.photoData) {
+                              return [{
+                                data: parsedRecipe.plate.photoData,
+                                filename: parsedRecipe.plate.photoFilename || 'dish.jpg',
+                                capturedAt: parsedRecipe.plate.capturedAt || new Date().toISOString(),
+                              }];
+                            }
+
+                            return existingPhotos;
+                          })()}
+                          recipeTitle={parsedRecipe.title}
+                          recipeAuthor={parsedRecipe.author}
+                          cuisine={parsedRecipe.cuisine}
+                          onShare={() => {
+                            // Track share
+                            const sharedAt = parsedRecipe.plate?.sharedAt || [];
+                            const shareCount = (parsedRecipe.plate?.shareCount || 0) + 1;
+                            setParsedRecipe({
+                              ...parsedRecipe,
+                              id: parsedRecipe.id || recipeId || undefined,
+                              plate: {
+                                ...parsedRecipe.plate,
+                                sharedAt: [...sharedAt, new Date().toISOString()],
+                                shareCount,
+                              },
+                            });
+                          }}
+                          onPhotoCapture={async (photoData, filename, rating) => {
+                            console.log('[RecipePage] 📸 Photo captured:', {
+                              parsedRecipeId: parsedRecipe.id,
+                              computedRecipeId: recipeId,
+                              hasRecipeId: !!parsedRecipe.id || !!recipeId,
+                              photoDataLength: photoData.length,
+                              filename,
+                            });
+
+                            // Get existing photos array or migrate legacy data
+                            const existingPhotos = parsedRecipe.plate?.photos || [];
+                            const legacyPhoto = parsedRecipe.plate?.photoData && !existingPhotos.length
+                              ? [{
+                                  data: parsedRecipe.plate.photoData,
+                                  filename: parsedRecipe.plate.photoFilename || 'dish.jpg',
+                                  capturedAt: parsedRecipe.plate.capturedAt || new Date().toISOString(),
+                                }]
+                              : [];
+
+                            const currentPhotos = existingPhotos.length > 0 ? existingPhotos : legacyPhoto;
+
+                            // Add new photo to the array with rating
+                            const newPhoto = {
+                              data: photoData,
+                              filename,
+                              capturedAt: new Date().toISOString(),
+                              rating, // Include rating from the flow
+                            };
+                            const updatedPhotos = [...currentPhotos, newPhoto];
+
+                            // Immediately update with new photo
+                            setParsedRecipe({
+                              ...parsedRecipe,
+                              id: parsedRecipe.id || recipeId || undefined,
+                              plate: {
+                                ...parsedRecipe.plate,
+                                photos: updatedPhotos,
+                                // Clear legacy fields after migration
+                                photoData: undefined,
+                                photoFilename: undefined,
+                                capturedAt: undefined,
+                              },
+                            });
+
+                            // Generate AI guidance only for first photo
+                            if (currentPhotos.length === 0) {
+                              try {
+                                const response = await fetch('/api/generatePlatingGuidance', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    recipeTitle: parsedRecipe.title,
+                                    ingredients: parsedRecipe.ingredients,
+                                    instructions: parsedRecipe.instructions,
+                                  }),
+                                });
+
+                                if (response.ok) {
+                                  const { data } = await response.json();
+                                  console.log('[RecipePage] 🤖 AI guidance generated:', data);
+
+                                  // Update recipe with AI-generated guidance
+                                  setParsedRecipe({
+                                    ...parsedRecipe,
+                                    id: parsedRecipe.id || recipeId || undefined,
+                                    plate: {
+                                      ...parsedRecipe.plate,
+                                      photos: updatedPhotos,
+                                      platingNotes: data.platingNotes,
+                                      servingVessel: data.servingVessel,
+                                      servingTemp: data.servingTemp,
+                                      storageGuide: data.storageGuide,
+                                      shelfLife: data.shelfLife,
+                                    },
+                                  });
+                                }
+                              } catch (error) {
+                                console.error('[RecipePage] ❌ Failed to generate AI guidance:', error);
+                                // Photo is already saved, just continue without AI guidance
+                              }
+                            }
+                          }}
+                          onPhotoRemove={(index) => {
+                            // Get current photos array
+                            const existingPhotos = parsedRecipe.plate?.photos || [];
+
+                            // Remove photo at index
+                            const updatedPhotos = existingPhotos.filter((_, i) => i !== index);
+
+                            setParsedRecipe({
+                              ...parsedRecipe,
+                              id: parsedRecipe.id || recipeId || undefined,
+                              plate: {
+                                ...parsedRecipe.plate,
+                                photos: updatedPhotos,
+                              },
+                            });
+                          }}
+                          onPhotoRatingUpdate={(index, rating) => {
+                            // Get current photos array
+                            const existingPhotos = parsedRecipe.plate?.photos || [];
+
+                            // Update photo rating at index
+                            const updatedPhotos = existingPhotos.map((photo, i) => 
+                              i === index ? { ...photo, rating } : photo
+                            );
+
+                            setParsedRecipe({
+                              ...parsedRecipe,
+                              id: parsedRecipe.id || recipeId || undefined,
+                              plate: {
+                                ...parsedRecipe.plate,
+                                photos: updatedPhotos,
+                              },
+                            });
+                          }}
+                        />
                       </div>
                     </motion.div>
                   </Tabs.Content>
@@ -885,17 +1568,20 @@ export default function ParsedRecipePage({
             </div>
           </Tabs.Root>
         </div>
-        
-        {/* Mobile Toolbar - Fixed bottom navigation for quick actions */}
-        {/* Only visible on mobile screens (< 768px) */}
-        <MobileToolbar 
-          servings={servings}
-          onServingsChange={handleServingsChange}
-        />
-        
+
         {/* Admin Panel for Prototyping */}
-        <AdminPrototypingPanel />
+        <AdminPrototypingPanel 
+          onIngredientsClick={() => setIsIngredientsOverlayOpen(true)}
+        />
+
+        {/* Ingredients Overlay - Modal (desktop) / Drawer (mobile) */}
+        <IngredientsOverlay
+          isOpen={isIngredientsOverlayOpen}
+          onClose={() => setIsIngredientsOverlayOpen(false)}
+          ingredients={scaledIngredients}
+        />
       </div>
+      </TooltipProvider>
     </UISettingsProvider>
   );
 }

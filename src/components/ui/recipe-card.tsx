@@ -3,24 +3,24 @@
 import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Camera } from 'lucide-react';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import MenuDotsCircle from '@solar-icons/react/csr/ui/MenuDotsCircle';
 import Pen from '@solar-icons/react/csr/messages/Pen';
 import ClipboardText from '@solar-icons/react/csr/notes/ClipboardText';
-import TrashBinTrash from '@solar-icons/react/csr/ui/TrashBinTrash';
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 
 export interface RecipeCardData {
   id: string;
   title: string;
-  author: string;
+  author?: string; // Optional - recipes parsed from images may not have an author
   imageUrl?: string;
   cuisine?: string[]; // Array of cuisine names (e.g., ["Italian", "Mediterranean"])
   prepTimeMinutes?: number;
   cookTimeMinutes?: number;
   totalTimeMinutes?: number;
+  platePhotoData?: string; // Base64 user plate photo
 }
 
 interface RecipeCardProps {
@@ -31,6 +31,7 @@ interface RecipeCardProps {
   onCopy?: () => void;
   showDelete?: boolean;
   showImage?: boolean;
+  showCuisineIcon?: boolean; // Controls visibility of cuisine icon image
 }
 
 export default function RecipeCard({
@@ -41,6 +42,7 @@ export default function RecipeCard({
   onCopy,
   showDelete = false,
   showImage = false, // Default to false as per new design (using cuisine icons instead)
+  showCuisineIcon = true, // Default to true - show cuisine icon unless explicitly hidden
 }: RecipeCardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [copiedRecipe, setCopiedRecipe] = useState(false);
@@ -52,7 +54,7 @@ export default function RecipeCard({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { getRecipeById, isBookmarked, toggleBookmark } = useParsedRecipes();
-  
+
   // Get bookmark state from context
   const isBookmarkedState = isBookmarked(recipe.id);
 
@@ -123,11 +125,24 @@ export default function RecipeCard({
   const primaryCuisine = recipe.cuisine && recipe.cuisine.length > 0 ? recipe.cuisine[0] : null;
   const cuisineIconPath = primaryCuisine ? CUISINE_ICON_MAP[primaryCuisine] : '/assets/Illustration Icons/Pan_Icon.png';
 
+  // Handle bookmark toggle - shows confirmation dialog if currently bookmarked
   const handleBookmarkToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Use context function to toggle bookmark state
-    toggleBookmark(recipe.id);
+
+    // If recipe is currently bookmarked, show confirmation dialog
+    if (isBookmarkedState) {
+      const confirmed = window.confirm(
+        'Are you sure you want to remove this recipe from your bookmarks? You can bookmark it again later.'
+      );
+
+      if (confirmed) {
+        toggleBookmark(recipe.id);
+      }
+    } else {
+      // If not bookmarked, just add the bookmark directly
+      toggleBookmark(recipe.id);
+    }
   };
 
   // Handle ellipsis menu toggle
@@ -228,16 +243,27 @@ export default function RecipeCard({
     }
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
+  // Handle unsave recipe - removes recipe from saved/bookmarked recipes
+  const handleUnsave = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsMenuOpen(false);
-    onDelete?.();
+
+    // If recipe is currently bookmarked, show confirmation dialog before unsaving
+    if (isBookmarkedState) {
+      const confirmed = window.confirm(
+        'Are you sure you want to remove this recipe from your bookmarks? You can bookmark it again later.'
+      );
+
+      if (confirmed) {
+        toggleBookmark(recipe.id);
+      }
+    }
   };
 
   return (
     <motion.div
-      className={`group w-full md:basis-0 md:grow min-h-px md:min-w-px relative rounded-[20px] shrink-0 bg-white hover:bg-gray-50 transition-colors duration-200 cursor-pointer overflow-visible ${isMenuOpen ? 'z-[99]' : ''}`}
+      className={`group w-full md:basis-0 md:grow min-h-px md:min-w-px relative rounded-[20px] shrink-0 bg-white hover:bg-[#FAFAFA] transition-colors duration-200 cursor-pointer overflow-visible ${isMenuOpen ? 'z-[99]' : ''}`}
       whileTap={{ scale: 0.98 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
     >
@@ -246,7 +272,18 @@ export default function RecipeCard({
         aria-hidden="true"
         className="absolute border border-solid border-stone-200 inset-0 pointer-events-none rounded-[20px]"
       />
-      
+
+      {/* Photo Indicator Badge - shown when plate photo exists */}
+      {recipe.platePhotoData && (
+        <div
+          className="absolute top-4 left-4 z-20 bg-[#0088ff] text-white px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm"
+          aria-label="Has plate photo"
+        >
+          <Camera className="w-3.5 h-3.5" />
+          <span className="font-albert text-[11px] font-medium">Cooked</span>
+        </div>
+      )}
+
       {/* Bookmark Button */}
       <button
         onPointerDownCapture={(e) => e.stopPropagation()}
@@ -322,13 +359,13 @@ export default function RecipeCard({
               </span>
             </button>
 
-            {/* Delete Option */}
+            {/* Unsave Option */}
             <button
-              onClick={handleDelete}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-albert rounded-md"
+              onClick={handleUnsave}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
             >
-              <TrashBinTrash weight="Bold" className="w-4 h-4 text-red-600 flex-shrink-0" />
-              <span className="font-albert font-medium whitespace-nowrap">Delete</span>
+              <Bookmark weight="Bold" className="w-4 h-4 text-stone-500 flex-shrink-0" />
+              <span className="font-albert font-medium whitespace-nowrap">Unsave</span>
             </button>
           </div>
         )}
@@ -340,17 +377,31 @@ export default function RecipeCard({
           className="w-full h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-0 rounded-[inherit]"
         >
           <div className="box-border flex flex-row items-center gap-[16px] md:gap-[24px] p-[16px] md:p-[20px] relative w-full min-h-[120px]">
-            {/* Cuisine Illustration Icon */}
-            <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
-              <Image
-                src={cuisineIconPath}
-                alt={`${primaryCuisine || 'Recipe'} icon`}
-                fill
-                quality={100}
-                unoptimized={true}
-                className="object-contain pointer-events-none"
-              />
-            </div>
+            {/* Plate Photo or Cuisine Icon */}
+            {recipe.platePhotoData ? (
+              // Show plate photo if available
+              <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
+                <img
+                  src={recipe.platePhotoData}
+                  alt="Your dish"
+                  className="w-full h-full object-cover rounded-[12px] border-2 border-stone-200 pointer-events-none"
+                />
+              </div>
+            ) : (
+              // Show cuisine icon if no plate photo and showCuisineIcon is true
+              showCuisineIcon && (
+                <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
+                  <Image
+                    src={cuisineIconPath}
+                    alt={`${primaryCuisine || 'Recipe'} icon`}
+                    fill
+                    quality={100}
+                    unoptimized={true}
+                    className="object-contain pointer-events-none"
+                  />
+                </div>
+              )
+            )}
 
             {/* Recipe Info */}
             <div className="flex-1 flex flex-col gap-[4px] min-w-0 pr-8 items-start">
@@ -358,18 +409,32 @@ export default function RecipeCard({
                 {recipe.title}
               </h3>
               
-              <p className="font-albert leading-[1.4] text-[13px] md:text-[15px] text-stone-700 text-left m-0">
-                <span className="text-stone-500">By </span>
-                {recipe.author}
-              </p>
+              {/* Only show author line if author exists and is not empty */}
+              {recipe.author && recipe.author.trim() !== '' && (
+                <p className="font-albert leading-[1.4] text-[13px] md:text-[15px] text-stone-700 text-left m-0">
+                  <span className="text-stone-500">By </span>
+                  {recipe.author}
+                </p>
+              )}
             </div>
 
-            {/* Right Side: Time Pill */}
-            <div className="flex flex-col justify-end self-stretch">
-              <span className="font-albert text-[11px] md:text-[13px] text-stone-600 bg-stone-100 px-3 py-1.5 rounded-full whitespace-nowrap border border-stone-200/50">
-                -- min
-              </span>
-            </div>
+            {/* Right Side: Time Pill - only show if time data is available */}
+            {(() => {
+              // Calculate display time: prefer total, else sum prep+cook, else show individual
+              const displayTime = recipe.totalTimeMinutes 
+                ?? (recipe.prepTimeMinutes && recipe.cookTimeMinutes 
+                  ? recipe.prepTimeMinutes + recipe.cookTimeMinutes 
+                  : recipe.prepTimeMinutes ?? recipe.cookTimeMinutes);
+              
+              // Only render the pill if there's actual time data
+              return displayTime ? (
+                <div className="flex flex-col justify-end self-stretch">
+                  <span className="font-albert text-[11px] md:text-[13px] text-stone-600 bg-stone-100 px-3 py-1.5 rounded-full whitespace-nowrap border border-stone-200/50">
+                    {displayTime} min
+                  </span>
+                </div>
+              ) : null;
+            })()}
           </div>
         </button>
       </div>

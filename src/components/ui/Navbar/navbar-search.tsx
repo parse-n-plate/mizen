@@ -12,7 +12,7 @@ import {
   validateRecipeUrl,
 } from '@/utils/recipe-parse';
 import { errorLogger } from '@/utils/errorLogger';
-import { useCommandK } from '@/contexts/CommandKContext';
+// Note: Command+K handling is now done globally via CommandKContext
 import { isUrl } from '@/utils/searchUtils';
 import LoadingAnimation from '@/components/ui/loading-animation';
 import { useToast } from '@/hooks/useToast';
@@ -25,10 +25,10 @@ export default function NavbarSearch() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchResults, setSearchResults] = useState<ParsedRecipe[]>([]);
   const [loading, setLoading] = useState(false);
+  const [detectedCuisine, setDetectedCuisine] = useState<string[] | undefined>(undefined);
   const { recentRecipes, addRecipe } = useParsedRecipes();
   const { parsedRecipe, setParsedRecipe } = useRecipe();
   const { showError, showSuccess, showInfo } = useToast();
-  const { open: openCommandK } = useCommandK();
   const router = useRouter();
   const pathname = usePathname();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -92,6 +92,22 @@ export default function NavbarSearch() {
     setShowDropdown(isFocused && query.trim() !== '' && !isUrl(query));
   }, [query, isFocused, recentRecipes, searchRecipes]);
 
+  // Handle ESC key to blur/unfocus the search input
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // If ESC is pressed and the search input is focused, blur it
+      if (e.key === 'Escape' && document.activeElement === inputRef.current) {
+        e.preventDefault();
+        inputRef.current?.blur();
+        setIsFocused(false);
+        setShowDropdown(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Handle focus - when on parsed recipe page, clear the displayed URL and allow editing
   const handleFocus = () => {
     setIsFocused(true);
@@ -134,6 +150,12 @@ export default function NavbarSearch() {
       author: recipe.author, // Include author if available
       sourceUrl: recipe.sourceUrl, // Include source URL if available
       summary: recipe.description || recipe.summary, // Use AI summary if available, fallback to card summary
+      imageData: recipe.imageData, // Include image data if available (for uploaded images)
+      imageFilename: recipe.imageFilename, // Include image filename if available
+      prepTimeMinutes: recipe.prepTimeMinutes, // Include prep time if available
+      cookTimeMinutes: recipe.cookTimeMinutes, // Include cook time if available
+      totalTimeMinutes: recipe.totalTimeMinutes, // Include total time if available
+      servings: recipe.servings, // Include servings if available
     });
     setQuery('');
     setShowDropdown(false);
@@ -162,6 +184,7 @@ export default function NavbarSearch() {
       const validUrlResponse = await validateRecipeUrl(query);
 
       if (!validUrlResponse.success) {
+        setLoading(false);
         errorLogger.log(
           validUrlResponse.error.code,
           validUrlResponse.error.message,
@@ -175,6 +198,7 @@ export default function NavbarSearch() {
       }
 
       if (!validUrlResponse.isRecipe) {
+        setLoading(false);
         errorLogger.log(
           'ERR_NO_RECIPE_FOUND',
           'No recipe found on this page',
@@ -192,16 +216,23 @@ export default function NavbarSearch() {
 
       // Check if parsing failed
       if (!response.success || response.error) {
+        setLoading(false);
         const errorCode = response.error?.code || 'ERR_NO_RECIPE_FOUND';
         errorLogger.log(errorCode, response.error?.message || 'Parsing failed', query);
         showError({
           code: errorCode,
           message: response.error?.message,
+          retryAfter: response.error?.retryAfter, // Pass through retry-after timestamp
         });
         return;
       }
 
       console.log('[Navbar] Successfully parsed recipe:', response.title);
+
+      // Store detected cuisine for reveal
+      if (response.cuisine) {
+        setDetectedCuisine(response.cuisine);
+      }
 
       // Step 3: Store parsed recipe in context
       const recipeToStore = {
@@ -212,6 +243,10 @@ export default function NavbarSearch() {
         sourceUrl: response.sourceUrl || query, // Use sourceUrl from response or fallback to query URL
         summary: response.summary, // Include AI-generated summary if available
         cuisine: response.cuisine, // Include cuisine tags if available
+        ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
       };
       
       setParsedRecipe(recipeToStore);
@@ -237,16 +272,23 @@ export default function NavbarSearch() {
         author: response.author, // Include author if available
         sourceUrl: response.sourceUrl || query, // Include source URL if available
         cuisine: response.cuisine, // Include cuisine tags if available
+        ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
       });
 
       // Show success toast
       showSuccess('Recipe parsed successfully!', 'Navigating to recipe page...');
 
-      // Step 5: Navigate to the parsed recipe page
-      router.push('/parsed-recipe-page');
-      setQuery('');
-      setIsFocused(false);
-      setShowDropdown(false);
+      // Step 5: Navigate to the parsed recipe page with delay for reveal
+      setTimeout(() => {
+        setLoading(false);
+        router.push('/parsed-recipe-page');
+        setQuery('');
+        setIsFocused(false);
+        setShowDropdown(false);
+      }, 1500);
     } catch (err) {
       console.error('[Navbar] Parse error:', err);
       errorLogger.log(
@@ -258,8 +300,9 @@ export default function NavbarSearch() {
         code: 'ERR_UNKNOWN',
         message: 'An unexpected error occurred. Please try again.',
       });
-    } finally {
       setLoading(false);
+    } finally {
+      // setLoading(false) handled in success/error paths
     }
   }, [
     query,
@@ -302,9 +345,15 @@ export default function NavbarSearch() {
     }, 100);
   };
 
+  // Handle cancel loading
+  const handleCancelLoading = () => {
+    setLoading(false);
+    setDetectedCuisine(undefined);
+  };
+
   return (
     <>
-      <LoadingAnimation isVisible={loading} />
+      <LoadingAnimation isVisible={loading} cuisine={detectedCuisine} onCancel={handleCancelLoading} />
       <div className="relative w-full">
         <form onSubmit={handleSubmit}>
         <div
@@ -361,6 +410,7 @@ export default function NavbarSearch() {
               ) : (
                 <input
                   ref={inputRef}
+                  data-search-input="navbar"
                   type="text"
                   placeholder={isFocused ? "Enter URL" : "Enter recipe URL"}
                   value={query}
@@ -384,21 +434,13 @@ export default function NavbarSearch() {
             </div>
 
             {/* Keyboard Shortcut Indicator (⌘+K) - shown when not focused or no query, but not on mobile or parsed recipe page showing URL */}
+            {/* Note: Command+K now focuses this search box directly via CommandKContext */}
             {!isFocused && !query && !(isOnParsedRecipePage && parsedRecipe?.sourceUrl) && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  openCommandK();
-                }}
-                className="hidden md:flex ml-2 items-center gap-1 flex-shrink-0 cursor-pointer"
-                aria-label="Open Command K search"
-              >
-                <kbd className="inline-flex items-center px-2 py-1 text-[10px] font-albert text-stone-500 bg-white border border-[#d9d9d9] rounded hover:border-[#4F46E5] transition-colors">
+              <div className="hidden md:flex ml-2 items-center gap-1 flex-shrink-0">
+                <kbd className="inline-flex items-center px-2 py-1 text-[10px] font-albert text-stone-500 bg-white border border-[#d9d9d9] rounded">
                   ⌘K
                 </kbd>
-              </button>
+              </div>
             )}
 
             {/* Clear Button */}

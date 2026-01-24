@@ -13,6 +13,8 @@ export type ParsedRecipe = {
   description?: string; // AI-generated engagement summary
   url: string;
   imageUrl?: string;
+  imageData?: string; // Base64 image data for uploaded images
+  imageFilename?: string; // Original filename for uploaded images
   parsedAt: string;
   // Full recipe data for viewing
   ingredients?: {
@@ -27,6 +29,37 @@ export type ParsedRecipe = {
   prepTimeMinutes?: number;
   cookTimeMinutes?: number;
   totalTimeMinutes?: number;
+  // Storage guidance - generated during initial parse (top-level for immediate access)
+  storageGuide?: string; // Storage instructions (e.g., "Store in airtight container in fridge")
+  shelfLife?: {
+    fridge?: number | null;  // Days in fridge (null if not fridge-safe)
+    freezer?: number | null; // Days in freezer (null if not freezer-friendly)
+  };
+  plate?: {
+    // Legacy single photo support (backward compatibility)
+    photoData?: string;
+    photoFilename?: string;
+    capturedAt?: string;
+    // New multi-photo support (up to 5 photos)
+    photos?: Array<{
+      data: string;
+      filename: string;
+      capturedAt: string;
+      rating?: number;        // 1-5 star rating
+    }>;
+    // AI-generated guidance
+    platingNotes?: string;      // AI-generated plating suggestions
+    servingVessel?: string;     // e.g., "shallow bowl", "plate"
+    servingTemp?: string;       // e.g., "hot", "warm", "chilled"
+    storageGuide?: string;      // Storage instructions
+    shelfLife?: {
+      fridge?: number | null;   // Days in fridge
+      freezer?: number | null;  // Days in freezer
+    };
+    storedAt?: string;          // ISO timestamp when marked as stored
+    sharedAt?: string[];        // Array of ISO timestamps when shared
+    shareCount?: number;        // Number of times shared
+  };
 };
 
 const RECENT_RECIPES_KEY = 'recentRecipes';
@@ -170,6 +203,51 @@ export function getRecipeById(id: string): ParsedRecipe | null {
   } catch (error) {
     console.error('Error getting recipe by ID from localStorage:', error);
     return null;
+  }
+}
+
+/**
+ * Update an existing recipe in recent recipes
+ * @param id - The ID of the recipe to update
+ * @param updates - Partial recipe data to merge with existing recipe
+ */
+export function updateRecipe(id: string, updates: Partial<ParsedRecipe>): void {
+  try {
+    const recentRecipes = getRecentRecipes();
+    const recipeIndex = recentRecipes.findIndex((recipe) => recipe.id === id);
+
+    if (recipeIndex !== -1) {
+      // Merge updates with existing recipe
+      recentRecipes[recipeIndex] = {
+        ...recentRecipes[recipeIndex],
+        ...updates,
+        id, // Preserve the original ID
+        parsedAt: recentRecipes[recipeIndex].parsedAt, // Preserve original parsedAt
+      };
+
+      console.log('[Storage] 📸 Updating recipe with plate data:', {
+        recipeId: id,
+        hasPlateData: !!updates.plate,
+        hasPhotoData: !!updates.plate?.photoData,
+        photoDataLength: updates.plate?.photoData?.length || 0,
+      });
+
+      localStorage.setItem(RECENT_RECIPES_KEY, JSON.stringify(recentRecipes));
+
+      // Verify it was saved
+      const saved = getRecentRecipes();
+      const savedRecipe = saved.find(r => r.id === id);
+      console.log('[Storage] ✅ Recipe updated successfully. Verification:', {
+        recipeId: id,
+        savedHasPlate: !!savedRecipe?.plate,
+        savedHasPhoto: !!savedRecipe?.plate?.photoData,
+        savedPhotoLength: savedRecipe?.plate?.photoData?.length || 0,
+      });
+    } else {
+      console.warn('[Storage] ⚠️ Recipe not found for update:', id);
+    }
+  } catch (error) {
+    console.error('Error updating recipe in localStorage:', error);
   }
 }
 

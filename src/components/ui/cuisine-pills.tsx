@@ -6,14 +6,14 @@ import { ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 import { SUPPORTED_CUISINES, CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 
-export type CuisineType = (typeof SUPPORTED_CUISINES)[number] | 'All';
+export type CuisineType = (typeof SUPPORTED_CUISINES)[number] | null;
 
 interface CuisinePillsProps {
   onCuisineChange?: (cuisine: CuisineType) => void;
 }
 
 export default function CuisinePills({ onCuisineChange }: CuisinePillsProps) {
-  const [selectedCuisine, setSelectedCuisine] = useState<CuisineType>('All');
+  const [selectedCuisine, setSelectedCuisine] = useState<CuisineType>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -49,9 +49,12 @@ export default function CuisinePills({ onCuisineChange }: CuisinePillsProps) {
   };
 
   const handleCuisineClick = (cuisine: CuisineType) => {
-    setSelectedCuisine(cuisine);
+    // Toggle behavior: if clicking the already-selected cuisine, deselect it (set to null)
+    // Otherwise, select the clicked cuisine
+    const newSelection = selectedCuisine === cuisine ? null : cuisine;
+    setSelectedCuisine(newSelection);
     if (onCuisineChange) {
-      onCuisineChange(cuisine);
+      onCuisineChange(newSelection);
     }
   };
 
@@ -60,24 +63,6 @@ export default function CuisinePills({ onCuisineChange }: CuisinePillsProps) {
       {/* Scroll container keeps content aligned to parent padding; overflow only to the right */}
       <div className="overflow-x-auto overflow-y-visible pr-6 py-1.5 scrollbar-hide" ref={scrollRef}>
         <div className="flex items-center gap-2">
-          {/* "All" option - shows all recipes */}
-          <motion.button
-            key="All"
-            aria-pressed={selectedCuisine === 'All'}
-            onClick={() => handleCuisineClick('All')}
-            whileHover={{ y: -2, scale: 1.02 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-            className={`relative flex-shrink-0 px-5 py-2.5 rounded-full font-albert text-[16px] font-medium leading-[1.4] border whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-0 flex items-center gap-2.5 transition-colors duration-150 ${
-              selectedCuisine === 'All'
-                ? 'bg-stone-200 border-stone-300'
-                : 'bg-white border-stone-200'
-            }`}
-          >
-            {/* "All" text - no icon */}
-            <span className="relative z-10">All</span>
-          </motion.button>
-          
           {/* Individual cuisine pills */}
           {SUPPORTED_CUISINES.map((cuisine) => {
             const isSelected = selectedCuisine === cuisine;
@@ -105,6 +90,7 @@ export default function CuisinePills({ onCuisineChange }: CuisinePillsProps) {
                     quality={100}
                     unoptimized={true}
                     className="w-8 h-8 object-contain"
+                    draggable={false}
                   />
                 </span>
                 {/* Cuisine Text */}

@@ -26,6 +26,7 @@ export default function InlineSearch() {
   const [query, setQuery] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [detectedCuisine, setDetectedCuisine] = useState<string[] | undefined>(undefined);
   const [recentRecipes, setRecentRecipes] = useState<ParsedRecipe[]>([]);
   const [filteredRecipes, setFilteredRecipes] = useState<ParsedRecipe[]>([]);
   const [showRecents, setShowRecents] = useState(false);
@@ -149,14 +150,20 @@ export default function InlineSearch() {
         const response = await recipeScrape(url);
 
         if (!response.success || response.error) {
+          setLoading(false);
           const errorCode = response.error?.code || 'ERR_NO_RECIPE_FOUND';
           errorLogger.log(errorCode, response.error?.message || 'Parsing failed', url);
           showError({
             code: errorCode,
             message: response.error?.message,
+            retryAfter: response.error?.retryAfter, // Pass through retry-after timestamp
           });
-          setLoading(false);
           return;
+        }
+
+        // Store detected cuisine for reveal
+        if (response.cuisine) {
+          setDetectedCuisine(response.cuisine);
         }
 
         // Store parsed recipe
@@ -168,6 +175,10 @@ export default function InlineSearch() {
           sourceUrl: response.sourceUrl || url,
           summary: response.summary,
           cuisine: response.cuisine,
+          ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+          ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+          ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+          ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
         };
 
         setParsedRecipe(recipeToStore);
@@ -192,16 +203,23 @@ export default function InlineSearch() {
           author: response.author,
           sourceUrl: response.sourceUrl || url,
           cuisine: response.cuisine,
+          ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+          ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+          ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+          ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
         });
 
         // Add to search history
         addToSearchHistory(url, response.title);
 
-        // Navigate to recipe page
-        router.push('/parsed-recipe-page');
-        setQuery('');
-        setIsExpanded(false);
-        setShowRecents(false);
+        // Navigate to recipe page with delay for reveal
+        setTimeout(() => {
+          setLoading(false);
+          router.push('/parsed-recipe-page');
+          setQuery('');
+          setIsExpanded(false);
+          setShowRecents(false);
+        }, 1500);
       } catch (err) {
         console.error('[InlineSearch] Parse error:', err);
         errorLogger.log('ERR_UNKNOWN', 'An unexpected error occurred', url);
@@ -209,8 +227,9 @@ export default function InlineSearch() {
           code: 'ERR_UNKNOWN',
           message: 'An unexpected error occurred. Please try again.',
         });
-      } finally {
         setLoading(false);
+      } finally {
+        // setLoading(false) handled in success/error paths
       }
     },
     [setParsedRecipe, addRecipe, showError, showInfo, router],
@@ -225,7 +244,13 @@ export default function InlineSearch() {
       author: recipe.author,
       sourceUrl: recipe.sourceUrl,
       summary: recipe.description || recipe.summary,
+      imageData: recipe.imageData, // Include image data if available (for uploaded images)
+      imageFilename: recipe.imageFilename, // Include image filename if available
       cuisine: recipe.cuisine,
+      prepTimeMinutes: recipe.prepTimeMinutes, // Include prep time if available
+      cookTimeMinutes: recipe.cookTimeMinutes, // Include cook time if available
+      totalTimeMinutes: recipe.totalTimeMinutes, // Include total time if available
+      servings: recipe.servings, // Include servings if available
     });
     router.push('/parsed-recipe-page');
     setQuery('');
@@ -290,9 +315,15 @@ export default function InlineSearch() {
     }
   };
 
+  // Handle cancel loading
+  const handleCancelLoading = () => {
+    setLoading(false);
+    setDetectedCuisine(undefined);
+  };
+
   return (
     <>
-      <LoadingAnimation isVisible={loading} />
+      <LoadingAnimation isVisible={loading} cuisine={detectedCuisine} onCancel={handleCancelLoading} />
       <div 
         ref={containerRef}
         className="relative flex-1 max-w-md"
@@ -302,8 +333,8 @@ export default function InlineSearch() {
             className={`
               bg-stone-100 rounded-md border transition-all duration-200
               ${isExpanded 
-                ? 'border-[#4F46E5] shadow-sm' 
-                : 'border-stone-200 hover:border-stone-300'
+                ? 'border-stone-400 shadow-sm' 
+                : 'border-stone-200 hover:border-stone-300 hover:bg-stone-50'
               }
             `}
           >
@@ -315,7 +346,7 @@ export default function InlineSearch() {
               <input
                 ref={inputRef}
                 type="text"
-                placeholder={isExpanded ? "Search recipes or enter URL..." : "Enter recipe URL..."}
+                placeholder={isExpanded ? "Enter recipe URL" : "Enter recipe URL"}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={handleFocus}
@@ -370,19 +401,19 @@ export default function InlineSearch() {
                   className={`
                     w-full text-left p-3 rounded-md transition-colors group
                     ${selectedIndex === index 
-                      ? 'bg-[#4F46E5] text-white' 
+                      ? 'bg-stone-50 text-stone-900' 
                       : 'hover:bg-stone-50'
                     }
                   `}
                   onMouseEnter={() => setSelectedIndex(index)}
                 >
                   <div className={`font-albert font-medium text-sm truncate ${
-                    selectedIndex === index ? 'text-white' : 'text-stone-800'
+                    selectedIndex === index ? 'text-stone-900' : 'text-stone-800'
                   }`}>
                     {recipe.title}
                   </div>
                   <div className={`font-albert text-xs mt-1 line-clamp-1 ${
-                    selectedIndex === index ? 'text-white/80' : 'text-stone-500'
+                    selectedIndex === index ? 'text-stone-600' : 'text-stone-500'
                   }`}>
                     {recipe.summary || recipe.description}
                   </div>

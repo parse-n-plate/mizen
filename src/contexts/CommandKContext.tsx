@@ -3,37 +3,60 @@
 import React, {
   createContext,
   useContext,
-  useState,
   ReactNode,
   useEffect,
   useCallback,
 } from 'react';
+import { usePathname } from 'next/navigation';
 
 interface CommandKContextType {
-  isOpen: boolean;
-  open: () => void;
-  close: () => void;
-  toggle: () => void;
+  focusSearch: () => void;
 }
 
 const CommandKContext = createContext<CommandKContextType | undefined>(
   undefined,
 );
 
+/**
+ * CommandKProvider
+ * 
+ * Handles Command+K (⌘K / Ctrl+K) keyboard shortcut to focus the relevant search box.
+ * - On homepage (/): focuses the homepage search input
+ * - On recipe page (/parsed-recipe-page): focuses the navbar search input
+ */
 export function CommandKProvider({ children }: { children: ReactNode }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
 
-  const open = useCallback(() => {
-    setIsOpen(true);
-  }, []);
-
-  const close = useCallback(() => {
-    setIsOpen(false);
-  }, []);
-
-  const toggle = useCallback(() => {
-    setIsOpen((prev) => !prev);
-  }, []);
+  /**
+   * Focus the appropriate search box based on current route
+   */
+  const focusSearch = useCallback(() => {
+    // Determine which search box to focus based on current page
+    const isRecipePage = pathname === '/parsed-recipe-page';
+    
+    if (isRecipePage) {
+      // On recipe page, focus the navbar search input
+      // Look for the navbar search input using data attribute
+      const navbarSearchInput = document.querySelector(
+        '[data-search-input="navbar"]'
+      ) as HTMLInputElement;
+      
+      if (navbarSearchInput) {
+        navbarSearchInput.focus();
+        // Select all text if there's any, to make it easy to replace
+        navbarSearchInput.select();
+      }
+    } else {
+      // On homepage or other pages, focus the homepage search input
+      const homepageSearchInput = document.querySelector(
+        '[data-search-input="homepage"]'
+      ) as HTMLInputElement;
+      
+      if (homepageSearchInput) {
+        homepageSearchInput.focus();
+      }
+    }
+  }, [pathname]);
 
   // Global keyboard listener for ⌘K / Ctrl+K
   useEffect(() => {
@@ -49,14 +72,8 @@ export function CommandKProvider({ children }: { children: ReactNode }) {
         event.preventDefault();
         event.stopPropagation();
 
-        // Toggle the modal
-        toggle();
-      }
-
-      // Also handle ESC to close
-      if (event.key === 'Escape' && isOpen) {
-        event.preventDefault();
-        close();
+        // Focus the appropriate search box
+        focusSearch();
       }
     };
 
@@ -67,15 +84,12 @@ export function CommandKProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, toggle, close]);
+  }, [focusSearch]);
 
   return (
     <CommandKContext.Provider
       value={{
-        isOpen,
-        open,
-        close,
-        toggle,
+        focusSearch,
       }}
     >
       {children}
@@ -83,6 +97,12 @@ export function CommandKProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * useCommandK Hook
+ * 
+ * Provides access to Command K functionality.
+ * Currently only provides focusSearch function to focus the relevant search box.
+ */
 export function useCommandK() {
   const context = useContext(CommandKContext);
   if (context === undefined) {

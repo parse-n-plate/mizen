@@ -112,9 +112,16 @@ export interface ParsedRecipe {
   publishedDate?: string;
   sourceUrl?: string;
   summary?: string; // AI-generated recipe summary (1-2 sentences)
+  servings?: number; // Number of servings/yield
   ingredients: IngredientGroup[];
   instructions: InstructionStep[];
   cuisine?: string[]; // Cuisine types/tags (e.g., ["Italian", "Mediterranean"])
+  // Storage guidance - generated during initial parse
+  storageGuide?: string; // Storage instructions (e.g., "Store in airtight container in fridge")
+  shelfLife?: {
+    fridge?: number | null;  // Days in fridge (null if not fridge-safe)
+    freezer?: number | null; // Days in freezer (null if not freezer-friendly)
+  };
 }
 
 /**
@@ -125,6 +132,27 @@ export interface ParserResult {
   data?: ParsedRecipe;
   error?: string;
   method?: 'json-ld' | 'ai' | 'none';
+  retryAfter?: number; // Timestamp (milliseconds) when to retry after rate limit
+}
+
+/**
+ * Parse ISO 8601 duration string (e.g., "PT30M", "PT1H30M") to minutes
+ * Returns undefined if parsing fails or duration is invalid
+ */
+function parseISODuration(duration: string): number | undefined {
+  if (!duration || typeof duration !== 'string') return undefined;
+  
+  // ISO 8601 duration format: PT[hours]H[minutes]M
+  // Examples: "PT30M" (30 minutes), "PT1H30M" (1 hour 30 minutes), "PT2H" (2 hours)
+  const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
+  if (!match) return undefined;
+  
+  const hours = parseInt(match[1] || '0', 10);
+  const minutes = parseInt(match[2] || '0', 10);
+  const totalMinutes = hours * 60 + minutes;
+  
+  // Return undefined if total is 0 (invalid duration)
+  return totalMinutes > 0 ? totalMinutes : undefined;
 }
 
 /**
@@ -332,6 +360,70 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
               author = undefined;
             }
 
+            // Extract servings/yield from JSON-LD
+            // JSON-LD can have yield as a string (e.g., "4 servings") or number (e.g., 4)
+            let servings: number | undefined = undefined;
+            if (recipe.yield || recipe.recipeYield) {
+              const yieldValue = recipe.yield || recipe.recipeYield;
+              
+              // Handle string format like "4 servings" or "4"
+              if (typeof yieldValue === 'string') {
+                // Extract number from string (e.g., "4 servings" -> 4, "Serves 6" -> 6)
+                const numberMatch = yieldValue.match(/\d+/);
+                if (numberMatch) {
+                  servings = parseInt(numberMatch[0], 10);
+                }
+              } 
+              // Handle number format
+              else if (typeof yieldValue === 'number') {
+                servings = yieldValue;
+              }
+              // Handle array format (some sites use ["4 servings"])
+              else if (Array.isArray(yieldValue) && yieldValue.length > 0) {
+                const firstValue = yieldValue[0];
+                if (typeof firstValue === 'string') {
+                  const numberMatch = firstValue.match(/\d+/);
+                  if (numberMatch) {
+                    servings = parseInt(numberMatch[0], 10);
+                  }
+                } else if (typeof firstValue === 'number') {
+                  servings = firstValue;
+                }
+              }
+              
+            // Validate servings is a positive number
+            if (servings && (isNaN(servings) || servings <= 0)) {
+              servings = undefined;
+            }
+            }
+
+            // Extract prep time, cook time, and total time from JSON-LD
+            // These are typically in ISO 8601 duration format (e.g., "PT30M", "PT1H30M")
+            let prepTimeMinutes: number | undefined = undefined;
+            let cookTimeMinutes: number | undefined = undefined;
+            let totalTimeMinutes: number | undefined = undefined;
+            
+            // Extract prepTime (prepTime or prepTimeMinutes)
+            if (recipe.prepTime) {
+              prepTimeMinutes = parseISODuration(recipe.prepTime);
+            } else if (typeof recipe.prepTimeMinutes === 'number' && recipe.prepTimeMinutes > 0) {
+              prepTimeMinutes = recipe.prepTimeMinutes;
+            }
+            
+            // Extract cookTime (cookTime or cookTimeMinutes)
+            if (recipe.cookTime) {
+              cookTimeMinutes = parseISODuration(recipe.cookTime);
+            } else if (typeof recipe.cookTimeMinutes === 'number' && recipe.cookTimeMinutes > 0) {
+              cookTimeMinutes = recipe.cookTimeMinutes;
+            }
+            
+            // Extract totalTime (totalTime or totalTimeMinutes)
+            if (recipe.totalTime) {
+              totalTimeMinutes = parseISODuration(recipe.totalTime);
+            } else if (typeof recipe.totalTimeMinutes === 'number' && recipe.totalTimeMinutes > 0) {
+              totalTimeMinutes = recipe.totalTimeMinutes;
+            }
+
             const normalizedInstructions = normalizeInstructionSteps(instructions);
 
             // Validate we have complete data
@@ -342,9 +434,18 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
               normalizedInstructions.length > 0
             ) {
               console.log(
-                `[JSON-LD] Found recipe: "${title}" with ${ingredients[0].ingredients.length} ingredients and ${normalizedInstructions.length} instructions${author ? `, author: "${author}"` : ''}`
+                `[JSON-LD] Found recipe: "${title}" with ${ingredients[0].ingredients.length} ingredients and ${normalizedInstructions.length} instructions${author ? `, author: "${author}"` : ''}${servings ? `, servings: ${servings}` : ''}${prepTimeMinutes ? `, prepTime: ${prepTimeMinutes}min` : ''}${cookTimeMinutes ? `, cookTime: ${cookTimeMinutes}min` : ''}${totalTimeMinutes ? `, totalTime: ${totalTimeMinutes}min` : ''}`
               );
-              return { title, ingredients, instructions: normalizedInstructions, author };
+              return { 
+                title, 
+                ingredients, 
+                instructions: normalizedInstructions, 
+                author,
+                ...(servings && { servings }),
+                ...(prepTimeMinutes && { prepTimeMinutes }),
+                ...(cookTimeMinutes && { cookTimeMinutes }),
+                ...(totalTimeMinutes && { totalTimeMinutes })
+              };
             }
           }
         }
@@ -480,6 +581,10 @@ Required JSON structure:
 {
   "title": "string (cleaned recipe title following TITLE EXTRACTION RULES - no prefixes/suffixes)",
   "author": "string (optional - recipe author name if found)",
+  "servings": 4, // Only include if found in HTML - omit if not available
+  "prepTimeMinutes": 15, // Prep time in minutes - only include if found in HTML
+  "cookTimeMinutes": 30, // Cook time in minutes - only include if found in HTML
+  "totalTimeMinutes": 45, // Total time in minutes - only include if found in HTML (or calculate as prep+cook if both available)
   "cuisine": ["Italian", "Mediterranean"],
   "ingredients": [
     {
@@ -497,7 +602,12 @@ Required JSON structure:
       "ingredients": ["ingredient 1", "ingredient 2"],
       "tips": "Optional tip for this step"
     }
-  ]
+  ],
+  "storageGuide": "2-3 sentences on how to store leftovers properly based on the dish type",
+  "shelfLife": {
+    "fridge": 3,
+    "freezer": 30
+  }
 }
 
 CRITICAL: ingredients and instructions MUST be arrays, NEVER null.
@@ -702,6 +812,15 @@ AUTHOR EXTRACTION:
 - Do NOT include author names in instruction text - extract separately
 - If no clear author is found, omit the "author" field (don't use null)
 
+SERVINGS/YIELD EXTRACTION:
+- Extract the number of servings (yield) if clearly visible in the HTML
+- Look for patterns like "Serves 4", "Yield: 6 servings", "Makes 8", "4 servings", etc.
+- Extract ONLY the numeric value (e.g., if HTML says "Serves 4", return 4)
+- Include servings as a number in the JSON output: "servings": 4
+- If servings information is not found or unclear, omit the "servings" field entirely (don't use null, 0, or any default value)
+- NEVER guess or default to a number - only include servings if you can clearly extract it from the HTML
+- Common locations: recipe metadata sections, near prep/cook time, in recipe header
+
 CLEANING (remove these only):
 - Attribution text (e.g., "Recipe courtesy of...") - but extract author name separately
 - Nutritional information
@@ -756,6 +875,10 @@ DO NOT use these example values. Extract actual values from the HTML provided.
 Example showing logical ingredient groupings (ALWAYS create groups):
 {
   "title": "Gochujang Pasta",
+  "servings": 4, // Only include if found in HTML - omit if not available
+  "prepTimeMinutes": 10, // Only include if found in HTML
+  "cookTimeMinutes": 20, // Only include if found in HTML
+  "totalTimeMinutes": 30, // Only include if found in HTML (or calculate as prep+cook)
   "ingredients": [
     {
       "groupName": "For the sauce",
@@ -894,6 +1017,44 @@ INGREDIENT-BASED DETECTION QUICK REFERENCE:
 - soy sauce, hoisin → ["Chinese"]
 
 ========================================
+📦 STORAGE GUIDANCE - REQUIRED FIELD 📦
+========================================
+THIS IS A REQUIRED FIELD. You MUST generate storage guidance for EVERY recipe.
+
+STORGE GUIDE RULES:
+- Provide 2-3 concise sentences on how to store leftovers properly
+- Be specific to the dish type (e.g., soups vs baked goods vs salads)
+- Include container recommendations when relevant (airtight container, covered bowl, etc.)
+- Mention any special handling (cool before storing, keep dressing separate, etc.)
+
+EXAMPLES:
+- Soup/Stew: "Store in an airtight container in the refrigerator. The flavors will develop further overnight. Reheat gently on the stovetop."
+- Pasta: "Store pasta and sauce separately in airtight containers in the fridge. Reheat with a splash of water or broth to restore moisture."
+- Salad: "Store undressed salad in a sealed container lined with paper towel. Keep dressing separate and add just before serving."
+- Baked goods: "Store in an airtight container at room temperature for up to 3 days. For longer storage, freeze in a freezer-safe bag."
+- Meat dishes: "Refrigerate in an airtight container within 2 hours of cooking. Reheat thoroughly to 165°F (74°C) before serving."
+
+SHELF LIFE RULES:
+- "fridge": Number of days the dish will stay fresh in the refrigerator (typically 2-5 days for most cooked dishes)
+- "freezer": Number of days in the freezer (typically 30-90 days), or null if the dish doesn't freeze well
+- Base estimates on the PRIMARY ingredients and dish type
+
+SHELF LIFE QUICK REFERENCE:
+- Soups/stews: fridge 3-4 days, freezer 60-90 days
+- Cooked pasta: fridge 3-5 days, freezer 30-60 days (sauce freezes better than pasta)
+- Cooked rice: fridge 3-4 days, freezer 30 days
+- Cooked meat: fridge 3-4 days, freezer 60-90 days
+- Salads (undressed): fridge 2-3 days, freezer null (don't freeze)
+- Baked goods: fridge 5-7 days (or room temp), freezer 60-90 days
+- Cream-based dishes: fridge 2-3 days, freezer null (may separate)
+- Fried foods: fridge 2-3 days, freezer 30 days (will lose crispiness)
+
+OUTPUT FORMAT:
+- "storageGuide": "2-3 sentences of practical storage advice"
+- "shelfLife": { "fridge": <number>, "freezer": <number or null> }
+- NEVER skip these fields - always include them in your JSON response
+
+========================================
 FINAL REMINDER
 ========================================
 Output ONLY the JSON object. No markdown, no code blocks, no explanations, no text before or after.
@@ -903,6 +1064,8 @@ ABSOLUTE REQUIREMENTS:
 - ingredients: MUST be an array [] (never null)
 - instructions: MUST be an array [] (never null)
 - cuisine: MUST be an array [] (REQUIRED FIELD - analyze every recipe, can be empty [] if truly uncertain)
+- storageGuide: MUST be a string with 2-3 sentences of storage advice (REQUIRED FIELD)
+- shelfLife: MUST be an object with "fridge" and "freezer" properties (REQUIRED FIELD)
 - Each instruction MUST be an object: {"title": "Summary", "detail": "Full text"}
 - If you find ingredients in the HTML, extract them
 - If you find instructions in the HTML, extract them as objects with title and detail
@@ -913,7 +1076,12 @@ ABSOLUTE REQUIREMENTS:
 - For fusion recipes (e.g., Korean pasta, Mexican-Italian fusion), include BOTH cuisines
 - Return empty array [] only if you truly cannot determine the cuisine
 - NEVER skip the "cuisine" field - it must always be present in your JSON response
-- The recipe data exists in the HTML - extract it carefully, including cuisine analysis`,
+
+📦 STORAGE GUIDANCE IS MANDATORY:
+- ALWAYS generate storage guidance based on the dish type and ingredients
+- ALWAYS estimate shelf life based on the recipe type
+- NEVER skip the "storageGuide" or "shelfLife" fields - they must always be present in your JSON response
+- The recipe data exists in the HTML - extract it carefully, including storage analysis`,
         },
         {
           role: 'user',
@@ -989,7 +1157,7 @@ ABSOLUTE REQUIREMENTS:
         console.log(
           `[AI Parser] Successfully parsed recipe: "${parsedData.title}" with ${parsedData.ingredients.reduce((sum: number, g: any) => sum + g.ingredients.length, 0)} ingredients and ${normalizedInstructions.length} instructions`
         );
-        // Return recipe with author and cuisine if available
+        // Return recipe with author, servings, and cuisine if available
         const recipe: ParsedRecipe = {
           title: parsedData.title,
           ingredients: parsedData.ingredients,
@@ -998,6 +1166,52 @@ ABSOLUTE REQUIREMENTS:
         if (parsedData.author && typeof parsedData.author === 'string') {
           recipe.author = parsedData.author;
         }
+        
+        // Extract servings if provided by AI
+        if (parsedData.servings !== undefined && parsedData.servings !== null) {
+          // Handle both number and string formats
+          if (typeof parsedData.servings === 'number') {
+            // Validate it's a positive number
+            if (parsedData.servings > 0 && !isNaN(parsedData.servings)) {
+              recipe.servings = parsedData.servings;
+            }
+          } else if (typeof parsedData.servings === 'string') {
+            // Extract number from string (e.g., "4 servings" -> 4)
+            const numberMatch = parsedData.servings.match(/\d+/);
+            if (numberMatch) {
+              const servingsNum = parseInt(numberMatch[0], 10);
+              if (servingsNum > 0 && !isNaN(servingsNum)) {
+                recipe.servings = servingsNum;
+              }
+            }
+          }
+        }
+        
+        // Extract storage guidance if provided by AI
+        if (parsedData.storageGuide && typeof parsedData.storageGuide === 'string') {
+          recipe.storageGuide = parsedData.storageGuide.trim();
+          console.log('[AI Parser] 📦 Storage guide extracted:', recipe.storageGuide.substring(0, 50) + '...');
+        }
+        
+        // Extract shelf life if provided by AI
+        if (parsedData.shelfLife && typeof parsedData.shelfLife === 'object') {
+          recipe.shelfLife = {
+            fridge: typeof parsedData.shelfLife.fridge === 'number' ? parsedData.shelfLife.fridge : null,
+            freezer: typeof parsedData.shelfLife.freezer === 'number' ? parsedData.shelfLife.freezer : null,
+          };
+          console.log('[AI Parser] 📦 Shelf life extracted:', recipe.shelfLife);
+        }
+        
+        // Log important recipe output information: title, author, servings, and storage
+        console.log('[AI Parser] 📋 Recipe output summary:', {
+          title: recipe.title || 'N/A',
+          author: recipe.author || 'N/A',
+          servings: recipe.servings || 'N/A',
+          hasAuthor: !!recipe.author,
+          hasServings: !!recipe.servings,
+          hasStorageGuide: !!recipe.storageGuide,
+          hasShelfLife: !!recipe.shelfLife,
+        });
         
         // Handle cuisine - normalize to array format and filter to supported cuisines only
         console.log('[AI Parser] 🍽️ Starting cuisine detection for recipe:', parsedData.title);
@@ -1128,7 +1342,31 @@ ABSOLUTE REQUIREMENTS:
         error?.message?.includes('quota') ||
         error?.response?.status === 429) {
       console.error('[AI Parser] Rate limit detected');
-      throw new Error('ERR_RATE_LIMIT');
+      
+      // Extract retry-after header if available
+      // Groq SDK may return headers in error.headers or error.response.headers
+      const retryAfterHeader = 
+        error?.headers?.['retry-after'] || 
+        error?.headers?.['Retry-After'] ||
+        error?.response?.headers?.['retry-after'] ||
+        error?.response?.headers?.['Retry-After'];
+      
+      // Calculate retry timestamp (retry-after is typically in seconds)
+      let retryAfter: number | undefined;
+      if (retryAfterHeader) {
+        const retrySeconds = parseInt(retryAfterHeader, 10);
+        if (!isNaN(retrySeconds) && retrySeconds > 0) {
+          // Add buffer time (add 5 seconds to be safe)
+          retryAfter = Date.now() + (retrySeconds + 5) * 1000;
+        }
+      }
+      
+      // Create error with retry-after information
+      const rateLimitError: any = new Error('ERR_RATE_LIMIT');
+      if (retryAfter) {
+        rateLimitError.retryAfter = retryAfter;
+      }
+      throw rateLimitError;
     }
     
     // Check for service unavailable
@@ -1185,11 +1423,17 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
                                     (aiResult.ingredients.length === 1 && aiResult.ingredients[0].groupName !== 'Main');
           
           if (hasBetterGroupings) {
-            // Merge JSON-LD data (title, author, etc.) with AI-detected groupings and cuisine
+            // Merge JSON-LD data (title, author, servings, times, etc.) with AI-detected groupings and cuisine
             const mergedRecipe: ParsedRecipe = {
               ...jsonLdResult,
               ingredients: aiResult.ingredients, // Use AI-detected groupings
               cuisine: aiResult.cuisine, // Include AI-detected cuisine tags
+              // Preserve servings from JSON-LD if available, otherwise use AI-detected servings
+              ...(jsonLdResult.servings ? { servings: jsonLdResult.servings } : (aiResult.servings ? { servings: aiResult.servings } : {})),
+              // Preserve times from JSON-LD if available, otherwise use AI-detected times
+              ...(jsonLdResult.prepTimeMinutes ? { prepTimeMinutes: jsonLdResult.prepTimeMinutes } : (aiResult.prepTimeMinutes ? { prepTimeMinutes: aiResult.prepTimeMinutes } : {})),
+              ...(jsonLdResult.cookTimeMinutes ? { cookTimeMinutes: jsonLdResult.cookTimeMinutes } : (aiResult.cookTimeMinutes ? { cookTimeMinutes: aiResult.cookTimeMinutes } : {})),
+              ...(jsonLdResult.totalTimeMinutes ? { totalTimeMinutes: jsonLdResult.totalTimeMinutes } : (aiResult.totalTimeMinutes ? { totalTimeMinutes: aiResult.totalTimeMinutes } : {})),
             };
             
             const summary = await generateRecipeSummary(mergedRecipe);
@@ -1218,17 +1462,34 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
         // Continue without cuisine if AI fails
       }
       
-      // Merge JSON-LD data with AI-detected cuisine (and summary if available)
+      // Merge JSON-LD data with AI-detected cuisine and servings (and summary if available)
       console.log('[Recipe Parser] 🔄 Merging JSON-LD + AI results for cuisine detection');
       console.log('[Recipe Parser] JSON-LD result cuisine:', jsonLdResult.cuisine || 'none');
       console.log('[Recipe Parser] AI result cuisine:', aiResult?.cuisine || 'none');
+      console.log('[Recipe Parser] JSON-LD result servings:', jsonLdResult.servings || 'none');
+      console.log('[Recipe Parser] AI result servings:', aiResult?.servings || 'none');
       
       const mergedRecipe: ParsedRecipe = {
         ...jsonLdResult,
         ...(aiResult?.cuisine && aiResult.cuisine.length > 0 && { cuisine: aiResult.cuisine }), // Add cuisine from AI if detected
+        // Preserve servings from JSON-LD if available, otherwise use AI-detected servings
+        ...(jsonLdResult.servings ? { servings: jsonLdResult.servings } : (aiResult?.servings ? { servings: aiResult.servings } : {})),
+        // Preserve times from JSON-LD if available, otherwise use AI-detected times
+        ...(jsonLdResult.prepTimeMinutes ? { prepTimeMinutes: jsonLdResult.prepTimeMinutes } : (aiResult?.prepTimeMinutes ? { prepTimeMinutes: aiResult.prepTimeMinutes } : {})),
+        ...(jsonLdResult.cookTimeMinutes ? { cookTimeMinutes: jsonLdResult.cookTimeMinutes } : (aiResult?.cookTimeMinutes ? { cookTimeMinutes: aiResult.cookTimeMinutes } : {})),
+        ...(jsonLdResult.totalTimeMinutes ? { totalTimeMinutes: jsonLdResult.totalTimeMinutes } : (aiResult?.totalTimeMinutes ? { totalTimeMinutes: aiResult.totalTimeMinutes } : {})),
       };
       
       console.log('[Recipe Parser] ✅ Final merged recipe cuisine:', mergedRecipe.cuisine || 'none');
+      
+      // Log important recipe output information: title, author, and servings
+      console.log('[Recipe Parser] 📋 Merged recipe output summary:', {
+        title: mergedRecipe.title || 'N/A',
+        author: mergedRecipe.author || 'N/A',
+        servings: mergedRecipe.servings || 'N/A',
+        hasAuthor: !!mergedRecipe.author,
+        hasServings: !!mergedRecipe.servings,
+      });
       
       const summary = await generateRecipeSummary(mergedRecipe);
       const recipeWithSummary = {
@@ -1258,6 +1519,16 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
         cuisine: aiResult.cuisine,
       });
       // #endregion
+      
+      // Log important recipe output information: title, author, and servings
+      console.log('[Recipe Parser] 📋 AI-only recipe output summary:', {
+        title: aiResult.title || 'N/A',
+        author: aiResult.author || 'N/A',
+        servings: aiResult.servings || 'N/A',
+        hasAuthor: !!aiResult.author,
+        hasServings: !!aiResult.servings,
+      });
+      
       // Generate summary for AI parsed recipe
       const summary = await generateRecipeSummary(aiResult);
       const recipeWithSummary = {
@@ -1287,10 +1558,13 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
         error?.status === 429 || 
         error?.message?.includes('rate limit') || 
         error?.message?.includes('quota')) {
+      // Pass through retry-after timestamp if available
+      const retryAfter = error?.retryAfter;
       return {
         success: false,
         error: 'ERR_RATE_LIMIT',
         method: 'none',
+        retryAfter, // Include retry timestamp if available
       };
     }
     
@@ -1602,10 +1876,28 @@ Start your response with { and end with }`,
         error?.message?.includes('rate limit') || 
         error?.message?.includes('quota') ||
         error?.response?.status === 429) {
+      // Extract retry-after header if available
+      const retryAfterHeader = 
+        error?.headers?.['retry-after'] || 
+        error?.headers?.['Retry-After'] ||
+        error?.response?.headers?.['retry-after'] ||
+        error?.response?.headers?.['Retry-After'];
+      
+      // Calculate retry timestamp (retry-after is typically in seconds)
+      let retryAfter: number | undefined;
+      if (retryAfterHeader) {
+        const retrySeconds = parseInt(retryAfterHeader, 10);
+        if (!isNaN(retrySeconds) && retrySeconds > 0) {
+          // Add buffer time (add 5 seconds to be safe)
+          retryAfter = Date.now() + (retrySeconds + 5) * 1000;
+        }
+      }
+      
       return {
         success: false,
         error: 'ERR_RATE_LIMIT',
         method: 'none',
+        retryAfter, // Include retry timestamp if available
       };
     }
     

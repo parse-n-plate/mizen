@@ -11,7 +11,7 @@ export default function IngredientsCard({ ingredients }: IngredientsCardProps) {
       <ul className="space-y-2">
         {ingredients.map((ingredient, index) => (
           <li key={index} className="flex items-start gap-2.5">
-            <span className="text-[#193d34] mt-1.5">•</span>
+            <span className="text-[#0C0A09] mt-1.5">•</span>
             <span className="font-albert text-[#44403b]">{ingredient}</span>
           </li>
         ))}

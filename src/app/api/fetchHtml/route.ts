@@ -1,25 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
 import { formatError, ERROR_CODES } from '@/utils/formatError';
-import { writeFile, appendFile } from 'fs/promises';
-import { join } from 'path';
 
 // Timeout constant (10 seconds, matching urlValidator)
 const FETCH_TIMEOUT_MS = 10000;
-
-// Debug logging helper - writes directly to file as backup
-async function debugLog(data: any) {
-  const logPath = '/Users/gageminamoto/Documents/GitHub/parse-n-plate/.cursor/debug.log';
-  const logLine = JSON.stringify({...data, timestamp: Date.now()}) + '\n';
-  try {
-    await appendFile(logPath, logLine, 'utf8');
-  } catch (err) {
-    // Log error to console for debugging
-    console.error('[DEBUG LOG] Failed to write log file:', err);
-  }
-  // Also try fetch-based logging
-  fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).catch(()=>{});
-}
 
 /**
  * Fetch with timeout using AbortController
@@ -30,30 +14,18 @@ async function fetchWithTimeout(
   options: RequestInit,
   timeoutMs: number,
 ): Promise<Response> {
-  // #region agent log
-  await debugLog({location:'fetchHtml/route.ts:32',message:'fetchWithTimeout entry',data:{url,timeoutMs,hasHeaders:!!options.headers},sessionId:'debug-session',runId:'run1',hypothesisId:'B'});
-  // #endregion
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    // #region agent log
-    await debugLog({location:'fetchHtml/route.ts:39',message:'Before fetch call',data:{url,timeoutMs},sessionId:'debug-session',runId:'run1',hypothesisId:'B'});
-    // #endregion
     const response = await fetch(url, {
       ...options,
       signal: controller.signal,
     });
     clearTimeout(timeoutId);
-    // #region agent log
-    await debugLog({location:'fetchHtml/route.ts:46',message:'After fetch success',data:{status:response.status,statusText:response.statusText,ok:response.ok,contentType:response.headers.get('content-type'),url:response.url},sessionId:'debug-session',runId:'run1',hypothesisId:'A'});
-    // #endregion
     return response;
   } catch (error) {
     clearTimeout(timeoutId);
-    // #region agent log
-    await debugLog({location:'fetchHtml/route.ts:52',message:'Fetch error caught',data:{errorName:error instanceof Error?error.name:'unknown',errorMessage:error instanceof Error?error.message:String(error),isAbortError:error instanceof Error&&error.name==='AbortError'},sessionId:'debug-session',runId:'run1',hypothesisId:'B'});
-    // #endregion
     if (error instanceof Error && error.name === 'AbortError') {
       throw new Error('Request timed out');
     }
@@ -66,9 +38,6 @@ export async function GET(req: NextRequest) {
   try {
     const url = req.nextUrl.searchParams.get('url');
     console.log('[fetchHtml] URL received:', url);
-    // #region agent log
-    await debugLog({location:'fetchHtml/route.ts:65',message:'GET handler entry',data:{url:url||'null'},sessionId:'debug-session',runId:'run1',hypothesisId:'ALL'});
-    // #endregion
 
     if (!url) {
       return NextResponse.json(
@@ -80,18 +49,12 @@ export async function GET(req: NextRequest) {
     try {
       new URL(url);
     } catch {
-      // #region agent log
-      await debugLog({location:'fetchHtml/route.ts:79',message:'URL validation failed',data:{url},sessionId:'debug-session',runId:'run1',hypothesisId:'D'});
-      // #endregion
       return NextResponse.json(
         formatError(ERROR_CODES.ERR_INVALID_URL, 'Invalid URL format'),
       );
     }
 
     // Fetch with timeout and proper headers
-    // #region agent log
-    await debugLog({location:'fetchHtml/route.ts:88',message:'Before fetchWithTimeout call',data:{url,timeout:FETCH_TIMEOUT_MS},sessionId:'debug-session',runId:'run1',hypothesisId:'B'});
-    // #endregion
     const htmlRes = await fetchWithTimeout(
       url,
       {
@@ -106,13 +69,7 @@ export async function GET(req: NextRequest) {
       FETCH_TIMEOUT_MS,
     );
 
-    // #region agent log
-    await debugLog({location:'fetchHtml/route.ts:106',message:'After fetchWithTimeout, checking response',data:{status:htmlRes.status,statusText:htmlRes.statusText,ok:htmlRes.ok,contentType:htmlRes.headers.get('content-type'),finalUrl:htmlRes.url},sessionId:'debug-session',runId:'run1',hypothesisId:'A'});
-    // #endregion
     if (!htmlRes.ok) {
-      // #region agent log
-      await debugLog({location:'fetchHtml/route.ts:109',message:'Response not ok',data:{status:htmlRes.status,statusText:htmlRes.statusText},sessionId:'debug-session',runId:'run1',hypothesisId:'A'});
-      // #endregion
       if (htmlRes.status === 404) {
         return NextResponse.json(
           formatError(ERROR_CODES.ERR_NO_RECIPE_FOUND, 'Page not found'),
@@ -129,14 +86,8 @@ export async function GET(req: NextRequest) {
     }
 
     const fullHtml = await htmlRes.text();
-    // #region agent log
-    await debugLog({location:'fetchHtml/route.ts:128',message:'After text extraction',data:{htmlLength:fullHtml.length,htmlTrimmedLength:fullHtml.trim().length,first200Chars:fullHtml.substring(0,200)},sessionId:'debug-session',runId:'run1',hypothesisId:'E'});
-    // #endregion
 
     if (!fullHtml || fullHtml.trim().length === 0) {
-      // #region agent log
-      await debugLog({location:'fetchHtml/route.ts:133',message:'HTML content empty',data:{htmlLength:fullHtml?.length||0},sessionId:'debug-session',runId:'run1',hypothesisId:'E'});
-      // #endregion
       return NextResponse.json(
         formatError(ERROR_CODES.ERR_NO_RECIPE_FOUND, 'Page content is empty'),
       );
@@ -151,14 +102,8 @@ export async function GET(req: NextRequest) {
 
     // Grab just the visible body content
     const cleanHtml = $('body').html() || '';
-    // #region agent log
-    await debugLog({location:'fetchHtml/route.ts:150',message:'After cheerio cleaning',data:{cleanHtmlLength:cleanHtml.length,cleanHtmlTrimmedLength:cleanHtml.trim().length,hasBody:!!$('body').length},sessionId:'debug-session',runId:'run1',hypothesisId:'E'});
-    // #endregion
 
     if (!cleanHtml || cleanHtml.trim().length === 0) {
-      // #region agent log
-      await debugLog({location:'fetchHtml/route.ts:155',message:'Clean HTML empty after processing',data:{cleanHtmlLength:cleanHtml?.length||0},sessionId:'debug-session',runId:'run1',hypothesisId:'E'});
-      // #endregion
       return NextResponse.json(
         formatError(
           ERROR_CODES.ERR_NO_RECIPE_FOUND,
@@ -167,15 +112,9 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // #region agent log
-    await debugLog({location:'fetchHtml/route.ts:167',message:'Success - returning HTML',data:{cleanHtmlLength:cleanHtml.length},sessionId:'debug-session',runId:'run1',hypothesisId:'ALL'});
-    // #endregion
     return NextResponse.json({ success: true, html: cleanHtml });
   } catch (error) {
     console.error('Error fetching HTML:', error);
-    // #region agent log
-    await debugLog({location:'fetchHtml/route.ts:171',message:'Error caught in GET handler',data:{errorName:error instanceof Error?error.name:'unknown',errorMessage:error instanceof Error?error.message:String(error),errorStack:error instanceof Error?error.stack:undefined,errorType:error instanceof TypeError?'TypeError':error instanceof Error?'Error':'Unknown'},sessionId:'debug-session',runId:'run1',hypothesisId:'ALL'});
-    // #endregion
 
     // Handle timeout errors specifically
     if (error instanceof Error) {
@@ -184,9 +123,6 @@ export async function GET(req: NextRequest) {
         error.message.includes('timed out') ||
         error.name === 'AbortError'
       ) {
-        // #region agent log
-        await debugLog({location:'fetchHtml/route.ts:179',message:'Timeout error detected',data:{errorMessage:error.message},sessionId:'debug-session',runId:'run1',hypothesisId:'B'});
-        // #endregion
         return NextResponse.json(
           formatError(ERROR_CODES.ERR_TIMEOUT, 'Request timed out'),
         );
@@ -199,9 +135,6 @@ export async function GET(req: NextRequest) {
         error.message.includes('ENOTFOUND') ||
         error.message.includes('network')
       ) {
-        // #region agent log
-        await debugLog({location:'fetchHtml/route.ts:193',message:'Network error detected',data:{errorMessage:error.message},sessionId:'debug-session',runId:'run1',hypothesisId:'D'});
-        // #endregion
         return NextResponse.json(
           formatError(ERROR_CODES.ERR_FETCH_FAILED, 'Network error occurred'),
         );
@@ -210,18 +143,12 @@ export async function GET(req: NextRequest) {
 
     // Handle TypeError (usually network-related)
     if (error instanceof TypeError) {
-      // #region agent log
-      await debugLog({location:'fetchHtml/route.ts:209',message:'TypeError detected',data:{errorMessage:error.message},sessionId:'debug-session',runId:'run1',hypothesisId:'D'});
-      // #endregion
       return NextResponse.json(
         formatError(ERROR_CODES.ERR_FETCH_FAILED, 'Failed to fetch the page'),
       );
     }
 
     // Generic error fallback
-    // #region agent log
-    await debugLog({location:'fetchHtml/route.ts:218',message:'Generic error fallback',data:{errorMessage:error instanceof Error?error.message:String(error)},sessionId:'debug-session',runId:'run1',hypothesisId:'G'});
-    // #endregion
     return NextResponse.json(
       formatError(ERROR_CODES.ERR_UNKNOWN, 'An unexpected error occurred'),
     );

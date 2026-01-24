@@ -12,9 +12,11 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-[#FAFAF9] max-w-6xl mx-auto pt-6 md:pt-8 pb-12 md:pb-16 px-4 md:px-8 relative overflow-hidden rounded-t-[32px]">
-      {/* Content container */}
-      <div className="relative z-10">
+    // Footer wrapper: Full-width background with rounded top corners
+    // This ensures the #FAFAF9 background fills edge-to-edge, eliminating negative space
+    <footer className="hidden md:block bg-[#FAFAF9] w-full pt-6 md:pt-8 pb-12 md:pb-16 relative overflow-hidden rounded-t-[32px]">
+      {/* Content container: Centered content with max-width constraint */}
+      <div className="max-w-6xl mx-auto px-4 md:px-8 relative z-10">
         <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 md:gap-8 relative min-h-[250px] md:min-h-[300px]">
           {/* Left Section: Branding and Team Info */}
           <div className="flex flex-col gap-6 md:gap-8 w-full items-start justify-start relative z-10">
@@ -29,6 +31,7 @@ export default function Footer() {
                     width={36}
                     height={36}
                     className="object-contain"
+                    draggable={false}
                   />
                 </div>
                 {/* Title */}
@@ -63,6 +66,7 @@ export default function Footer() {
                     width={37}
                     height={37}
                     className="object-cover rounded-full"
+                    draggable={false}
                   />
                 </Link>
                 {/* Michelle Avatar */}
@@ -79,6 +83,7 @@ export default function Footer() {
                     width={37}
                     height={37}
                     className="object-cover rounded-full"
+                    draggable={false}
                   />
                 </Link>
                 {/* Will Avatar */}
@@ -95,6 +100,7 @@ export default function Footer() {
                     width={37}
                     height={37}
                     className="object-cover rounded-full"
+                    draggable={false}
                   />
                 </Link>
               </div>
@@ -104,6 +110,7 @@ export default function Footer() {
       </div>
 
       {/* Fish Illustration - positioned absolutely, extends from bottom half and gets cut off */}
+      {/* Note: This is positioned relative to the footer, not the content container */}
       <div className="absolute right-0 w-[300px] sm:w-[400px] md:w-[500px] lg:w-[600px] h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] z-0 pointer-events-none" style={{ bottom: '-40%' }}>
         <div className="relative w-full h-full">
           <Image
@@ -112,9 +119,10 @@ export default function Footer() {
             fill
             className="object-contain object-bottom"
             priority
+            draggable={false}
           />
         </div>
       </div>
-      </footer>
+    </footer>
   );
 }

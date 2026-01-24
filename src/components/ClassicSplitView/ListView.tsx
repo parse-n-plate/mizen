@@ -44,8 +44,8 @@ export default function ListView({ steps, onSelectStep, allIngredients = [] }: L
   };
 
   return (
-    <div className="h-full overflow-y-auto p-4 md:p-6 bg-white">
-      <div className="space-y-1 pb-12">
+    <div className="h-full overflow-y-auto bg-white">
+      <div className="max-w-6xl mx-auto px-4 md:px-8 py-4 space-y-0 pb-12">
         {steps.map((step, index) => (
           <button
             key={index}
@@ -70,7 +70,7 @@ export default function ListView({ steps, onSelectStep, allIngredients = [] }: L
               
               {/* Right side: Square image */}
               {step.imageUrl && (
-                <div className={`flex-shrink-0 rounded-lg overflow-hidden border border-stone-100 bg-stone-50 transition-all duration-300 ${imageSizeMap[stepSizing]}`}>
+                <div className={`flex-shrink-0 rounded-lg overflow-hidden border border-stone-200 bg-stone-50 transition-all duration-300 ${imageSizeMap[stepSizing]}`}>
                   {/* Use regular img for external URLs, Next.js Image for local paths */}
                   {step.imageUrl.startsWith('/') || step.imageUrl.startsWith('http://localhost') ? (
                     <Image
@@ -80,6 +80,7 @@ export default function ListView({ steps, onSelectStep, allIngredients = [] }: L
                       height={150}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                       unoptimized={step.imageUrl.startsWith('http://localhost')}
+                      draggable={false}
                     />
                   ) : (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -87,6 +88,7 @@ export default function ListView({ steps, onSelectStep, allIngredients = [] }: L
                       src={step.imageUrl}
                       alt={`Step ${index + 1}: ${step.step}`}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                      draggable="false"
                     />
                   )}
                 </div>
@@ -95,7 +97,7 @@ export default function ListView({ steps, onSelectStep, allIngredients = [] }: L
             
             {/* Subtle separator line - disappears on hover of itself or neighbors */}
             {index < steps.length - 1 && (
-              <div className="absolute bottom-0 left-4 right-4 h-px bg-stone-100 group-hover:opacity-0 transition-opacity duration-200" />
+              <div className="absolute bottom-0 left-4 right-4 h-px bg-stone-200/50 group-hover:opacity-0 transition-opacity duration-200" />
             )}
           </button>
         ))}

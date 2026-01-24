@@ -23,68 +23,66 @@ export default function ContextPanel({ step, allIngredients }: ContextPanelProps
     window.dispatchEvent(event);
   };
 
+  // Check if there's any content to show
+  const hasIngredients = adminSettings.showIngredientsForStepList && (
+    matchedIngredients.length > 0 || 
+    (step.ingredients && step.ingredients.length > 0)
+  );
+  const hasTimer = step.time && step.time > 0;
+  const hasTip = step.tips && step.tips.trim().length > 0;
+
+  // If there's no content to display, don't render the panel
+  if (!hasIngredients && !hasTimer && !hasTip) {
+    return null;
+  }
+
   return (
-    <div className="overflow-y-auto pt-8 px-8 pb-8 bg-[#fafafa] rounded-[12px] cursor-default">
+    <div className="pt-12 pb-12 cursor-default">
       <AnimatePresence mode="wait">
         <motion.div
           key={step.step} // Use step title as key to trigger re-animation
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.3 }}
-          className="space-y-10 cursor-default"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="space-y-8 cursor-default"
         >
           {/* Ingredients List Section - Detailed View */}
           {adminSettings.showIngredientsForStepList && matchedIngredients.length > 0 && (
-            <div className="flex flex-col gap-6">
-              <div className="flex items-center gap-3">
-                <span className="font-albert font-bold text-[12px] uppercase tracking-[0.2em] text-stone-400">
-                  Ingredients for this step
-                </span>
-                <div className="h-px bg-stone-200 flex-1" />
-              </div>
-              
-              <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-1 gap-2">
                 {matchedIngredients.map((ing, index) => (
                   <motion.div
                     key={index}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: index * 0.05 }}
+                    transition={{ delay: index * 0.03 }}
                     onClick={() => handleIngredientClick(ing.name)}
-                    className="group flex items-center justify-between p-3 -mx-3 rounded-xl cursor-pointer border border-transparent hover:bg-white hover:border-stone-100"
+                    className="group flex items-center justify-between py-2 border-b border-stone-100 last:border-0 cursor-pointer hover:bg-stone-50/50 -mx-4 px-4 rounded-lg transition-colors"
                   >
-                    <div className="flex flex-col">
-                      <p className="font-albert font-medium text-[17px] text-stone-700 leading-tight group-hover:text-[#193d34]">
+                    <div className="flex items-baseline gap-3">
+                      <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">
                         {ing.name}
                       </p>
-                      <p className="font-albert text-[13px] text-stone-400 mt-1">
+                      <p className="font-albert text-[14px] text-stone-400">
                         {ing.amount} {ing.units}
                       </p>
                     </div>
-                    <motion.div 
-                      className="w-5 h-5 shrink-0 text-stone-300 group-hover:text-[#193d34]"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 0.4 }}
-                      whileHover={{ opacity: 1 }}
-                      transition={{ duration: 0 }}
-                    >
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                       <svg
-                        width="20"
-                        height="20"
+                        width="16"
+                        height="16"
                         viewBox="0 0 24 24"
                         fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-stone-300"
                       >
-                        <path
-                          d="M7 17L17 7M17 7H7M17 7V17"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
+                        <path d="M7 17L17 7M17 7H7M17 7V17" />
                       </svg>
-                    </motion.div>
+                    </div>
                   </motion.div>
                 ))}
               </div>
@@ -93,50 +91,35 @@ export default function ContextPanel({ step, allIngredients }: ContextPanelProps
 
           {/* Fallback to legacy ingredients if no matches found in text but they exist in step object */}
           {adminSettings.showIngredientsForStepList && matchedIngredients.length === 0 && step.ingredients && step.ingredients.length > 0 && (
-            <div className="flex flex-col gap-6">
-              <div className="flex items-center gap-3">
-                <span className="font-albert font-bold text-[12px] uppercase tracking-[0.2em] text-stone-400">
-                  Ingredients for this step
-                </span>
-                <div className="h-px bg-stone-300 flex-1" />
-              </div>
-              
-              <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-4">
+              <div className="grid grid-cols-1 gap-2">
                 {step.ingredients.map((ingredient, index) => (
                   <motion.div
                     key={index}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: index * 0.05 }}
+                    transition={{ delay: index * 0.03 }}
                     onClick={() => handleIngredientClick(ingredient)}
-                    className="group flex items-center justify-between p-3 -mx-3 rounded-xl hover:bg-white cursor-pointer border border-transparent hover:border-stone-100"
+                    className="group flex items-center justify-between py-2 border-b border-stone-100 last:border-0 cursor-pointer hover:bg-stone-50/50 -mx-4 px-4 rounded-lg transition-colors"
                   >
-                    <p className="font-albert font-medium text-[17px] text-stone-500 leading-relaxed group-hover:text-[#193d34]">
+                    <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">
                       {ingredient}
                     </p>
-                    <motion.div 
-                      className="w-5 h-5 shrink-0 text-stone-300 group-hover:text-[#193d34]"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 0.4 }}
-                      whileHover={{ opacity: 1 }}
-                      transition={{ duration: 0 }}
-                    >
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                       <svg
-                        width="20"
-                        height="20"
+                        width="16"
+                        height="16"
                         viewBox="0 0 24 24"
                         fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-stone-300"
                       >
-                        <path
-                          d="M7 17L17 7M17 7H7M17 7V17"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
+                        <path d="M7 17L17 7M17 7H7M17 7V17" />
                       </svg>
-                    </motion.div>
+                    </div>
                   </motion.div>
                 ))}
               </div>
@@ -144,7 +127,7 @@ export default function ContextPanel({ step, allIngredients }: ContextPanelProps
           )}
 
           {/* Timer and Tips Cards with refined spacing */}
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 gap-4 pt-4">
             <TimerCard time={step.time} />
             <TipsCard tip={step.tips} />
           </div>

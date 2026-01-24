@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowUpDown, ChefHat } from 'lucide-react';
+import { ChefHat } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { findStepsForIngredient } from '@/utils/ingredientMatcher';
@@ -10,7 +10,7 @@ import { IngredientExpandedModal } from './ingredient-expanded-modal';
 import { IngredientExpandedSidePanel } from './ingredient-expanded-sidepanel';
 import { IngredientExpandedThings3 } from './ingredient-expanded-things3';
 import { IngredientExpandedDrawer } from './ingredient-expanded-drawer';
-import { cn } from '@/lib/utils';
+import { cn, convertTextFractionsToSymbols } from '@/lib/utils';
 
 /**
  * IngredientCard Component (Linear List Style)
@@ -33,7 +33,7 @@ interface IngredientCardProps {
   };
   description?: string; // Future: will be populated from backend
   isLast?: boolean; // Hide divider if this is the last item
-  recipeSteps?: { instruction: string }[];
+  recipeSteps?: { instruction: string; title?: string }[]; // Step data with instruction and optional title
   /** Ingredient group name (e.g., "Main", "Sauce") */
   groupName?: string;
   /** Recipe URL for note persistence */
@@ -134,6 +134,18 @@ export default function IngredientCard({
     return findStepsForIngredient(ingredientNameOnly, recipeSteps);
   }, [ingredientNameOnly, recipeSteps]);
 
+  // Create a map of step numbers to step titles for displaying in buttons
+  const stepTitlesMap = useMemo(() => {
+    const map: Record<number, string> = {};
+    recipeSteps.forEach((step, index) => {
+      // Step numbers are 1-indexed, array indices are 0-indexed
+      const stepNumber = index + 1;
+      // Use title if available, otherwise fallback to empty string (will show just step number)
+      map[stepNumber] = step.title || '';
+    });
+    return map;
+  }, [recipeSteps]);
+
   const handleStepClick = (stepNumber: number) => {
     // Dispatch custom event to navigate to a specific step in the Cook tab
     const event = new CustomEvent('navigate-to-step', { detail: { stepNumber } });
@@ -141,19 +153,20 @@ export default function IngredientCard({
   };
 
   // Format the ingredient text (combines amount, units, and ingredient name)
+  // Also converts text fractions to Unicode symbols (1/2 → ½)
   const formatIngredientText = (): string => {
     // Handle string ingredients
     if (typeof ingredient === 'string') {
-      return ingredient;
+      return convertTextFractionsToSymbols(ingredient);
     }
 
     // Handle object ingredients
     if (typeof ingredient === 'object' && ingredient !== null) {
       const parts: string[] = [];
       
-      // Add amount if it exists and is valid
+      // Add amount if it exists and is valid (convert fractions to symbols)
       if (ingredient.amount && ingredient.amount.trim() && ingredient.amount !== 'as much as you like') {
-        parts.push(ingredient.amount.trim());
+        parts.push(convertTextFractionsToSymbols(ingredient.amount.trim()));
       }
       
       // Add units if they exist
@@ -161,10 +174,10 @@ export default function IngredientCard({
         parts.push(ingredient.units.trim());
       }
       
-      // Add ingredient name
+      // Add ingredient name (convert fractions in case they appear in the name)
       const ingredientName = ingredient.ingredient && ingredient.ingredient.trim();
       if (ingredientName) {
-        parts.push(ingredientName);
+        parts.push(convertTextFractionsToSymbols(ingredientName));
       }
       
       return parts.join(' ');
@@ -181,12 +194,15 @@ export default function IngredientCard({
       const parsed = parseIngredientString(ingredient.ingredient);
       if (parsed.amount) {
         // Return amount with unit if unit exists, otherwise just amount
-        return parsed.unit ? `${parsed.amount} ${parsed.unit}` : parsed.amount;
+        // Convert fractions to symbols
+        const amountWithSymbols = convertTextFractionsToSymbols(parsed.amount);
+        return parsed.unit ? `${amountWithSymbols} ${parsed.unit}` : amountWithSymbols;
       }
     }
     
+    // Convert fractions to symbols in the computed amount
     const computed = `${ingredient.amount || ''} ${ingredient.units || ''}`.trim();
-    return computed;
+    return convertTextFractionsToSymbols(computed);
   }, [ingredient]);
 
   // Extract units separately for note storage
@@ -236,11 +252,11 @@ export default function IngredientCard({
 
   return (
     <div className="relative">
-      <motion.div 
+      <motion.div
         id={`ingredient-${ingredientNameOnly.toLowerCase().replace(/\s+/g, '-')}`}
         onClick={toggleExpand}
         className={cn(
-          "ingredient-list-item group cursor-default",
+          "ingredient-list-item group cursor-pointer",
           isChecked ? 'is-checked' : '',
           isExpanded && settings.ingredientExpandStyle === 'things3' ? "bg-stone-50/50 shadow-sm rounded-xl border border-stone-100 -mx-1 px-1" : ""
         )}
@@ -267,57 +283,66 @@ export default function IngredientCard({
 
           {/* Ingredient details in the center */}
           <div className="ingredient-list-text-content">
-            {/* Primary text: Ingredient name with amount/units */}
-            <div className="ingredient-list-primary flex items-center justify-between">
-              <motion.p 
-                animate={{ 
-                  opacity: isChecked ? 0.5 : 1,
-                  x: isChecked ? 4 : 0
-                }}
-                className="ingredient-list-name transition-all duration-[180ms]"
-              >
-                {/* Render amount/unit in black and ingredient name in gray, or ingredient name in bold black with parentheses in gray if no amount */}
-                {typeof ingredient === 'string' ? (
-                  (() => {
-                    // Split string ingredients: main name in bold, parentheses in gray
-                    const parenMatch = ingredientText.match(/^([^(]+?)\s*(\(.+\))$/);
-                    if (parenMatch) {
-                      return (
-                        <>
-                          <span className="text-stone-900 font-bold">{parenMatch[1].trim()}</span>
-                          <span className="text-stone-600"> {parenMatch[2]}</span>
-                        </>
-                      );
-                    }
-                    return <span className="text-stone-900 font-bold">{ingredientText}</span>;
-                  })()
-                ) : (
-                  <>
-                    {ingredientAmount ? (
-                      // Has amount/unit: show amount in bold black, name in gray
+            {/* Primary text: Ingredient name with amount/units - matching cook mode format */}
+            <motion.div 
+              animate={{ 
+                opacity: isChecked ? 0.5 : 1
+              }}
+              className="ingredient-list-primary flex items-baseline gap-3 transition-all duration-[180ms]"
+            >
+              {/* Format: ingredient name first (medium, stone-800, 16px), then amount/units (regular, stone-400, 14px) */}
+              {typeof ingredient === 'string' ? (
+                (() => {
+                  // For string ingredients, try to parse to separate name and amount
+                  const parsed = parseIngredientString(ingredientText);
+                  if (parsed.amount) {
+                    // Has amount: show name first, then amount/unit
+                    const amountDisplay = parsed.unit ? `${parsed.amount} ${parsed.unit}` : parsed.amount;
+                    return (
                       <>
-                        <span className="text-stone-900 font-bold">{ingredientAmount} </span>
-                        <span className="text-stone-600">{ingredientNameOnly}</span>
+                        <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{parsed.name}</p>
+                        <p className="font-albert text-[14px] text-stone-400">{amountDisplay}</p>
                       </>
-                    ) : (
-                      // No amount/unit: show main name in bold black, parentheses in gray
-                      (() => {
-                        const parenMatch = ingredientText.match(/^([^(]+?)\s*(\(.+\))$/);
-                        if (parenMatch) {
-                          return (
-                            <>
-                              <span className="text-stone-900 font-bold">{parenMatch[1].trim()}</span>
-                              <span className="text-stone-600"> {parenMatch[2]}</span>
-                            </>
-                          );
-                        }
-                        return <span className="text-stone-900 font-bold">{ingredientText}</span>;
-                      })()
-                    )}
-                  </>
-                )}
-              </motion.p>
-            </div>
+                    );
+                  }
+                  // No amount found: show full text as name (check for parentheses)
+                  const parenMatch = ingredientText.match(/^([^(]+?)\s*(\(.+\))$/);
+                  if (parenMatch) {
+                    return (
+                      <>
+                        <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{parenMatch[1].trim()}</p>
+                        <p className="font-albert text-[14px] text-stone-400">{parenMatch[2]}</p>
+                      </>
+                    );
+                  }
+                  return <p className="font-albert font-medium text-[16px] text-stone-800">{ingredientText}</p>;
+                })()
+              ) : (
+                <>
+                  {ingredientAmount ? (
+                    // Has amount/unit: show name first, then amount/unit
+                    <>
+                      <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{ingredientNameOnly}</p>
+                      <p className="font-albert text-[14px] text-stone-400">{ingredientAmount}</p>
+                    </>
+                  ) : (
+                    // No amount/unit: show main name, check for parentheses
+                    (() => {
+                      const parenMatch = ingredientText.match(/^([^(]+?)\s*(\(.+\))$/);
+                      if (parenMatch) {
+                        return (
+                          <>
+                            <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{parenMatch[1].trim()}</p>
+                            <p className="font-albert text-[14px] text-stone-400">{parenMatch[2]}</p>
+                          </>
+                        );
+                      }
+                      return <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{ingredientText}</p>;
+                    })()
+                  )}
+                </>
+              )}
+            </motion.div>
 
             {/* Secondary text: Description (hidden when empty) */}
             <AnimatePresence>
@@ -333,18 +358,6 @@ export default function IngredientCard({
               )}
             </AnimatePresence>
           </div>
-
-          {/* Swap icon on the right */}
-          <button
-            type="button"
-            className="ingredient-list-swap-button cursor-pointer"
-            aria-label={`Reorder ${ingredientText}`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-center">
-              <ArrowUpDown className="ingredient-list-swap-icon" />
-            </div>
-          </button>
         </div>
       </motion.div>
 
@@ -357,6 +370,7 @@ export default function IngredientCard({
           groupName={groupName}
           description={description}
           linkedSteps={linkedSteps}
+          stepTitlesMap={stepTitlesMap}
           onStepClick={handleStepClick}
           isOpen={isExpanded}
           recipeUrl={recipeUrl}
@@ -372,6 +386,7 @@ export default function IngredientCard({
           groupName={groupName}
           description={description}
           linkedSteps={linkedSteps}
+          stepTitlesMap={stepTitlesMap}
           onStepClick={handleStepClick}
           isOpen={isExpanded}
           recipeUrl={recipeUrl}
@@ -386,6 +401,7 @@ export default function IngredientCard({
         groupName={groupName}
         description={description}
         linkedSteps={linkedSteps}
+        stepTitlesMap={stepTitlesMap}
         onStepClick={handleStepClick}
         isOpen={isExpanded && settings.ingredientExpandStyle === 'modal'}
         onClose={() => onExpandChange ? onExpandChange(false) : setInternalExpanded(false)}
@@ -400,6 +416,7 @@ export default function IngredientCard({
         groupName={groupName}
         description={description}
         linkedSteps={linkedSteps}
+        stepTitlesMap={stepTitlesMap}
         onStepClick={handleStepClick}
         isOpen={isExpanded && settings.ingredientExpandStyle === 'sidepanel'}
         onClose={() => onExpandChange ? onExpandChange(false) : setInternalExpanded(false)}
@@ -411,6 +428,7 @@ export default function IngredientCard({
         ingredientName={ingredientNameOnly}
         ingredientAmount={ingredientAmount}
         linkedSteps={linkedSteps}
+        stepTitlesMap={stepTitlesMap}
         onStepClick={handleStepClick}
         isOpen={isExpanded && settings.ingredientExpandStyle === 'mobile-drawer'}
         onClose={() => onExpandChange ? onExpandChange(false) : setInternalExpanded(false)}

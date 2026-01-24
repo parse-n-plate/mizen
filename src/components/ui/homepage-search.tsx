@@ -43,12 +43,17 @@ export default function HomepageSearch() {
   const { showError, showInfo } = useToast();
   const router = useRouter();
 
-  // Command+K keyboard shortcut handler - focuses the search bar
+  // Note: Command+K handling is now done globally via CommandKContext
+  // This component's input will be focused when Command+K is pressed on the homepage
+
+  // Handle ESC key to blur/unfocus the search input
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      // If ESC is pressed and the search input is focused, blur it
+      if (e.key === 'Escape' && document.activeElement === searchInputRef.current) {
         e.preventDefault();
-        searchInputRef.current?.focus();
+        searchInputRef.current?.blur();
+        setIsSearchFocused(false);
       }
     };
 
@@ -123,6 +128,17 @@ export default function HomepageSearch() {
 
       console.log('[HomepageSearch] Parsing recipe from image:', selectedImage.name);
 
+      // Convert image to base64 for storage
+      // This allows us to display the image preview later
+      const imageDataPromise = new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          resolve(reader.result as string);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(selectedImage);
+      });
+
       // Call the image parsing function
       const response = await parseRecipeFromImage(selectedImage);
 
@@ -133,6 +149,7 @@ export default function HomepageSearch() {
         showError({
           code: errorCode,
           message: response.error?.message,
+          retryAfter: response.error?.retryAfter, // Pass through retry-after timestamp
         });
         setLoading(false);
         return;
@@ -140,7 +157,10 @@ export default function HomepageSearch() {
 
       console.log('[HomepageSearch] Successfully parsed recipe from image:', response.title);
 
-      // Store parsed recipe
+      // Wait for image data conversion to complete
+      const imageData = await imageDataPromise;
+
+      // Store parsed recipe with image data
       const recipeToStore = {
         title: response.title,
         ingredients: response.ingredients,
@@ -149,6 +169,12 @@ export default function HomepageSearch() {
         sourceUrl: response.sourceUrl || `image:${selectedImage.name}`,
         summary: response.summary,
         cuisine: response.cuisine,
+        ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
+        imageData: imageData, // Store base64 image data for preview
+        imageFilename: selectedImage.name, // Store original filename
       };
 
       setParsedRecipe(recipeToStore);
@@ -173,6 +199,12 @@ export default function HomepageSearch() {
         author: response.author,
         sourceUrl: response.sourceUrl || `image:${selectedImage.name}`,
         cuisine: response.cuisine,
+        ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
+        imageData: imageData, // Store base64 image data for preview
+        imageFilename: selectedImage.name, // Store original filename
       });
 
       // Navigate to recipe page
@@ -244,6 +276,7 @@ export default function HomepageSearch() {
           showError({
             code: errorCode,
             message: response.error?.message,
+            retryAfter: response.error?.retryAfter, // Pass through retry-after timestamp
           });
           setLoading(false);
           return;
@@ -258,6 +291,10 @@ export default function HomepageSearch() {
           sourceUrl: response.sourceUrl || url,
           summary: response.summary,
           cuisine: response.cuisine,
+          ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+          ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+          ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+          ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
         };
 
         setParsedRecipe(recipeToStore);
@@ -282,6 +319,10 @@ export default function HomepageSearch() {
           author: response.author,
           sourceUrl: response.sourceUrl || url,
           cuisine: response.cuisine,
+          ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+          ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
+          ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
+          ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
         });
 
         // Add to search history
@@ -326,9 +367,14 @@ export default function HomepageSearch() {
     fileInputRef.current?.click();
   };
 
+  // Handle cancel loading
+  const handleCancelLoading = () => {
+    setLoading(false);
+  };
+
   return (
     <>
-      <LoadingAnimation isVisible={loading} />
+      <LoadingAnimation isVisible={loading} onCancel={handleCancelLoading} />
       <div className="w-full max-w-2xl mx-auto">
         <form onSubmit={handleSubmit} className="w-full">
           <div 
@@ -363,6 +409,7 @@ export default function HomepageSearch() {
                         src={imagePreviewUrl} 
                         alt={selectedImage.name}
                         className="size-[28px] rounded object-cover flex-shrink-0"
+                        draggable="false"
                       />
                     )}
                     <span className="font-albert font-medium text-[#0c0a09] text-[13px]">{selectedImage.name}</span>
@@ -387,6 +434,7 @@ export default function HomepageSearch() {
                 {!selectedImage && (
                   <input
                     ref={searchInputRef}
+                    data-search-input="homepage"
                     type="text"
                     value={searchValue}
                     onChange={handleSearchChange}

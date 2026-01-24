@@ -11,6 +11,7 @@ import {
   getRecentRecipes,
   addRecentRecipe,
   getRecipeById,
+  updateRecipe as updateRecipeInStorage,
   getBookmarkedRecipeIds,
   addBookmark as addBookmarkToStorage,
   removeBookmark as removeBookmarkFromStorage,
@@ -21,6 +22,7 @@ interface ParsedRecipesContextType {
   recentRecipes: ParsedRecipe[];
   isLoaded: boolean;
   addRecipe: (recipe: Omit<ParsedRecipe, 'id' | 'parsedAt'>) => void;
+  updateRecipe: (id: string, updates: Partial<ParsedRecipe>) => void;
   clearRecipes: () => void;
   removeRecipe: (id: string) => void;
   getRecipeById: (id: string) => ParsedRecipe | null;
@@ -69,6 +71,19 @@ export function ParsedRecipesProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateRecipe = (id: string, updates: Partial<ParsedRecipe>) => {
+    try {
+      // Update in localStorage
+      updateRecipeInStorage(id, updates);
+
+      // Update state by re-fetching from localStorage
+      const updatedRecipes = getRecentRecipes();
+      setRecentRecipes(updatedRecipes);
+    } catch (error) {
+      console.error('Error updating recipe:', error);
+    }
+  };
+
   const clearRecipes = () => {
     try {
       // Clear from localStorage
@@ -105,7 +120,7 @@ export function ParsedRecipesProvider({ children }: { children: ReactNode }) {
   const toggleBookmark = (id: string) => {
     try {
       const isCurrentlyBookmarked = bookmarkedRecipeIds.includes(id);
-      
+
       if (isCurrentlyBookmarked) {
         // Remove bookmark
         removeBookmarkFromStorage(id);
@@ -137,6 +152,7 @@ export function ParsedRecipesProvider({ children }: { children: ReactNode }) {
         recentRecipes,
         isLoaded,
         addRecipe,
+        updateRecipe,
         clearRecipes,
         removeRecipe,
         getRecipeById: getRecipeByIdFromContext,
