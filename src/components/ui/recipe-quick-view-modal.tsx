@@ -4,7 +4,9 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { X, Camera } from 'lucide-react';
+import { X } from 'lucide-react';
+// Solar Camera icon with Bold weight (filled) for consistent visual style
+import CameraIcon from '@solar-icons/react/csr/video/Camera';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import MenuDotsCircle from '@solar-icons/react/csr/ui/MenuDotsCircle';
 import Pen from '@solar-icons/react/csr/messages/Pen';
@@ -182,13 +184,15 @@ export default function RecipeQuickViewModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      {/* Refined dialog with better sizing and rounded corners */}
+      <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto p-0 rounded-2xl">
+        {/* Header section with padding */}
+        <DialogHeader className="p-6 pb-0">
           <div className="flex items-start justify-between gap-4">
-            <DialogTitle className="font-domine text-2xl font-bold text-black pr-8">
+            <DialogTitle className="font-domine text-xl font-bold text-stone-900 leading-tight pr-12">
               {recipe.title}
             </DialogTitle>
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               {/* Bookmark Button */}
               <button
                 onClick={handleBookmarkToggle}
@@ -258,96 +262,75 @@ export default function RecipeQuickViewModal({
           </div>
           
           {recipe.author && (
-            <p className="font-albert text-sm text-stone-600 mt-2">
+            <p className="font-albert text-sm text-stone-500 mt-1">
               By {recipe.author}
             </p>
           )}
         </DialogHeader>
 
-        <div className="mt-6 space-y-6">
-          {/* Recipe Image or Cuisine Icon */}
-          <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-stone-100 border border-stone-200">
+        {/* Main content with consistent padding */}
+        <div className="px-6 pb-6 pt-4 space-y-5">
+          {/* Recipe Image or Cuisine Icon - refined styling */}
+          <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-gradient-to-b from-stone-50 to-stone-100 border border-stone-200">
             {recipe.plate?.photoData ? (
+              // Show user's cooked dish photo
               <img
                 src={recipe.plate.photoData}
                 alt="Your dish"
                 className="w-full h-full object-cover"
               />
             ) : (
+              // Show cuisine icon as placeholder with centered layout
               <div className="w-full h-full flex items-center justify-center">
                 <Image
                   src={cuisineIconPath}
                   alt={`${primaryCuisine || 'Recipe'} icon`}
-                  width={120}
-                  height={120}
+                  width={96}
+                  height={96}
                   quality={100}
                   unoptimized={true}
-                  className="object-contain"
+                  className="object-contain opacity-90"
                 />
               </div>
             )}
+            {/* "Cooked" badge - only shown when user has uploaded a photo */}
             {recipe.plate?.photoData && (
-              <div className="absolute top-4 left-4 bg-[#0088ff] text-white px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
-                <Camera className="w-3.5 h-3.5" />
+              <div className="absolute top-3 left-3 bg-[#0088ff] text-white px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-md">
+                <CameraIcon weight="Bold" className="w-3.5 h-3.5" />
                 <span className="font-albert text-[11px] font-medium">Cooked</span>
               </div>
             )}
           </div>
 
-          {/* Recipe Metadata */}
-          <div className="flex flex-wrap items-center gap-3">
-            {recipe.cuisine && recipe.cuisine.length > 0 && (
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {recipe.cuisine.map((cuisine, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-stone-100 border border-stone-200 rounded-full font-albert text-[12px] text-stone-600"
-                  >
-                    {CUISINE_ICON_MAP[cuisine] && (
-                      <Image
-                        src={CUISINE_ICON_MAP[cuisine]}
-                        alt={`${cuisine} icon`}
-                        width={16}
-                        height={16}
-                        quality={100}
-                        unoptimized={true}
-                        className="w-4 h-4 object-contain flex-shrink-0"
-                        draggable={false}
-                      />
-                    )}
-                    <span>{cuisine}</span>
-                  </span>
-                ))}
-              </div>
-            )}
-            
+          {/* Recipe Metadata - refined pill styling */}
+          <div className="flex flex-wrap items-center gap-2">
             {displayTime && (
-              <div className="px-3 py-1.5 bg-stone-100 rounded-full">
-                <p className="font-albert text-[14px] text-stone-700">
+              <div className="px-3 py-1.5 bg-stone-100 rounded-full border border-stone-200">
+                <p className="font-albert text-[13px] font-medium text-stone-700">
                   {displayTime}
                 </p>
               </div>
             )}
             
             {recipe.servings && (
-              <div className="px-3 py-1.5 bg-stone-100 rounded-full">
-                <p className="font-albert text-[14px] text-stone-700">
+              <div className="px-3 py-1.5 bg-stone-100 rounded-full border border-stone-200">
+                <p className="font-albert text-[13px] font-medium text-stone-700">
                   Serves {recipe.servings}
                 </p>
               </div>
             )}
           </div>
 
-          {/* Ingredients Preview */}
+          {/* Ingredients Preview - refined typography and spacing */}
           {previewIngredients.length > 0 && (
             <div>
-              <h3 className="font-domine text-lg font-semibold text-black mb-3">
+              <h3 className="font-domine text-base font-semibold text-stone-900 mb-2.5">
                 Ingredients Preview
               </h3>
-              <ul className="space-y-2">
+              <ul className="space-y-1.5">
                 {previewIngredients.map((ingredient: any, index: number) => (
-                  <li key={index} className="font-albert text-sm text-stone-700 flex items-start gap-2">
-                    <span className="text-stone-400 mt-1">•</span>
+                  <li key={index} className="font-albert text-[14px] text-stone-600 flex items-start gap-2">
+                    <span className="text-stone-300 mt-0.5">•</span>
                     <span>
                       {[ingredient.amount, ingredient.units, ingredient.ingredient]
                         .filter(Boolean)
@@ -356,7 +339,7 @@ export default function RecipeQuickViewModal({
                   </li>
                 ))}
                 {recipe.ingredients && recipe.ingredients[0]?.ingredients?.length > 5 && (
-                  <li className="font-albert text-sm text-stone-500 italic">
+                  <li className="font-albert text-[13px] text-stone-400 italic pl-4">
                     + {recipe.ingredients[0].ingredients.length - 5} more ingredients
                   </li>
                 )}
@@ -364,11 +347,11 @@ export default function RecipeQuickViewModal({
             </div>
           )}
 
-          {/* View Full Recipe Button */}
-          <div className="pt-4 border-t border-stone-200">
+          {/* View Full Recipe Button - refined with better styling */}
+          <div className="pt-4 border-t border-stone-100">
             <Button
               onClick={handleViewFullRecipe}
-              className="w-full font-albert"
+              className="w-full font-albert font-medium h-12 rounded-xl text-[15px] bg-[#FF6F00] hover:bg-[#E56300] text-white transition-colors"
               size="lg"
             >
               View Full Recipe
