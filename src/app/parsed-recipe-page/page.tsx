@@ -9,7 +9,7 @@ import { ArrowLeft, Copy, Check, Clock } from 'lucide-react';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import Settings from '@solar-icons/react/csr/settings/Settings';
 import LinkIcon from '@solar-icons/react/csr/text-formatting/Link';
-import TrashBin2 from '@solar-icons/react/csr/ui/TrashBin2';
+import TrashBinTrash from '@solar-icons/react/csr/ui/TrashBinTrash';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useSwipeable } from 'react-swipeable';
 import { scaleIngredients } from '@/utils/ingredientScaler';
@@ -961,7 +961,7 @@ export default function ParsedRecipePage({
                                   onClick={handleDeleteRecipe}
                                   className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-red-50"
                                 >
-                                  <TrashBin2 className="w-4 h-4 flex-shrink-0 text-red-600" />
+                                  <TrashBinTrash weight="Bold" className="w-4 h-4 flex-shrink-0 text-red-600" style={{ fill: 'currentColor' }} />
                                   <span className="menu-action-label flex-1 text-[14px] text-red-600">Delete Recipe</span>
                                 </button>
                               )}
