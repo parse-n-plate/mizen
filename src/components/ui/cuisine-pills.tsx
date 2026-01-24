@@ -2,18 +2,21 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Camera } from 'lucide-react';
 import Image from 'next/image';
 import { SUPPORTED_CUISINES, CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 
 export type CuisineType = (typeof SUPPORTED_CUISINES)[number] | null;
+export type SelectedCuisines = (typeof SUPPORTED_CUISINES)[number][];
 
 interface CuisinePillsProps {
-  onCuisineChange?: (cuisine: CuisineType) => void;
+  onCuisineChange?: (cuisines: SelectedCuisines) => void;
+  showCookedOnly?: boolean;
+  onShowCookedOnlyChange?: (value: boolean) => void;
 }
 
-export default function CuisinePills({ onCuisineChange }: CuisinePillsProps) {
-  const [selectedCuisine, setSelectedCuisine] = useState<CuisineType>(null);
+export default function CuisinePills({ onCuisineChange, showCookedOnly, onShowCookedOnlyChange }: CuisinePillsProps) {
+  const [selectedCuisines, setSelectedCuisines] = useState<SelectedCuisines>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -48,24 +51,44 @@ export default function CuisinePills({ onCuisineChange }: CuisinePillsProps) {
     scrollRef.current?.scrollBy({ left: -180, behavior: 'smooth' });
   };
 
-  const handleCuisineClick = (cuisine: CuisineType) => {
-    // Toggle behavior: if clicking the already-selected cuisine, deselect it (set to null)
-    // Otherwise, select the clicked cuisine
-    const newSelection = selectedCuisine === cuisine ? null : cuisine;
-    setSelectedCuisine(newSelection);
+  const handleCuisineClick = (cuisine: (typeof SUPPORTED_CUISINES)[number]) => {
+    // Toggle behavior: add or remove cuisine from selection
+    const newSelection = selectedCuisines.includes(cuisine)
+      ? selectedCuisines.filter(c => c !== cuisine)
+      : [...selectedCuisines, cuisine];
+    setSelectedCuisines(newSelection);
     if (onCuisineChange) {
       onCuisineChange(newSelection);
     }
   };
 
   return (
-    <div className="relative w-full">
-      {/* Scroll container keeps content aligned to parent padding; overflow only to the right */}
-      <div className="overflow-x-auto overflow-y-visible pr-6 py-1.5 scrollbar-hide" ref={scrollRef}>
+    <div className="relative w-full overflow-visible">
+      {/* Scroll container keeps content aligned to parent padding; extra top padding for hover lift */}
+      <div className="overflow-x-auto px-6 pt-3 pb-1.5 scrollbar-hide -mx-6" ref={scrollRef}>
         <div className="flex items-center gap-2">
+          {/* Cooked Dishes Only Toggle - appears first in the row */}
+          {onShowCookedOnlyChange && (
+            <motion.button
+              onClick={() => onShowCookedOnlyChange(!showCookedOnly)}
+              whileHover={{ y: -2, scale: 1.02 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              className={`relative flex-shrink-0 px-5 py-2.5 rounded-full font-albert text-[16px] font-medium leading-[1.4] border whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-0 flex items-center gap-2.5 transition-colors duration-150 ${
+                showCookedOnly
+                  ? 'bg-stone-200 border-stone-300'
+                  : 'bg-white border-stone-200'
+              }`}
+              aria-label={showCookedOnly ? 'Show all recipes' : 'Show cooked dishes only'}
+              aria-pressed={showCookedOnly}
+            >
+              <Camera className="w-5 h-5" />
+              <span>Cooked dishes only</span>
+            </motion.button>
+          )}
           {/* Individual cuisine pills */}
           {SUPPORTED_CUISINES.map((cuisine) => {
-            const isSelected = selectedCuisine === cuisine;
+            const isSelected = selectedCuisines.includes(cuisine);
             return (
               <motion.button
                 key={cuisine}
