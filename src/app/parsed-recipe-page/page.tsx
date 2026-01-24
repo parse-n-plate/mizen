@@ -220,6 +220,9 @@ export default function ParsedRecipePage({
   const [copiedPlainText, setCopiedPlainText] = useState(false);
   const settingsMenuRef = useRef<HTMLDivElement>(null);
   
+  // Bookmark success animation state - tracks when bookmark is just saved
+  const [justBookmarked, setJustBookmarked] = useState(false);
+  
   // Accessibility: respect user's reduced motion preference
   const shouldReduceMotion = useReducedMotion();
 
@@ -260,6 +263,12 @@ export default function ParsedRecipePage({
     } else {
       // If not bookmarked, just add the bookmark directly
       toggleBookmark(recipeId);
+      // Trigger success animation when bookmarking (not when removing)
+      setJustBookmarked(true);
+      // Reset animation state after animation completes (400ms for the full animation)
+      setTimeout(() => {
+        setJustBookmarked(false);
+      }, 400);
     }
   };
 
@@ -865,10 +874,32 @@ export default function ParsedRecipePage({
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {/* Bookmark Button */}
                       {recipeId && (
-                        <button
+                        <motion.button
                           onClick={handleBookmarkToggle}
-                          className="flex-shrink-0 p-2 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 cursor-pointer"
+                          className={`flex-shrink-0 p-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 cursor-pointer ${justBookmarked && !shouldReduceMotion ? 'bookmark-just-saved' : ''}`}
                           aria-label={isBookmarkedState ? 'Remove bookmark' : 'Bookmark recipe'}
+                          initial={{ scale: 1, rotate: 0 }}
+                          whileHover={shouldReduceMotion ? {} : { 
+                            scale: 1.08,
+                            rotate: -3,
+                            transition: { 
+                              duration: 0.2, 
+                              ease: [0.25, 0.46, 0.45, 0.94] // ease-out-quad
+                            }
+                          }}
+                          whileTap={shouldReduceMotion ? {} : { 
+                            scale: 0.97,
+                            rotate: 0,
+                            transition: { duration: 0.1 }
+                          }}
+                          animate={justBookmarked && !shouldReduceMotion ? {
+                            scale: [1, 1.15, 1.05, 1],
+                            rotate: [0, -8, 6, -2, 0],
+                            transition: {
+                              duration: 0.4,
+                              ease: [0.23, 1, 0.32, 1] // ease-out-quint for playful feel
+                            }
+                          } : { scale: 1, rotate: 0 }}
                         >
                           <Bookmark
                             className={`
@@ -879,22 +910,37 @@ export default function ParsedRecipePage({
                               }
                             `}
                           />
-                        </button>
+                        </motion.button>
                       )}
                       
                       {/* Settings Button and Popover */}
                       <div className="relative" ref={settingsMenuRef}>
-                        <button
+                        <motion.button
                           onClick={() => setIsSettingsOpen(!isSettingsOpen)}
                           className={`p-2 rounded-full transition-colors ${isSettingsOpen ? 'bg-stone-100 text-stone-900' : 'text-stone-400 hover:bg-stone-50'}`}
                           aria-label="Recipe settings"
                           aria-expanded={isSettingsOpen}
+                          initial={{ scale: 1, rotate: 0 }}
+                          whileHover={shouldReduceMotion ? {} : { 
+                            scale: 1.08,
+                            rotate: 3,
+                            transition: { 
+                              duration: 0.2, 
+                              ease: [0.25, 0.46, 0.45, 0.94] // ease-out-quad
+                            }
+                          }}
+                          whileTap={shouldReduceMotion ? {} : { 
+                            scale: 0.97,
+                            rotate: 0,
+                            transition: { duration: 0.1 }
+                          }}
+                          animate={{ scale: 1, rotate: 0 }}
                         >
                           <Settings
                             weight="Bold"
                             className="w-6 h-6"
                           />
-                        </button>
+                        </motion.button>
 
                         <AnimatePresence>
                           {isSettingsOpen && (

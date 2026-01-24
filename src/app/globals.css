@@ -603,7 +603,7 @@
   .ingredients-header-container {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem; /* Tighter spacing between header, servings slider, and search bar */
+    gap: 1.25rem; /* Increased spacing between header, servings slider, and search bar */
     max-width: 700px;
     margin-left: auto;
     margin-right: auto;
@@ -1075,7 +1075,7 @@
     display: flex;
     align-items: center; /* Center items vertically */
     gap: 12px;
-    padding: 16px 8px; /* Increased vertical padding for more space between items */
+    padding: 16px 8px 16px 8px; /* Equal padding on both sides: 8px left, 8px right */
     position: relative;
     transition: background-color 0ms;
     border-radius: 8px; /* Rounded corners for hover effect */
@@ -1130,7 +1130,7 @@
     flex-direction: column;
     gap: 2px;
     min-width: 0; /* Allows text truncation */
-    padding-right: 40px; /* Space for swap icon */
+    /* Removed padding-right - swap icon space handled by container padding */
   }
 
   .ingredient-list-primary {
@@ -1855,6 +1855,95 @@
     }
 
     .pill-just-selected {
+      animation: none;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     RECIPE PAGE BUTTONS - Playful hover animations
+     Bookmark and Settings buttons with subtle, playful interactions
+     Based on Emil Kowalski's animation guidelines:
+     - Hover: ease easing (200ms) with subtle scale and rotation
+     - Active: scale(0.95) for responsive tap feedback
+     - Success: playful bounce animation when bookmark is saved
+     - Only animating transform and opacity for performance (GPU accelerated)
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  /* Bookmark button hover effect - subtle lift and gentle rotation */
+  .recipe-page-bookmark-btn {
+    transition: 
+      transform 200ms ease,
+      background-color 150ms ease;
+    transform-origin: center;
+  }
+
+  /* Settings button hover effect - subtle lift and gentle rotation */
+  .recipe-page-settings-btn {
+    transition: 
+      transform 200ms ease,
+      background-color 150ms ease;
+    transform-origin: center;
+  }
+
+  /* Hover state - subtle scale and rotation (only on devices with precise pointer) */
+  @media (hover: hover) and (pointer: fine) {
+    .recipe-page-bookmark-btn:hover {
+      transform: scale(1.1) rotate(-2deg);
+    }
+
+    .recipe-page-settings-btn:hover {
+      transform: scale(1.1) rotate(2deg);
+    }
+  }
+
+  /* Active/tap state - scale down for responsive feedback */
+  .recipe-page-bookmark-btn:active,
+  .recipe-page-settings-btn:active {
+    transform: scale(0.95);
+    transition-duration: 100ms; /* Faster on active for snappy feel */
+  }
+
+  /* Success animation for bookmark button when saved */
+  @keyframes bookmark-success-bounce {
+    0% {
+      transform: scale(1) rotate(0deg);
+    }
+    25% {
+      transform: scale(1.2) rotate(-10deg);
+    }
+    50% {
+      transform: scale(1.15) rotate(10deg);
+    }
+    75% {
+      transform: scale(1.05) rotate(-5deg);
+    }
+    100% {
+      transform: scale(1) rotate(0deg);
+    }
+  }
+
+  .bookmark-just-saved {
+    animation: bookmark-success-bounce 400ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  /* Disable animations for users who prefer reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .recipe-page-bookmark-btn,
+    .recipe-page-settings-btn {
+      transition: background-color 150ms ease;
+    }
+
+    .recipe-page-bookmark-btn:hover,
+    .recipe-page-settings-btn:hover {
+      transform: none;
+    }
+
+    .recipe-page-bookmark-btn:active,
+    .recipe-page-settings-btn:active {
+      transform: none;
+    }
+
+    .bookmark-just-saved {
       animation: none;
     }
   }
