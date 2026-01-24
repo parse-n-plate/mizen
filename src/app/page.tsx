@@ -7,10 +7,11 @@ import HomepageSearch from '@/components/ui/homepage-search';
 import HomepageRecentRecipes from '@/components/ui/homepage-recent-recipes';
 import HomepageBanner from '@/components/ui/homepage-banner';
 import { useState, useEffect, useMemo, Suspense, use, useRef } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRecipe } from '@/contexts/RecipeContext';
 import { useRouter } from 'next/navigation';
-import type { CuisineType } from '@/components/ui/cuisine-pills';
+import type { SelectedCuisines } from '@/components/ui/cuisine-pills';
 import Image from 'next/image';
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 import { Search, X, Camera } from 'lucide-react';
@@ -48,6 +49,9 @@ function RecipeListItem({
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Accessibility: respect user's reduced motion preference
+  const shouldReduceMotion = useReducedMotion();
   
   // Format time display
   const formatTime = (minutes?: number) => {
@@ -329,21 +333,29 @@ function RecipeListItem({
             </button>
             
             {/* Dropdown Menu - Origin-aware positioning */}
-            {isMenuOpen && (
-              <div
-                ref={dropdownRef}
-                onPointerDownCapture={(e) => e.stopPropagation()}
-                onPointerUpCapture={(e) => e.stopPropagation()}
-                className={`absolute w-60 bg-white rounded-lg border border-stone-200 shadow-xl p-1.5 z-[100] animate-in fade-in duration-200 ${
-                  menuPosition.vertical === 'bottom'
-                    ? 'top-[calc(100%+8px)] slide-in-from-top-2'
-                    : 'bottom-[calc(100%+8px)] slide-in-from-bottom-2'
-                } ${
-                  menuPosition.horizontal === 'right'
-                    ? 'right-0'
-                    : 'left-0'
-                }`}
-              >
+            <AnimatePresence>
+              {isMenuOpen && (
+                <motion.div
+                  ref={dropdownRef}
+                  onPointerDownCapture={(e) => e.stopPropagation()}
+                  onPointerUpCapture={(e) => e.stopPropagation()}
+                  initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
+                  transition={{ 
+                    duration: shouldReduceMotion ? 0 : 0.12, // 120ms for snappier feel
+                    ease: [0.23, 1, 0.32, 1] // ease-out-quint - stronger acceleration for faster perceived speed
+                  }}
+                  className={`absolute w-60 bg-white rounded-xl border border-stone-200 shadow-xl p-1.5 z-[100] ${
+                    menuPosition.vertical === 'bottom'
+                      ? 'top-[calc(100%+8px)]'
+                      : 'bottom-[calc(100%+8px)]'
+                  } ${
+                    menuPosition.horizontal === 'right'
+                      ? 'right-0'
+                      : 'left-0'
+                  }`}
+                >
                 {/* Edit Option */}
                 {onEdit && (
                   <button
@@ -374,8 +386,9 @@ function RecipeListItem({
                   <Bookmark weight="Bold" className="w-4 h-4 text-stone-500 flex-shrink-0" />
                   <span className="font-albert font-medium whitespace-nowrap">Unsave</span>
                 </button>
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -394,7 +407,7 @@ function HomeContent() {
   } = useParsedRecipes();
   const { setParsedRecipe } = useRecipe();
   const router = useRouter();
-  const [selectedCuisine, setSelectedCuisine] = useState<CuisineType>(null);
+  const [selectedCuisines, setSelectedCuisines] = useState<SelectedCuisines>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isPageLoaded, setIsPageLoaded] = useState<boolean>(false);
   const [isSearchFocused, setIsSearchFocused] = useState<boolean>(false);
@@ -411,8 +424,8 @@ function HomeContent() {
     }
   }, [isLoaded]);
 
-  const handleCuisineChange = (cuisine: CuisineType) => {
-    setSelectedCuisine(cuisine);
+  const handleCuisineChange = (cuisines: SelectedCuisines) => {
+    setSelectedCuisines(cuisines);
   };
 
   // Handle recipe click - navigate to parsed recipe page
@@ -491,9 +504,9 @@ function HomeContent() {
     return recipes.map(convertToRecipeCardData);
   }, [getBookmarkedRecipes]);
 
-  // Filter bookmarked recipes by selected cuisine, search query, and cooked status
+  // Filter bookmarked recipes by selected cuisines, search query, and cooked status
   const filteredRecipes = useMemo(() => {
-    console.log('[Homepage] 🍽️ Filtering bookmarked recipes by cuisine:', selectedCuisine);
+    console.log('[Homepage] 🍽️ Filtering bookmarked recipes by cuisines:', selectedCuisines);
     console.log('[Homepage] 🔍 Search query:', searchQuery);
     console.log('[Homepage] 📸 Show cooked only:', showCookedOnly);
     console.log('[Homepage] Available bookmarked recipes:', bookmarkedRecipes.map(r => ({ title: r.title, cuisine: r.cuisine, hasPlatePhoto: !!r.platePhotoData })));
@@ -507,10 +520,11 @@ function HomeContent() {
       });
     }
 
-    // Filter by cuisine (only if a cuisine is selected)
-    if (selectedCuisine !== null) {
+    // Filter by cuisines (only if at least one cuisine is selected)
+    if (selectedCuisines.length > 0) {
       filtered = filtered.filter(recipe => {
-        const hasMatchingCuisine = recipe.cuisine && recipe.cuisine.includes(selectedCuisine);
+        // Recipe matches if it has any of the selected cuisines
+        const hasMatchingCuisine = recipe.cuisine && recipe.cuisine.some(c => selectedCuisines.includes(c as any));
         console.log(`[Homepage] Recipe "${recipe.title}": cuisine=${recipe.cuisine}, matches=${hasMatchingCuisine}`);
         return hasMatchingCuisine;
       });
@@ -528,7 +542,7 @@ function HomeContent() {
 
     console.log('[Homepage] Filtered results:', filtered.length, 'bookmarked recipes match filters');
     return filtered;
-  }, [selectedCuisine, searchQuery, showCookedOnly, bookmarkedRecipes]);
+  }, [selectedCuisines, searchQuery, showCookedOnly, bookmarkedRecipes]);
 
   if (!isLoaded) {
     return <HomepageSkeleton />;
@@ -547,21 +561,25 @@ function HomeContent() {
               <h1 className="font-domine text-[57.6px] sm:text-[67.2px] md:text-[76.8px] font-bold text-black leading-[1.05] flex flex-col items-center justify-center gap-2 md:gap-3">
                 <span className="flex items-center gap-2 md:gap-3">
                   Clean recipes,
-                  <img 
-                    src="/assets/Illustration Icons/Tomato_Icon.png" 
-                    alt="" 
+                  <motion.img
+                    src="/assets/Illustration Icons/Tomato_Icon.png"
+                    alt=""
                     className="hidden md:block w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 flex-shrink-0 object-contain"
                     aria-hidden="true"
-                    draggable="false"
+                    draggable={false}
+                    whileHover={{ scale: 1.15, rotate: 8 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                   />
                 </span>
                 <span className="flex items-center gap-2 md:gap-3">
-                  <img 
-                    src="/assets/Illustration Icons/Pan_Icon.png" 
-                    alt="" 
+                  <motion.img
+                    src="/assets/Illustration Icons/Pan_Icon.png"
+                    alt=""
                     className="hidden md:block w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 flex-shrink-0 object-contain"
                     aria-hidden="true"
-                    draggable="false"
+                    draggable={false}
+                    whileHover={{ scale: 1.15, rotate: -8 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                   />
                   calm cooking.
                 </span>
@@ -640,30 +658,13 @@ function HomeContent() {
               </div>
             </div>
 
-            {/* Cuisine Filter Pills now sit below the search bar */}
-            <div className="mb-6 md:mb-8">
-              <CuisinePills onCuisineChange={handleCuisineChange} />
-            </div>
-
-            {/* Cooked Dishes Only Toggle */}
-            <div className="mb-6 md:mb-8 flex items-center gap-2">
-              <button
-                onClick={() => setShowCookedOnly(!showCookedOnly)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full font-albert text-[14px] font-medium transition-all ${
-                  showCookedOnly
-                    ? 'bg-[#0088ff] text-white shadow-sm'
-                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-                }`}
-                aria-label={showCookedOnly ? 'Show all recipes' : 'Show cooked dishes only'}
-              >
-                <Camera className="w-4 h-4" />
-                <span>Cooked dishes only</span>
-              </button>
-              {showCookedOnly && (
-                <span className="font-albert text-[13px] text-stone-500">
-                  Showing recipes you've cooked
-                </span>
-              )}
+            {/* Cuisine Filter Pills and Cooked Toggle - same row */}
+            <div className="mb-6 md:mb-8 overflow-visible">
+              <CuisinePills
+                onCuisineChange={handleCuisineChange}
+                showCookedOnly={showCookedOnly}
+                onShowCookedOnlyChange={setShowCookedOnly}
+              />
             </div>
 
             {/* Recipe List View */}
@@ -694,22 +695,27 @@ function HomeContent() {
             {/* Show message if no recipes match filter (but only if there are bookmarked recipes available) */}
             {filteredRecipes.length === 0 && bookmarkedRecipes.length > 0 && (
               <div className="text-center py-12">
-                {/* Display cuisine icon if a specific cuisine is selected */}
-                {selectedCuisine !== null && CUISINE_ICON_MAP[selectedCuisine] && (
-                  <div className="flex justify-center mb-6">
-                    <Image
-                      src={CUISINE_ICON_MAP[selectedCuisine]}
-                      alt={`${selectedCuisine} cuisine icon`}
-                      width={80}
-                      height={80}
-                      quality={100}
-                      unoptimized={true}
-                      className="w-20 h-20 object-contain"
-                    />
+                {/* Display cuisine icons if cuisines are selected */}
+                {selectedCuisines.length > 0 && (
+                  <div className="flex justify-center gap-2 mb-6">
+                    {selectedCuisines.slice(0, 3).map(cuisine => (
+                      CUISINE_ICON_MAP[cuisine] && (
+                        <Image
+                          key={cuisine}
+                          src={CUISINE_ICON_MAP[cuisine]}
+                          alt={`${cuisine} cuisine icon`}
+                          width={80}
+                          height={80}
+                          quality={100}
+                          unoptimized={true}
+                          className="w-16 h-16 object-contain"
+                        />
+                      )
+                    ))}
                   </div>
                 )}
                 <p className="font-albert text-[16px] text-stone-600">
-                  No bookmarked recipes found{selectedCuisine !== null ? ` for ${selectedCuisine}` : ''}
+                  No bookmarked recipes found{selectedCuisines.length > 0 ? ` for ${selectedCuisines.join(', ')}` : ''}
                 </p>
               </div>
             )}

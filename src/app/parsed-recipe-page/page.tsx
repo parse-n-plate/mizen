@@ -5,13 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo, use, useRef } from 'react';
 import RecipeSkeleton from '@/components/ui/recipe-skeleton';
 import * as Tabs from '@radix-ui/react-tabs';
-import { ArrowLeft, Copy, Check, Clock, Trash2 } from 'lucide-react';
+import { ArrowLeft, Copy, Check, Clock } from 'lucide-react';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import Settings from '@solar-icons/react/csr/settings/Settings';
 import LinkIcon from '@solar-icons/react/csr/text-formatting/Link';
-import CopyIcon from '@solar-icons/react/csr/ui/Copy';
-import Download from '@solar-icons/react/csr/arrows-action/Download';
-import { motion, AnimatePresence } from 'framer-motion';
+import TrashBin2 from '@solar-icons/react/csr/ui/TrashBin2';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useSwipeable } from 'react-swipeable';
 import { scaleIngredients } from '@/utils/ingredientScaler';
 import { convertIngredientGroupUnits, type UnitSystem } from '@/utils/unitConverter';
@@ -220,7 +219,9 @@ export default function ParsedRecipePage({
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedPlainText, setCopiedPlainText] = useState(false);
   const settingsMenuRef = useRef<HTMLDivElement>(null);
-  const settingsButtonRef = useRef<HTMLButtonElement>(null);
+  
+  // Accessibility: respect user's reduced motion preference
+  const shouldReduceMotion = useReducedMotion();
 
   // Ingredients overlay state
   const [isIngredientsOverlayOpen, setIsIngredientsOverlayOpen] = useState(false);
@@ -527,20 +528,12 @@ export default function ParsedRecipePage({
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target as Node)) {
-        if (settingsButtonRef.current && !settingsButtonRef.current.contains(event.target as Node)) {
-          setIsSettingsOpen(false);
-        }
+        setIsSettingsOpen(false);
       }
     }
-
-    if (isSettingsOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isSettingsOpen]);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Handle copy link to original recipe
   const handleCopyLink = async () => {
@@ -882,7 +875,7 @@ export default function ParsedRecipePage({
                               w-6 h-6 transition-colors duration-200
                               ${isBookmarkedState
                                 ? 'fill-stone-600 text-stone-600'
-                                : 'text-stone-400 hover:text-stone-600'
+                                : 'fill-none text-stone-400 hover:text-stone-600'
                               }
                             `}
                           />
@@ -890,73 +883,91 @@ export default function ParsedRecipePage({
                       )}
                       
                       {/* Settings Button and Popover */}
-                      <div ref={settingsMenuRef} className={`relative ${isSettingsOpen ? 'z-[100]' : 'z-10'}`}>
+                      <div className="relative" ref={settingsMenuRef}>
                         <button
-                          ref={settingsButtonRef}
                           onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                          className="flex-shrink-0 p-2 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 cursor-pointer"
+                          className={`p-2 rounded-full transition-colors ${isSettingsOpen ? 'bg-stone-100 text-stone-900' : 'text-stone-400 hover:bg-stone-50'}`}
                           aria-label="Recipe settings"
                           aria-expanded={isSettingsOpen}
                         >
                           <Settings
                             weight="Bold"
-                            className={`w-6 h-6 transition-colors duration-200 ${
-                              isSettingsOpen
-                                ? 'text-stone-600'
-                                : 'text-stone-400 hover:text-stone-600'
-                            }`}
+                            className="w-6 h-6"
                           />
                         </button>
 
-                        {/* Settings Popover */}
-                        {isSettingsOpen && (
-                          <div className="absolute w-60 bg-white rounded-lg border border-stone-200 shadow-xl p-1.5 z-[100] animate-in fade-in duration-200 top-[calc(100%+8px)] slide-in-from-top-2 right-0">
-                            {/* Copy Link to Original Option */}
-                            <button
-                              onClick={handleCopyLink}
-                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
+                        <AnimatePresence>
+                          {isSettingsOpen && (
+                            <motion.div
+                              initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
+                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                              exit={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
+                              transition={{ 
+                                duration: shouldReduceMotion ? 0 : 0.12,
+                                ease: [0.23, 1, 0.32, 1]
+                              }}
+                              className="absolute right-0 mt-2 w-60 bg-white border border-stone-200 rounded-xl shadow-xl z-50 overflow-hidden"
                             >
-                              <LinkIcon weight="Bold" className={`w-4 h-4 flex-shrink-0 ${copiedLink ? 'text-green-600' : 'text-stone-500'}`} />
-                              <span className={`font-albert font-medium whitespace-nowrap ${copiedLink ? 'text-green-600' : ''}`}>
-                                {copiedLink ? 'Link Copied' : 'Copy Link to Original'}
-                              </span>
-                            </button>
-
-                            {/* Copy Recipe as Plain Text Option */}
-                            <button
-                              onClick={handleCopyPlainText}
-                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
-                            >
-                              <CopyIcon weight="Bold" className={`w-4 h-4 flex-shrink-0 ${copiedPlainText ? 'text-green-600' : 'text-stone-500'}`} />
-                              <span className={`font-albert font-medium whitespace-nowrap ${copiedPlainText ? 'text-green-600' : ''}`}>
-                                {copiedPlainText ? 'Copied to Clipboard' : 'Copy Recipe as Plain Text'}
-                              </span>
-                            </button>
-
-                            {/* Download Recipe as JPG Option - Disabled for now */}
-                            <button
-                              disabled
-                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-400 cursor-not-allowed opacity-50 font-albert rounded-md"
-                            >
-                              <Download weight="Bold" className="w-4 h-4 text-stone-400 flex-shrink-0" />
-                              <span className="font-albert font-medium whitespace-nowrap">Download Recipe as JPG</span>
-                            </button>
-
-                            {/* Divider before delete option */}
-                            <div className="h-px bg-stone-200 my-1" />
-
-                            {/* Delete Recipe Option */}
-                            {recipeId && (
+                              {/* Copy Link to Original Option */}
                               <button
-                                onClick={handleDeleteRecipe}
-                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-albert rounded-md"
+                                onClick={handleCopyLink}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors group hover:bg-stone-50"
                               >
-                                <Trash2 className="w-4 h-4 flex-shrink-0" />
-                                <span className="font-albert font-medium whitespace-nowrap">Delete Recipe</span>
+                                <span className={`menu-action-label flex-1 text-[14px] ${
+                                  copiedLink 
+                                    ? 'text-green-600 font-medium' 
+                                    : 'text-stone-700'
+                                }`}>
+                                  {copiedLink ? 'Link copied' : 'Copy link'}
+                                </span>
+                                {copiedLink && (
+                                  <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                                )}
                               </button>
-                            )}
-                          </div>
-                        )}
+
+                              {/* Copy Recipe as Plain Text Option */}
+                              <button
+                                onClick={handleCopyPlainText}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors group hover:bg-stone-50"
+                              >
+                                <span className={`menu-action-label flex-1 text-[14px] ${
+                                  copiedPlainText 
+                                    ? 'text-green-600 font-medium' 
+                                    : 'text-stone-700'
+                                }`}>
+                                  {copiedPlainText ? 'Recipe copied' : 'Copy recipe'}
+                                </span>
+                                {copiedPlainText && (
+                                  <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
+                                )}
+                              </button>
+
+                              {/* Download Recipe as JPG Option - Disabled for now */}
+                              <button
+                                disabled
+                                className="w-full flex items-center gap-3 px-3 py-2.5 text-left cursor-not-allowed opacity-50"
+                              >
+                                <span className="menu-action-label flex-1 text-[14px] text-stone-400">Download Recipe as JPG</span>
+                              </button>
+
+                              {/* Divider before delete option */}
+                              {recipeId && (
+                                <div className="h-px bg-stone-200 my-1" />
+                              )}
+
+                              {/* Delete Recipe Option */}
+                              {recipeId && (
+                                <button
+                                  onClick={handleDeleteRecipe}
+                                  className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-red-50"
+                                >
+                                  <TrashBin2 className="w-4 h-4 flex-shrink-0 text-red-600" />
+                                  <span className="menu-action-label flex-1 text-[14px] text-red-600">Delete Recipe</span>
+                                </button>
+                              )}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     </div>
                   </div>
