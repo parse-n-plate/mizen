@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 
@@ -31,12 +31,15 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
   const [progress, setProgress] = useState(0);
   const [hasCuisine, setHasCuisine] = useState(false);
-  
+
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [mounted, setMounted] = useState(false);
 
   const rafRef = useRef<number | null>(null);
   const progressRef = useRef<number>(0); // Track current progress for animation
+
+  // Accessibility: respect user's reduced motion preference
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
     setMounted(true);
@@ -196,10 +199,10 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
     <div className="fixed inset-0 z-[2147483647] flex items-center justify-center p-4 pointer-events-none">
       {/* Blurred background backdrop */}
       <motion.div
-        initial={{ opacity: 0 }}
+        initial={shouldReduceMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
         className="fixed inset-0 bg-white/60 backdrop-blur-sm pointer-events-none"
         aria-hidden="true"
       />
@@ -211,11 +214,11 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
             onClick={handleCancel}
             className="absolute top-4 right-4 z-10 p-2 rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-50 transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-2"
             aria-label="Cancel loading"
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3, duration: 0.3, ease: "easeOut" }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
+            transition={{ delay: shouldReduceMotion ? 0 : 0.15, duration: shouldReduceMotion ? 0 : 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+            whileHover={shouldReduceMotion ? {} : { scale: 1.1 }}
+            whileTap={shouldReduceMotion ? {} : { scale: 0.95 }}
           >
             <X className="w-5 h-5" />
           </motion.button>
@@ -224,9 +227,9 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
           <div className="w-full space-y-12">
             {/* Header Section */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
+          transition={{ duration: shouldReduceMotion ? 0 : 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="text-center space-y-3"
         >
           <h1 className="font-domine text-[32px] md:text-[40px] text-[#0C0A09] font-bold tracking-tight">
@@ -239,30 +242,30 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
 
         {/* Step Card Section */}
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ delay: shouldReduceMotion ? 0 : 0.1, duration: shouldReduceMotion ? 0 : 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="loading-step-card space-y-2"
         >
           {steps.map((step, idx) => (
             <motion.div
               key={step.title}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ 
+              initial={shouldReduceMotion ? false : { opacity: 0, x: -8 }}
+              animate={{
                 opacity: step.status === 'pending' ? 0.3 : 1,
-                x: 0 
+                x: 0
               }}
-              transition={{ delay: 0.6 + (idx * 0.15), duration: 0.5 }}
+              transition={{ delay: shouldReduceMotion ? 0 : 0.15 + (idx * 0.05), duration: shouldReduceMotion ? 0 : 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
               className="step-row"
             >
               <div className="step-icon-container">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={step.icon}
-                    initial={{ scale: 0.8, opacity: 0, rotate: -10 }}
-                    animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                    exit={{ scale: 0.8, opacity: 0, rotate: 10 }}
-                    transition={{ duration: 0.4, ease: "backOut" }}
+                    initial={shouldReduceMotion ? false : { scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={shouldReduceMotion ? { opacity: 0 } : { scale: 0.9, opacity: 0 }}
+                    transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
                     className="relative w-10 h-10"
                   >
                     <Image
@@ -289,9 +292,9 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
 
         {/* Progress Bar Section */}
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={shouldReduceMotion ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.2, duration: 0.8 }}
+          transition={{ delay: shouldReduceMotion ? 0 : 0.2, duration: shouldReduceMotion ? 0 : 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="space-y-4"
         >
           <div className="flex justify-between items-end">
@@ -303,11 +306,11 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
             </span>
           </div>
           <div className="loading-progress-container">
-            <motion.div 
+            <motion.div
               className="loading-progress-bar"
               initial={{ width: "0%" }}
               animate={{ width: `${progress}%` }}
-              transition={{ duration: 1, ease: "circOut" }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.4, ease: [0.075, 0.82, 0.165, 1] }}
             />
           </div>
         </motion.div>

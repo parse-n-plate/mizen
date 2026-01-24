@@ -3,7 +3,7 @@
 import * as React from "react"
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
 
 import { cn } from "@/lib/utils"
 
@@ -61,23 +61,29 @@ const DropdownMenuContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
 >(({ className, sideOffset = 8, children, ...props }, ref) => {
+  // Accessibility: respect user's reduced motion preference
+  const shouldReduceMotion = useReducedMotion();
+  
   return (
     <DropdownMenuPrimitive.Portal>
       <DropdownMenuPrimitive.Content
         ref={ref}
         sideOffset={sideOffset}
         className={cn(
-          "z-[100] min-w-[8rem] overflow-hidden bg-white rounded-lg border border-stone-200 shadow-xl p-1.5",
+          "z-[100] min-w-[8rem] overflow-hidden bg-white rounded-xl border border-stone-200 shadow-xl p-1.5",
           className
         )}
         {...props}
         asChild
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          transition={{ duration: 0.2 }}
+          exit={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
+          transition={{ 
+            duration: shouldReduceMotion ? 0 : 0.12, // 120ms for snappier feel
+            ease: [0.23, 1, 0.32, 1] // ease-out-quint - stronger acceleration for faster perceived speed
+          }}
         >
           {children}
         </motion.div>

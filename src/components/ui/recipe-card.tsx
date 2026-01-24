@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { X, Camera } from 'lucide-react';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import MenuDotsCircle from '@solar-icons/react/csr/ui/MenuDotsCircle';
@@ -50,6 +50,9 @@ export default function RecipeCard({
     vertical: 'bottom',
     horizontal: 'right',
   });
+  
+  // Accessibility: respect user's reduced motion preference
+  const shouldReduceMotion = useReducedMotion();
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -324,21 +327,29 @@ export default function RecipeCard({
         </button>
 
         {/* Dropdown Menu - Origin-aware positioning */}
-        {isMenuOpen && (
-          <div
-            ref={dropdownRef}
-            onPointerDownCapture={(e) => e.stopPropagation()}
-            onPointerUpCapture={(e) => e.stopPropagation()}
-            className={`absolute w-60 bg-white rounded-lg border border-stone-200 shadow-xl p-1.5 z-[100] animate-in fade-in duration-200 ${
-              menuPosition.vertical === 'bottom'
-                ? 'top-[calc(100%+8px)] slide-in-from-top-2'
-                : 'bottom-[calc(100%+8px)] slide-in-from-bottom-2'
-            } ${
-              menuPosition.horizontal === 'right'
-                ? 'right-0'
-                : 'left-0'
-            }`}
-          >
+        <AnimatePresence>
+          {isMenuOpen && (
+            <motion.div
+              ref={dropdownRef}
+              onPointerDownCapture={(e) => e.stopPropagation()}
+              onPointerUpCapture={(e) => e.stopPropagation()}
+              initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ 
+                duration: shouldReduceMotion ? 0 : 0.12, // 120ms for snappier feel
+                ease: [0.23, 1, 0.32, 1] // ease-out-quint - stronger acceleration for faster perceived speed
+              }}
+              className={`absolute w-60 bg-white rounded-xl border border-stone-200 shadow-xl p-1.5 z-[100] ${
+                menuPosition.vertical === 'bottom'
+                  ? 'top-[calc(100%+8px)]'
+                  : 'bottom-[calc(100%+8px)]'
+              } ${
+                menuPosition.horizontal === 'right'
+                  ? 'right-0'
+                  : 'left-0'
+              }`}
+            >
             {/* Edit Option */}
             <button
               onClick={handleEdit}
@@ -367,8 +378,9 @@ export default function RecipeCard({
               <Bookmark weight="Bold" className="w-4 h-4 text-stone-500 flex-shrink-0" />
               <span className="font-albert font-medium whitespace-nowrap">Unsave</span>
             </button>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <div className="size-full">
