@@ -1,4 +1,4 @@
-# Parse & Plate
+# Mizen
 
 A Next.js application that parses recipes from URLs or images and extracts ingredients and instructions using structured data extraction and AI processing.
 
