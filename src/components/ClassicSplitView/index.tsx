@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { RecipeStep } from './types';
 import ListView from './ListView';
 import CardView from './CardView';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { MoreHorizontal, ChevronLeft, Search, Link2, Copy, FileText, Edit, Check } from 'lucide-react';
 import List from '@solar-icons/react/csr/list/List';
 import Book from '@solar-icons/react/csr/school/Book';
@@ -29,6 +29,9 @@ export default function ClassicSplitView({ steps, title = 'Recipe Steps', allIng
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { settings, setStepSizing, setFontFamily } = useUISettings();
   const { parsedRecipe } = useRecipe();
+  
+  // Accessibility: respect user's reduced motion preference
+  const shouldReduceMotion = useReducedMotion();
 
   // Handler functions - must be defined before useEffects that reference them
   const handleCopyLink = async () => {
@@ -346,9 +349,13 @@ export default function ClassicSplitView({ steps, title = 'Recipe Steps', allIng
               <AnimatePresence>
                 {isSettingsOpen && (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                    initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                    exit={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
+                    transition={{ 
+                      duration: shouldReduceMotion ? 0 : 0.12, // 120ms for snappier feel
+                      ease: [0.23, 1, 0.32, 1] // ease-out-quint - stronger acceleration for faster perceived speed
+                    }}
                     className="absolute right-0 mt-2 w-72 bg-white border border-stone-200 rounded-xl shadow-xl z-50 overflow-hidden"
                   >
                     {/* Search Bar */}
