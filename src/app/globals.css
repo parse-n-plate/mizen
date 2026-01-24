@@ -1756,6 +1756,108 @@
       gap: 4px;
     }
   }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     CUISINE FILTER PILLS - Subtle, playful animations
+     Based on Emil Kowalski's animation guidelines:
+     - Hover: ease easing (200ms) with subtle lift and scale
+     - Selected: smooth background transition with subtle scale emphasis
+     - Active: scale(0.97) for responsive tap feedback
+     - Only animating transform and opacity for performance (GPU accelerated)
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  .cuisine-filter-pill {
+    /* Smooth transitions for all interactive states
+       Using ease easing for hover effects (200ms matches app patterns)
+       Animating transform, background-color, border-color, and box-shadow */
+    transition: 
+      transform 200ms ease,
+      background-color 200ms ease,
+      border-color 200ms ease,
+      box-shadow 200ms ease;
+    /* Ensure transform origin is centered for scale animations */
+    transform-origin: center;
+    /* Initial state - no shadow for unselected pills */
+    box-shadow: none;
+  }
+
+  /* Hover state - subtle lift and minimal scale
+     More restrained animation for a refined feel
+     Only applies on devices with precise pointer (not touch)
+     Adds subtle shadow for depth */
+  @media (hover: hover) and (pointer: fine) {
+    .cuisine-filter-pill:hover:not([aria-pressed="true"]) {
+      transform: translateY(-1px) scale(1.01);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    }
+    
+    /* Hover state for selected pills - slightly different */
+    .cuisine-filter-pill[aria-pressed="true"]:hover {
+      transform: translateY(-1px) scale(1.01);
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.06);
+    }
+  }
+
+  /* Selected state - subtle visual emphasis
+     Selected pills have a slightly elevated appearance with shadow
+     Subtle scale to make them feel "pressed in" */
+  .cuisine-filter-pill[aria-pressed="true"] {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    transform: scale(1);
+  }
+
+  /* Animation when pill becomes selected - playful "pop" effect
+     This creates a satisfying feedback when clicking to select */
+  .pill-just-selected {
+    animation: pill-selected-pop 250ms ease-out;
+  }
+
+  @keyframes pill-selected-pop {
+    0% {
+      transform: scale(0.95);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  /* Active/tap state - scale down for responsive feedback
+     Using scale(0.97) per Emil's guidelines for button interactions
+     This provides immediate visual feedback when clicking
+     Overrides hover transform when actively clicking */
+  .cuisine-filter-pill:active {
+    transform: scale(0.97) !important;
+    transition-duration: 100ms; /* Faster on active for snappy feel */
+  }
+
+  /* Disable animations for users who prefer reduced motion
+     Keep color transitions but remove transform animations */
+  @media (prefers-reduced-motion: reduce) {
+    .cuisine-filter-pill {
+      transition: background-color 200ms ease, border-color 200ms ease;
+    }
+
+    .cuisine-filter-pill:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    .cuisine-filter-pill:active {
+      transform: none;
+    }
+
+    .cuisine-filter-pill[aria-pressed="true"] {
+      animation: none;
+      box-shadow: none;
+    }
+
+    .pill-just-selected {
+      animation: none;
+    }
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
