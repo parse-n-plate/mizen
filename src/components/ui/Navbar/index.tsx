@@ -3,12 +3,15 @@
 import PPLogo from '@/components/ui/Navbar/pplogo';
 import InlineSearch from '@/components/ui/Navbar/inline-search';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 
 export default function Navbar() {
   const { bookmarkedRecipeIds, isLoaded } = useParsedRecipes();
   const hasSavedRecipes = bookmarkedRecipeIds.length > 0;
+  const pathname = usePathname();
+  const isOnSavedRecipesPage = pathname === '/saved-recipes';
 
   return (
     <div className="bg-white px-4 md:px-6 py-3 md:py-4 sticky top-0 z-[10000] border-b border-stone-200">
@@ -33,19 +36,38 @@ export default function Navbar() {
           <div className="flex items-center flex-shrink-0">
             <Link
               href="/saved-recipes"
-              className="relative p-2 rounded-full transition-colors hover:bg-stone-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300"
+              className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 border border-stone-200 ${
+                isOnSavedRecipesPage
+                  ? 'bg-stone-200'
+                  : 'hover:bg-stone-100'
+              }`}
               aria-label="View saved recipes"
+              aria-current={isOnSavedRecipesPage ? 'page' : undefined}
             >
               <Bookmark
-                className={`w-5 h-5 transition-colors ${
-                  hasSavedRecipes
+                className={`w-4 h-4 transition-colors ${
+                  isOnSavedRecipesPage
+                    ? 'fill-[#0C0A09] text-[#0C0A09]'
+                    : hasSavedRecipes
                     ? 'fill-[#78716C] text-[#78716C]'
-                    : 'fill-[#D6D3D1] text-[#D6D3D1]'
+                    : 'fill-[#A8A29E] text-[#A8A29E]'
                 }`}
               />
-              {/* Badge indicator when there are saved recipes */}
+              {/* Text label - visible on all screen sizes for clarity */}
+              <span className={`font-albert text-sm font-medium transition-colors ${
+                isOnSavedRecipesPage
+                  ? 'text-stone-900'
+                  : hasSavedRecipes
+                  ? 'text-stone-600'
+                  : 'text-stone-400'
+              }`}>
+                Saved
+              </span>
+              {/* Badge indicator showing count when there are saved recipes */}
               {hasSavedRecipes && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-[#78716C] rounded-full" />
+                <span className="font-albert flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-xs font-medium text-white bg-stone-500 rounded-full">
+                  {bookmarkedRecipeIds.length}
+                </span>
               )}
             </Link>
           </div>
