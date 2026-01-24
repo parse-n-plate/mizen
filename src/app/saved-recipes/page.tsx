@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, Suspense, use, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { X, Camera, Grid3x3, List } from 'lucide-react';
+import { X, Camera, Grid3x3, List, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import MenuDotsCircle from '@solar-icons/react/csr/ui/MenuDotsCircle';
@@ -527,11 +527,28 @@ function SavedRecipesContent() {
 
   return (
     <div className="bg-white min-h-screen">
-      <div className="max-w-6xl mx-auto px-4 md:px-8 pt-16 md:pt-24 pb-12 md:pb-16">
-        {/* Page Header */}
-        <div className="mb-8 md:mb-10">
-          <div className="flex items-center justify-between gap-4 mb-6">
-            {/* Title and subtitle - animate in (like landing page hero) */}
+      {/* Header Section with #FAFAF9 Background - matching parsed-recipe-page style */}
+      <div className="bg-[#FAFAF9]">
+        {/* Main Content Container with max-width */}
+        <div className="max-w-6xl mx-auto px-4 md:px-8 pt-6 md:pt-10 pb-0">
+          {/* Top Navigation Bar - Back arrow only */}
+          <div className="w-full mb-6 md:mb-8">
+            <div className="flex items-center justify-between">
+              {/* Back Button - Visible on all screen sizes */}
+              <button
+                onClick={() => router.push('/')}
+                className="flex items-center gap-2 text-stone-600 hover:text-stone-800 transition-colors cursor-pointer group"
+                aria-label="Back to Home"
+              >
+                <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
+                {/* Desktop: Show "Back to Home" text */}
+                <span className="hidden md:inline font-albert text-[14px] font-medium">Back to Home</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Title and Subtitle Section */}
+          <div className="w-full pb-8 md:pb-12">
             <div className={`${isPageLoaded ? 'page-fade-in-up' : 'opacity-0'}`}>
               <h1 className="font-domine text-[28px] md:text-[32px] font-normal text-black leading-[1.1] tracking-tight mb-2">
                 Saved Recipes
@@ -540,8 +557,40 @@ function SavedRecipesContent() {
                 {bookmarkedRecipes.length} {bookmarkedRecipes.length === 1 ? 'recipe' : 'recipes'} saved
               </p>
             </div>
-            
-            {/* View Toggle and Sort - NO animation (frequently used controls) */}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="max-w-6xl mx-auto px-4 md:px-8 pt-8 md:pt-12 pb-12 md:pb-16">
+        {/* Search Bar with View Toggle and Sort - Side by Side Layout */}
+        <div className={`mb-6 ${isPageLoaded ? 'page-fade-in-up page-fade-delay-1' : 'opacity-0'}`}>
+          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 w-full">
+            {/* Search Bar - Left Side */}
+            <div className="flex-1 min-w-0">
+              <div className="ingredients-search-wrapper">
+                <Magnifer className="ingredients-search-icon" />
+                <input
+                  type="text"
+                  placeholder="Search saved recipes..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="ingredients-search-input"
+                  aria-label="Search saved recipes"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="ml-2 flex-shrink-0 text-stone-400 hover:text-stone-600 transition-colors"
+                    aria-label="Clear search"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* View Toggle and Sort - Right Side */}
             <div className="flex items-center gap-2 flex-shrink-0">
               {/* View Mode Toggle */}
               <div className="flex items-center gap-1 bg-stone-100 rounded-lg p-1">
@@ -606,34 +655,9 @@ function SavedRecipesContent() {
           </div>
         </div>
 
-        {/* Search Bar - animate in with delay (like landing page search) */}
-        <div className={`mb-6 ${isPageLoaded ? 'page-fade-in-up page-fade-delay-1' : 'opacity-0'}`}>
-          <div className="ingredients-search-container max-w-full">
-            <div className="ingredients-search-wrapper">
-              <Magnifer className="ingredients-search-icon" />
-              <input
-                type="text"
-                placeholder="Search saved recipes..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="ingredients-search-input"
-                aria-label="Search saved recipes"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="ml-2 flex-shrink-0 text-stone-400 hover:text-stone-600 transition-colors"
-                  aria-label="Clear search"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Cuisine Filter Pills and Cooked Toggle - animate in with delay */}
-        <div className={`mb-6 md:mb-8 overflow-visible ${isPageLoaded ? 'page-fade-in-up page-fade-delay-1' : 'opacity-0'}`}>
+        {/* Cuisine Filter Pills and Cooked Toggle - Below Search Bar */}
+        {/* Extend to container edges to align pills with search bar and recipe items */}
+        <div className={`mb-6 md:mb-8 overflow-visible -mx-4 md:-mx-8 ${isPageLoaded ? 'page-fade-in-up page-fade-delay-1' : 'opacity-0'}`}>
           <CuisinePills
             onCuisineChange={handleCuisineChange}
             showCookedOnly={showCookedOnly}
