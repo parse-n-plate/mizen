@@ -1358,7 +1358,7 @@ export default function ParsedRecipePage({
                       className="bg-white"
                     >
                       <div className="max-w-[700px] mx-auto space-y-6">
-                        {/* Plating Suggestions - use top-level from initial parse, fallback to plate for backward compat */}
+                        {/* Plating Suggestions - use top-level plating from initial parse, fallback to plate for backward compat */}
                         <PlatingGuidanceCard
                           platingNotes={parsedRecipe.platingNotes || parsedRecipe.plate?.platingNotes}
                           servingVessel={parsedRecipe.servingVessel || parsedRecipe.plate?.servingVessel}
@@ -1367,10 +1367,9 @@ export default function ParsedRecipePage({
                             setParsedRecipe({
                               ...parsedRecipe,
                               id: parsedRecipe.id || recipeId || undefined,
-                              platingNotes: notes, // Store at top level
                               plate: {
                                 ...parsedRecipe.plate,
-                                platingNotes: notes, // Also store in plate for backward compat
+                                platingNotes: notes,
                               },
                             });
                           }}
