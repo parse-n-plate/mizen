@@ -24,6 +24,13 @@ import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 import Image from 'next/image';
 import ImagePreview from '@/components/ui/image-preview';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { convertTextFractionsToSymbols } from '@/lib/utils';
 import PlatePhotoCapture from '@/components/ui/plate-photo-capture';
 import PlatingGuidanceCard from '@/components/ui/plating-guidance-card';
@@ -215,10 +222,8 @@ export default function ParsedRecipePage({
   const [isMobile, setIsMobile] = useState(false);
   
   // Settings popover state
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedPlainText, setCopiedPlainText] = useState(false);
-  const settingsMenuRef = useRef<HTMLDivElement>(null);
   
   // Bookmark success animation state - tracks when bookmark is just saved
   const [justBookmarked, setJustBookmarked] = useState(false);
@@ -533,28 +538,15 @@ export default function ParsedRecipePage({
     }
   };
 
-  // Close settings popover when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target as Node)) {
-        setIsSettingsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   // Handle copy link to original recipe
   const handleCopyLink = async () => {
     if (!parsedRecipe?.sourceUrl) return;
-    
+
     try {
       await navigator.clipboard.writeText(parsedRecipe.sourceUrl);
       setCopiedLink(true);
-      setTimeout(() => {
-        setCopiedLink(false);
-        setIsSettingsOpen(false);
-      }, 2000);
+      setTimeout(() => setCopiedLink(false), 2000);
     } catch (err) {
       console.error('Failed to copy link:', err);
     }
@@ -626,10 +618,7 @@ export default function ParsedRecipePage({
     try {
       await navigator.clipboard.writeText(text);
       setCopiedPlainText(true);
-      setTimeout(() => {
-        setCopiedPlainText(false);
-        setIsSettingsOpen(false);
-      }, 2000);
+      setTimeout(() => setCopiedPlainText(false), 2000);
     } catch (err) {
       console.error('Failed to copy recipe:', err);
     }
@@ -651,10 +640,7 @@ export default function ParsedRecipePage({
     if (confirmed) {
       // Remove recipe from storage and context
       removeRecipe(recipeId);
-      
-      // Close the settings menu
-      setIsSettingsOpen(false);
-      
+
       // Navigate back to home page after deletion
       router.push('/');
     }
@@ -914,107 +900,57 @@ export default function ParsedRecipePage({
                       )}
                       
                       {/* Settings Button and Popover */}
-                      <div className="relative" ref={settingsMenuRef}>
-                        <motion.button
-                          onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                          className={`p-2 rounded-full transition-colors ${isSettingsOpen ? 'bg-stone-100 text-stone-900' : 'text-stone-400 hover:bg-stone-50'}`}
-                          aria-label="Recipe settings"
-                          aria-expanded={isSettingsOpen}
-                          initial={{ scale: 1, rotate: 0 }}
-                          whileHover={shouldReduceMotion ? {} : { 
-                            scale: 1.08,
-                            rotate: 3,
-                            transition: { 
-                              duration: 0.2, 
-                              ease: [0.25, 0.46, 0.45, 0.94] // ease-out-quad
-                            }
-                          }}
-                          whileTap={shouldReduceMotion ? {} : { 
-                            scale: 0.97,
-                            rotate: 0,
-                            transition: { duration: 0.1 }
-                          }}
-                          animate={{ scale: 1, rotate: 0 }}
-                        >
-                          <Settings
-                            weight="Bold"
-                            className="w-6 h-6"
-                          />
-                        </motion.button>
-
-                        <AnimatePresence>
-                          {isSettingsOpen && (
-                            <motion.div
-                              initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
-                              animate={{ opacity: 1, scale: 1, y: 0 }}
-                              exit={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
-                              transition={{ 
-                                duration: shouldReduceMotion ? 0 : 0.12,
-                                ease: [0.23, 1, 0.32, 1]
-                              }}
-                              className="absolute right-0 mt-2 w-60 bg-white border border-stone-200 rounded-xl shadow-xl z-50 overflow-hidden"
-                            >
-                              {/* Copy Link to Original Option */}
-                              <button
-                                onClick={handleCopyLink}
-                                className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors group hover:bg-stone-50"
-                              >
-                                <span className={`menu-action-label flex-1 text-[14px] ${
-                                  copiedLink 
-                                    ? 'text-green-600 font-medium' 
-                                    : 'text-stone-700'
-                                }`}>
-                                  {copiedLink ? 'Link copied' : 'Copy link'}
-                                </span>
-                                {copiedLink && (
-                                  <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
-                                )}
-                              </button>
-
-                              {/* Copy Recipe as Plain Text Option */}
-                              <button
-                                onClick={handleCopyPlainText}
-                                className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors group hover:bg-stone-50"
-                              >
-                                <span className={`menu-action-label flex-1 text-[14px] ${
-                                  copiedPlainText 
-                                    ? 'text-green-600 font-medium' 
-                                    : 'text-stone-700'
-                                }`}>
-                                  {copiedPlainText ? 'Recipe copied' : 'Copy recipe'}
-                                </span>
-                                {copiedPlainText && (
-                                  <Check className="w-4 h-4 text-green-600 flex-shrink-0" />
-                                )}
-                              </button>
-
-                              {/* Download Recipe as JPG Option - Disabled for now */}
-                              <button
-                                disabled
-                                className="w-full flex items-center gap-3 px-3 py-2.5 text-left cursor-not-allowed opacity-50"
-                              >
-                                <span className="menu-action-label flex-1 text-[14px] text-stone-400">Download Recipe as JPG</span>
-                              </button>
-
-                              {/* Divider before delete option */}
-                              {recipeId && (
-                                <div className="h-px bg-stone-200 my-1" />
-                              )}
-
-                              {/* Delete Recipe Option */}
-                              {recipeId && (
-                                <button
-                                  onClick={handleDeleteRecipe}
-                                  className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-red-50"
-                                >
-                                  <TrashBinTrash weight="Bold" className="w-4 h-4 flex-shrink-0 text-red-600" style={{ fill: 'currentColor' }} />
-                                  <span className="menu-action-label flex-1 text-[14px] text-red-600">Delete Recipe</span>
-                                </button>
-                              )}
-                            </motion.div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <motion.button
+                            className="p-2 rounded-full transition-colors text-stone-400 hover:bg-stone-50 data-[state=open]:bg-stone-100 data-[state=open]:text-stone-900"
+                            aria-label="Recipe settings"
+                            initial={{ scale: 1, rotate: 0 }}
+                            whileHover={shouldReduceMotion ? {} : {
+                              scale: 1.08,
+                              rotate: 3,
+                              transition: {
+                                duration: 0.2,
+                                ease: [0.25, 0.46, 0.45, 0.94]
+                              }
+                            }}
+                            whileTap={shouldReduceMotion ? {} : {
+                              scale: 0.97,
+                              rotate: 0,
+                              transition: { duration: 0.1 }
+                            }}
+                            animate={{ scale: 1, rotate: 0 }}
+                          >
+                            <Settings weight="Bold" className="w-6 h-6" />
+                          </motion.button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-60">
+                          <DropdownMenuItem onSelect={handleCopyLink}>
+                            <span className={copiedLink ? 'text-green-600 font-medium' : ''}>
+                              {copiedLink ? 'Link copied' : 'Copy link'}
+                            </span>
+                            {copiedLink && <Check className="w-4 h-4 text-green-600 ml-auto" />}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={handleCopyPlainText}>
+                            <span className={copiedPlainText ? 'text-green-600 font-medium' : ''}>
+                              {copiedPlainText ? 'Recipe copied' : 'Copy recipe'}
+                            </span>
+                            {copiedPlainText && <Check className="w-4 h-4 text-green-600 ml-auto" />}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem disabled>
+                            <span className="text-stone-400">Download Recipe as JPG</span>
+                          </DropdownMenuItem>
+                          {recipeId && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onSelect={handleDeleteRecipe} className="text-red-600 focus:text-red-600 focus:bg-red-50">
+                                <TrashBinTrash weight="Bold" className="w-4 h-4 flex-shrink-0" style={{ fill: 'currentColor' }} />
+                                <span>Delete Recipe</span>
+                              </DropdownMenuItem>
+                            </>
                           )}
-                        </AnimatePresence>
-                      </div>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 </div>
@@ -1422,18 +1358,19 @@ export default function ParsedRecipePage({
                       className="bg-white"
                     >
                       <div className="max-w-[700px] mx-auto space-y-6">
-                        {/* Plating Suggestions */}
+                        {/* Plating Suggestions - use top-level from initial parse, fallback to plate for backward compat */}
                         <PlatingGuidanceCard
-                          platingNotes={parsedRecipe.plate?.platingNotes}
-                          servingVessel={parsedRecipe.plate?.servingVessel}
-                          servingTemp={parsedRecipe.plate?.servingTemp}
+                          platingNotes={parsedRecipe.platingNotes || parsedRecipe.plate?.platingNotes}
+                          servingVessel={parsedRecipe.servingVessel || parsedRecipe.plate?.servingVessel}
+                          servingTemp={parsedRecipe.servingTemp || parsedRecipe.plate?.servingTemp}
                           onNotesChange={(notes) => {
                             setParsedRecipe({
                               ...parsedRecipe,
                               id: parsedRecipe.id || recipeId || undefined,
+                              platingNotes: notes, // Store at top level
                               plate: {
                                 ...parsedRecipe.plate,
-                                platingNotes: notes,
+                                platingNotes: notes, // Also store in plate for backward compat
                               },
                             });
                           }}
