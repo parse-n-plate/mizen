@@ -215,6 +215,12 @@ export default function SearchForm({
         ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
         ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings if available
+        // Storage & plating guidance - now returned during initial parse (photo upload optional)
+        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
+        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
+        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
+        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
+        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
       });
 
       // Add to recent recipes
@@ -236,6 +242,12 @@ export default function SearchForm({
         ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
         imageData: imagePreview || undefined, // Store base64 image data for preview
         imageFilename: selectedImage.name, // Store original filename
+        // Storage & plating guidance - now returned during initial parse (photo upload optional)
+        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
+        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
+        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
+        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
+        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
       });
 
       // Update progress: Complete (100%)
@@ -405,6 +417,12 @@ export default function SearchForm({
         ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
         ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
         ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
+        // Storage & plating guidance - now returned during initial URL parse (photo upload optional)
+        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
+        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
+        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
+        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
+        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
       };
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'search-form.tsx:310',message:'recipeToStore created',data:{hasServings:'servings' in recipeToStore,servings:recipeToStore.servings,servingsType:typeof recipeToStore.servings,servingsValue:recipeToStore.servings,keys:Object.keys(recipeToStore)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
@@ -440,6 +458,12 @@ export default function SearchForm({
         ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
         ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
         ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
+        // Storage & plating guidance - now returned during initial URL parse (photo upload optional)
+        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
+        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
+        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
+        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
+        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
       });
 
       // Show success toast
