@@ -244,6 +244,12 @@ export default function NavbarSearch() {
         ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
         ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
         ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
+        // Storage & plating guidance - now returned during initial URL parse (photo upload optional)
+        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
+        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
+        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
+        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
+        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
       };
       
       setParsedRecipe(recipeToStore);
@@ -273,6 +279,12 @@ export default function NavbarSearch() {
         ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
         ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
         ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
+        // Storage & plating guidance - now returned during initial URL parse (photo upload optional)
+        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
+        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
+        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
+        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
+        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
       });
 
       // Show success toast
@@ -355,24 +367,22 @@ export default function NavbarSearch() {
         <form onSubmit={handleSubmit}>
         <div
           className={`
-            bg-stone-100 rounded-[9999px] border border-stone-200 
-            transition-all duration-300 ease-in-out
-            hover:border-[#4F46E5] hover:border-opacity-80
-            ${isFocused ? 'shadow-sm border-[#4F46E5] border-opacity-60' : ''}
+            rounded-lg border transition-all duration-200 ease-in-out
+            ${isFocused ? 'bg-white border-stone-200 shadow-[0_1px_2px_rgba(0,0,0,0.02)]' : 'bg-[#f5f5f4] border-transparent'}
           `}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           onClick={handleContainerClick}
         >
-          <div className="flex items-center pl-3 md:pl-4 pr-2.5 md:pr-4 py-1.5 md:py-2 relative min-h-[38px] md:min-h-[44px]">
+          <div className="flex items-center gap-3 px-4 py-3 relative">
             {/* Search Icon */}
-            <Search className="w-3.5 h-3.5 md:w-4 md:h-4 text-stone-600 flex-shrink-0" />
+            <Search className="w-[18px] h-[18px] text-stone-400 flex-shrink-0" />
 
             {/* Input */}
-            <div className="flex-1 ml-1.5 md:ml-2 relative min-h-[18px] md:min-h-[20px] flex items-center">
+            <div className="flex-1 relative flex items-center">
               {/* Show URL display when on parsed recipe page and not focused/editing */}
               {isOnParsedRecipePage && parsedRecipe?.sourceUrl && !isFocused && !query ? (
-                <div className="w-full font-albert text-[13px] md:text-[14px] truncate flex-1 min-w-0 cursor-text h-[18px] md:h-[20px] flex items-center">
+                <div className="w-full font-albert text-[15px] truncate flex-1 min-w-0 cursor-text flex items-center">
                   <AnimatePresence mode="wait">
                     {isHovered ? (
                       <motion.span
@@ -381,7 +391,7 @@ export default function NavbarSearch() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 5 }}
                         transition={{ duration: 0.2 }}
-                        className="text-stone-500 block"
+                        className="text-stone-400 block"
                       >
                         Enter URL
                       </motion.span>
@@ -394,7 +404,7 @@ export default function NavbarSearch() {
                         transition={{ duration: 0.2 }}
                         className="truncate"
                       >
-                        <span className="font-medium text-[#193d34]">
+                        <span className="font-medium text-stone-800">
                           {getDomainFromUrl(parsedRecipe.sourceUrl)}
                         </span>
                         <span className="text-stone-400">
@@ -425,7 +435,7 @@ export default function NavbarSearch() {
                       }
                     }, 0);
                   }}
-                  className="w-full bg-transparent font-albert text-[13px] md:text-[14px] text-stone-600 placeholder:text-stone-500 focus:outline-none border-none h-[18px] md:h-[20px]"
+                  className="w-full bg-transparent font-albert text-[15px] text-stone-800 placeholder:text-stone-400 focus:outline-none border-none"
                 />
               )}
             </div>
