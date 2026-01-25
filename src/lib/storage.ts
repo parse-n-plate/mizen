@@ -35,6 +35,10 @@ export type ParsedRecipe = {
     fridge?: number | null;  // Days in fridge (null if not fridge-safe)
     freezer?: number | null; // Days in freezer (null if not freezer-friendly)
   };
+  // Plating guidance - generated during initial parse (top-level for immediate access)
+  platingNotes?: string;     // AI-generated plating suggestions
+  servingVessel?: string;    // Recommended serving vessel (e.g., "shallow bowl", "dinner plate")
+  servingTemp?: string;      // Ideal serving temperature (e.g., "hot", "warm", "room temp", "chilled")
   plate?: {
     // Legacy single photo support (backward compatibility)
     photoData?: string;

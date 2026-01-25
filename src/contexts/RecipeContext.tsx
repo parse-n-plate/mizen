@@ -49,6 +49,10 @@ export interface ParsedRecipe {
     fridge?: number | null;      // Days in fridge (null if not fridge-safe)
     freezer?: number | null;     // Days in freezer (null if not freezer-friendly)
   };
+  // Plating guidance - generated during initial parse (top-level for immediate access)
+  platingNotes?: string;         // AI-generated plating suggestions
+  servingVessel?: string;        // Recommended serving vessel (e.g., "shallow bowl", "dinner plate")
+  servingTemp?: string;          // Ideal serving temperature (e.g., "hot", "warm", "room temp", "chilled")
   rating?: number;               // NEW: Recipe rating (1-5)
   skills?: {                    // NEW: Required cooking skills
     techniques?: string[];      // Cooking techniques needed
