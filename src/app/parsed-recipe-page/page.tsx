@@ -851,7 +851,7 @@ export default function ParsedRecipePage({
                       className="flex items-center gap-2 text-stone-600 hover:text-stone-800 transition-colors cursor-pointer group"
                       aria-label="Back to Home"
                     >
-                      <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
+                      <ArrowLeft className="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1" />
                       {/* Desktop: Show "Back to Home" text */}
                       <span className="hidden md:inline font-albert text-[14px] font-medium">Back to Home</span>
                     </button>
@@ -1009,9 +1009,9 @@ export default function ParsedRecipePage({
                                 {copied ? (
                                   <motion.div
                                     key="check"
-                                    initial={{ scale: 0.5, opacity: 0 }}
+                                    initial={shouldReduceMotion ? { opacity: 0 } : { scale: 0.5, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
-                                    exit={{ scale: 0.5, opacity: 0 }}
+                                    exit={shouldReduceMotion ? { opacity: 0 } : { scale: 0.5, opacity: 0 }}
                                     transition={{ duration: 0.1 }}
                                   >
                                     <Check className="w-3.5 h-3.5 text-green-600" />
@@ -1019,9 +1019,9 @@ export default function ParsedRecipePage({
                                 ) : (
                                   <motion.div
                                     key="copy"
-                                    initial={{ scale: 0.5, opacity: 0 }}
+                                    initial={shouldReduceMotion ? { opacity: 0 } : { scale: 0.5, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
-                                    exit={{ scale: 0.5, opacity: 0 }}
+                                    exit={shouldReduceMotion ? { opacity: 0 } : { scale: 0.5, opacity: 0 }}
                                     transition={{ duration: 0.1 }}
                                   >
                                     <Copy className="w-3.5 h-3.5 text-stone-400" />
@@ -1133,7 +1133,7 @@ export default function ParsedRecipePage({
                         className="folder-tab-trigger group flex-1 h-[58px] md:h-[64px]"
                       >
                         <motion.div
-                          className="relative shrink-0 w-8 h-8 md:w-9 md:h-9 group-hover:scale-110 group-hover:rotate-[-5deg] transition-transform duration-200"
+                          className="relative shrink-0 w-8 h-8 md:w-9 md:h-9 group-hover:scale-105 group-hover:rotate-[-5deg] transition-transform duration-200"
                         >
                           <img
                             alt="Prep icon"
@@ -1157,7 +1157,7 @@ export default function ParsedRecipePage({
                         className="folder-tab-trigger group flex-1 h-[58px] md:h-[64px]"
                       >
                         <motion.div
-                          className="relative shrink-0 w-8 h-8 md:w-9 md:h-9 group-hover:scale-110 group-hover:rotate-[5deg] transition-transform duration-200"
+                          className="relative shrink-0 w-8 h-8 md:w-9 md:h-9 group-hover:scale-105 group-hover:rotate-[5deg] transition-transform duration-200"
                         >
                           <img
                             alt="Cook icon"
@@ -1181,7 +1181,7 @@ export default function ParsedRecipePage({
                         className="folder-tab-trigger group flex-1 h-[58px] md:h-[64px]"
                       >
                         <motion.div
-                          className="relative shrink-0 w-8 h-8 md:w-9 md:h-9 group-hover:scale-110 group-hover:rotate-[-3deg] transition-transform duration-200"
+                          className="relative shrink-0 w-8 h-8 md:w-9 md:h-9 group-hover:scale-105 group-hover:rotate-[-3deg] transition-transform duration-200"
                         >
                           <img
                             alt="Plate icon"
@@ -1221,7 +1221,7 @@ export default function ParsedRecipePage({
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
                       className="bg-white cursor-default"
                     >
                       <div className="max-w-[700px] mx-auto space-y-6">
@@ -1333,7 +1333,7 @@ export default function ParsedRecipePage({
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
                       className="w-full -mx-4 md:-mx-8 flex flex-col items-center"
                     >
                       <div className="w-full max-w-[700px]">
@@ -1354,7 +1354,7 @@ export default function ParsedRecipePage({
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
+                      transition={{ duration: 0.2, ease: "easeOut" }}
                       className="bg-white"
                     >
                       <div className="max-w-[700px] mx-auto space-y-6">
