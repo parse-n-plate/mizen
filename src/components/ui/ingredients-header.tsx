@@ -5,7 +5,14 @@ import { useState, useRef, useEffect } from "react"
 import User from "@solar-icons/react/csr/users/User"
 import Magnifer from "@solar-icons/react/csr/search/Magnifer"
 import { ChevronDown, MoreHorizontal, X } from "lucide-react"
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import type { UnitSystem } from "@/utils/unitConverter"
 
 interface IngredientsHeaderProps {
@@ -29,28 +36,10 @@ export function IngredientsHeader({
 }: IngredientsHeaderProps) {
   // State to toggle the servings slider card
   const [isSliderOpen, setIsSliderOpen] = useState(false);
-  // State to track unit dropdown menu open state for animation
-  const [isUnitMenuOpen, setIsUnitMenuOpen] = useState(false);
-  
+
   // Track slider dragging state
   const sliderRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-  
-  // Accessibility: respect user's reduced motion preference
-  const shouldReduceMotion = useReducedMotion();
-  
-  // Close unit menu when clicking outside
-  const unitMenuRef = useRef<HTMLDivElement>(null);
-  
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (unitMenuRef.current && !unitMenuRef.current.contains(event.target as Node)) {
-        setIsUnitMenuOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
   
   // State for servings input
   const [servingsInputValue, setServingsInputValue] = useState<string>('');
@@ -255,82 +244,23 @@ export function IngredientsHeader({
         <div className="ingredients-header-left">
           <h2 className="ingredients-header-title">Ingredients</h2>
           {/* Ellipsis menu icon - opens unit type options */}
-          <div className="relative" ref={unitMenuRef}>
-            <button
-              onClick={() => setIsUnitMenuOpen(!isUnitMenuOpen)}
-              className={`p-2 rounded-full transition-colors ${isUnitMenuOpen ? 'bg-stone-100 text-stone-900' : 'text-stone-400 hover:bg-stone-50'}`}
-              aria-label="Unit type options"
-              aria-expanded={isUnitMenuOpen}
-            >
-              <MoreHorizontal className="w-5 h-5" />
-            </button>
-
-            <AnimatePresence>
-              {isUnitMenuOpen && (
-                <motion.div
-                  initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
-                  transition={{ 
-                    duration: shouldReduceMotion ? 0 : 0.12,
-                    ease: [0.23, 1, 0.32, 1]
-                  }}
-                  className="absolute left-0 mt-2 w-[180px] bg-white border border-stone-200 rounded-xl shadow-xl z-50 overflow-hidden"
-                >
-                  <button
-                    onClick={() => {
-                      onUnitSystemChange('original');
-                      setIsUnitMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-stone-50 ${
-                      unitSystem === 'original' ? 'bg-stone-50' : ''
-                    }`}
-                  >
-                    <div className={`w-2 h-2 rounded-full border-2 flex-shrink-0 ${
-                      unitSystem === 'original' 
-                        ? 'bg-[#0C0A09] border-[#0C0A09]' 
-                        : 'border-stone-300'
-                    }`} />
-                    <span className="menu-action-label flex-1 text-[14px] text-stone-700">Original</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      onUnitSystemChange('metric');
-                      setIsUnitMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-stone-50 ${
-                      unitSystem === 'metric' ? 'bg-stone-50' : ''
-                    }`}
-                  >
-                    <div className={`w-2 h-2 rounded-full border-2 flex-shrink-0 ${
-                      unitSystem === 'metric' 
-                        ? 'bg-[#0C0A09] border-[#0C0A09]' 
-                        : 'border-stone-300'
-                    }`} />
-                    <span className="menu-action-label flex-1 text-[14px] text-stone-700">Metric</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      onUnitSystemChange('imperial');
-                      setIsUnitMenuOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-stone-50 ${
-                      unitSystem === 'imperial' ? 'bg-stone-50' : ''
-                    }`}
-                  >
-                    <div className={`w-2 h-2 rounded-full border-2 flex-shrink-0 ${
-                      unitSystem === 'imperial' 
-                        ? 'bg-[#0C0A09] border-[#0C0A09]' 
-                        : 'border-stone-300'
-                    }`} />
-                    <span className="menu-action-label flex-1 text-[14px] text-stone-700">Imperial</span>
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="p-2 rounded-full transition-colors text-stone-400 hover:bg-stone-50 data-[state=open]:bg-stone-100 data-[state=open]:text-stone-900"
+                aria-label="Unit type options"
+              >
+                <MoreHorizontal className="w-5 h-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-[180px]">
+              <DropdownMenuRadioGroup value={unitSystem} onValueChange={(value) => onUnitSystemChange(value as UnitSystem)}>
+                <DropdownMenuRadioItem value="original">Original</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="metric">Metric</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="imperial">Imperial</DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         
         {/* Servings/Scale Button - toggles slider card */}

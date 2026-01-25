@@ -1,8 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { X, Camera } from 'lucide-react';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import MenuDotsCircle from '@solar-icons/react/csr/ui/MenuDotsCircle';
@@ -10,6 +10,12 @@ import Pen from '@solar-icons/react/csr/messages/Pen';
 import ClipboardText from '@solar-icons/react/csr/notes/ClipboardText';
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export interface RecipeCardData {
   id: string;
@@ -44,85 +50,11 @@ export default function RecipeCard({
   showImage = false, // Default to false as per new design (using cuisine icons instead)
   showCuisineIcon = true, // Default to true - show cuisine icon unless explicitly hidden
 }: RecipeCardProps) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [copiedRecipe, setCopiedRecipe] = useState(false);
-  const [menuPosition, setMenuPosition] = useState<{ vertical: 'top' | 'bottom'; horizontal: 'left' | 'right' }>({
-    vertical: 'bottom',
-    horizontal: 'right',
-  });
-  
-  // Accessibility: respect user's reduced motion preference
-  const shouldReduceMotion = useReducedMotion();
-  const menuRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const { getRecipeById, isBookmarked, toggleBookmark } = useParsedRecipes();
 
   // Get bookmark state from context
   const isBookmarkedState = isBookmarked(recipe.id);
-
-  // Calculate menu position based on available viewport space
-  useEffect(() => {
-    if (!isMenuOpen || !buttonRef.current) return;
-
-    const calculatePosition = () => {
-      if (!buttonRef.current) return;
-      
-      const buttonRect = buttonRef.current.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      
-      // Calculate available space
-      const spaceBelow = viewportHeight - buttonRect.bottom;
-      const spaceAbove = buttonRect.top;
-      const spaceRight = viewportWidth - buttonRect.right;
-      const spaceLeft = buttonRect.left;
-      
-      // Menu dimensions
-      const menuHeight = 150; // Approximate height for 3 items + padding
-      const menuWidth = 240; // w-60 = 240px
-      const offset = 8; // Gap between button and menu
-      
-      // Determine vertical position - prefer bottom, but flip to top if not enough space
-      const vertical = spaceBelow >= menuHeight + offset || spaceBelow >= spaceAbove ? 'bottom' : 'top';
-      
-      // Determine horizontal position - prefer right, but flip to left if not enough space
-      // Check if menu would overflow on the right side
-      const horizontal = spaceRight >= menuWidth || (spaceRight < menuWidth && spaceLeft >= menuWidth) ? 'right' : 'left';
-      
-      setMenuPosition({ vertical, horizontal });
-    };
-
-    // Small delay to ensure DOM is ready, then calculate position
-    const timeoutId = setTimeout(calculatePosition, 0);
-    
-    // Recalculate on window resize or scroll
-    window.addEventListener('resize', calculatePosition);
-    window.addEventListener('scroll', calculatePosition, true);
-    
-    return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener('resize', calculatePosition);
-      window.removeEventListener('scroll', calculatePosition, true);
-    };
-  }, [isMenuOpen]);
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-      }
-    }
-
-    if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isMenuOpen]);
 
   // Get the first cuisine icon if available, otherwise use a default
   const primaryCuisine = recipe.cuisine && recipe.cuisine.length > 0 ? recipe.cuisine[0] : null;
@@ -148,27 +80,13 @@ export default function RecipeCard({
     }
   };
 
-  // Handle ellipsis menu toggle
-  const handleMenuToggle = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsMenuOpen(!isMenuOpen);
-  };
-
   // Handle menu actions
-  const handleEdit = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsMenuOpen(false);
+  const handleEdit = () => {
     onEdit?.();
   };
 
   // Handle copy recipe - formats and copies the full recipe to clipboard
-  const handleCopyRecipe = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsMenuOpen(false);
-    
+  const handleCopyRecipe = async () => {
     // If onCopy callback is provided, use it (for custom behavior)
     if (onCopy) {
       onCopy();
@@ -247,11 +165,7 @@ export default function RecipeCard({
   };
 
   // Handle unsave recipe - removes recipe from saved/bookmarked recipes
-  const handleUnsave = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsMenuOpen(false);
-
+  const handleUnsave = () => {
     // If recipe is currently bookmarked, show confirmation dialog before unsaving
     if (isBookmarkedState) {
       const confirmed = window.confirm(
@@ -266,7 +180,7 @@ export default function RecipeCard({
 
   return (
     <motion.div
-      className={`group w-full md:basis-0 md:grow min-h-px md:min-w-px relative rounded-[20px] shrink-0 bg-white hover:bg-[#FAFAFA] transition-colors duration-200 cursor-pointer overflow-visible ${isMenuOpen ? 'z-[99]' : ''}`}
+      className="group w-full md:basis-0 md:grow min-h-px md:min-w-px relative rounded-[20px] shrink-0 bg-white hover:bg-[#FAFAFA] transition-colors duration-200 cursor-pointer overflow-visible"
       whileTap={{ scale: 0.98 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
     >
@@ -307,81 +221,34 @@ export default function RecipeCard({
       </button>
 
       {/* Ellipsis Menu Button and Dropdown */}
-      <div ref={menuRef} className={`absolute top-4 right-4 ${isMenuOpen ? 'z-[100]' : 'z-30'}`}>
-        <button
-          ref={buttonRef}
-          onPointerDownCapture={(e) => e.stopPropagation()}
-          onPointerUpCapture={(e) => e.stopPropagation()}
-          onClick={handleMenuToggle}
-          className="p-1.5 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 bg-white/50 backdrop-blur-sm hover:bg-white/70"
-          aria-label="More options"
-          aria-expanded={isMenuOpen}
-        >
-          <MenuDotsCircle
-            className={`w-6 h-6 transition-colors duration-200 ${
-              isMenuOpen 
-                ? 'text-stone-500' 
-                : 'text-stone-300 hover:text-stone-400'
-            }`}
-          />
-        </button>
-
-        {/* Dropdown Menu - Origin-aware positioning */}
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div
-              ref={dropdownRef}
-              onPointerDownCapture={(e) => e.stopPropagation()}
-              onPointerUpCapture={(e) => e.stopPropagation()}
-              initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
-              transition={{ 
-                duration: shouldReduceMotion ? 0 : 0.12, // 120ms for snappier feel
-                ease: [0.23, 1, 0.32, 1] // ease-out-quint - stronger acceleration for faster perceived speed
-              }}
-              className={`absolute w-60 bg-white rounded-xl border border-stone-200 shadow-xl p-1.5 z-[100] ${
-                menuPosition.vertical === 'bottom'
-                  ? 'top-[calc(100%+8px)]'
-                  : 'bottom-[calc(100%+8px)]'
-              } ${
-                menuPosition.horizontal === 'right'
-                  ? 'right-0'
-                  : 'left-0'
-              }`}
-            >
-            {/* Edit Option */}
-            <button
-              onClick={handleEdit}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
-            >
-              <Pen weight="Bold" className="w-4 h-4 text-stone-500 flex-shrink-0" />
-              <span className="font-albert font-medium whitespace-nowrap">Edit</span>
-            </button>
-
-            {/* Copy Recipe to Clipboard Option */}
-            <button
-              onClick={handleCopyRecipe}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
-            >
-              <ClipboardText weight="Bold" className={`w-4 h-4 flex-shrink-0 ${copiedRecipe ? 'text-green-600' : 'text-stone-500'}`} />
-              <span className={`font-albert font-medium whitespace-nowrap ${copiedRecipe ? 'text-green-600' : ''}`}>
-                {copiedRecipe ? 'Copied to Clipboard' : 'Copy Recipe to Clipboard'}
-              </span>
-            </button>
-
-            {/* Unsave Option */}
-            <button
-              onClick={handleUnsave}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
-            >
-              <Bookmark weight="Bold" className="w-4 h-4 text-stone-500 flex-shrink-0" />
-              <span className="font-albert font-medium whitespace-nowrap">Unsave</span>
-            </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            onPointerDownCapture={(e) => e.stopPropagation()}
+            onPointerUpCapture={(e) => e.stopPropagation()}
+            className="absolute top-4 right-4 z-30 p-1.5 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 bg-white/50 backdrop-blur-sm hover:bg-white/70"
+            aria-label="More options"
+          >
+            <MenuDotsCircle className="w-6 h-6 text-stone-300 hover:text-stone-400 transition-colors duration-200" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-60">
+          <DropdownMenuItem onSelect={handleEdit}>
+            <Pen weight="Bold" className="w-4 h-4 text-stone-500 flex-shrink-0" />
+            <span className="font-medium whitespace-nowrap">Edit</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={handleCopyRecipe}>
+            <ClipboardText weight="Bold" className={`w-4 h-4 flex-shrink-0 ${copiedRecipe ? 'text-green-600' : 'text-stone-500'}`} />
+            <span className={`font-medium whitespace-nowrap ${copiedRecipe ? 'text-green-600' : ''}`}>
+              {copiedRecipe ? 'Copied to Clipboard' : 'Copy Recipe to Clipboard'}
+            </span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={handleUnsave}>
+            <Bookmark weight="Bold" className="w-4 h-4 text-stone-500 flex-shrink-0" />
+            <span className="font-medium whitespace-nowrap">Unsave</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <div className="size-full">
         <button

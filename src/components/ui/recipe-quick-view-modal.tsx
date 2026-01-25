@@ -1,15 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { X } from 'lucide-react';
-// Solar Camera icon with Bold weight (filled) for consistent visual style
 import CameraIcon from '@solar-icons/react/csr/video/Camera';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import MenuDotsCircle from '@solar-icons/react/csr/ui/MenuDotsCircle';
-import Pen from '@solar-icons/react/csr/messages/Pen';
 import ClipboardText from '@solar-icons/react/csr/notes/ClipboardText';
 import {
   Dialog,
@@ -17,6 +13,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
@@ -37,27 +39,7 @@ export default function RecipeQuickViewModal({
   const router = useRouter();
   const { getRecipeById, isBookmarked, toggleBookmark } = useParsedRecipes();
   const { setParsedRecipe } = useRecipe();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [copiedRecipe, setCopiedRecipe] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const shouldReduceMotion = useReducedMotion();
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-      }
-    }
-
-    if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isMenuOpen]);
 
   if (!recipe) return null;
 
@@ -209,55 +191,28 @@ export default function RecipeQuickViewModal({
               </button>
               
               {/* More Options Menu */}
-              <div ref={menuRef} className="relative">
-                <button
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="p-1.5 rounded-full transition-colors hover:bg-stone-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300"
-                  aria-label="More options"
-                  aria-expanded={isMenuOpen}
-                >
-                  <MenuDotsCircle
-                    className={`w-5 h-5 transition-colors ${
-                      isMenuOpen 
-                        ? 'text-stone-500' 
-                        : 'text-stone-300 hover:text-stone-400'
-                    }`}
-                  />
-                </button>
-                
-                <AnimatePresence>
-                  {isMenuOpen && (
-                    <motion.div
-                      initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
-                      transition={{ 
-                        duration: shouldReduceMotion ? 0 : 0.12,
-                        ease: [0.23, 1, 0.32, 1]
-                      }}
-                      className="absolute right-0 top-[calc(100%+8px)] w-60 bg-white rounded-xl border border-stone-200 shadow-xl p-1.5 z-[100]"
-                    >
-                      <button
-                        onClick={handleCopyRecipe}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
-                      >
-                        <ClipboardText weight="Bold" className={`w-4 h-4 flex-shrink-0 ${copiedRecipe ? 'text-green-600' : 'text-stone-500'}`} />
-                        <span className={`font-albert font-medium whitespace-nowrap ${copiedRecipe ? 'text-green-600' : ''}`}>
-                          {copiedRecipe ? 'Copied to Clipboard' : 'Copy Recipe to Clipboard'}
-                        </span>
-                      </button>
-                      
-                      <button
-                        onClick={handleBookmarkToggle}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
-                      >
-                        <Bookmark weight="Bold" className="w-4 h-4 text-stone-500 flex-shrink-0" />
-                        <span className="font-albert font-medium whitespace-nowrap">Unsave</span>
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="p-1.5 rounded-full transition-colors hover:bg-stone-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300"
+                    aria-label="More options"
+                  >
+                    <MenuDotsCircle className="w-5 h-5 text-stone-300 hover:text-stone-400 transition-colors" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-60">
+                  <DropdownMenuItem onSelect={handleCopyRecipe}>
+                    <ClipboardText weight="Bold" className={`w-4 h-4 flex-shrink-0 ${copiedRecipe ? 'text-green-600' : 'text-stone-500'}`} />
+                    <span className={`font-medium whitespace-nowrap ${copiedRecipe ? 'text-green-600' : ''}`}>
+                      {copiedRecipe ? 'Copied to Clipboard' : 'Copy Recipe to Clipboard'}
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={handleBookmarkToggle}>
+                    <Bookmark weight="Bold" className="w-4 h-4 text-stone-500 flex-shrink-0" />
+                    <span className="font-medium whitespace-nowrap">Unsave</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
           
