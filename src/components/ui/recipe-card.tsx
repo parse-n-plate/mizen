@@ -255,21 +255,30 @@ export default function RecipeCard({
           onClick={onClick}
           className="w-full h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-0 rounded-[inherit]"
         >
-          <div className="box-border flex flex-row items-center gap-[16px] md:gap-[24px] p-[16px] md:p-[20px] relative w-full min-h-[120px]">
-            {/* Plate Photo or Cuisine Icon */}
+          <div className="box-border flex flex-row items-center gap-[14px] md:gap-[20px] p-[16px] md:p-[20px] relative w-full min-h-[120px]">
+            {/* Image Display Priority: Plate Photo > Original Recipe Image > Cuisine Icon > Placeholder */}
             {recipe.platePhotoData ? (
-              // Show plate photo if available
-              <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
+              // Priority 1: Show plate photo if user uploaded one (shows "Cooked" badge)
+              <div className="relative w-16 h-16 md:w-24 md:h-24 flex-shrink-0">
                 <img
                   src={recipe.platePhotoData}
                   alt="Your dish"
                   className="w-full h-full object-cover rounded-[12px] border-2 border-stone-200 pointer-events-none"
                 />
               </div>
+            ) : recipe.imageUrl ? (
+              // Priority 2: Show original recipe image from website if available
+              <div className="relative w-16 h-16 md:w-24 md:h-24 flex-shrink-0">
+                <img
+                  src={recipe.imageUrl}
+                  alt={recipe.title}
+                  className="w-full h-full object-cover rounded-[12px] border-2 border-stone-200 pointer-events-none"
+                />
+              </div>
             ) : (
-              // Show cuisine icon if no plate photo and showCuisineIcon is true
+              // Priority 3: Show cuisine icon (or pan placeholder) if no images available
               showCuisineIcon && (
-                <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
+                <div className="relative w-16 h-16 md:w-24 md:h-24 flex-shrink-0">
                   <Image
                     src={cuisineIconPath}
                     alt={`${primaryCuisine || 'Recipe'} icon`}
@@ -283,14 +292,14 @@ export default function RecipeCard({
             )}
 
             {/* Recipe Info */}
-            <div className="flex-1 flex flex-col gap-[4px] min-w-0 pr-8 items-start">
-              <h3 className="font-domine leading-[1.2] text-[18px] md:text-[22px] text-black text-left line-clamp-1 break-words m-0">
+            <div className="flex-1 flex flex-col gap-[4px] min-w-0 pr-4 md:pr-6 items-start">
+              <h3 className="font-domine leading-[1.2] text-[18px] md:text-[22px] text-black text-left line-clamp-2 break-words m-0">
                 {recipe.title}
               </h3>
               
               {/* Only show author line if author exists and is not empty */}
               {recipe.author && recipe.author.trim() !== '' && (
-                <p className="font-albert leading-[1.4] text-[13px] md:text-[15px] text-stone-700 text-left m-0">
+                <p className="font-albert leading-[1.4] text-[13px] md:text-[15px] text-stone-600 text-left m-0 line-clamp-1">
                   <span className="text-stone-500">By </span>
                   {recipe.author}
                 </p>
