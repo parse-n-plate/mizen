@@ -244,12 +244,6 @@ export default function NavbarSearch() {
         ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
         ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
         ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
-        // Storage & plating guidance - now returned during initial URL parse (photo upload optional)
-        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
-        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
-        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
-        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
-        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
       };
       
       setParsedRecipe(recipeToStore);
@@ -279,12 +273,6 @@ export default function NavbarSearch() {
         ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
         ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
         ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
-        // Storage & plating guidance - now returned during initial URL parse (photo upload optional)
-        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
-        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
-        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
-        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
-        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
       });
 
       // Show success toast
