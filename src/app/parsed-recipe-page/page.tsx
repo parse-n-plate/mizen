@@ -1137,13 +1137,13 @@ export default function ParsedRecipePage({
                         >
                           <img
                             alt="Prep icon"
-                            className={`absolute inset-0 w-full h-full object-contain transition-all duration-300 ${activeTab === 'prep' ? '' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
+                            className={`absolute inset-0 w-full h-full object-contain ${activeTab === 'prep' ? '' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
                             src="/assets/icons/Prep_Icon.png"
                           />
                         </motion.div>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className={`font-albert font-medium text-[15px] md:text-[16px] transition-colors duration-300 ${activeTab === 'prep' ? 'text-[#0C0A09]' : 'text-[#79716b] group-hover:text-[#0C0A09]'}`}>
+                            <span className={`font-albert font-medium text-[15px] md:text-[16px] ${activeTab === 'prep' ? 'text-[#0C0A09]' : 'text-[#79716b] group-hover:text-[#0C0A09]'}`}>
                               Prep
                             </span>
                           </TooltipTrigger>
@@ -1161,13 +1161,13 @@ export default function ParsedRecipePage({
                         >
                           <img
                             alt="Cook icon"
-                            className={`absolute inset-0 w-full h-full object-contain transition-all duration-300 ${activeTab === 'cook' ? '' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
+                            className={`absolute inset-0 w-full h-full object-contain ${activeTab === 'cook' ? '' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
                             src="/assets/icons/Cook_Icon.png"
                           />
                         </motion.div>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className={`font-albert font-medium text-[15px] md:text-[16px] transition-colors duration-300 ${activeTab === 'cook' ? 'text-[#0C0A09]' : 'text-[#79716b] group-hover:text-[#0C0A09]'}`}>
+                            <span className={`font-albert font-medium text-[15px] md:text-[16px] ${activeTab === 'cook' ? 'text-[#0C0A09]' : 'text-[#79716b] group-hover:text-[#0C0A09]'}`}>
                               Cook
                             </span>
                           </TooltipTrigger>
@@ -1185,13 +1185,13 @@ export default function ParsedRecipePage({
                         >
                           <img
                             alt="Plate icon"
-                            className={`absolute inset-0 w-full h-full object-contain transition-all duration-300 ${activeTab === 'plate' ? '' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
+                            className={`absolute inset-0 w-full h-full object-contain ${activeTab === 'plate' ? '' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
                             src="/assets/icons/Plate_Icon.png"
                           />
                         </motion.div>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className={`font-albert font-medium text-[15px] md:text-[16px] transition-colors duration-300 ${activeTab === 'plate' ? 'text-[#0C0A09]' : 'text-[#79716b] group-hover:text-[#0C0A09]'}`}>
+                            <span className={`font-albert font-medium text-[15px] md:text-[16px] ${activeTab === 'plate' ? 'text-[#0C0A09]' : 'text-[#79716b] group-hover:text-[#0C0A09]'}`}>
                               Plate
                             </span>
                           </TooltipTrigger>

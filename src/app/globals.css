@@ -1725,7 +1725,9 @@
     gap: 8px;
     padding: 0 8px;
     border-radius: 16px 16px 0 0;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    /* No transition - instant tab switching for frequently-used navigation
+       Following the Frequency Principle: users switch tabs 100+ times per session */
+    transition: none;
     background-color: transparent;
     color: #78716C;
     border: none;
