@@ -182,6 +182,12 @@ export default function HomepageSearch() {
         ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
         ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
         ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
+        // Storage & plating guidance - now returned during initial parse (photo upload optional)
+        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
+        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
+        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
+        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
+        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
         imageData: imageData, // Store base64 image data for preview
         imageFilename: selectedImage.name, // Store original filename
       };
@@ -212,6 +218,12 @@ export default function HomepageSearch() {
         ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
         ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
         ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
+        // Storage & plating guidance - now returned during initial parse (photo upload optional)
+        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
+        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
+        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
+        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
+        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
         imageData: imageData, // Store base64 image data for preview
         imageFilename: selectedImage.name, // Store original filename
       });
@@ -308,6 +320,12 @@ export default function HomepageSearch() {
           ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
           ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
           ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
+          // Storage & plating guidance - now returned during initial URL parse (photo upload optional)
+          ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
+          ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
+          ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
+          ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
+          ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
         };
 
         setParsedRecipe(recipeToStore);
@@ -336,6 +354,12 @@ export default function HomepageSearch() {
           ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
           ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
           ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
+          // Storage & plating guidance - now returned during initial URL parse (photo upload optional)
+          ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
+          ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
+          ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
+          ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
+          ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
         });
 
         // Add to search history
