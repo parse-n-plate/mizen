@@ -175,6 +175,9 @@ export async function POST(req: NextRequest): Promise<Response> {
       totalTimeMinutes: result.data.totalTimeMinutes, // Include total time if available
       storageGuide: result.data.storageGuide, // Include storage instructions if available
       shelfLife: result.data.shelfLife, // Include shelf life info if available
+      platingNotes: result.data.platingNotes, // Include plating suggestions if available
+      servingVessel: result.data.servingVessel, // Include serving vessel recommendation if available
+      servingTemp: result.data.servingTemp, // Include serving temperature if available
       method: result.method, // Include which method was used (json-ld or ai)
     });
   } catch (error) {

@@ -5,13 +5,12 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo, use, useRef } from 'react';
 import RecipeSkeleton from '@/components/ui/recipe-skeleton';
 import * as Tabs from '@radix-ui/react-tabs';
-import { ArrowLeft, Copy, Check, Clock, Trash2 } from 'lucide-react';
+import { ArrowLeft, Copy, Check, Clock } from 'lucide-react';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import Settings from '@solar-icons/react/csr/settings/Settings';
 import LinkIcon from '@solar-icons/react/csr/text-formatting/Link';
-import CopyIcon from '@solar-icons/react/csr/ui/Copy';
-import Download from '@solar-icons/react/csr/arrows-action/Download';
-import { motion, AnimatePresence } from 'framer-motion';
+import TrashBinTrash from '@solar-icons/react/csr/ui/TrashBinTrash';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useSwipeable } from 'react-swipeable';
 import { scaleIngredients } from '@/utils/ingredientScaler';
 import { convertIngredientGroupUnits, type UnitSystem } from '@/utils/unitConverter';
@@ -25,6 +24,13 @@ import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 import Image from 'next/image';
 import ImagePreview from '@/components/ui/image-preview';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { convertTextFractionsToSymbols } from '@/lib/utils';
 import PlatePhotoCapture from '@/components/ui/plate-photo-capture';
 import PlatingGuidanceCard from '@/components/ui/plating-guidance-card';
@@ -216,11 +222,14 @@ export default function ParsedRecipePage({
   const [isMobile, setIsMobile] = useState(false);
   
   // Settings popover state
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedPlainText, setCopiedPlainText] = useState(false);
-  const settingsMenuRef = useRef<HTMLDivElement>(null);
-  const settingsButtonRef = useRef<HTMLButtonElement>(null);
+  
+  // Bookmark success animation state - tracks when bookmark is just saved
+  const [justBookmarked, setJustBookmarked] = useState(false);
+  
+  // Accessibility: respect user's reduced motion preference
+  const shouldReduceMotion = useReducedMotion();
 
   // Ingredients overlay state
   const [isIngredientsOverlayOpen, setIsIngredientsOverlayOpen] = useState(false);
@@ -259,6 +268,12 @@ export default function ParsedRecipePage({
     } else {
       // If not bookmarked, just add the bookmark directly
       toggleBookmark(recipeId);
+      // Trigger success animation when bookmarking (not when removing)
+      setJustBookmarked(true);
+      // Reset animation state after animation completes (400ms for the full animation)
+      setTimeout(() => {
+        setJustBookmarked(false);
+      }, 400);
     }
   };
 
@@ -523,36 +538,15 @@ export default function ParsedRecipePage({
     }
   };
 
-  // Close settings popover when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target as Node)) {
-        if (settingsButtonRef.current && !settingsButtonRef.current.contains(event.target as Node)) {
-          setIsSettingsOpen(false);
-        }
-      }
-    }
-
-    if (isSettingsOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isSettingsOpen]);
 
   // Handle copy link to original recipe
   const handleCopyLink = async () => {
     if (!parsedRecipe?.sourceUrl) return;
-    
+
     try {
       await navigator.clipboard.writeText(parsedRecipe.sourceUrl);
       setCopiedLink(true);
-      setTimeout(() => {
-        setCopiedLink(false);
-        setIsSettingsOpen(false);
-      }, 2000);
+      setTimeout(() => setCopiedLink(false), 2000);
     } catch (err) {
       console.error('Failed to copy link:', err);
     }
@@ -624,10 +618,7 @@ export default function ParsedRecipePage({
     try {
       await navigator.clipboard.writeText(text);
       setCopiedPlainText(true);
-      setTimeout(() => {
-        setCopiedPlainText(false);
-        setIsSettingsOpen(false);
-      }, 2000);
+      setTimeout(() => setCopiedPlainText(false), 2000);
     } catch (err) {
       console.error('Failed to copy recipe:', err);
     }
@@ -649,10 +640,7 @@ export default function ParsedRecipePage({
     if (confirmed) {
       // Remove recipe from storage and context
       removeRecipe(recipeId);
-      
-      // Close the settings menu
-      setIsSettingsOpen(false);
-      
+
       // Navigate back to home page after deletion
       router.push('/');
     }
@@ -872,92 +860,97 @@ export default function ParsedRecipePage({
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {/* Bookmark Button */}
                       {recipeId && (
-                        <button
+                        <motion.button
                           onClick={handleBookmarkToggle}
-                          className="flex-shrink-0 p-2 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 cursor-pointer"
+                          className={`flex-shrink-0 p-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 cursor-pointer ${justBookmarked && !shouldReduceMotion ? 'bookmark-just-saved' : ''}`}
                           aria-label={isBookmarkedState ? 'Remove bookmark' : 'Bookmark recipe'}
+                          initial={{ scale: 1, rotate: 0 }}
+                          whileHover={shouldReduceMotion ? {} : { 
+                            scale: 1.08,
+                            rotate: -3,
+                            transition: { 
+                              duration: 0.2, 
+                              ease: [0.25, 0.46, 0.45, 0.94] // ease-out-quad
+                            }
+                          }}
+                          whileTap={shouldReduceMotion ? {} : { 
+                            scale: 0.97,
+                            rotate: 0,
+                            transition: { duration: 0.1 }
+                          }}
+                          animate={justBookmarked && !shouldReduceMotion ? {
+                            scale: [1, 1.15, 1.05, 1],
+                            rotate: [0, -8, 6, -2, 0],
+                            transition: {
+                              duration: 0.4,
+                              ease: [0.23, 1, 0.32, 1] // ease-out-quint for playful feel
+                            }
+                          } : { scale: 1, rotate: 0 }}
                         >
                           <Bookmark
                             className={`
                               w-6 h-6 transition-colors duration-200
                               ${isBookmarkedState
                                 ? 'fill-stone-600 text-stone-600'
-                                : 'text-stone-400 hover:text-stone-600'
+                                : 'fill-none text-stone-400 hover:text-stone-600'
                               }
                             `}
                           />
-                        </button>
+                        </motion.button>
                       )}
                       
                       {/* Settings Button and Popover */}
-                      <div ref={settingsMenuRef} className={`relative ${isSettingsOpen ? 'z-[100]' : 'z-10'}`}>
-                        <button
-                          ref={settingsButtonRef}
-                          onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                          className="flex-shrink-0 p-2 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 cursor-pointer"
-                          aria-label="Recipe settings"
-                          aria-expanded={isSettingsOpen}
-                        >
-                          <Settings
-                            weight="Bold"
-                            className={`w-6 h-6 transition-colors duration-200 ${
-                              isSettingsOpen
-                                ? 'text-stone-600'
-                                : 'text-stone-400 hover:text-stone-600'
-                            }`}
-                          />
-                        </button>
-
-                        {/* Settings Popover */}
-                        {isSettingsOpen && (
-                          <div className="absolute w-60 bg-white rounded-lg border border-stone-200 shadow-xl p-1.5 z-[100] animate-in fade-in duration-200 top-[calc(100%+8px)] slide-in-from-top-2 right-0">
-                            {/* Copy Link to Original Option */}
-                            <button
-                              onClick={handleCopyLink}
-                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
-                            >
-                              <LinkIcon weight="Bold" className={`w-4 h-4 flex-shrink-0 ${copiedLink ? 'text-green-600' : 'text-stone-500'}`} />
-                              <span className={`font-albert font-medium whitespace-nowrap ${copiedLink ? 'text-green-600' : ''}`}>
-                                {copiedLink ? 'Link Copied' : 'Copy Link to Original'}
-                              </span>
-                            </button>
-
-                            {/* Copy Recipe as Plain Text Option */}
-                            <button
-                              onClick={handleCopyPlainText}
-                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
-                            >
-                              <CopyIcon weight="Bold" className={`w-4 h-4 flex-shrink-0 ${copiedPlainText ? 'text-green-600' : 'text-stone-500'}`} />
-                              <span className={`font-albert font-medium whitespace-nowrap ${copiedPlainText ? 'text-green-600' : ''}`}>
-                                {copiedPlainText ? 'Copied to Clipboard' : 'Copy Recipe as Plain Text'}
-                              </span>
-                            </button>
-
-                            {/* Download Recipe as JPG Option - Disabled for now */}
-                            <button
-                              disabled
-                              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-400 cursor-not-allowed opacity-50 font-albert rounded-md"
-                            >
-                              <Download weight="Bold" className="w-4 h-4 text-stone-400 flex-shrink-0" />
-                              <span className="font-albert font-medium whitespace-nowrap">Download Recipe as JPG</span>
-                            </button>
-
-                            {/* Divider before delete option */}
-                            <div className="h-px bg-stone-200 my-1" />
-
-                            {/* Delete Recipe Option */}
-                            {recipeId && (
-                              <button
-                                onClick={handleDeleteRecipe}
-                                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors font-albert rounded-md"
-                              >
-                                <Trash2 className="w-4 h-4 flex-shrink-0" />
-                                <span className="font-albert font-medium whitespace-nowrap">Delete Recipe</span>
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <motion.button
+                            className="p-2 rounded-full transition-colors text-stone-400 hover:bg-stone-50 data-[state=open]:bg-stone-100 data-[state=open]:text-stone-900"
+                            aria-label="Recipe settings"
+                            initial={{ scale: 1, rotate: 0 }}
+                            whileHover={shouldReduceMotion ? {} : {
+                              scale: 1.08,
+                              rotate: 3,
+                              transition: {
+                                duration: 0.2,
+                                ease: [0.25, 0.46, 0.45, 0.94]
+                              }
+                            }}
+                            whileTap={shouldReduceMotion ? {} : {
+                              scale: 0.97,
+                              rotate: 0,
+                              transition: { duration: 0.1 }
+                            }}
+                            animate={{ scale: 1, rotate: 0 }}
+                          >
+                            <Settings weight="Bold" className="w-6 h-6" />
+                          </motion.button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-60">
+                          <DropdownMenuItem onSelect={handleCopyLink}>
+                            <span className={copiedLink ? 'text-green-600 font-medium' : ''}>
+                              {copiedLink ? 'Link copied' : 'Copy link'}
+                            </span>
+                            {copiedLink && <Check className="w-4 h-4 text-green-600 ml-auto" />}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={handleCopyPlainText}>
+                            <span className={copiedPlainText ? 'text-green-600 font-medium' : ''}>
+                              {copiedPlainText ? 'Recipe copied' : 'Copy recipe'}
+                            </span>
+                            {copiedPlainText && <Check className="w-4 h-4 text-green-600 ml-auto" />}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem disabled>
+                            <span className="text-stone-400">Download Recipe as JPG</span>
+                          </DropdownMenuItem>
+                          {recipeId && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onSelect={handleDeleteRecipe} className="text-red-600 focus:text-red-600 focus:bg-red-50">
+                                <TrashBinTrash weight="Bold" className="w-4 h-4 flex-shrink-0" style={{ fill: 'currentColor' }} />
+                                <span>Delete Recipe</span>
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                 </div>
@@ -1365,11 +1358,11 @@ export default function ParsedRecipePage({
                       className="bg-white"
                     >
                       <div className="max-w-[700px] mx-auto space-y-6">
-                        {/* Plating Suggestions */}
+                        {/* Plating Suggestions - use top-level plating from initial parse, fallback to plate for backward compat */}
                         <PlatingGuidanceCard
-                          platingNotes={parsedRecipe.plate?.platingNotes}
-                          servingVessel={parsedRecipe.plate?.servingVessel}
-                          servingTemp={parsedRecipe.plate?.servingTemp}
+                          platingNotes={parsedRecipe.platingNotes || parsedRecipe.plate?.platingNotes}
+                          servingVessel={parsedRecipe.servingVessel || parsedRecipe.plate?.servingVessel}
+                          servingTemp={parsedRecipe.servingTemp || parsedRecipe.plate?.servingTemp}
                           onNotesChange={(notes) => {
                             setParsedRecipe({
                               ...parsedRecipe,

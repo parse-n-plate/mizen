@@ -11,7 +11,7 @@ import {
   parseRecipeFromImage,
 } from '@/utils/recipe-parse';
 import { errorLogger } from '@/utils/errorLogger';
-import { isUrl } from '@/utils/searchUtils';
+import { isUrl, normalizeUrl } from '@/utils/searchUtils';
 import { addToSearchHistory } from '@/lib/searchHistory';
 import { useToast } from '@/hooks/useToast';
 import { ERROR_CODES } from '@/utils/formatError';
@@ -45,6 +45,15 @@ export default function HomepageSearch() {
 
   // Note: Command+K handling is now done globally via CommandKContext
   // This component's input will be focused when Command+K is pressed on the homepage
+
+  // Auto-focus the search input when the component mounts
+  useEffect(() => {
+    // Small delay to ensure the page has fully rendered
+    const timer = setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Handle ESC key to blur/unfocus the search input
   useEffect(() => {
@@ -241,14 +250,18 @@ export default function HomepageSearch() {
           return;
         }
 
+        // Normalize the URL by adding protocol/www if missing
+        // This enables users to type "allrecipes.com/recipe" instead of full URL
+        const normalizedUrl = normalizeUrl(url);
+
         // Step 1: Validate URL format and check if it's a recipe page
-        const validUrlResponse = await validateRecipeUrl(url);
+        const validUrlResponse = await validateRecipeUrl(normalizedUrl);
 
         if (!validUrlResponse.success) {
           errorLogger.log(
             validUrlResponse.error.code,
             validUrlResponse.error.message,
-            url,
+            normalizedUrl,
           );
           showError({
             code: validUrlResponse.error.code,
@@ -259,7 +272,7 @@ export default function HomepageSearch() {
         }
 
         if (!validUrlResponse.isRecipe) {
-          errorLogger.log('ERR_NO_RECIPE_FOUND', 'No recipe found on this page', url);
+          errorLogger.log('ERR_NO_RECIPE_FOUND', 'No recipe found on this page', normalizedUrl);
           showError({
             code: 'ERR_NO_RECIPE_FOUND',
           });
@@ -268,11 +281,11 @@ export default function HomepageSearch() {
         }
 
         // Step 2: Parse recipe using unified AI-based parser
-        const response = await recipeScrape(url);
+        const response = await recipeScrape(normalizedUrl);
 
         if (!response.success || response.error) {
           const errorCode = response.error?.code || 'ERR_NO_RECIPE_FOUND';
-          errorLogger.log(errorCode, response.error?.message || 'Parsing failed', url);
+          errorLogger.log(errorCode, response.error?.message || 'Parsing failed', normalizedUrl);
           showError({
             code: errorCode,
             message: response.error?.message,
@@ -288,13 +301,18 @@ export default function HomepageSearch() {
           ingredients: response.ingredients,
           instructions: response.instructions,
           author: response.author,
-          sourceUrl: response.sourceUrl || url,
+          sourceUrl: response.sourceUrl || normalizedUrl,
           summary: response.summary,
           cuisine: response.cuisine,
           ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
           ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
           ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
           ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
+          ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }), // Include storage instructions if available
+          ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }), // Include shelf life info if available
+          ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }), // Include plating suggestions if available
+          ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }), // Include serving vessel recommendation if available
+          ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }), // Include serving temperature if available
         };
 
         setParsedRecipe(recipeToStore);
@@ -313,11 +331,11 @@ export default function HomepageSearch() {
           title: response.title,
           summary: recipeSummary,
           description: response.summary,
-          url: url,
+          url: normalizedUrl,
           ingredients: response.ingredients,
           instructions: response.instructions,
           author: response.author,
-          sourceUrl: response.sourceUrl || url,
+          sourceUrl: response.sourceUrl || normalizedUrl,
           cuisine: response.cuisine,
           ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
           ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
@@ -326,14 +344,14 @@ export default function HomepageSearch() {
         });
 
         // Add to search history
-        addToSearchHistory(url, response.title);
+        addToSearchHistory(normalizedUrl, response.title);
 
         // Navigate to recipe page
         router.push('/parsed-recipe-page');
         setSearchValue('');
       } catch (err) {
         console.error('[HomepageSearch] Parse error:', err);
-        errorLogger.log('ERR_UNKNOWN', 'An unexpected error occurred', url);
+        errorLogger.log('ERR_UNKNOWN', 'An unexpected error occurred', url.trim());
         showError({
           code: 'ERR_UNKNOWN',
           message: 'An unexpected error occurred. Please try again.',
@@ -446,63 +464,68 @@ export default function HomepageSearch() {
                 )}
               </div>
 
-              {/* Right side buttons */}
-              <div className="shrink-0 flex items-center gap-2">
-                {/* Hidden file input */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileInputChange}
-                  className="hidden"
-                />
-                
-                {/* Command+K Shortcut Indicator - Only shown when not focused and no text, hidden on mobile */}
-                {!isSearchFocused && !searchValue && !selectedImage && (
-                  <div className="hidden md:flex items-center gap-1 px-2 py-1 bg-[#e7e5e4] rounded border border-[#d6d3d1] animate-in fade-in duration-200">
-                    <kbd className="text-[12px] text-[#57534e] font-albert font-medium">⌘K</kbd>
-                  </div>
-                )}
-                
-                {/* Clear Text Button - Only shown when typing */}
-                {searchValue && (
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileInputChange}
+                className="hidden"
+              />
+
+              {/* Right side buttons - only show when focused or has input */}
+              {(isSearchFocused || searchValue || selectedImage) && (
+                <div className="shrink-0 flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-200">
+                  {/* Clear Text Button - Only shown when typing */}
+                  {searchValue && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchValue('')}
+                      className="p-2 transition-all hover:opacity-60"
+                      title="Clear text"
+                    >
+                      <svg className="size-[16px]" fill="none" viewBox="0 0 24 24">
+                        <path stroke="#57534e" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+
+                  {/* Upload Button - uses onMouseDown to fire before blur hides the button */}
                   <button
                     type="button"
-                    onClick={() => setSearchValue('')}
-                    className="p-2 transition-all hover:opacity-60"
-                    title="Clear text"
-                  >
-                    <svg className="size-[16px]" fill="none" viewBox="0 0 24 24">
-                      <path stroke="#57534e" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                )}
-                
-                {/* Upload Button - Always visible */}
-                <button
-                  type="button"
-                  onClick={triggerFileInput}
-                  className="p-2 transition-all"
-                  title="Upload image"
-                  disabled={loading}
-                >
-                  <Upload className="size-[20px] text-[#78716c] hover:text-[#0072fb] transition-colors" />
-                </button>
-                
-                {/* Submit Button - Only visible when there's valid input */}
-                {(searchValue || selectedImage) && (
-                  <button
-                    type="submit"
-                    className="bg-[#0072fb] hover:bg-[#0066e0] rounded-full px-6 py-2 transition-all animate-in fade-in duration-200"
-                    title="Process recipe"
+                    onMouseDown={(e) => {
+                      e.preventDefault(); // Prevent blur from firing
+                      triggerFileInput();
+                    }}
+                    className="p-2 transition-all"
+                    title="Upload image"
                     disabled={loading}
                   >
-                    <svg className="size-[20px]" fill="none" viewBox="0 0 24 24">
-                      <path stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14m-7-7l7 7-7 7" />
-                    </svg>
+                    <Upload className="size-[20px] text-[#78716c] hover:text-[#0072fb] transition-colors" />
                   </button>
-                )}
-              </div>
+
+                  {/* Submit Button - Only visible when there's valid input */}
+                  {(searchValue || selectedImage) && (
+                    <button
+                      type="submit"
+                      className="bg-[#0072fb] hover:bg-[#0066e0] rounded-full px-6 py-2 transition-all animate-in fade-in duration-200"
+                      title="Process recipe"
+                      disabled={loading}
+                    >
+                      <svg className="size-[20px]" fill="none" viewBox="0 0 24 24">
+                        <path stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14m-7-7l7 7-7 7" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Command+K Shortcut Indicator - Only shown when not focused and no text, hidden on mobile */}
+              {!isSearchFocused && !searchValue && !selectedImage && (
+                <div className="shrink-0 hidden md:flex items-center gap-1 px-2 py-1 bg-[#e7e5e4] rounded border border-[#d6d3d1]">
+                  <kbd className="text-[12px] text-[#57534e] font-albert font-medium">⌘K</kbd>
+                </div>
+              )}
             </div>
           </div>
         </form>

@@ -13,7 +13,7 @@ import {
 } from '@/utils/recipe-parse';
 import { errorLogger } from '@/utils/errorLogger';
 // Note: Command+K handling is now done globally via CommandKContext
-import { isUrl } from '@/utils/searchUtils';
+import { isUrl, normalizeUrl } from '@/utils/searchUtils';
 import LoadingAnimation from '@/components/ui/loading-animation';
 import { useToast } from '@/hooks/useToast';
 import EmptyState from '@/components/ui/empty-state';
@@ -57,15 +57,8 @@ export default function NavbarSearch() {
     }
   };
 
-  // Check if query looks like a URL
-  const isUrl = (text: string) => {
-    return (
-      text.includes('http') ||
-      text.includes('www.') ||
-      text.includes('.com') ||
-      text.includes('.org')
-    );
-  };
+  // Note: isUrl is now imported from @/utils/searchUtils
+  // It supports domain patterns like "allrecipes.com/recipe" without the http prefix
 
   // Search through cached recipes
   const searchRecipes = useCallback(
@@ -180,15 +173,19 @@ export default function NavbarSearch() {
         return;
       }
 
+      // Normalize the URL by adding protocol/www if missing
+      // This enables users to type "allrecipes.com/recipe" instead of full URL
+      const normalizedUrl = normalizeUrl(query);
+
       // Step 1: Quick validation to ensure URL contains recipe-related keywords
-      const validUrlResponse = await validateRecipeUrl(query);
+      const validUrlResponse = await validateRecipeUrl(normalizedUrl);
 
       if (!validUrlResponse.success) {
         setLoading(false);
         errorLogger.log(
           validUrlResponse.error.code,
           validUrlResponse.error.message,
-          query,
+          normalizedUrl,
         );
         showError({
           code: validUrlResponse.error.code,
@@ -202,7 +199,7 @@ export default function NavbarSearch() {
         errorLogger.log(
           'ERR_NO_RECIPE_FOUND',
           'No recipe found on this page',
-          query,
+          normalizedUrl,
         );
         showError({
           code: 'ERR_NO_RECIPE_FOUND',
@@ -212,13 +209,13 @@ export default function NavbarSearch() {
 
       // Step 2: Parse recipe using unified AI-based parser
       console.log('[Navbar] Calling unified recipe parser...');
-      const response = await recipeScrape(query);
+      const response = await recipeScrape(normalizedUrl);
 
       // Check if parsing failed
       if (!response.success || response.error) {
         setLoading(false);
         const errorCode = response.error?.code || 'ERR_NO_RECIPE_FOUND';
-        errorLogger.log(errorCode, response.error?.message || 'Parsing failed', query);
+        errorLogger.log(errorCode, response.error?.message || 'Parsing failed', normalizedUrl);
         showError({
           code: errorCode,
           message: response.error?.message,
@@ -240,7 +237,7 @@ export default function NavbarSearch() {
         ingredients: response.ingredients,
         instructions: response.instructions,
         author: response.author, // Include author if available
-        sourceUrl: response.sourceUrl || query, // Use sourceUrl from response or fallback to query URL
+        sourceUrl: response.sourceUrl || normalizedUrl, // Use sourceUrl from response or fallback to normalized URL
         summary: response.summary, // Include AI-generated summary if available
         cuisine: response.cuisine, // Include cuisine tags if available
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
@@ -266,11 +263,11 @@ export default function NavbarSearch() {
         title: response.title,
         summary: recipeSummary,
         description: response.summary, // Store the AI-generated summary
-        url: query,
+        url: normalizedUrl,
         ingredients: response.ingredients,
         instructions: response.instructions,
         author: response.author, // Include author if available
-        sourceUrl: response.sourceUrl || query, // Include source URL if available
+        sourceUrl: response.sourceUrl || normalizedUrl, // Include source URL if available
         cuisine: response.cuisine, // Include cuisine tags if available
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
         ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
@@ -294,7 +291,7 @@ export default function NavbarSearch() {
       errorLogger.log(
         'ERR_UNKNOWN',
         'An unexpected error occurred during parsing',
-        query,
+        query.trim(),
       );
       showError({
         code: 'ERR_UNKNOWN',
@@ -358,24 +355,22 @@ export default function NavbarSearch() {
         <form onSubmit={handleSubmit}>
         <div
           className={`
-            bg-stone-100 rounded-[9999px] border border-stone-200 
-            transition-all duration-300 ease-in-out
-            hover:border-[#4F46E5] hover:border-opacity-80
-            ${isFocused ? 'shadow-sm border-[#4F46E5] border-opacity-60' : ''}
+            rounded-lg border transition-all duration-200 ease-in-out
+            ${isFocused ? 'bg-white border-stone-200 shadow-[0_1px_2px_rgba(0,0,0,0.02)]' : 'bg-[#f5f5f4] border-transparent'}
           `}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           onClick={handleContainerClick}
         >
-          <div className="flex items-center pl-3 md:pl-4 pr-2.5 md:pr-4 py-1.5 md:py-2 relative min-h-[38px] md:min-h-[44px]">
+          <div className="flex items-center gap-3 px-4 py-3 relative">
             {/* Search Icon */}
-            <Search className="w-3.5 h-3.5 md:w-4 md:h-4 text-stone-600 flex-shrink-0" />
+            <Search className="w-[18px] h-[18px] text-stone-400 flex-shrink-0" />
 
             {/* Input */}
-            <div className="flex-1 ml-1.5 md:ml-2 relative min-h-[18px] md:min-h-[20px] flex items-center">
+            <div className="flex-1 relative flex items-center">
               {/* Show URL display when on parsed recipe page and not focused/editing */}
               {isOnParsedRecipePage && parsedRecipe?.sourceUrl && !isFocused && !query ? (
-                <div className="w-full font-albert text-[13px] md:text-[14px] truncate flex-1 min-w-0 cursor-text h-[18px] md:h-[20px] flex items-center">
+                <div className="w-full font-albert text-[15px] truncate flex-1 min-w-0 cursor-text flex items-center">
                   <AnimatePresence mode="wait">
                     {isHovered ? (
                       <motion.span
@@ -384,7 +379,7 @@ export default function NavbarSearch() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 5 }}
                         transition={{ duration: 0.2 }}
-                        className="text-stone-500 block"
+                        className="text-stone-400 block"
                       >
                         Enter URL
                       </motion.span>
@@ -397,7 +392,7 @@ export default function NavbarSearch() {
                         transition={{ duration: 0.2 }}
                         className="truncate"
                       >
-                        <span className="font-medium text-[#193d34]">
+                        <span className="font-medium text-stone-800">
                           {getDomainFromUrl(parsedRecipe.sourceUrl)}
                         </span>
                         <span className="text-stone-400">
@@ -428,7 +423,7 @@ export default function NavbarSearch() {
                       }
                     }, 0);
                   }}
-                  className="w-full bg-transparent font-albert text-[13px] md:text-[14px] text-stone-600 placeholder:text-stone-500 focus:outline-none border-none h-[18px] md:h-[20px]"
+                  className="w-full bg-transparent font-albert text-[15px] text-stone-800 placeholder:text-stone-400 focus:outline-none border-none"
                 />
               )}
             </div>

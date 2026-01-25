@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, Camera } from 'lucide-react';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
@@ -10,6 +10,12 @@ import Pen from '@solar-icons/react/csr/messages/Pen';
 import ClipboardText from '@solar-icons/react/csr/notes/ClipboardText';
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export interface RecipeCardData {
   id: string;
@@ -44,82 +50,11 @@ export default function RecipeCard({
   showImage = false, // Default to false as per new design (using cuisine icons instead)
   showCuisineIcon = true, // Default to true - show cuisine icon unless explicitly hidden
 }: RecipeCardProps) {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [copiedRecipe, setCopiedRecipe] = useState(false);
-  const [menuPosition, setMenuPosition] = useState<{ vertical: 'top' | 'bottom'; horizontal: 'left' | 'right' }>({
-    vertical: 'bottom',
-    horizontal: 'right',
-  });
-  const menuRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const { getRecipeById, isBookmarked, toggleBookmark } = useParsedRecipes();
 
   // Get bookmark state from context
   const isBookmarkedState = isBookmarked(recipe.id);
-
-  // Calculate menu position based on available viewport space
-  useEffect(() => {
-    if (!isMenuOpen || !buttonRef.current) return;
-
-    const calculatePosition = () => {
-      if (!buttonRef.current) return;
-      
-      const buttonRect = buttonRef.current.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      
-      // Calculate available space
-      const spaceBelow = viewportHeight - buttonRect.bottom;
-      const spaceAbove = buttonRect.top;
-      const spaceRight = viewportWidth - buttonRect.right;
-      const spaceLeft = buttonRect.left;
-      
-      // Menu dimensions
-      const menuHeight = 150; // Approximate height for 3 items + padding
-      const menuWidth = 240; // w-60 = 240px
-      const offset = 8; // Gap between button and menu
-      
-      // Determine vertical position - prefer bottom, but flip to top if not enough space
-      const vertical = spaceBelow >= menuHeight + offset || spaceBelow >= spaceAbove ? 'bottom' : 'top';
-      
-      // Determine horizontal position - prefer right, but flip to left if not enough space
-      // Check if menu would overflow on the right side
-      const horizontal = spaceRight >= menuWidth || (spaceRight < menuWidth && spaceLeft >= menuWidth) ? 'right' : 'left';
-      
-      setMenuPosition({ vertical, horizontal });
-    };
-
-    // Small delay to ensure DOM is ready, then calculate position
-    const timeoutId = setTimeout(calculatePosition, 0);
-    
-    // Recalculate on window resize or scroll
-    window.addEventListener('resize', calculatePosition);
-    window.addEventListener('scroll', calculatePosition, true);
-    
-    return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener('resize', calculatePosition);
-      window.removeEventListener('scroll', calculatePosition, true);
-    };
-  }, [isMenuOpen]);
-
-  // Close menu when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-      }
-    }
-
-    if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isMenuOpen]);
 
   // Get the first cuisine icon if available, otherwise use a default
   const primaryCuisine = recipe.cuisine && recipe.cuisine.length > 0 ? recipe.cuisine[0] : null;
@@ -145,27 +80,13 @@ export default function RecipeCard({
     }
   };
 
-  // Handle ellipsis menu toggle
-  const handleMenuToggle = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsMenuOpen(!isMenuOpen);
-  };
-
   // Handle menu actions
-  const handleEdit = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsMenuOpen(false);
+  const handleEdit = () => {
     onEdit?.();
   };
 
   // Handle copy recipe - formats and copies the full recipe to clipboard
-  const handleCopyRecipe = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsMenuOpen(false);
-    
+  const handleCopyRecipe = async () => {
     // If onCopy callback is provided, use it (for custom behavior)
     if (onCopy) {
       onCopy();
@@ -244,11 +165,7 @@ export default function RecipeCard({
   };
 
   // Handle unsave recipe - removes recipe from saved/bookmarked recipes
-  const handleUnsave = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsMenuOpen(false);
-
+  const handleUnsave = () => {
     // If recipe is currently bookmarked, show confirmation dialog before unsaving
     if (isBookmarkedState) {
       const confirmed = window.confirm(
@@ -263,7 +180,7 @@ export default function RecipeCard({
 
   return (
     <motion.div
-      className={`group w-full md:basis-0 md:grow min-h-px md:min-w-px relative rounded-[20px] shrink-0 bg-white hover:bg-[#FAFAFA] transition-colors duration-200 cursor-pointer overflow-visible ${isMenuOpen ? 'z-[99]' : ''}`}
+      className="group w-full md:basis-0 md:grow min-h-px md:min-w-px relative rounded-[20px] shrink-0 bg-white hover:bg-[#FAFAFA] transition-colors duration-200 cursor-pointer overflow-visible"
       whileTap={{ scale: 0.98 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
     >
@@ -304,93 +221,64 @@ export default function RecipeCard({
       </button>
 
       {/* Ellipsis Menu Button and Dropdown */}
-      <div ref={menuRef} className={`absolute top-4 right-4 ${isMenuOpen ? 'z-[100]' : 'z-30'}`}>
-        <button
-          ref={buttonRef}
-          onPointerDownCapture={(e) => e.stopPropagation()}
-          onPointerUpCapture={(e) => e.stopPropagation()}
-          onClick={handleMenuToggle}
-          className="p-1.5 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 bg-white/50 backdrop-blur-sm hover:bg-white/70"
-          aria-label="More options"
-          aria-expanded={isMenuOpen}
-        >
-          <MenuDotsCircle
-            className={`w-6 h-6 transition-colors duration-200 ${
-              isMenuOpen 
-                ? 'text-stone-500' 
-                : 'text-stone-300 hover:text-stone-400'
-            }`}
-          />
-        </button>
-
-        {/* Dropdown Menu - Origin-aware positioning */}
-        {isMenuOpen && (
-          <div
-            ref={dropdownRef}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
             onPointerDownCapture={(e) => e.stopPropagation()}
             onPointerUpCapture={(e) => e.stopPropagation()}
-            className={`absolute w-60 bg-white rounded-lg border border-stone-200 shadow-xl p-1.5 z-[100] animate-in fade-in duration-200 ${
-              menuPosition.vertical === 'bottom'
-                ? 'top-[calc(100%+8px)] slide-in-from-top-2'
-                : 'bottom-[calc(100%+8px)] slide-in-from-bottom-2'
-            } ${
-              menuPosition.horizontal === 'right'
-                ? 'right-0'
-                : 'left-0'
-            }`}
+            className="absolute top-4 right-4 z-30 p-1.5 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 bg-white/50 backdrop-blur-sm hover:bg-white/70"
+            aria-label="More options"
           >
-            {/* Edit Option */}
-            <button
-              onClick={handleEdit}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
-            >
-              <Pen weight="Bold" className="w-4 h-4 text-stone-500 flex-shrink-0" />
-              <span className="font-albert font-medium whitespace-nowrap">Edit</span>
-            </button>
-
-            {/* Copy Recipe to Clipboard Option */}
-            <button
-              onClick={handleCopyRecipe}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
-            >
-              <ClipboardText weight="Bold" className={`w-4 h-4 flex-shrink-0 ${copiedRecipe ? 'text-green-600' : 'text-stone-500'}`} />
-              <span className={`font-albert font-medium whitespace-nowrap ${copiedRecipe ? 'text-green-600' : ''}`}>
-                {copiedRecipe ? 'Copied to Clipboard' : 'Copy Recipe to Clipboard'}
-              </span>
-            </button>
-
-            {/* Unsave Option */}
-            <button
-              onClick={handleUnsave}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors font-albert rounded-md"
-            >
-              <Bookmark weight="Bold" className="w-4 h-4 text-stone-500 flex-shrink-0" />
-              <span className="font-albert font-medium whitespace-nowrap">Unsave</span>
-            </button>
-          </div>
-        )}
-      </div>
+            <MenuDotsCircle className="w-6 h-6 text-stone-300 hover:text-stone-400 transition-colors duration-200" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-60">
+          <DropdownMenuItem onSelect={handleEdit}>
+            <Pen weight="Bold" className="w-4 h-4 text-stone-500 flex-shrink-0" />
+            <span className="font-medium whitespace-nowrap">Edit</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={handleCopyRecipe}>
+            <ClipboardText weight="Bold" className={`w-4 h-4 flex-shrink-0 ${copiedRecipe ? 'text-green-600' : 'text-stone-500'}`} />
+            <span className={`font-medium whitespace-nowrap ${copiedRecipe ? 'text-green-600' : ''}`}>
+              {copiedRecipe ? 'Copied to Clipboard' : 'Copy Recipe to Clipboard'}
+            </span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={handleUnsave}>
+            <Bookmark weight="Bold" className="w-4 h-4 text-stone-500 flex-shrink-0" />
+            <span className="font-medium whitespace-nowrap">Unsave</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <div className="size-full">
         <button
           onClick={onClick}
           className="w-full h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-0 rounded-[inherit]"
         >
-          <div className="box-border flex flex-row items-center gap-[16px] md:gap-[24px] p-[16px] md:p-[20px] relative w-full min-h-[120px]">
-            {/* Plate Photo or Cuisine Icon */}
+          <div className="box-border flex flex-row items-center gap-[14px] md:gap-[20px] p-[16px] md:p-[20px] relative w-full min-h-[120px]">
+            {/* Image Display Priority: Plate Photo > Original Recipe Image > Cuisine Icon > Placeholder */}
             {recipe.platePhotoData ? (
-              // Show plate photo if available
-              <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
+              // Priority 1: Show plate photo if user uploaded one (shows "Cooked" badge)
+              <div className="relative w-16 h-16 md:w-24 md:h-24 flex-shrink-0">
                 <img
                   src={recipe.platePhotoData}
                   alt="Your dish"
                   className="w-full h-full object-cover rounded-[12px] border-2 border-stone-200 pointer-events-none"
                 />
               </div>
+            ) : recipe.imageUrl ? (
+              // Priority 2: Show original recipe image from website if available
+              <div className="relative w-16 h-16 md:w-24 md:h-24 flex-shrink-0">
+                <img
+                  src={recipe.imageUrl}
+                  alt={recipe.title}
+                  className="w-full h-full object-cover rounded-[12px] border-2 border-stone-200 pointer-events-none"
+                />
+              </div>
             ) : (
-              // Show cuisine icon if no plate photo and showCuisineIcon is true
+              // Priority 3: Show cuisine icon (or pan placeholder) if no images available
               showCuisineIcon && (
-                <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0">
+                <div className="relative w-16 h-16 md:w-24 md:h-24 flex-shrink-0">
                   <Image
                     src={cuisineIconPath}
                     alt={`${primaryCuisine || 'Recipe'} icon`}
@@ -404,14 +292,14 @@ export default function RecipeCard({
             )}
 
             {/* Recipe Info */}
-            <div className="flex-1 flex flex-col gap-[4px] min-w-0 pr-8 items-start">
-              <h3 className="font-domine leading-[1.2] text-[18px] md:text-[22px] text-black text-left line-clamp-1 break-words m-0">
+            <div className="flex-1 flex flex-col gap-[4px] min-w-0 pr-4 md:pr-6 items-start">
+              <h3 className="font-domine leading-[1.2] text-[18px] md:text-[22px] text-black text-left line-clamp-2 break-words m-0">
                 {recipe.title}
               </h3>
               
               {/* Only show author line if author exists and is not empty */}
               {recipe.author && recipe.author.trim() !== '' && (
-                <p className="font-albert leading-[1.4] text-[13px] md:text-[15px] text-stone-700 text-left m-0">
+                <p className="font-albert leading-[1.4] text-[13px] md:text-[15px] text-stone-600 text-left m-0 line-clamp-1">
                   <span className="text-stone-500">By </span>
                   {recipe.author}
                 </p>

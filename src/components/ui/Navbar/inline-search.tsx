@@ -11,7 +11,7 @@ import {
   validateRecipeUrl,
 } from '@/utils/recipe-parse';
 import { errorLogger } from '@/utils/errorLogger';
-import { isUrl } from '@/utils/searchUtils';
+import { isUrl, normalizeUrl } from '@/utils/searchUtils';
 import { addToSearchHistory } from '@/lib/searchHistory';
 import { useToast } from '@/hooks/useToast';
 import LoadingAnimation from '@/components/ui/loading-animation';
@@ -120,14 +120,18 @@ export default function InlineSearch() {
           return;
         }
 
+        // Normalize the URL by adding protocol/www if missing
+        // This enables users to type "allrecipes.com/recipe" instead of full URL
+        const normalizedUrl = normalizeUrl(url);
+
         // Step 1: Validate URL format and check if it's a recipe page
-        const validUrlResponse = await validateRecipeUrl(url);
+        const validUrlResponse = await validateRecipeUrl(normalizedUrl);
 
         if (!validUrlResponse.success) {
           errorLogger.log(
             validUrlResponse.error.code,
             validUrlResponse.error.message,
-            url,
+            normalizedUrl,
           );
           showError({
             code: validUrlResponse.error.code,
@@ -138,7 +142,7 @@ export default function InlineSearch() {
         }
 
         if (!validUrlResponse.isRecipe) {
-          errorLogger.log('ERR_NO_RECIPE_FOUND', 'No recipe found on this page', url);
+          errorLogger.log('ERR_NO_RECIPE_FOUND', 'No recipe found on this page', normalizedUrl);
           showError({
             code: 'ERR_NO_RECIPE_FOUND',
           });
@@ -147,12 +151,12 @@ export default function InlineSearch() {
         }
 
         // Step 2: Parse recipe using unified AI-based parser
-        const response = await recipeScrape(url);
+        const response = await recipeScrape(normalizedUrl);
 
         if (!response.success || response.error) {
           setLoading(false);
           const errorCode = response.error?.code || 'ERR_NO_RECIPE_FOUND';
-          errorLogger.log(errorCode, response.error?.message || 'Parsing failed', url);
+          errorLogger.log(errorCode, response.error?.message || 'Parsing failed', normalizedUrl);
           showError({
             code: errorCode,
             message: response.error?.message,
@@ -172,7 +176,7 @@ export default function InlineSearch() {
           ingredients: response.ingredients,
           instructions: response.instructions,
           author: response.author,
-          sourceUrl: response.sourceUrl || url,
+          sourceUrl: response.sourceUrl || normalizedUrl,
           summary: response.summary,
           cuisine: response.cuisine,
           ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
@@ -197,11 +201,11 @@ export default function InlineSearch() {
           title: response.title,
           summary: recipeSummary,
           description: response.summary,
-          url: url,
+          url: normalizedUrl,
           ingredients: response.ingredients,
           instructions: response.instructions,
           author: response.author,
-          sourceUrl: response.sourceUrl || url,
+          sourceUrl: response.sourceUrl || normalizedUrl,
           cuisine: response.cuisine,
           ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
           ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
@@ -210,7 +214,7 @@ export default function InlineSearch() {
         });
 
         // Add to search history
-        addToSearchHistory(url, response.title);
+        addToSearchHistory(normalizedUrl, response.title);
 
         // Navigate to recipe page with delay for reveal
         setTimeout(() => {
@@ -222,7 +226,7 @@ export default function InlineSearch() {
         }, 1500);
       } catch (err) {
         console.error('[InlineSearch] Parse error:', err);
-        errorLogger.log('ERR_UNKNOWN', 'An unexpected error occurred', url);
+        errorLogger.log('ERR_UNKNOWN', 'An unexpected error occurred', url.trim());
         showError({
           code: 'ERR_UNKNOWN',
           message: 'An unexpected error occurred. Please try again.',

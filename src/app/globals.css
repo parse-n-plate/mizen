@@ -25,6 +25,23 @@
   /* Spacing */
   --spacing-base: 1rem;
   --spacing-lg: 1.5rem;
+
+  /* Custom Easing Curves - Based on Emil Kowalski's animation guidelines
+     Use ease-out for elements entering/exiting the viewport */
+  --ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-out-cubic: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --ease-out-quart: cubic-bezier(0.165, 0.84, 0.44, 1);
+  --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-out-circ: cubic-bezier(0.075, 0.82, 0.165, 1);
+
+  /* Ease-in-out for elements moving on screen */
+  --ease-in-out-quad: cubic-bezier(0.455, 0.03, 0.515, 0.955);
+  --ease-in-out-cubic: cubic-bezier(0.645, 0.045, 0.355, 1);
+  --ease-in-out-quart: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-in-out-quint: cubic-bezier(0.86, 0, 0.07, 1);
+  --ease-in-out-expo: cubic-bezier(1, 0, 0, 1);
+  --ease-in-out-circ: cubic-bezier(0.785, 0.135, 0.15, 0.86);
 }
 
 /* Base Typography Styles */
@@ -108,7 +125,7 @@
     align-items: center;
     gap: 16px;
     padding: 12px 0;
-    transition: all 0.3s ease-in-out;
+    transition: all 0.2s ease-out;
   }
 
   .step-icon-container {
@@ -481,7 +498,7 @@
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    padding: 1rem 0;
+    padding: 0; /* Removed vertical padding - spacing handled by container gap */
     max-width: 700px;
     margin-left: auto;
     margin-right: auto;
@@ -586,7 +603,7 @@
   .ingredients-header-container {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 1.25rem; /* Increased spacing between header, servings slider, and search bar */
     max-width: 700px;
     margin-left: auto;
     margin-right: auto;
@@ -1058,7 +1075,7 @@
     display: flex;
     align-items: center; /* Center items vertically */
     gap: 12px;
-    padding: 16px 8px; /* Increased vertical padding for more space between items */
+    padding: 16px 8px 16px 8px; /* Equal padding on both sides: 8px left, 8px right */
     position: relative;
     transition: background-color 0ms;
     border-radius: 8px; /* Rounded corners for hover effect */
@@ -1113,7 +1130,7 @@
     flex-direction: column;
     gap: 2px;
     min-width: 0; /* Allows text truncation */
-    padding-right: 40px; /* Space for swap icon */
+    /* Removed padding-right - swap icon space handled by container padding */
   }
 
   .ingredient-list-primary {
@@ -1648,6 +1665,8 @@
   /* ═══════════════════════════════════════════════════════════════════════════
      LANDING PAGE ONLOAD ANIMATION
      Smooth fade-in-up animation for landing page content sections
+     Duration: 200ms (standard UI timing per animation guidelines)
+     Easing: ease-out (for elements entering the viewport)
   ═══════════════════════════════════════════════════════════════════════════ */
 
   /* Fade-in-up animation keyframe */
@@ -1662,18 +1681,37 @@
     }
   }
 
-  /* Base fade-in-up animation class */
+  /* Base fade-in-up animation class
+     Starts from opacity: 0 to prevent flashing
+     Uses custom ease-out-cubic curve for natural, responsive feel
+     Uses forwards to maintain final state after animation completes */
   .page-fade-in-up {
-    animation: page-fade-in-up 0.6s ease-out forwards;
+    opacity: 0; /* Initial state - prevents flash before animation starts */
+    animation: page-fade-in-up 200ms var(--ease-out-cubic) forwards;
   }
 
-  /* Staggered delay classes for sequential animations */
+  /* Staggered delay classes for sequential animations
+     Creates a smooth cascade effect where each element follows the previous one
+     Header (0ms) → Search (50ms) → Filters (100ms) → Content (150ms) */
   .page-fade-delay-1 {
-    animation-delay: 0.15s;
+    animation-delay: 50ms;
   }
 
   .page-fade-delay-2 {
-    animation-delay: 0.3s;
+    animation-delay: 100ms;
+  }
+
+  .page-fade-delay-3 {
+    animation-delay: 150ms;
+  }
+
+  /* Disable animations for users who prefer reduced motion
+     Set opacity to 1 immediately so content is visible */
+  @media (prefers-reduced-motion: reduce) {
+    .page-fade-in-up {
+      opacity: 1;
+      animation: none;
+    }
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
@@ -1717,5 +1755,213 @@
       padding: 0 4px;
       gap: 4px;
     }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     CUISINE FILTER PILLS - Subtle, playful animations
+     Based on Emil Kowalski's animation guidelines:
+     - Hover: ease easing (200ms) with subtle lift and scale
+     - Selected: smooth background transition with subtle scale emphasis
+     - Active: scale(0.97) for responsive tap feedback
+     - Only animating transform and opacity for performance (GPU accelerated)
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  .cuisine-filter-pill {
+    /* Smooth transitions for all interactive states
+       Using ease easing for hover effects (200ms matches app patterns)
+       Animating transform, background-color, border-color, and box-shadow */
+    transition: 
+      transform 200ms ease,
+      background-color 200ms ease,
+      border-color 200ms ease,
+      box-shadow 200ms ease;
+    /* Ensure transform origin is centered for scale animations */
+    transform-origin: center;
+    /* Initial state - no shadow for unselected pills */
+    box-shadow: none;
+  }
+
+  /* Hover state - subtle lift and minimal scale
+     More restrained animation for a refined feel
+     Only applies on devices with precise pointer (not touch)
+     Adds subtle shadow for depth */
+  @media (hover: hover) and (pointer: fine) {
+    .cuisine-filter-pill:hover:not([aria-pressed="true"]) {
+      transform: translateY(-1px) scale(1.01);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    }
+    
+    /* Hover state for selected pills - slightly different */
+    .cuisine-filter-pill[aria-pressed="true"]:hover {
+      transform: translateY(-1px) scale(1.01);
+      box-shadow: 0 1px 5px rgba(0, 0, 0, 0.06);
+    }
+  }
+
+  /* Selected state - subtle visual emphasis
+     Selected pills have a slightly elevated appearance with shadow
+     Subtle scale to make them feel "pressed in" */
+  .cuisine-filter-pill[aria-pressed="true"] {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    transform: scale(1);
+  }
+
+  /* Animation when pill becomes selected - playful "pop" effect
+     This creates a satisfying feedback when clicking to select */
+  .pill-just-selected {
+    animation: pill-selected-pop 250ms ease-out;
+  }
+
+  @keyframes pill-selected-pop {
+    0% {
+      transform: scale(0.95);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  /* Active/tap state - scale down for responsive feedback
+     Using scale(0.97) per Emil's guidelines for button interactions
+     This provides immediate visual feedback when clicking
+     Overrides hover transform when actively clicking */
+  .cuisine-filter-pill:active {
+    transform: scale(0.97) !important;
+    transition-duration: 100ms; /* Faster on active for snappy feel */
+  }
+
+  /* Disable animations for users who prefer reduced motion
+     Keep color transitions but remove transform animations */
+  @media (prefers-reduced-motion: reduce) {
+    .cuisine-filter-pill {
+      transition: background-color 200ms ease, border-color 200ms ease;
+    }
+
+    .cuisine-filter-pill:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    .cuisine-filter-pill:active {
+      transform: none;
+    }
+
+    .cuisine-filter-pill[aria-pressed="true"] {
+      animation: none;
+      box-shadow: none;
+    }
+
+    .pill-just-selected {
+      animation: none;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     RECIPE PAGE BUTTONS - Playful hover animations
+     Bookmark and Settings buttons with subtle, playful interactions
+     Based on Emil Kowalski's animation guidelines:
+     - Hover: ease easing (200ms) with subtle scale and rotation
+     - Active: scale(0.95) for responsive tap feedback
+     - Success: playful bounce animation when bookmark is saved
+     - Only animating transform and opacity for performance (GPU accelerated)
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  /* Bookmark button hover effect - subtle lift and gentle rotation */
+  .recipe-page-bookmark-btn {
+    transition: 
+      transform 200ms ease,
+      background-color 150ms ease;
+    transform-origin: center;
+  }
+
+  /* Settings button hover effect - subtle lift and gentle rotation */
+  .recipe-page-settings-btn {
+    transition: 
+      transform 200ms ease,
+      background-color 150ms ease;
+    transform-origin: center;
+  }
+
+  /* Hover state - subtle scale and rotation (only on devices with precise pointer) */
+  @media (hover: hover) and (pointer: fine) {
+    .recipe-page-bookmark-btn:hover {
+      transform: scale(1.1) rotate(-2deg);
+    }
+
+    .recipe-page-settings-btn:hover {
+      transform: scale(1.1) rotate(2deg);
+    }
+  }
+
+  /* Active/tap state - scale down for responsive feedback */
+  .recipe-page-bookmark-btn:active,
+  .recipe-page-settings-btn:active {
+    transform: scale(0.95);
+    transition-duration: 100ms; /* Faster on active for snappy feel */
+  }
+
+  /* Success animation for bookmark button when saved */
+  @keyframes bookmark-success-bounce {
+    0% {
+      transform: scale(1) rotate(0deg);
+    }
+    25% {
+      transform: scale(1.2) rotate(-10deg);
+    }
+    50% {
+      transform: scale(1.15) rotate(10deg);
+    }
+    75% {
+      transform: scale(1.05) rotate(-5deg);
+    }
+    100% {
+      transform: scale(1) rotate(0deg);
+    }
+  }
+
+  .bookmark-just-saved {
+    animation: bookmark-success-bounce 400ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  /* Disable animations for users who prefer reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .recipe-page-bookmark-btn,
+    .recipe-page-settings-btn {
+      transition: background-color 150ms ease;
+    }
+
+    .recipe-page-bookmark-btn:hover,
+    .recipe-page-settings-btn:hover {
+      transform: none;
+    }
+
+    .recipe-page-bookmark-btn:active,
+    .recipe-page-settings-btn:active {
+      transform: none;
+    }
+
+    .bookmark-just-saved {
+      animation: none;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   REDUCED MOTION - Accessibility support for users who prefer reduced motion
+   Disables all animations and transitions when the user has enabled
+   "Reduce motion" in their system preferences.
+═══════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

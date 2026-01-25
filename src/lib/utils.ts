@@ -65,6 +65,31 @@ export function convertTextFractionsToSymbols(text: string): string {
   return result;
 }
 
+/**
+ * Converts text to title case (capitalizes first letter of each word)
+ * Preserves numbers, fractions, and special characters
+ * 
+ * @param text - The text to convert to title case
+ * @returns The text in title case
+ * 
+ * @example
+ * toTitleCase("dashi (Japanese soup stock)") // returns "Dashi (Japanese Soup Stock)"
+ * toTitleCase("2½ cups") // returns "2½ Cups"
+ */
+export function toTitleCase(text: string): string {
+  if (!text) return text;
+  
+  // Split by word boundaries, preserving spaces and punctuation
+  return text.replace(/\b\w+\b/g, (word) => {
+    // Skip if it's a number or starts with a number/fraction symbol
+    if (/^[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]/.test(word)) {
+      return word;
+    }
+    // Capitalize first letter, lowercase the rest
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  });
+}
+
 export function formatRelativeTime(dateString: string): string {
   const now = new Date();
   const date = new Date(dateString);

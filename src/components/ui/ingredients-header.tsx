@@ -12,7 +12,7 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
-} from "./dropdown-menu"
+} from "@/components/ui/dropdown-menu"
 import type { UnitSystem } from "@/utils/unitConverter"
 
 interface IngredientsHeaderProps {
@@ -36,9 +36,7 @@ export function IngredientsHeader({
 }: IngredientsHeaderProps) {
   // State to toggle the servings slider card
   const [isSliderOpen, setIsSliderOpen] = useState(false);
-  // State to track unit dropdown menu open state for animation
-  const [isUnitMenuOpen, setIsUnitMenuOpen] = useState(false);
-  
+
   // Track slider dragging state
   const sliderRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -246,35 +244,22 @@ export function IngredientsHeader({
         <div className="ingredients-header-left">
           <h2 className="ingredients-header-title">Ingredients</h2>
           {/* Ellipsis menu icon - opens unit type options */}
-          <DropdownMenu open={isUnitMenuOpen} onOpenChange={setIsUnitMenuOpen}>
+          <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className="ingredients-header-menu-btn"
+                className="p-2 rounded-full transition-colors text-stone-400 hover:bg-stone-50 data-[state=open]:bg-stone-100 data-[state=open]:text-stone-900"
                 aria-label="Unit type options"
               >
-                <MoreHorizontal className="w-5 h-5 text-stone-400" />
+                <MoreHorizontal className="w-5 h-5" />
               </button>
             </DropdownMenuTrigger>
-            <AnimatePresence>
-              {isUnitMenuOpen && (
-                <DropdownMenuContent align="start" className="w-[180px]">
-                  <DropdownMenuRadioGroup 
-                    value={unitSystem} 
-                    onValueChange={(value) => onUnitSystemChange(value as UnitSystem)}
-                  >
-                    <DropdownMenuRadioItem value="original">
-                      Original
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="metric">
-                      Metric
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="imperial">
-                      Imperial
-                    </DropdownMenuRadioItem>
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-              )}
-            </AnimatePresence>
+            <DropdownMenuContent align="start" className="w-[180px]">
+              <DropdownMenuRadioGroup value={unitSystem} onValueChange={(value) => onUnitSystemChange(value as UnitSystem)}>
+                <DropdownMenuRadioItem value="original">Original</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="metric">Metric</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="imperial">Imperial</DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
           </DropdownMenu>
         </div>
         

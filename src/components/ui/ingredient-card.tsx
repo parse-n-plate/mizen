@@ -13,6 +13,24 @@ import { IngredientExpandedDrawer } from './ingredient-expanded-drawer';
 import { cn, convertTextFractionsToSymbols } from '@/lib/utils';
 
 /**
+ * Converts text to title case (capitalizes first letter of each word)
+ * Preserves numbers, fractions, and special characters
+ */
+function toTitleCase(text: string): string {
+  if (!text) return text;
+  
+  // Split by word boundaries, preserving spaces and punctuation
+  return text.replace(/\b\w+\b/g, (word) => {
+    // Skip if it's a number or starts with a number/fraction symbol
+    if (/^[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]/.test(word)) {
+      return word;
+    }
+    // Capitalize first letter, lowercase the rest
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  });
+}
+
+/**
  * IngredientCard Component (Linear List Style)
  * 
  * Displays an ingredient in a linear list format matching the Figma design.
@@ -300,8 +318,8 @@ export default function IngredientCard({
                     const amountDisplay = parsed.unit ? `${parsed.amount} ${parsed.unit}` : parsed.amount;
                     return (
                       <>
-                        <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{parsed.name}</p>
-                        <p className="font-albert text-[14px] text-stone-400">{amountDisplay}</p>
+                        <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{toTitleCase(parsed.name)}</p>
+                        <p className="font-albert text-[14px] text-stone-400 text-right ml-auto">{toTitleCase(amountDisplay)}</p>
                       </>
                     );
                   }
@@ -310,20 +328,20 @@ export default function IngredientCard({
                   if (parenMatch) {
                     return (
                       <>
-                        <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{parenMatch[1].trim()}</p>
-                        <p className="font-albert text-[14px] text-stone-400">{parenMatch[2]}</p>
+                        <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{toTitleCase(parenMatch[1].trim())}</p>
+                        <p className="font-albert text-[14px] text-stone-400 text-right ml-auto">{toTitleCase(parenMatch[2])}</p>
                       </>
                     );
                   }
-                  return <p className="font-albert font-medium text-[16px] text-stone-800">{ingredientText}</p>;
+                  return <p className="font-albert font-medium text-[16px] text-stone-800">{toTitleCase(ingredientText)}</p>;
                 })()
               ) : (
                 <>
                   {ingredientAmount ? (
                     // Has amount/unit: show name first, then amount/unit
                     <>
-                      <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{ingredientNameOnly}</p>
-                      <p className="font-albert text-[14px] text-stone-400">{ingredientAmount}</p>
+                      <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{toTitleCase(ingredientNameOnly)}</p>
+                      <p className="font-albert text-[14px] text-stone-400 text-right ml-auto">{toTitleCase(ingredientAmount)}</p>
                     </>
                   ) : (
                     // No amount/unit: show main name, check for parentheses
@@ -332,12 +350,12 @@ export default function IngredientCard({
                       if (parenMatch) {
                         return (
                           <>
-                            <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{parenMatch[1].trim()}</p>
-                            <p className="font-albert text-[14px] text-stone-400">{parenMatch[2]}</p>
+                            <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{toTitleCase(parenMatch[1].trim())}</p>
+                            <p className="font-albert text-[14px] text-stone-400 text-right ml-auto">{toTitleCase(parenMatch[2])}</p>
                           </>
                         );
                       }
-                      return <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{ingredientText}</p>;
+                      return <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{toTitleCase(ingredientText)}</p>;
                     })()
                   )}
                 </>

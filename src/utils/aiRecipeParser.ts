@@ -122,6 +122,10 @@ export interface ParsedRecipe {
     fridge?: number | null;  // Days in fridge (null if not fridge-safe)
     freezer?: number | null; // Days in freezer (null if not freezer-friendly)
   };
+  // Plating/serving guidance - generated during initial parse
+  platingNotes?: string; // 2-3 sentences of plating suggestions based on the dish
+  servingVessel?: string; // Recommended serving vessel (e.g., "shallow bowl", "dinner plate")
+  servingTemp?: string; // Ideal serving temperature (e.g., "hot", "warm", "room temp", "chilled")
 }
 
 /**
@@ -607,7 +611,10 @@ Required JSON structure:
   "shelfLife": {
     "fridge": 3,
     "freezer": 30
-  }
+  },
+  "platingNotes": "2-3 sentences of plating suggestions based on the dish",
+  "servingVessel": "recommended serving vessel (e.g., 'shallow bowl', 'dinner plate', 'cast iron skillet')",
+  "servingTemp": "ideal serving temperature (e.g., 'hot', 'warm', 'room temp', 'chilled')"
 }
 
 CRITICAL: ingredients and instructions MUST be arrays, NEVER null.
@@ -1055,6 +1062,39 @@ OUTPUT FORMAT:
 - NEVER skip these fields - always include them in your JSON response
 
 ========================================
+🍽️ PLATING GUIDANCE - REQUIRED FIELD 🍽️
+========================================
+THIS IS A REQUIRED FIELD. You MUST generate plating guidance for EVERY recipe.
+
+PLATING NOTES RULES:
+- Provide 2-3 concise sentences on how to plate/present the dish
+- Be specific to the dish type (e.g., pasta vs steak vs salad)
+- Include visual arrangement suggestions (e.g., "pile in center", "fan slices", "drizzle sauce around")
+- Mention garnish placement when relevant
+
+EXAMPLES:
+- Pasta: "Twirl pasta into a nest in the center of a shallow bowl. Spoon sauce over the top and finish with grated parmesan and fresh basil leaves."
+- Steak: "Slice against the grain and fan across the plate. Place vegetables alongside and drizzle pan sauce around the meat."
+- Salad: "Build layers starting with greens as the base. Arrange toppings in sections for visual appeal and drizzle dressing in a zigzag pattern."
+- Soup: "Ladle into a warmed bowl leaving room at the rim. Add garnishes to the center and serve immediately."
+- Dessert: "Place on the center of a clean white plate. Add sauce dots or swooshes and dust with powdered sugar."
+
+SERVING VESSEL RULES:
+- Recommend the most appropriate vessel for the dish type
+- Use common vessel names: "shallow bowl", "dinner plate", "deep bowl", "cast iron skillet", "wooden board", "ramekin", "soup bowl", "salad plate", "serving platter"
+- Consider the dish texture and sauce amount
+
+SERVING TEMPERATURE RULES:
+- Use one of these standard temperatures: "hot", "warm", "room temp", "chilled", "frozen"
+- Base on the dish type and how it's best enjoyed
+
+OUTPUT FORMAT:
+- "platingNotes": "2-3 sentences of plating suggestions"
+- "servingVessel": "vessel type (e.g., 'shallow bowl', 'dinner plate')"
+- "servingTemp": "temperature (e.g., 'hot', 'warm', 'room temp', 'chilled')"
+- NEVER skip these fields - always include them in your JSON response
+
+========================================
 FINAL REMINDER
 ========================================
 Output ONLY the JSON object. No markdown, no code blocks, no explanations, no text before or after.
@@ -1066,6 +1106,9 @@ ABSOLUTE REQUIREMENTS:
 - cuisine: MUST be an array [] (REQUIRED FIELD - analyze every recipe, can be empty [] if truly uncertain)
 - storageGuide: MUST be a string with 2-3 sentences of storage advice (REQUIRED FIELD)
 - shelfLife: MUST be an object with "fridge" and "freezer" properties (REQUIRED FIELD)
+- platingNotes: MUST be a string with 2-3 sentences of plating suggestions (REQUIRED FIELD)
+- servingVessel: MUST be a string with vessel recommendation (REQUIRED FIELD)
+- servingTemp: MUST be a string with serving temperature (REQUIRED FIELD)
 - Each instruction MUST be an object: {"title": "Summary", "detail": "Full text"}
 - If you find ingredients in the HTML, extract them
 - If you find instructions in the HTML, extract them as objects with title and detail
@@ -1081,7 +1124,13 @@ ABSOLUTE REQUIREMENTS:
 - ALWAYS generate storage guidance based on the dish type and ingredients
 - ALWAYS estimate shelf life based on the recipe type
 - NEVER skip the "storageGuide" or "shelfLife" fields - they must always be present in your JSON response
-- The recipe data exists in the HTML - extract it carefully, including storage analysis`,
+
+🍽️ PLATING GUIDANCE IS MANDATORY:
+- ALWAYS generate plating notes with 2-3 sentences of presentation suggestions
+- ALWAYS recommend an appropriate serving vessel
+- ALWAYS specify the ideal serving temperature
+- NEVER skip the "platingNotes", "servingVessel", or "servingTemp" fields - they must always be present in your JSON response
+- The recipe data exists in the HTML - extract it carefully, including plating analysis`,
         },
         {
           role: 'user',
@@ -1202,7 +1251,25 @@ ABSOLUTE REQUIREMENTS:
           console.log('[AI Parser] 📦 Shelf life extracted:', recipe.shelfLife);
         }
         
-        // Log important recipe output information: title, author, servings, and storage
+        // Extract plating notes if provided by AI
+        if (parsedData.platingNotes && typeof parsedData.platingNotes === 'string') {
+          recipe.platingNotes = parsedData.platingNotes.trim();
+          console.log('[AI Parser] 🍽️ Plating notes extracted:', recipe.platingNotes.substring(0, 50) + '...');
+        }
+        
+        // Extract serving vessel if provided by AI
+        if (parsedData.servingVessel && typeof parsedData.servingVessel === 'string') {
+          recipe.servingVessel = parsedData.servingVessel.trim();
+          console.log('[AI Parser] 🍽️ Serving vessel extracted:', recipe.servingVessel);
+        }
+        
+        // Extract serving temperature if provided by AI
+        if (parsedData.servingTemp && typeof parsedData.servingTemp === 'string') {
+          recipe.servingTemp = parsedData.servingTemp.trim();
+          console.log('[AI Parser] 🌡️ Serving temp extracted:', recipe.servingTemp);
+        }
+        
+        // Log important recipe output information: title, author, servings, storage, and plating
         console.log('[AI Parser] 📋 Recipe output summary:', {
           title: recipe.title || 'N/A',
           author: recipe.author || 'N/A',
@@ -1211,6 +1278,9 @@ ABSOLUTE REQUIREMENTS:
           hasServings: !!recipe.servings,
           hasStorageGuide: !!recipe.storageGuide,
           hasShelfLife: !!recipe.shelfLife,
+          hasPlatingNotes: !!recipe.platingNotes,
+          servingVessel: recipe.servingVessel || 'N/A',
+          servingTemp: recipe.servingTemp || 'N/A',
         });
         
         // Handle cuisine - normalize to array format and filter to supported cuisines only

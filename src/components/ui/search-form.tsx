@@ -14,6 +14,7 @@ import LoadingAnimation from './loading-animation';
 import { ParsedRecipe } from '@/lib/storage';
 import { useToast } from '@/hooks/useToast';
 import EmptyState from './empty-state';
+import { isUrl, normalizeUrl } from '@/utils/searchUtils';
 
 interface SearchFormProps {
   initialUrl?: string;
@@ -44,15 +45,9 @@ export default function SearchForm({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Check if query looks like a URL
-  const isUrl = (text: string) => {
-    return (
-      text.includes('http') ||
-      text.includes('www.') ||
-      text.includes('.com') ||
-      text.includes('.org')
-    );
-  };
+  // Note: isUrl and normalizeUrl are now imported from @/utils/searchUtils
+  // isUrl supports domain patterns like "allrecipes.com/recipe" without the http prefix
+  // normalizeUrl adds the missing protocol/www prefix automatically
 
   // Search through cached recipes
   const searchRecipes = useCallback(
@@ -304,13 +299,17 @@ export default function SearchForm({
         return;
       }
 
+      // Normalize the URL by adding protocol/www if missing
+      // This enables users to type "allrecipes.com/recipe" instead of full URL
+      const normalizedUrl = normalizeUrl(query);
+
       // Update progress: Gathering Resources phase (0-30%)
       setLoadingProgress(10);
       setLoadingPhase('gathering');
 
       // Step 1: Quick validation to ensure URL contains recipe-related keywords
       // This provides fast feedback before making the full parsing request
-      const validUrlResponse = await validateRecipeUrl(query);
+      const validUrlResponse = await validateRecipeUrl(normalizedUrl);
       
       // Update progress: Validation complete (20%)
       setLoadingProgress(20);
@@ -322,7 +321,7 @@ export default function SearchForm({
         errorLogger.log(
           validUrlResponse.error.code,
           validUrlResponse.error.message,
-          query,
+          normalizedUrl,
         );
         showError({
           code: validUrlResponse.error.code,
@@ -338,7 +337,7 @@ export default function SearchForm({
         errorLogger.log(
           'ERR_NO_RECIPE_FOUND',
           'No recipe found on this page',
-          query,
+          normalizedUrl,
         );
         showError({
           code: 'ERR_NO_RECIPE_FOUND',
@@ -357,7 +356,7 @@ export default function SearchForm({
       // - Falls back to AI parsing if needed
       // - Returns consistently structured data
       console.log('[Client] Calling unified recipe parser...');
-      const response = await recipeScrape(query);
+      const response = await recipeScrape(normalizedUrl);
       
       // Update progress: Parsing complete (85%)
       setLoadingProgress(85);
@@ -368,7 +367,7 @@ export default function SearchForm({
         setLoadingProgress(0);
         setLoadingPhase(undefined);
         const errorCode = response.error?.code || 'ERR_NO_RECIPE_FOUND';
-        errorLogger.log(errorCode, response.error?.message || 'Parsing failed', query);
+        errorLogger.log(errorCode, response.error?.message || 'Parsing failed', normalizedUrl);
         showError({
           code: errorCode,
           message: response.error?.message,
@@ -399,13 +398,18 @@ export default function SearchForm({
         ingredients: response.ingredients,
         instructions: response.instructions,
         author: response.author, // Include author if available
-        sourceUrl: response.sourceUrl || query, // Use sourceUrl from response or fallback to query URL
+        sourceUrl: response.sourceUrl || normalizedUrl, // Use sourceUrl from response or fallback to normalized URL
         summary: response.summary, // Include AI-generated summary if available
         cuisine: response.cuisine, // Include cuisine tags if available
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
         ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
         ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
         ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
+        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }), // Include storage instructions if available
+        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }), // Include shelf life info if available
+        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }), // Include plating suggestions if available
+        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }), // Include serving vessel recommendation if available
+        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }), // Include serving temperature if available
       };
       // #region agent log
       fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'search-form.tsx:310',message:'recipeToStore created',data:{hasServings:'servings' in recipeToStore,servings:recipeToStore.servings,servingsType:typeof recipeToStore.servings,servingsValue:recipeToStore.servings,keys:Object.keys(recipeToStore)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
@@ -431,11 +435,11 @@ export default function SearchForm({
         title: response.title,
         summary: recipeSummary,
         description: response.summary, // Store the AI-generated summary
-        url: query,
+        url: normalizedUrl,
         ingredients: response.ingredients,
         instructions: response.instructions,
         author: response.author, // Include author if available
-        sourceUrl: response.sourceUrl || query, // Include source URL if available
+        sourceUrl: response.sourceUrl || normalizedUrl, // Include source URL if available
         cuisine: response.cuisine, // Include cuisine tags if available
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
         ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
@@ -456,7 +460,7 @@ export default function SearchForm({
       errorLogger.log(
         'ERR_UNKNOWN',
         'An unexpected error occurred during parsing',
-        query,
+        query.trim(),
       );
       showError({
         code: 'ERR_UNKNOWN',

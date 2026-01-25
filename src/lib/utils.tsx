@@ -9,6 +9,59 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Calculates the scrollbar width by creating a temporary element and measuring it.
+ * This is more reliable than comparing window.innerWidth vs clientWidth.
+ * 
+ * @returns The width of the scrollbar in pixels, or 0 if no scrollbar exists
+ */
+export function getScrollbarWidth(): number {
+  // Only calculate if we're in the browser (not SSR)
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return 0;
+  }
+
+  // Check if page is actually scrollable first
+  const isScrollable = document.documentElement.scrollHeight > window.innerHeight;
+  if (!isScrollable) {
+    return 0;
+  }
+
+  // Method 1: Compare window width vs document width (most reliable)
+  const scrollbarWidth1 = window.innerWidth - document.documentElement.clientWidth;
+  
+  // Method 2: Create temporary element (backup method)
+  const outer = document.createElement('div');
+  outer.style.visibility = 'hidden';
+  outer.style.overflow = 'scroll';
+  outer.style.msOverflowStyle = 'scrollbar';
+  outer.style.width = '100px';
+  outer.style.position = 'absolute';
+  outer.style.top = '-9999px';
+  document.body.appendChild(outer);
+
+  const inner = document.createElement('div');
+  inner.style.width = '100%';
+  outer.appendChild(inner);
+
+  const scrollbarWidth2 = outer.offsetWidth - inner.offsetWidth;
+
+  // Clean up
+  document.body.removeChild(outer);
+
+  // Use the larger value, but cap at reasonable maximum (scrollbars are typically 15-17px)
+  // This prevents incorrect calculations from causing layout issues
+  const calculatedWidth = Math.max(scrollbarWidth1, scrollbarWidth2, 0);
+  const MAX_SCROLLBAR_WIDTH = 25; // Reasonable maximum for scrollbar width
+  
+  // Return 0 if calculation seems incorrect (negative or too large)
+  if (calculatedWidth <= 0 || calculatedWidth > MAX_SCROLLBAR_WIDTH) {
+    return 0;
+  }
+  
+  return calculatedWidth;
+}
+
+/**
  * Converts text fractions like "1/2" to Unicode fraction symbols like "½"
  * Handles common cooking fractions and mixed numbers like "1 1/2"
  * 

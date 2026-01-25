@@ -119,16 +119,51 @@ export function parseSearchQuery(query: string): ParsedSearchQuery {
 
 /**
  * Check if a string looks like a URL
+ * 
+ * This function detects URLs with or without the protocol prefix.
+ * Examples that will return true:
+ * - "https://example.com/recipe"
+ * - "www.example.com/recipe"
+ * - "allrecipes.com/recipe/123" (domain pattern without prefix)
  */
 export function isUrl(text: string): boolean {
+  const trimmed = text.trim();
   return (
-    text.includes('http') ||
-    text.includes('www.') ||
-    text.includes('.com') ||
-    text.includes('.org') ||
-    text.includes('.net') ||
-    text.includes('.io')
+    trimmed.includes('http') ||
+    trimmed.includes('www.') ||
+    // Match domain patterns like "example.com/path" or "sub.example.co.uk"
+    // This regex matches: word characters, optional hyphens, followed by a TLD (2+ chars)
+    /^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+/.test(trimmed)
   );
+}
+
+/**
+ * Normalize a URL by adding protocol and www if missing
+ * 
+ * This enables "Arc/Dia browser" style URL auto-completion where users
+ * can type shortened URLs like "allrecipes.com/recipe/123" and we'll
+ * automatically expand them to "https://www.allrecipes.com/recipe/123"
+ * 
+ * Examples:
+ * - "allrecipes.com/recipe" → "https://www.allrecipes.com/recipe"
+ * - "www.example.com" → "https://www.example.com"
+ * - "https://example.com" → "https://example.com" (unchanged)
+ */
+export function normalizeUrl(input: string): string {
+  let url = input.trim();
+  
+  // If already has protocol, return as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // If starts with www., add https://
+  if (url.startsWith('www.')) {
+    return `https://${url}`;
+  }
+  
+  // Otherwise, add https://www.
+  return `https://www.${url}`;
 }
 
 /**

@@ -55,16 +55,30 @@ export default function IngredientsOverlay({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Prevent body scroll when overlay is open
+  // Prevent body scroll and layout shift when overlay is open
+  // This prevents the page from shifting when the scrollbar appears/disappears
   useEffect(() => {
     if (isOpen) {
+      // Calculate scrollbar width to prevent layout shift
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      
+      // Store original values to restore later
+      const originalOverflow = document.body.style.overflow;
+      const originalPaddingRight = document.body.style.paddingRight;
+      
+      // Lock body scroll and add padding equal to scrollbar width
+      // This prevents the page from shifting when scrollbar disappears
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+      if (scrollbarWidth > 0) {
+        document.body.style.paddingRight = `${scrollbarWidth}px`;
+      }
+      
+      // Cleanup: restore original styles when overlay closes
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        document.body.style.paddingRight = originalPaddingRight;
+      };
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, [isOpen]);
 
   // Format ingredient for display
@@ -157,7 +171,7 @@ export default function IngredientsOverlay({
               </div>
 
               {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto p-6">
+              <div className="flex-1 min-h-0 overflow-y-auto p-6">
                 {renderContent()}
               </div>
             </motion.div>
@@ -194,7 +208,7 @@ export default function IngredientsOverlay({
               </div>
 
               {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto px-8 pb-8">
+              <div className="flex-1 min-h-0 overflow-y-auto px-8 pb-8">
                 {renderContent()}
               </div>
             </motion.div>
