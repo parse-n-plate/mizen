@@ -193,6 +193,11 @@ export async function POST(req: NextRequest): Promise<Response> {
       prepTimeMinutes: result.data.prepTimeMinutes, // Include prep time if available
       cookTimeMinutes: result.data.cookTimeMinutes, // Include cook time if available
       totalTimeMinutes: result.data.totalTimeMinutes, // Include total time if available
+      storageGuide: result.data.storageGuide, // Include storage instructions if available
+      shelfLife: result.data.shelfLife, // Include shelf life info if available
+      platingNotes: result.data.platingNotes, // Include plating suggestions if available
+      servingVessel: result.data.servingVessel, // Include serving vessel recommendation if available
+      servingTemp: result.data.servingTemp, // Include serving temperature if available
       imageData: base64DataUrl, // Return the base64 image data for preview
       imageFilename: imageFile.name, // Return the original filename
     });
