@@ -182,12 +182,6 @@ export default function HomepageSearch() {
         ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
         ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
         ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
-        // Storage & plating guidance - now returned during initial parse (photo upload optional)
-        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
-        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
-        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
-        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
-        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
         imageData: imageData, // Store base64 image data for preview
         imageFilename: selectedImage.name, // Store original filename
       };
@@ -218,12 +212,6 @@ export default function HomepageSearch() {
         ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
         ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
         ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
-        // Storage & plating guidance - now returned during initial parse (photo upload optional)
-        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
-        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
-        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
-        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
-        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
         imageData: imageData, // Store base64 image data for preview
         imageFilename: selectedImage.name, // Store original filename
       });
@@ -320,12 +308,11 @@ export default function HomepageSearch() {
           ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
           ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
           ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
-          // Storage & plating guidance - now returned during initial URL parse (photo upload optional)
-          ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
-          ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
-          ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
-          ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
-          ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
+          ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }), // Include storage instructions if available
+          ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }), // Include shelf life info if available
+          ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }), // Include plating suggestions if available
+          ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }), // Include serving vessel recommendation if available
+          ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }), // Include serving temperature if available
         };
 
         setParsedRecipe(recipeToStore);
@@ -354,12 +341,6 @@ export default function HomepageSearch() {
           ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
           ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
           ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
-          // Storage & plating guidance - now returned during initial URL parse (photo upload optional)
-          ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
-          ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
-          ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
-          ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
-          ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
         });
 
         // Add to search history
@@ -509,10 +490,13 @@ export default function HomepageSearch() {
                     </button>
                   )}
 
-                  {/* Upload Button */}
+                  {/* Upload Button - uses onMouseDown to fire before blur hides the button */}
                   <button
                     type="button"
-                    onClick={triggerFileInput}
+                    onMouseDown={(e) => {
+                      e.preventDefault(); // Prevent blur from firing
+                      triggerFileInput();
+                    }}
                     className="p-2 transition-all"
                     title="Upload image"
                     disabled={loading}
