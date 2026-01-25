@@ -329,7 +329,8 @@ function SavedRecipesContent() {
       prepTimeMinutes: recipe.prepTimeMinutes,
       cookTimeMinutes: recipe.cookTimeMinutes,
       totalTimeMinutes: recipe.totalTimeMinutes,
-      platePhotoData: recipe.plate?.photoData,
+      // Check for new multi-photo format first, then fall back to legacy single photo
+      platePhotoData: recipe.plate?.photos?.[0]?.data || recipe.plate?.photoData,
     };
   };
 
