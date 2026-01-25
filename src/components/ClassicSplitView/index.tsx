@@ -273,7 +273,7 @@ export default function ClassicSplitView({ steps, title = 'Recipe Steps', allIng
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => setView('list')}
-                    className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all ${
+                    className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-colors transition-shadow ${
                       view === 'list' 
                         ? 'bg-white text-stone-900 shadow-sm' 
                         : 'text-stone-400 hover:text-stone-600'
@@ -293,7 +293,7 @@ export default function ClassicSplitView({ steps, title = 'Recipe Steps', allIng
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => setView('card')}
-                    className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-all ${
+                    className={`flex items-center gap-2 px-4 py-1.5 rounded-full transition-colors transition-shadow ${
                       view === 'card' 
                         ? 'bg-white text-stone-900 shadow-sm' 
                         : 'text-stone-400 hover:text-stone-600'
