@@ -5,6 +5,7 @@ import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRecipe } from '@/contexts/RecipeContext';
 import { useRouter } from 'next/navigation';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
+import History from '@solar-icons/react/csr/time/History';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -157,9 +158,13 @@ export default function HomepageRecentRecipes() {
     <div className="w-full max-w-2xl mx-auto">
       {/* Section Title and Clear All Button */}
       <div className="flex items-center justify-between mb-4 pl-4 group">
-        <h2 className="font-albert text-base text-stone-500 text-left font-medium">
-          Recent Recipes
-        </h2>
+        <div className="flex items-center gap-2">
+          {/* History Icon - Visual indicator for recent recipes */}
+          <History className="w-5 h-5 text-stone-500" />
+          <h2 className="font-albert text-base text-stone-500 text-left font-medium">
+            Recent Recipes
+          </h2>
+        </div>
         {displayRecipes.length > 0 && (
           <Button
             variant="ghost"
