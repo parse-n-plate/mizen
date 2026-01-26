@@ -333,51 +333,43 @@ export default function InlineSearch() {
         className="relative flex-1 max-w-md"
       >
         <form onSubmit={handleSubmit}>
-          <div
-            className={`
-              bg-stone-100 rounded-md border transition-all duration-200
-              ${isExpanded 
-                ? 'border-stone-400 shadow-sm' 
-                : 'border-stone-200 hover:border-stone-300 hover:bg-stone-50'
-              }
-            `}
-          >
-            <div className="flex items-center px-3 py-2">
-              {/* Search Icon */}
-              <Search className="w-4 h-4 text-stone-600 flex-shrink-0" />
+          {/* Search wrapper - uses same styling as IngredientsHeader */}
+          <div className="ingredients-search-wrapper">
+            {/* Search Icon - matches IngredientsHeader icon styling */}
+            <Search className="ingredients-search-icon" />
 
-              {/* Input */}
-              <input
-                ref={inputRef}
-                type="text"
-                placeholder={isExpanded ? "Enter recipe URL" : "Enter recipe URL"}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onFocus={handleFocus}
-                onKeyDown={handleKeyDown}
-                className="flex-1 ml-2 bg-transparent font-albert text-sm text-stone-800 placeholder:text-stone-500 focus:outline-none"
-              />
+            {/* Input - matches IngredientsHeader input styling */}
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder={isExpanded ? "Enter recipe URL" : "Enter recipe URL"}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onFocus={handleFocus}
+              onKeyDown={handleKeyDown}
+              className="ingredients-search-input"
+            />
 
-              {/* Clear Button */}
-              {query && (
-                <button
-                  type="button"
-                  onClick={clearInput}
-                  className="ml-2 p-1 hover:bg-stone-200 rounded transition-colors flex-shrink-0"
-                >
-                  <X className="w-3.5 h-3.5 text-stone-600" />
-                </button>
-              )}
+            {/* Clear Button */}
+            {query && (
+              <button
+                type="button"
+                onClick={clearInput}
+                className="ml-2 flex-shrink-0 p-1 rounded transition-colors"
+                aria-label="Clear search"
+              >
+                <X className="w-4 h-4 text-stone-600 hover:text-stone-900 transition-colors duration-150 ease" />
+              </button>
+            )}
 
-              {/* ESC hint */}
-              {isExpanded && !query && (
-                <div className="ml-2 flex-shrink-0">
-                  <kbd className="px-2 py-0.5 text-xs font-albert text-stone-500 bg-white border border-stone-300 rounded">
-                    ESC
-                  </kbd>
-                </div>
-              )}
-            </div>
+            {/* ESC hint */}
+            {isExpanded && !query && (
+              <div className="ml-2 flex-shrink-0">
+                <kbd className="px-2 py-0.5 text-xs font-albert text-stone-500 bg-white border border-stone-300 rounded">
+                  ESC
+                </kbd>
+              </div>
+            )}
           </div>
         </form>
 
