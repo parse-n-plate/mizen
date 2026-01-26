@@ -383,6 +383,17 @@ export function IngredientsHeader({
               className="ingredients-search-input"
               aria-label="Search ingredients"
             />
+            {/* Clear Button - appears when there's text in the search field */}
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => onSearchChange('')}
+                className="ml-2 flex-shrink-0 p-1 rounded transition-colors"
+                aria-label="Clear search"
+              >
+                <X className="w-4 h-4 text-stone-600 hover:text-stone-900 transition-colors duration-150 ease" />
+              </button>
+            )}
           </div>
         </div>
       )}
