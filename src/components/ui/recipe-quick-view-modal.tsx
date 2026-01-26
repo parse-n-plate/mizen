@@ -240,8 +240,8 @@ export default function RecipeQuickViewModal({
                 <Image
                   src={cuisineIconPath}
                   alt={`${primaryCuisine || 'Recipe'} icon`}
-                  width={96}
-                  height={96}
+                  width={160}
+                  height={160}
                   quality={100}
                   unoptimized={true}
                   className="object-contain opacity-90"
