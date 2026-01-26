@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Link, Upload } from 'lucide-react';
+import { Link, Upload, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRecipe } from '@/contexts/RecipeContext';
@@ -481,12 +481,11 @@ export default function HomepageSearch() {
                     <button
                       type="button"
                       onClick={() => setSearchValue('')}
-                      className="p-2 transition-all hover:opacity-60"
+                      className="p-2 transition-all hover:opacity-60 flex-shrink-0"
                       title="Clear text"
+                      aria-label="Clear search"
                     >
-                      <svg className="size-[16px]" fill="none" viewBox="0 0 24 24">
-                        <path stroke="#57534e" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
-                      </svg>
+                      <X className="size-[16px] text-[#57534e]" />
                     </button>
                   )}
 
