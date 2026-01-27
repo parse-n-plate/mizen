@@ -1,5 +1,35 @@
 @import 'tailwindcss';
 
+/* Register custom theme values with Tailwind v4 */
+@theme {
+  /* Hero sizes (responsive) */
+  --text-hero: 63px;
+  --text-hero-tablet: 74px;
+  --text-hero-desktop: 85px;
+
+  /* Heading sizes */
+  --text-h1-sm: 35px;
+  --text-h1-md: 46px;
+  --text-h2: 26px;
+  --text-h3: 22px;
+
+  /* Body text sizes */
+  --text-body-lg-sm: 18px;
+  --text-body-lg-md: 19px;
+  --text-body-md-sm: 17px;
+  --text-body-md: 18px;
+  --text-body-sm: 15px;
+
+  /* Small / Label sizes */
+  --text-label-lg-sm: 13px;
+  --text-label-lg-md: 14px;
+  --text-label-sm: 13px;
+
+  /* Tab / Navigation sizes */
+  --text-nav-sm: 17px;
+  --text-nav-md: 18px;
+}
+
 /* Custom CSS Variables for Parse & Plate Design System */
 :root {
   /* Colors */
@@ -17,6 +47,36 @@
   /* Typography - Using Next.js font variables */
   --font-family-serif: var(--font-domine), 'Georgia', 'Times New Roman', serif;
   --font-family-sans: var(--font-albert), 'Helvetica', 'system-ui', sans-serif;
+
+  /* Typography Scale (110% of base sizes)
+     Base sizes scaled up for improved readability */
+
+  /* Hero sizes (responsive) */
+  --text-hero: 63px;
+  --text-hero-tablet: 74px;
+  --text-hero-desktop: 85px;
+
+  /* Heading sizes */
+  --text-h1-sm: 35px;           /* was 32px */
+  --text-h1-md: 46px;           /* was 42px */
+  --text-h2: 26px;              /* was 24px */
+  --text-h3: 22px;              /* was 20px */
+
+  /* Body text sizes */
+  --text-body-lg-sm: 18px;      /* was 16px */
+  --text-body-lg-md: 19px;      /* was 17px */
+  --text-body-md-sm: 17px;      /* was 15px */
+  --text-body-md: 18px;         /* was 16px */
+  --text-body-sm: 15px;         /* was 14px */
+
+  /* Small / Label sizes */
+  --text-label-lg-sm: 13px;     /* was 12px */
+  --text-label-lg-md: 14px;     /* was 13px */
+  --text-label-sm: 13px;        /* was 12px */
+
+  /* Tab / Navigation sizes */
+  --text-nav-sm: 17px;          /* was 15px */
+  --text-nav-md: 18px;          /* was 16px */
 
   /* Line Heights */
   --line-height-heading: 1.3;
@@ -626,7 +686,7 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
-    background: #f5f5f4; /* stone-100 - light gray background */
+    background: theme(colors.stone.100);
     border-radius: 0.5rem; /* rounded corners */
     border: 2px solid transparent;
     transition: all 0.2s ease;
