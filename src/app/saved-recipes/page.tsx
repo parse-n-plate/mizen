@@ -279,10 +279,9 @@ function SavedRecipesContent() {
   const [selectedRecipe, setSelectedRecipe] = useState<ParsedRecipe | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const [isPageLoaded, setIsPageLoaded] = useState<boolean>(false);
-  const [isSearchFocused, setIsSearchFocused] = useState<boolean>(false);
 
-  // Determine if we're in search mode (focused or has content)
-  const isSearchMode = isSearchFocused || searchQuery.trim().length > 0;
+  // Hide filters when actively searching
+  const isSearching = searchQuery.trim().length > 0;
 
   // Persist view mode to localStorage
   useEffect(() => {
@@ -473,7 +472,7 @@ function SavedRecipesContent() {
           </div>
 
           {/* Title and Subtitle Section */}
-          <div className="w-full pb-8 md:pb-12">
+          <div className="w-full pb-6">
             <h1 className="font-domine text-[28px] md:text-[32px] font-normal text-black leading-[1.1] tracking-tight mb-2">
               Saved Recipes
             </h1>
@@ -481,96 +480,97 @@ function SavedRecipesContent() {
               {bookmarkedRecipes.length} {bookmarkedRecipes.length === 1 ? 'recipe' : 'recipes'} saved
             </p>
           </div>
+
+          {/* Cooking Insights Section */}
+          {bookmarkedRecipes.length > 0 && (
+            <div className="pb-8 md:pb-12">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
+                {/* Cooked Stats */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white">
+                    <ChefHat className="w-5 h-5 text-stone-600" />
+                  </div>
+                  <div>
+                    <p className="font-albert text-[14px] text-stone-500">Cooked</p>
+                    <p className="font-albert text-[20px] font-medium text-stone-900">
+                      {cookingInsights.cookedCount} of {cookingInsights.totalSaved}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="hidden sm:block w-px h-12 bg-stone-200" />
+
+                {/* Top Cuisine */}
+                {cookingInsights.topCuisine && (
+                  <div className="flex items-center gap-3">
+                    {CUISINE_ICON_MAP[cookingInsights.topCuisine] && (
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white">
+                        <Image
+                          src={CUISINE_ICON_MAP[cookingInsights.topCuisine]}
+                          alt={`${cookingInsights.topCuisine} icon`}
+                          width={24}
+                          height={24}
+                          quality={100}
+                          unoptimized={true}
+                          className="w-6 h-6 object-contain"
+                          draggable={false}
+                        />
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-albert text-[14px] text-stone-500">Top Cuisine</p>
+                      <p className="font-albert text-[20px] font-medium text-stone-900">
+                        {cookingInsights.topCuisine}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Additional Cuisines Preview */}
+                {cookingInsights.topCuisines.length > 1 && (
+                  <>
+                    <div className="hidden sm:block w-px h-12 bg-stone-200" />
+                    <div className="flex items-center gap-3">
+                      <p className="font-albert text-[14px] text-stone-500">Also enjoying</p>
+                      <div className="flex items-center gap-2">
+                        {cookingInsights.topCuisines.slice(1, 3).map(([cuisine]) => (
+                          <span
+                            key={cuisine}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white rounded-full"
+                          >
+                            {CUISINE_ICON_MAP[cuisine] && (
+                              <Image
+                                src={CUISINE_ICON_MAP[cuisine]}
+                                alt={`${cuisine} icon`}
+                                width={16}
+                                height={16}
+                                quality={100}
+                                unoptimized={true}
+                                className="w-4 h-4 object-contain"
+                                draggable={false}
+                              />
+                            )}
+                            <span className="font-albert text-[13px] text-stone-700">{cuisine}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Main Content Area */}
       <div className="max-w-6xl mx-auto px-4 md:px-8 pt-8 md:pt-12 pb-12 md:pb-16">
-        {/* Cooking Insights Section */}
-        {bookmarkedRecipes.length > 0 && (
-          <div className={`mb-8 ${isPageLoaded ? 'page-fade-in-up' : 'opacity-0'}`}>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
-              {/* Cooked Stats */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-stone-100">
-                  <ChefHat className="w-5 h-5 text-stone-600" />
-                </div>
-                <div>
-                  <p className="font-albert text-[14px] text-stone-500">Cooked</p>
-                  <p className="font-albert text-[20px] font-medium text-stone-900">
-                    {cookingInsights.cookedCount} of {cookingInsights.totalSaved}
-                  </p>
-                </div>
-              </div>
 
-              {/* Divider */}
-              <div className="hidden sm:block w-px h-12 bg-stone-200" />
-
-              {/* Top Cuisine */}
-              {cookingInsights.topCuisine && (
-                <div className="flex items-center gap-3">
-                  {CUISINE_ICON_MAP[cookingInsights.topCuisine] && (
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-stone-100">
-                      <Image
-                        src={CUISINE_ICON_MAP[cookingInsights.topCuisine]}
-                        alt={`${cookingInsights.topCuisine} icon`}
-                        width={24}
-                        height={24}
-                        quality={100}
-                        unoptimized={true}
-                        className="w-6 h-6 object-contain"
-                        draggable={false}
-                      />
-                    </div>
-                  )}
-                  <div>
-                    <p className="font-albert text-[14px] text-stone-500">Top Cuisine</p>
-                    <p className="font-albert text-[20px] font-medium text-stone-900">
-                      {cookingInsights.topCuisine}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Additional Cuisines Preview */}
-              {cookingInsights.topCuisines.length > 1 && (
-                <>
-                  <div className="hidden sm:block w-px h-12 bg-stone-200" />
-                  <div className="flex items-center gap-3">
-                    <p className="font-albert text-[14px] text-stone-500">Also enjoying</p>
-                    <div className="flex items-center gap-2">
-                      {cookingInsights.topCuisines.slice(1, 3).map(([cuisine]) => (
-                        <span
-                          key={cuisine}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-stone-100 rounded-full"
-                        >
-                          {CUISINE_ICON_MAP[cuisine] && (
-                            <Image
-                              src={CUISINE_ICON_MAP[cuisine]}
-                              alt={`${cuisine} icon`}
-                              width={16}
-                              height={16}
-                              quality={100}
-                              unoptimized={true}
-                              className="w-4 h-4 object-contain"
-                              draggable={false}
-                            />
-                          )}
-                          <span className="font-albert text-[13px] text-stone-700">{cuisine}</span>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Search Bar with View Toggle and Sort - Side by Side Layout */}
+        {/* Search Bar - Always visible */}
         <div className={`mb-6 ${isPageLoaded ? 'page-fade-in-up page-fade-delay-1' : 'opacity-0'}`}>
           <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 w-full">
-            {/* Search Bar - Left Side */}
+            {/* Search Bar */}
             <div className="flex-1 min-w-0">
               <div className="ingredients-search-wrapper">
                 <Magnifer className="ingredients-search-icon" />
@@ -579,8 +579,6 @@ function SavedRecipesContent() {
                   placeholder="Search saved recipes..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => setIsSearchFocused(true)}
-                  onBlur={() => setIsSearchFocused(false)}
                   className="ingredients-search-input"
                   aria-label="Search saved recipes"
                 />
@@ -597,116 +595,137 @@ function SavedRecipesContent() {
               </div>
             </div>
 
-            {/* View Toggle and Sort - Right Side */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              {/* View Mode Toggle */}
-              <div className="flex items-center gap-1 bg-stone-100 rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded transition-colors ${
-                    viewMode === 'list'
-                      ? 'bg-white text-stone-900 shadow-sm'
-                      : 'text-stone-600 hover:text-stone-900'
-                  }`}
-                  aria-label="List view"
-                >
-                  <List className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded transition-colors ${
-                    viewMode === 'grid'
-                      ? 'bg-white text-stone-900 shadow-sm'
-                      : 'text-stone-600 hover:text-stone-900'
-                  }`}
-                  aria-label="Grid view"
-                >
-                  <Grid3x3 className="w-4 h-4" />
-                </button>
+            {/* View Toggle and Sort - Hidden when searching */}
+            {!isSearching && (
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {/* View Mode Toggle */}
+                <div className="flex items-center gap-1 bg-stone-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 rounded transition-colors ${
+                      viewMode === 'list'
+                        ? 'bg-white text-stone-900 shadow-sm'
+                        : 'text-stone-600 hover:text-stone-900'
+                    }`}
+                    aria-label="List view"
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 rounded transition-colors ${
+                      viewMode === 'grid'
+                        ? 'bg-white text-stone-900 shadow-sm'
+                        : 'text-stone-600 hover:text-stone-900'
+                    }`}
+                    aria-label="Grid view"
+                  >
+                    <Grid3x3 className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Sort Dropdown */}
+                <DropdownMenu>
+                  <TooltipProvider delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9 text-stone-600 hover:text-stone-900 hover:bg-stone-100"
+                            aria-label="Sort recipes"
+                          >
+                            <Sort className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom">
+                        Sort recipes
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>Sort By</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuRadioGroup value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)}>
+                      <DropdownMenuRadioItem value="date-newest">
+                        Date (Newest)
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="date-oldest">
+                        Date (Oldest)
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="name-asc">
+                        Name (A-Z)
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="name-desc">
+                        Name (Z-A)
+                      </DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="cuisine">
+                        Cuisine
+                      </DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-              
-              {/* Sort Dropdown */}
-              <DropdownMenu>
-                <TooltipProvider delayDuration={300}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 text-stone-600 hover:text-stone-900 hover:bg-stone-100"
-                          aria-label="Sort recipes"
-                        >
-                          <Sort className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      Sort recipes
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>Sort By</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuRadioGroup value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)}>
-                    <DropdownMenuRadioItem value="date-newest">
-                      Date (Newest)
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="date-oldest">
-                      Date (Oldest)
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="name-asc">
-                      Name (A-Z)
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="name-desc">
-                      Name (Z-A)
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem value="cuisine">
-                      Cuisine
-                    </DropdownMenuRadioItem>
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            )}
           </div>
         </div>
 
-        {/* Cuisine Filter Pills and Cooked Toggle - Below Search Bar */}
-        {/* Extend to container edges to align pills with search bar and recipe items */}
-        <div className={`mb-6 md:mb-8 overflow-visible -mx-4 md:-mx-8 ${isPageLoaded ? 'page-fade-in-up page-fade-delay-1' : 'opacity-0'}`}>
-          <CuisinePills
-            onCuisineChange={handleCuisineChange}
-            showCookedOnly={showCookedOnly}
-            onShowCookedOnlyChange={setShowCookedOnly}
-          />
-        </div>
+        {/* Cuisine Filter Pills - Hidden when searching */}
+        <AnimatePresence>
+          {!isSearching && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="mb-6 md:mb-8 overflow-visible -mx-4 md:-mx-8"
+            >
+              <CuisinePills
+                onCuisineChange={handleCuisineChange}
+                showCookedOnly={showCookedOnly}
+                onShowCookedOnlyChange={setShowCookedOnly}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Recipe Display - animate in with delay (main content) */}
+        {/* Recipe Display */}
         <div className={`${isPageLoaded ? 'page-fade-in-up page-fade-delay-2' : 'opacity-0'}`}>
           {filteredRecipes.length === 0 && bookmarkedRecipes.length > 0 ? (
             <div className="text-center py-12">
-              {selectedCuisines.length > 0 && (
-                <div className="flex justify-center gap-2 mb-6">
-                  {selectedCuisines.slice(0, 3).map(cuisine => (
-                    CUISINE_ICON_MAP[cuisine] && (
-                      <Image
-                        key={cuisine}
-                        src={CUISINE_ICON_MAP[cuisine]}
-                        alt={`${cuisine} cuisine icon`}
-                        width={80}
-                        height={80}
-                        quality={100}
-                        unoptimized={true}
-                        className="w-16 h-16 object-contain"
-                      />
-                    )
-                  ))}
-                </div>
+              {isSearching ? (
+                <p className="font-albert text-[16px] text-stone-600">
+                  No recipes found matching &quot;{searchQuery.trim()}&quot;
+                </p>
+              ) : selectedCuisines.length > 0 ? (
+                <>
+                  <div className="flex justify-center gap-2 mb-6">
+                    {selectedCuisines.slice(0, 3).map(cuisine => (
+                      CUISINE_ICON_MAP[cuisine] && (
+                        <Image
+                          key={cuisine}
+                          src={CUISINE_ICON_MAP[cuisine]}
+                          alt={`${cuisine} cuisine icon`}
+                          width={80}
+                          height={80}
+                          quality={100}
+                          unoptimized={true}
+                          className="w-16 h-16 object-contain"
+                        />
+                      )
+                    ))}
+                  </div>
+                  <p className="font-albert text-[16px] text-stone-600">
+                    No bookmarked recipes found for {selectedCuisines.join(', ')}
+                  </p>
+                </>
+              ) : (
+                <p className="font-albert text-[16px] text-stone-600">
+                  No bookmarked recipes found
+                </p>
               )}
-              <p className="font-albert text-[16px] text-stone-600">
-                No bookmarked recipes found{selectedCuisines.length > 0 ? ` for ${selectedCuisines.join(', ')}` : ''}
-              </p>
             </div>
           ) : bookmarkedRecipes.length === 0 ? (
             <div className="text-center py-12">
@@ -714,7 +733,7 @@ function SavedRecipesContent() {
                 No saved recipes yet. Bookmark a recipe to see it here!
               </p>
             </div>
-          ) : viewMode === 'list' ? (
+          ) : viewMode === 'list' || isSearching ? (
             <div className="flex flex-col">
               {filteredRecipes.map((recipe) => (
                 <RecipeListItem
