@@ -429,7 +429,7 @@ function SavedRecipesContent() {
           {/* Title and Subtitle Section */}
           <div className="w-full pb-8 md:pb-12">
             <h1 className="font-domine text-[28px] md:text-[32px] font-normal text-black leading-[1.1] tracking-tight mb-2">
-              Saved Recipes
+              Cookbook
             </h1>
             <p className="font-albert text-[14px] text-stone-600">
               {bookmarkedRecipes.length} {bookmarkedRecipes.length === 1 ? 'recipe' : 'recipes'} saved
