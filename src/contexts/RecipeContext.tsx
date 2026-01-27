@@ -85,7 +85,13 @@ export interface ParsedRecipe {
   };
   ingredients: {
     groupName: string;
-    ingredients: { amount: string; units: string; ingredient: string }[];
+    ingredients: {
+      amount: string;
+      units: string;
+      ingredient: string;
+      description?: string;
+      substitutions?: string[];
+    }[];
   }[];
   // Instructions can be legacy strings or new objects with titles
   instructions: Array<string | InstructionStep>;

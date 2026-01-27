@@ -53,7 +53,13 @@ Required JSON structure:
     {
       "groupName": "string",
       "ingredients": [
-        {"amount": "string", "units": "string", "ingredient": "string"}
+        {
+          "amount": "string",
+          "units": "string",
+          "ingredient": "string",
+          "description": "One sentence (max 80 chars) explaining flavor/texture contribution",
+          "substitutions": ["alternative1", "alternative2"]
+        }
       ]
     }
   ]
@@ -110,6 +116,24 @@ INGREDIENT NAMES:
 - Include all descriptors: "all-purpose flour", "unsalted butter", "large eggs"
 - Do NOT abbreviate, simplify, or modify names
 - If a size is part of the ingredient name (e.g., "6-inch tortillas"), include it in the ingredient name and leave units blank
+
+INGREDIENT DESCRIPTION (AI-GENERATED):
+- For EACH ingredient, generate a brief one-sentence description (max 80 characters)
+- Explain what flavor, texture, or role this ingredient contributes to the dish
+- Focus on culinary purpose: "Adds umami depth and savory richness"
+- Examples:
+  - gochujang: "Adds spicy-sweet depth and fermented complexity"
+  - heavy cream: "Creates silky richness and balances heat"
+  - parmesan: "Provides salty, nutty finish and umami"
+
+INGREDIENT SUBSTITUTIONS (AI-GENERATED):
+- For EACH ingredient, suggest 1-3 realistic substitutions
+- Only include substitutions that would work in this specific recipe
+- Use empty array [] if no good substitutions exist
+- Examples:
+  - gochujang: ["sriracha mixed with miso", "sambal oelek"]
+  - heavy cream: ["coconut cream", "half-and-half"]
+  - pasta water: []
 
 INGREDIENT GROUPS - MANDATORY GROUPING RULES:
 You MUST create logical ingredient groupings for EVERY recipe. Do NOT default to a single "Main" group unless the recipe truly has no logical way to group ingredients.
@@ -219,25 +243,25 @@ Example showing logical ingredient groupings (ALWAYS create groups):
     {
       "groupName": "For the sauce",
       "ingredients": [
-        {"amount": "2", "units": "tablespoons", "ingredient": "unsalted butter"},
-        {"amount": "2", "units": "cloves", "ingredient": "garlic"},
-        {"amount": "2", "units": "tablespoons", "ingredient": "gochujang"},
-        {"amount": "1/2", "units": "cup", "ingredient": "heavy cream"},
-        {"amount": "1", "units": "teaspoon", "ingredient": "sugar"}
+        {"amount": "2", "units": "tablespoons", "ingredient": "unsalted butter", "description": "Creates silky base and rich mouthfeel", "substitutions": ["ghee", "olive oil"]},
+        {"amount": "2", "units": "cloves", "ingredient": "garlic", "description": "Builds aromatic foundation", "substitutions": ["garlic powder"]},
+        {"amount": "2", "units": "tablespoons", "ingredient": "gochujang", "description": "Adds spicy-sweet depth", "substitutions": ["sriracha mixed with miso"]},
+        {"amount": "1/2", "units": "cup", "ingredient": "heavy cream", "description": "Creates richness and balances heat", "substitutions": ["coconut cream"]},
+        {"amount": "1", "units": "teaspoon", "ingredient": "sugar", "description": "Rounds out flavors", "substitutions": ["honey"]}
       ]
     },
     {
       "groupName": "Main ingredients",
       "ingredients": [
-        {"amount": "8", "units": "ounces", "ingredient": "pasta"},
-        {"amount": "1/2", "units": "cup", "ingredient": "pasta water"}
+        {"amount": "8", "units": "ounces", "ingredient": "pasta", "description": "The starchy canvas for the sauce", "substitutions": ["linguine", "udon"]},
+        {"amount": "1/2", "units": "cup", "ingredient": "pasta water", "description": "Emulsifies the sauce", "substitutions": []}
       ]
     },
     {
       "groupName": "For garnish",
       "ingredients": [
-        {"amount": "2", "units": "stalks", "ingredient": "green onion"},
-        {"amount": "as needed", "units": "", "ingredient": "parmesan cheese"}
+        {"amount": "2", "units": "stalks", "ingredient": "green onion", "description": "Adds fresh crunch", "substitutions": ["chives"]},
+        {"amount": "as needed", "units": "", "ingredient": "parmesan cheese", "description": "Provides salty, nutty finish", "substitutions": ["pecorino"]}
       ]
     }
   ]
@@ -250,17 +274,17 @@ Example showing multiple groups:
     {
       "groupName": "For the cake",
       "ingredients": [
-        {"amount": "2 1/2", "units": "cups", "ingredient": "all-purpose flour"},
-        {"amount": "1 3/4", "units": "cups", "ingredient": "granulated sugar"},
-        {"amount": "3/4", "units": "cup", "ingredient": "unsweetened cocoa powder"}
+        {"amount": "2 1/2", "units": "cups", "ingredient": "all-purpose flour", "description": "Provides structure", "substitutions": ["cake flour"]},
+        {"amount": "1 3/4", "units": "cups", "ingredient": "granulated sugar", "description": "Adds sweetness and moisture", "substitutions": ["coconut sugar"]},
+        {"amount": "3/4", "units": "cup", "ingredient": "unsweetened cocoa powder", "description": "Deep chocolate flavor", "substitutions": ["dutch-process cocoa"]}
       ]
     },
     {
       "groupName": "For the frosting",
       "ingredients": [
-        {"amount": "½", "units": "cup", "ingredient": "unsalted butter"},
-        {"amount": "2 1/2", "units": "cups", "ingredient": "powdered sugar"},
-        {"amount": "¼", "units": "teaspoon", "ingredient": "vanilla extract"}
+        {"amount": "½", "units": "cup", "ingredient": "unsalted butter", "description": "Creamy base for frosting", "substitutions": ["vegan butter"]},
+        {"amount": "2 1/2", "units": "cups", "ingredient": "powdered sugar", "description": "Sweetness and texture", "substitutions": []},
+        {"amount": "¼", "units": "teaspoon", "ingredient": "vanilla extract", "description": "Enhances chocolate flavor", "substitutions": ["almond extract"]}
       ]
     }
   ]

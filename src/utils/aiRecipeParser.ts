@@ -82,6 +82,8 @@ export interface Ingredient {
   amount: string;
   units: string;
   ingredient: string;
+  description?: string;      // One sentence explaining flavor/texture contribution (max 80 chars)
+  substitutions?: string[];  // Array of 1-3 realistic alternatives (empty array if none)
 }
 
 /**
@@ -594,7 +596,13 @@ Required JSON structure:
     {
       "groupName": "string",
       "ingredients": [
-        {"amount": "string", "units": "string", "ingredient": "string"}
+        {
+          "amount": "string",
+          "units": "string",
+          "ingredient": "string",
+          "description": "One sentence (max 80 chars) explaining flavor/texture contribution",
+          "substitutions": ["alternative1", "alternative2"]
+        }
       ]
     }
   ],
@@ -715,6 +723,30 @@ INGREDIENT NAMES:
 - Copy the ingredient name EXACTLY as written in HTML
 - Include all descriptors: "all-purpose flour", "unsalted butter", "large eggs"
 - Do NOT abbreviate, simplify, or modify names
+
+INGREDIENT DESCRIPTION (AI-GENERATED):
+- For EACH ingredient, generate a brief one-sentence description (max 80 characters)
+- Explain what flavor, texture, or role this ingredient contributes to the dish
+- Focus on culinary purpose: "Adds umami depth and savory richness"
+- Keep it informative and concise, not instructional
+- Examples:
+  - gochujang: "Adds spicy-sweet depth and fermented complexity"
+  - heavy cream: "Creates silky richness and balances heat"
+  - parmesan: "Provides salty, nutty finish and umami"
+  - garlic: "Builds aromatic foundation and savory base"
+  - pasta: "The starchy canvas that absorbs the sauce"
+
+INGREDIENT SUBSTITUTIONS (AI-GENERATED):
+- For EACH ingredient, suggest 1-3 realistic substitutions
+- Only include substitutions that would work in this specific recipe
+- Use empty array [] if no good substitutions exist (e.g., for the main protein in a specific dish)
+- Prioritize common, accessible alternatives
+- Examples:
+  - gochujang: ["sriracha mixed with miso", "sambal oelek", "red pepper flakes with soy sauce"]
+  - heavy cream: ["coconut cream", "half-and-half"]
+  - parmesan: ["pecorino romano", "grana padano"]
+  - unsalted butter: ["salted butter (reduce added salt)", "ghee"]
+  - spaghetti: ["linguine", "fettuccine", "bucatini"]
 
 INGREDIENT GROUPS - MANDATORY GROUPING RULES:
 You MUST create logical ingredient groupings for EVERY recipe. Do NOT default to a single "Main" group unless the recipe truly has no logical way to group ingredients.
@@ -890,25 +922,25 @@ Example showing logical ingredient groupings (ALWAYS create groups):
     {
       "groupName": "For the sauce",
       "ingredients": [
-        {"amount": "2", "units": "tablespoons", "ingredient": "unsalted butter"},
-        {"amount": "2", "units": "cloves", "ingredient": "garlic"},
-        {"amount": "2", "units": "tablespoons", "ingredient": "gochujang"},
-        {"amount": "1/2", "units": "cup", "ingredient": "heavy cream"},
-        {"amount": "1", "units": "teaspoon", "ingredient": "sugar"}
+        {"amount": "2", "units": "tablespoons", "ingredient": "unsalted butter", "description": "Creates silky base and rich mouthfeel", "substitutions": ["ghee", "olive oil"]},
+        {"amount": "2", "units": "cloves", "ingredient": "garlic", "description": "Builds aromatic foundation", "substitutions": ["garlic powder", "shallots"]},
+        {"amount": "2", "units": "tablespoons", "ingredient": "gochujang", "description": "Adds spicy-sweet depth and fermented complexity", "substitutions": ["sriracha mixed with miso", "sambal oelek"]},
+        {"amount": "1/2", "units": "cup", "ingredient": "heavy cream", "description": "Creates silky richness and balances heat", "substitutions": ["coconut cream", "half-and-half"]},
+        {"amount": "1", "units": "teaspoon", "ingredient": "sugar", "description": "Rounds out flavors and tempers spice", "substitutions": ["honey", "maple syrup"]}
       ]
     },
     {
       "groupName": "Main ingredients",
       "ingredients": [
-        {"amount": "8", "units": "ounces", "ingredient": "pasta"},
-        {"amount": "1/2", "units": "cup", "ingredient": "pasta water"}
+        {"amount": "8", "units": "ounces", "ingredient": "pasta", "description": "The starchy canvas that absorbs the sauce", "substitutions": ["linguine", "udon noodles"]},
+        {"amount": "1/2", "units": "cup", "ingredient": "pasta water", "description": "Starchy liquid that emulsifies the sauce", "substitutions": []}
       ]
     },
     {
       "groupName": "For garnish",
       "ingredients": [
-        {"amount": "2", "units": "stalks", "ingredient": "green onion"},
-        {"amount": "as needed", "units": "", "ingredient": "parmesan cheese"}
+        {"amount": "2", "units": "stalks", "ingredient": "green onion", "description": "Adds fresh crunch and mild onion bite", "substitutions": ["chives", "thinly sliced shallots"]},
+        {"amount": "as needed", "units": "", "ingredient": "parmesan cheese", "description": "Provides salty, nutty finish and umami", "substitutions": ["pecorino romano", "nutritional yeast"]}
       ]
     }
   ],
