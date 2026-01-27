@@ -391,7 +391,7 @@ export function IngredientsHeader({
                 className="ml-2 flex-shrink-0 p-1 rounded transition-colors"
                 aria-label="Clear search"
               >
-                <X className="w-4 h-4 text-stone-600 hover:text-stone-900 transition-colors duration-150 ease" />
+                <X className="w-4 h-4 text-stone-400 hover:text-stone-600 transition-colors duration-150 ease" />
               </button>
             )}
           </div>
