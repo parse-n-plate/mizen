@@ -1040,7 +1040,7 @@ export default function ParsedRecipePage({
                       <div className="flex items-center gap-3 flex-wrap">
                         {/* Prep Time Card */}
                         {parsedRecipe.prepTimeMinutes !== undefined && parsedRecipe.prepTimeMinutes !== null && parsedRecipe.prepTimeMinutes > 0 && (
-                          <div className="flex flex-col bg-stone-200/30 px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
+                          <div className="flex flex-col bg-white px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
                             <p className="font-albert text-[13px] md:text-[14px] text-stone-500 leading-tight mb-0.5">
                               Prep
                             </p>
@@ -1052,7 +1052,7 @@ export default function ParsedRecipePage({
                         
                         {/* Cook Time Card */}
                         {parsedRecipe.cookTimeMinutes !== undefined && parsedRecipe.cookTimeMinutes !== null && parsedRecipe.cookTimeMinutes > 0 && (
-                          <div className="flex flex-col bg-stone-200/30 px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
+                          <div className="flex flex-col bg-white px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
                             <p className="font-albert text-[13px] md:text-[14px] text-stone-500 leading-tight mb-0.5">
                               Cooking
                             </p>
@@ -1064,7 +1064,7 @@ export default function ParsedRecipePage({
                         
                         {/* Total Time Card - only show if prep and cook aren't both available */}
                         {parsedRecipe.totalTimeMinutes !== undefined && parsedRecipe.totalTimeMinutes !== null && parsedRecipe.totalTimeMinutes > 0 && !parsedRecipe.prepTimeMinutes && !parsedRecipe.cookTimeMinutes && (
-                          <div className="flex flex-col bg-stone-200/30 px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
+                          <div className="flex flex-col bg-white px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
                             <p className="font-albert text-[13px] md:text-[14px] text-stone-500 leading-tight mb-0.5">
                               Total
                             </p>
@@ -1077,7 +1077,7 @@ export default function ParsedRecipePage({
                         {/* Servings Card - shows current servings (updated when scaled) */}
                         {/* Only show if originalServings is defined (we know the actual serving count) */}
                         {originalServings !== undefined && originalServings !== null && originalServings > 0 && servings !== undefined && servings !== null && servings > 0 && (
-                          <div className="flex flex-col bg-stone-200/30 px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
+                          <div className="flex flex-col bg-white px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
                             <p className="font-albert text-[13px] md:text-[14px] text-stone-500 leading-tight mb-0.5">
                               Servings
                             </p>
