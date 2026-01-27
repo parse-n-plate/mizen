@@ -1133,7 +1133,7 @@ export default function ParsedRecipePage({
                         className="folder-tab-trigger group flex-1 h-[58px] md:h-[64px]"
                       >
                         <motion.div
-                          className="relative shrink-0 w-8 h-8 md:w-9 md:h-9 group-hover:scale-105 group-hover:rotate-[-5deg] transition-transform duration-200"
+                          className="relative shrink-0 w-8 h-8 md:w-9 md:h-9 group-hover:rotate-[-5deg] transition-transform duration-200"
                         >
                           <img
                             alt="Prep icon"
