@@ -291,9 +291,10 @@ export function highlightQuantitiesAndIngredients(
 
   // Pattern to match time expressions: numbers (including ranges, decimals, and "to" connectors) followed by time units
   // Matches: "5 minutes", "10 min", "30 seconds", "2-3 minutes", "2–3 minutes" (en dash), "5 to 7 minutes", "about 5 to 7 minutes", "2.5 minutes", "2 to 2.5 minutes", etc.
+  // Also handles modifiers like "more", "additional", "extra" (e.g., "15 more minutes")
   // Includes ranges with "to", hyphens, or en dashes, and optional "about" prefix
   // Note: Put plural forms FIRST in alternation to match them before singular forms
-  const timePattern = /(?:about\s+)?(\d+(?:\.\d+)?(?:\s+\d+\/\d+|\/\d+)?(?:\s*(?:to|–|-)\s*\d+(?:\.\d+)?(?:\s+\d+\/\d+|\/\d+)?)?)\s*(minutes|minute|mins|min|seconds|second|secs|sec|hours|hour|hrs|hr|h)/gi;
+  const timePattern = /(?:about\s+)?(\d+(?:\.\d+)?(?:\s+\d+\/\d+|\/\d+)?(?:\s*(?:to|–|-)\s*\d+(?:\.\d+)?(?:\s+\d+\/\d+|\/\d+)?)?)\s*(?:more\s+|additional\s+|extra\s+)?(minutes|minute|mins|min|seconds|second|secs|sec|hours|hour|hrs|hr|h)/gi;
 
   // Find all ingredient matches in the text
   const matchedIngredients = findIngredientsInText(text, allIngredients);
