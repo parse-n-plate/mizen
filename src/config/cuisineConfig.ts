@@ -21,10 +21,23 @@ export const SUPPORTED_CUISINES = [
   'Japanese',
   'Korean',
   'Hawaiian',
+  'Thai',
+  'Vietnamese',
+  'Greek',
+  'American',
+  'Southern',
+  'Spanish',
+  'Middle Eastern',
+  'Caribbean',
+  'Ethiopian',
 ] as const;
+
+// Placeholder icon for cuisines without custom icons
+export const PLACEHOLDER_CUISINE_ICON = '/assets/cusineIcons/Placeholder_Icon.svg';
 
 // Mapping cuisine names to their icon file paths
 // Note: Meditareain_Icon.png has a typo in the filename but matches Mediterranean cuisine
+// Cuisines without icons will use the placeholder
 export const CUISINE_ICON_MAP: Record<string, string> = {
   'Chinese': '/assets/cusineIcons/Chinese_Icon.png',
   'Italian': '/assets/cusineIcons/Italian_Icon.png',
@@ -35,6 +48,15 @@ export const CUISINE_ICON_MAP: Record<string, string> = {
   'Japanese': '/assets/cusineIcons/Japanese_Icon.png',
   'Korean': '/assets/cusineIcons/Korean_Icon.png',
   'Hawaiian': '/assets/cusineIcons/Hawaiian_Icon.png',
+  'Thai': PLACEHOLDER_CUISINE_ICON,
+  'Vietnamese': PLACEHOLDER_CUISINE_ICON,
+  'Greek': PLACEHOLDER_CUISINE_ICON,
+  'American': PLACEHOLDER_CUISINE_ICON,
+  'Southern': PLACEHOLDER_CUISINE_ICON,
+  'Spanish': PLACEHOLDER_CUISINE_ICON,
+  'Middle Eastern': PLACEHOLDER_CUISINE_ICON,
+  'Caribbean': PLACEHOLDER_CUISINE_ICON,
+  'Ethiopian': PLACEHOLDER_CUISINE_ICON,
 };
 
 // TypeScript type for supported cuisine names
