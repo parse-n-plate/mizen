@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { findIngredientsInText, IngredientInfo } from '@/utils/ingredientMatcher';
+import { findIngredientsInText, IngredientInfo, IngredientMatch } from '@/utils/ingredientMatcher';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function cn(...inputs: ClassValue[]) {
@@ -352,63 +352,47 @@ export function highlightQuantitiesAndIngredients(
     });
   }
 
-  // Find all ingredient matches (including plural forms)
+  // Find all ingredient matches using matchedTerms from IngredientMatch
   const lowerText = text.toLowerCase();
   const ingredientMatches = new Set<string>(); // Track matches to avoid duplicates
-  
-  matchedIngredients.forEach((ingredient) => {
-    const lowerName = ingredient.name.toLowerCase();
-    
-    // Helper function to check if a position is a word boundary
-    const isWordBoundary = (pos: number, length: number): boolean => {
-      const beforeChar = pos > 0 ? lowerText[pos - 1] : ' ';
-      const afterChar = pos + length < lowerText.length ? lowerText[pos + length] : ' ';
-      // Word boundary: before and after are not letters
-      return !/[a-z]/.test(beforeChar) && !/[a-z]/.test(afterChar);
-    };
-    
-    // Helper function to add match if it's a whole word and not duplicate
-    const addMatchIfValid = (start: number, end: number) => {
-      const matchKey = `${start}-${end}`;
-      if (!ingredientMatches.has(matchKey) && isWordBoundary(start, end - start)) {
-        ingredientMatches.add(matchKey);
-        const actualText = text.substring(start, end);
-        matches.push({
-          start,
-          end,
-          text: actualText,
-          type: 'ingredient',
-          ingredientInfo: ingredient, // Store ingredient info for tooltip
-        });
-      }
-    };
-    
-    // Find all occurrences of this ingredient name (exact match)
-    let searchIndex = 0;
-    while ((searchIndex = lowerText.indexOf(lowerName, searchIndex)) !== -1) {
-      const endIndex = searchIndex + lowerName.length;
-      addMatchIfValid(searchIndex, endIndex);
-      searchIndex = endIndex;
-    }
 
-    // Also check for plural/singular variations
-    // If ingredient name ends with 's', also search for singular form
-    if (lowerName.endsWith('s') && lowerName.length > 1) {
-      const singular = lowerName.slice(0, -1);
-      searchIndex = 0;
-      while ((searchIndex = lowerText.indexOf(singular, searchIndex)) !== -1) {
-        const afterIndex = searchIndex + singular.length;
-        addMatchIfValid(searchIndex, afterIndex);
-        searchIndex = afterIndex;
-      }
-    } else {
-      // If ingredient name doesn't end with 's', also search for plural form
-      const plural = lowerName + 's';
-      searchIndex = 0;
-      while ((searchIndex = lowerText.indexOf(plural, searchIndex)) !== -1) {
-        const afterIndex = searchIndex + plural.length;
-        addMatchIfValid(searchIndex, afterIndex);
-        searchIndex = afterIndex;
+  // Helper function to check if a position is a word boundary
+  const isWordBoundary = (pos: number, length: number): boolean => {
+    const beforeChar = pos > 0 ? lowerText[pos - 1] : ' ';
+    const afterChar = pos + length < lowerText.length ? lowerText[pos + length] : ' ';
+    // Word boundary: before and after are not letters
+    return !/[a-z]/.test(beforeChar) && !/[a-z]/.test(afterChar);
+  };
+
+  // Helper function to add match if it's a whole word and not duplicate
+  const addMatchIfValid = (start: number, end: number, ingredientInfo: IngredientInfo) => {
+    const matchKey = `${start}-${end}`;
+    if (!ingredientMatches.has(matchKey) && isWordBoundary(start, end - start)) {
+      ingredientMatches.add(matchKey);
+      const actualText = text.substring(start, end);
+      matches.push({
+        start,
+        end,
+        text: actualText,
+        type: 'ingredient',
+        ingredientInfo, // Store ingredient info for tooltip
+      });
+    }
+  };
+
+  matchedIngredients.forEach((ingredient) => {
+    // Use matchedTerms from IngredientMatch for highlighting (includes fuzzy/synonym matches)
+    const match = ingredient as IngredientMatch;
+    const termsToHighlight = match.matchedTerms || [ingredient.name];
+
+    for (const term of termsToHighlight) {
+      const lowerTerm = term.toLowerCase();
+      let searchIndex = 0;
+
+      while ((searchIndex = lowerText.indexOf(lowerTerm, searchIndex)) !== -1) {
+        const endIndex = searchIndex + lowerTerm.length;
+        addMatchIfValid(searchIndex, endIndex, ingredient);
+        searchIndex = endIndex;
       }
     }
   });
