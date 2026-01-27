@@ -303,8 +303,8 @@ export default function CuisinePills({ onCuisineChange, onQuickFilterChange, sho
                       <button
                         className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full font-albert text-[13px] font-medium transition-colors duration-150 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 ${
                           hasSelections
-                            ? 'bg-stone-900 text-white'
-                            : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                            ? 'bg-stone-900 text-white data-[state=open]:bg-stone-800'
+                            : 'bg-stone-100 text-stone-700 hover:bg-stone-200 data-[state=open]:bg-stone-200 data-[state=open]:text-stone-900'
                         }`}
                       >
                         {hasSelections ? (
@@ -312,7 +312,7 @@ export default function CuisinePills({ onCuisineChange, onQuickFilterChange, sho
                         ) : (
                           group.label
                         )}
-                        <ChevronDown className={`w-3.5 h-3.5 ${hasSelections ? 'text-white' : 'text-stone-500'}`} />
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 [[data-state=open]>&]:rotate-180 ${hasSelections ? 'text-white' : 'text-stone-500'}`} />
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-48">

@@ -902,27 +902,12 @@ export default function ParsedRecipePage({
                       {/* Settings Button and Popover */}
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <motion.button
-                            className="p-2 rounded-full transition-colors text-stone-400 hover:bg-stone-50 data-[state=open]:bg-stone-100 data-[state=open]:text-stone-900"
+                          <button
+                            className="p-2 rounded-full transition-all duration-200 text-stone-400 hover:bg-stone-50 hover:scale-105 active:scale-95 data-[state=open]:bg-stone-100 data-[state=open]:text-stone-900"
                             aria-label="Recipe settings"
-                            initial={{ scale: 1, rotate: 0 }}
-                            whileHover={shouldReduceMotion ? {} : {
-                              scale: 1.08,
-                              rotate: 3,
-                              transition: {
-                                duration: 0.2,
-                                ease: [0.25, 0.46, 0.45, 0.94]
-                              }
-                            }}
-                            whileTap={shouldReduceMotion ? {} : {
-                              scale: 0.97,
-                              rotate: 0,
-                              transition: { duration: 0.1 }
-                            }}
-                            animate={{ scale: 1, rotate: 0 }}
                           >
                             <Settings weight="Bold" className="w-6 h-6" />
-                          </motion.button>
+                          </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-60">
                           <DropdownMenuItem onSelect={handleCopyLink}>
