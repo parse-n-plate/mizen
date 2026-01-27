@@ -2,7 +2,6 @@ import React from 'react';
 import type { Metadata } from 'next';
 import { Domine, Albert_Sans } from 'next/font/google';
 import Sidebar from '@/components/ui/Sidebar';
-import Footer from '@/components/ui/footer';
 import { AdminSettingsProvider } from '@/contexts/AdminSettingsContext';
 import { RecipeProvider } from '@/contexts/RecipeContext';
 import { ParsedRecipesProvider } from '@/contexts/ParsedRecipesContext';
@@ -68,7 +67,6 @@ export default function RootLayout({
                     <div className="flex-1 flex flex-col min-h-0">
                       <main className="flex-1 overflow-y-auto">
                         {children}
-                        <Footer />
                       </main>
                     </div>
                   </div>
