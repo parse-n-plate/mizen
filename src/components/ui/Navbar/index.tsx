@@ -63,12 +63,6 @@ export default function Navbar() {
               }`}>
                 Saved
               </span>
-              {/* Badge indicator showing count when there are saved recipes */}
-              {hasSavedRecipes && (
-                <span className="font-albert flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 text-xs font-medium text-white bg-stone-500 rounded-full">
-                  {bookmarkedRecipeIds.length}
-                </span>
-              )}
             </Link>
           </div>
         )}

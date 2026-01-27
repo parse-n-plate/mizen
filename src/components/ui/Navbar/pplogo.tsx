@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 export default function PPLogo() {
   return (
-    <div className="w-14 h-14 flex items-center justify-center transition-all duration-300 ease-in-out group-hover:scale-110 group-hover:-rotate-12 group-active:scale-95">
+    <div className="w-14 h-14 flex items-center justify-center">
       <Image
         src="/assets/icons/Fish Logo.svg"
         alt="Parse and Plate Logo"

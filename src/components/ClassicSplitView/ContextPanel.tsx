@@ -7,6 +7,24 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { findIngredientsInText } from '@/utils/ingredientMatcher';
 import { useAdminSettings } from '@/contexts/AdminSettingsContext';
 
+/**
+ * Converts text to title case (capitalizes first letter of each word)
+ * Preserves numbers, fractions, and special characters
+ */
+function toTitleCase(text: string): string {
+  if (!text) return text;
+  
+  // Split by word boundaries, preserving spaces and punctuation
+  return text.replace(/\b\w+\b/g, (word) => {
+    // Skip if it's a number or starts with a number/fraction symbol
+    if (/^[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]/.test(word)) {
+      return word;
+    }
+    // Capitalize first letter, lowercase the rest
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+  });
+}
+
 interface ContextPanelProps {
   step: RecipeStep;
   allIngredients: any[];
@@ -60,29 +78,14 @@ export default function ContextPanel({ step, allIngredients }: ContextPanelProps
                     onClick={() => handleIngredientClick(ing.name)}
                     className="group flex items-center justify-between py-2 border-b border-stone-100 last:border-0 cursor-pointer hover:bg-stone-50/50 -mx-4 px-4 rounded-lg transition-colors"
                   >
-                    <div className="flex items-baseline gap-3">
-                      <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">
-                        {ing.name}
-                      </p>
+                    <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">
+                      {toTitleCase(ing.name)}
+                    </p>
+                    {(ing.amount || ing.units) && (
                       <p className="font-albert text-[14px] text-stone-400">
-                        {ing.amount} {ing.units}
+                        {[ing.amount, ing.units].filter(Boolean).map(toTitleCase).join(' ')}
                       </p>
-                    </div>
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="text-stone-300"
-                      >
-                        <path d="M7 17L17 7M17 7H7M17 7V17" />
-                      </svg>
-                    </div>
+                    )}
                   </motion.div>
                 ))}
               </div>
@@ -103,23 +106,8 @@ export default function ContextPanel({ step, allIngredients }: ContextPanelProps
                     className="group flex items-center justify-between py-2 border-b border-stone-100 last:border-0 cursor-pointer hover:bg-stone-50/50 -mx-4 px-4 rounded-lg transition-colors"
                   >
                     <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">
-                      {ingredient}
+                      {toTitleCase(ingredient)}
                     </p>
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="text-stone-300"
-                      >
-                        <path d="M7 17L17 7M17 7H7M17 7V17" />
-                      </svg>
-                    </div>
                   </motion.div>
                 ))}
               </div>

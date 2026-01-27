@@ -306,7 +306,7 @@ export default function IngredientCard({
               animate={{ 
                 opacity: isChecked ? 0.5 : 1
               }}
-              className="ingredient-list-primary flex items-baseline gap-3 transition-all duration-[180ms]"
+              className="ingredient-list-primary flex items-baseline justify-between transition-all duration-[180ms]"
             >
               {/* Format: ingredient name first (medium, stone-800, 16px), then amount/units (regular, stone-400, 14px) */}
               {typeof ingredient === 'string' ? (
@@ -319,7 +319,7 @@ export default function IngredientCard({
                     return (
                       <>
                         <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{toTitleCase(parsed.name)}</p>
-                        <p className="font-albert text-[14px] text-stone-400 text-right ml-auto">{toTitleCase(amountDisplay)}</p>
+                        <p className="font-albert text-[14px] text-stone-400">{toTitleCase(amountDisplay)}</p>
                       </>
                     );
                   }
@@ -329,7 +329,7 @@ export default function IngredientCard({
                     return (
                       <>
                         <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{toTitleCase(parenMatch[1].trim())}</p>
-                        <p className="font-albert text-[14px] text-stone-400 text-right ml-auto">{toTitleCase(parenMatch[2])}</p>
+                        <p className="font-albert text-[14px] text-stone-400">{toTitleCase(parenMatch[2])}</p>
                       </>
                     );
                   }
@@ -341,7 +341,7 @@ export default function IngredientCard({
                     // Has amount/unit: show name first, then amount/unit
                     <>
                       <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{toTitleCase(ingredientNameOnly)}</p>
-                      <p className="font-albert text-[14px] text-stone-400 text-right ml-auto">{toTitleCase(ingredientAmount)}</p>
+                      <p className="font-albert text-[14px] text-stone-400">{toTitleCase(ingredientAmount)}</p>
                     </>
                   ) : (
                     // No amount/unit: show main name, check for parentheses
@@ -351,7 +351,7 @@ export default function IngredientCard({
                         return (
                           <>
                             <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">{toTitleCase(parenMatch[1].trim())}</p>
-                            <p className="font-albert text-[14px] text-stone-400 text-right ml-auto">{toTitleCase(parenMatch[2])}</p>
+                            <p className="font-albert text-[14px] text-stone-400">{toTitleCase(parenMatch[2])}</p>
                           </>
                         );
                       }
