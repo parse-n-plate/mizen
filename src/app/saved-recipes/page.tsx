@@ -10,6 +10,7 @@ import MenuDotsCircle from '@solar-icons/react/csr/ui/MenuDotsCircle';
 import Pen from '@solar-icons/react/csr/messages/Pen';
 import ClipboardText from '@solar-icons/react/csr/notes/ClipboardText';
 import Magnifer from '@solar-icons/react/csr/search/Magnifer';
+import Sort from '@solar-icons/react/csr/ui/Sort';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRecipe } from '@/contexts/RecipeContext';
 import CuisinePills, { type SelectedCuisines } from '@/components/ui/cuisine-pills';
@@ -26,8 +27,15 @@ import {
   DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 import type { ParsedRecipe } from '@/lib/storage';
+import ChefHat from '@solar-icons/react/csr/food/ChefHat';
 
 // Recipe List Item Component for List View
 interface RecipeListItemProps {
@@ -271,6 +279,10 @@ function SavedRecipesContent() {
   const [selectedRecipe, setSelectedRecipe] = useState<ParsedRecipe | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const [isPageLoaded, setIsPageLoaded] = useState<boolean>(false);
+  const [isSearchFocused, setIsSearchFocused] = useState<boolean>(false);
+
+  // Determine if we're in search mode (focused or has content)
+  const isSearchMode = isSearchFocused || searchQuery.trim().length > 0;
 
   // Persist view mode to localStorage
   useEffect(() => {
@@ -337,6 +349,40 @@ function SavedRecipesContent() {
   const bookmarkedRecipes = useMemo(() => {
     const recipes = getBookmarkedRecipes();
     return recipes.map(convertToRecipeCardData);
+  }, [getBookmarkedRecipes]);
+
+  // Calculate cooking insights from recipe data
+  const cookingInsights = useMemo(() => {
+    const recipes = getBookmarkedRecipes();
+
+    // Count cooked recipes (those with plate photos)
+    const cookedCount = recipes.filter(r =>
+      r.plate?.photos?.[0]?.data || r.plate?.photoData
+    ).length;
+
+    // Get cuisine frequency
+    const cuisineCounts: Record<string, number> = {};
+    recipes.forEach(recipe => {
+      recipe.cuisine?.forEach(c => {
+        cuisineCounts[c] = (cuisineCounts[c] || 0) + 1;
+      });
+    });
+
+    // Sort cuisines by frequency and get top ones
+    const sortedCuisines = Object.entries(cuisineCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3);
+
+    const topCuisine = sortedCuisines[0]?.[0] || null;
+    const topCuisineCount = sortedCuisines[0]?.[1] || 0;
+
+    return {
+      totalSaved: recipes.length,
+      cookedCount,
+      topCuisine,
+      topCuisineCount,
+      topCuisines: sortedCuisines,
+    };
   }, [getBookmarkedRecipes]);
 
   // Sort recipes
@@ -421,7 +467,7 @@ function SavedRecipesContent() {
               >
                 <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
                 {/* Desktop: Show "Back to Home" text */}
-                <span className="hidden md:inline font-albert text-[14px] font-medium">Back to Home</span>
+                <span className="hidden md:inline font-albert text-[var(--text-body-sm)] font-medium">Back to Home</span>
               </button>
             </div>
           </div>
@@ -440,6 +486,87 @@ function SavedRecipesContent() {
 
       {/* Main Content Area */}
       <div className="max-w-6xl mx-auto px-4 md:px-8 pt-8 md:pt-12 pb-12 md:pb-16">
+        {/* Cooking Insights Section */}
+        {bookmarkedRecipes.length > 0 && (
+          <div className={`mb-8 ${isPageLoaded ? 'page-fade-in-up' : 'opacity-0'}`}>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
+              {/* Cooked Stats */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-stone-100">
+                  <ChefHat className="w-5 h-5 text-stone-600" />
+                </div>
+                <div>
+                  <p className="font-albert text-[14px] text-stone-500">Cooked</p>
+                  <p className="font-albert text-[20px] font-medium text-stone-900">
+                    {cookingInsights.cookedCount} of {cookingInsights.totalSaved}
+                  </p>
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="hidden sm:block w-px h-12 bg-stone-200" />
+
+              {/* Top Cuisine */}
+              {cookingInsights.topCuisine && (
+                <div className="flex items-center gap-3">
+                  {CUISINE_ICON_MAP[cookingInsights.topCuisine] && (
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-stone-100">
+                      <Image
+                        src={CUISINE_ICON_MAP[cookingInsights.topCuisine]}
+                        alt={`${cookingInsights.topCuisine} icon`}
+                        width={24}
+                        height={24}
+                        quality={100}
+                        unoptimized={true}
+                        className="w-6 h-6 object-contain"
+                        draggable={false}
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-albert text-[14px] text-stone-500">Top Cuisine</p>
+                    <p className="font-albert text-[20px] font-medium text-stone-900">
+                      {cookingInsights.topCuisine}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Additional Cuisines Preview */}
+              {cookingInsights.topCuisines.length > 1 && (
+                <>
+                  <div className="hidden sm:block w-px h-12 bg-stone-200" />
+                  <div className="flex items-center gap-3">
+                    <p className="font-albert text-[14px] text-stone-500">Also enjoying</p>
+                    <div className="flex items-center gap-2">
+                      {cookingInsights.topCuisines.slice(1, 3).map(([cuisine]) => (
+                        <span
+                          key={cuisine}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-stone-100 rounded-full"
+                        >
+                          {CUISINE_ICON_MAP[cuisine] && (
+                            <Image
+                              src={CUISINE_ICON_MAP[cuisine]}
+                              alt={`${cuisine} icon`}
+                              width={16}
+                              height={16}
+                              quality={100}
+                              unoptimized={true}
+                              className="w-4 h-4 object-contain"
+                              draggable={false}
+                            />
+                          )}
+                          <span className="font-albert text-[13px] text-stone-700">{cuisine}</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Search Bar with View Toggle and Sort - Side by Side Layout */}
         <div className={`mb-6 ${isPageLoaded ? 'page-fade-in-up page-fade-delay-1' : 'opacity-0'}`}>
           <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 w-full">
@@ -452,6 +579,8 @@ function SavedRecipesContent() {
                   placeholder="Search saved recipes..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setIsSearchFocused(false)}
                   className="ingredients-search-input"
                   aria-label="Search saved recipes"
                 />
@@ -498,15 +627,25 @@ function SavedRecipesContent() {
               
               {/* Sort Dropdown */}
               <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-9 text-stone-600 hover:text-stone-900 hover:bg-stone-100"
-                  >
-                    Sort
-                  </Button>
-                </DropdownMenuTrigger>
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 text-stone-600 hover:text-stone-900 hover:bg-stone-100"
+                          aria-label="Sort recipes"
+                        >
+                          <Sort className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      Sort recipes
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>Sort By</DropdownMenuLabel>
                   <DropdownMenuSeparator />
