@@ -237,7 +237,7 @@ export default function Sidebar() {
 
         {/* User Profile */}
         <div className="px-4 py-4 border-t border-stone-200">
-          <button className="w-full flex items-center gap-3 hover:bg-stone-50 rounded-lg p-2 -m-2 transition-colors">
+          <Link href="/profile" className="w-full flex items-center gap-3 hover:bg-stone-50 rounded-lg p-2 -m-2 transition-colors">
             <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden">
               <Image
                 src="/assets/icons/Fish Logo.svg"
@@ -255,7 +255,7 @@ export default function Sidebar() {
                 View Profile
               </div>
             </div>
-          </button>
+          </Link>
         </div>
       </div>
     </aside>
