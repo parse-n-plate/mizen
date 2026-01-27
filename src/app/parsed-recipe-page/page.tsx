@@ -853,7 +853,7 @@ export default function ParsedRecipePage({
                     >
                       <ArrowLeft className="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1" />
                       {/* Desktop: Show "Back to Home" text */}
-                      <span className="hidden md:inline font-albert text-[14px] font-medium">Back to Home</span>
+                      <span className="hidden md:inline font-albert text-[15px] font-medium">Back to Home</span>
                     </button>
                     
                     {/* Bookmark and Settings Buttons */}
@@ -959,20 +959,20 @@ export default function ParsedRecipePage({
                 <div className="w-full pb-8 md:pb-12">
                   <div className="flex flex-col gap-4 md:gap-5">
                     {/* Recipe Title - Full width, on its own line */}
-                    <h1 className="font-domine text-[32px] md:text-[42px] text-[#0C0A09] leading-[1.15] font-bold tracking-tight">
+                    <h1 className="font-domine text-[35px] md:text-[46px] text-[#0C0A09] leading-[1.15] font-bold tracking-tight">
                       {parsedRecipe.title || 'Untitled Recipe'}
                     </h1>
                     
                     {/* Author - Below title */}
                     {parsedRecipe.author?.trim() && (
-                      <p className="font-albert text-[15px] md:text-[16px] text-stone-500 leading-[1.4] font-medium">
+                      <p className="font-albert text-[17px] md:text-[18px] text-stone-500 leading-[1.4] font-medium">
                         <span className="text-stone-400 font-normal">by</span> {parsedRecipe.author.trim()}
                       </p>
                     )}
                     
                     {/* AI-Generated Summary/Description - Below author */}
                     {parsedRecipe.summary?.trim() && (
-                      <p className="font-albert text-[16px] md:text-[17px] text-stone-600 leading-[1.6] italic max-w-3xl">
+                      <p className="font-albert text-[18px] md:text-[19px] text-stone-600 leading-[1.6] italic max-w-3xl">
                         {parsedRecipe.summary.trim()}
                       </p>
                     )}
@@ -992,7 +992,7 @@ export default function ParsedRecipePage({
                               href={parsedRecipe.sourceUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="font-albert text-[15px] md:text-[16px] text-stone-500 hover:text-stone-800 transition-colors flex items-center gap-1.5 cursor-pointer underline-offset-4 hover:underline decoration-stone-300"
+                              className="font-albert text-[17px] md:text-[18px] text-stone-500 hover:text-stone-800 transition-colors flex items-center gap-1.5 cursor-pointer underline-offset-4 hover:underline decoration-stone-300"
                               aria-label={`View original recipe on ${getDomainFromUrl(parsedRecipe.sourceUrl)}`}
                             >
                               <LinkIcon className="w-3.5 h-3.5 text-stone-400" />
@@ -1041,10 +1041,10 @@ export default function ParsedRecipePage({
                         {/* Prep Time Card */}
                         {parsedRecipe.prepTimeMinutes !== undefined && parsedRecipe.prepTimeMinutes !== null && parsedRecipe.prepTimeMinutes > 0 && (
                           <div className="flex flex-col bg-stone-200/30 px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
-                            <p className="font-albert text-[12px] md:text-[13px] text-stone-500 leading-tight mb-0.5">
+                            <p className="font-albert text-[13px] md:text-[14px] text-stone-500 leading-tight mb-0.5">
                               Prep
                             </p>
-                            <p className="font-albert text-[15px] md:text-[16px] text-stone-700 leading-tight font-semibold">
+                            <p className="font-albert text-[17px] md:text-[18px] text-stone-700 leading-tight font-semibold">
                               {parsedRecipe.prepTimeMinutes} min
                             </p>
                           </div>
@@ -1053,10 +1053,10 @@ export default function ParsedRecipePage({
                         {/* Cook Time Card */}
                         {parsedRecipe.cookTimeMinutes !== undefined && parsedRecipe.cookTimeMinutes !== null && parsedRecipe.cookTimeMinutes > 0 && (
                           <div className="flex flex-col bg-stone-200/30 px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
-                            <p className="font-albert text-[12px] md:text-[13px] text-stone-500 leading-tight mb-0.5">
+                            <p className="font-albert text-[13px] md:text-[14px] text-stone-500 leading-tight mb-0.5">
                               Cooking
                             </p>
-                            <p className="font-albert text-[15px] md:text-[16px] text-stone-700 leading-tight font-semibold">
+                            <p className="font-albert text-[17px] md:text-[18px] text-stone-700 leading-tight font-semibold">
                               {parsedRecipe.cookTimeMinutes} min
                             </p>
                           </div>
@@ -1065,10 +1065,10 @@ export default function ParsedRecipePage({
                         {/* Total Time Card - only show if prep and cook aren't both available */}
                         {parsedRecipe.totalTimeMinutes !== undefined && parsedRecipe.totalTimeMinutes !== null && parsedRecipe.totalTimeMinutes > 0 && !parsedRecipe.prepTimeMinutes && !parsedRecipe.cookTimeMinutes && (
                           <div className="flex flex-col bg-stone-200/30 px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
-                            <p className="font-albert text-[12px] md:text-[13px] text-stone-500 leading-tight mb-0.5">
+                            <p className="font-albert text-[13px] md:text-[14px] text-stone-500 leading-tight mb-0.5">
                               Total
                             </p>
-                            <p className="font-albert text-[15px] md:text-[16px] text-stone-700 leading-tight font-semibold">
+                            <p className="font-albert text-[17px] md:text-[18px] text-stone-700 leading-tight font-semibold">
                               {formatMinutesAsHours(parsedRecipe.totalTimeMinutes)}
                             </p>
                           </div>
@@ -1078,10 +1078,10 @@ export default function ParsedRecipePage({
                         {/* Only show if originalServings is defined (we know the actual serving count) */}
                         {originalServings !== undefined && originalServings !== null && originalServings > 0 && servings !== undefined && servings !== null && servings > 0 && (
                           <div className="flex flex-col bg-stone-200/30 px-3 py-2 rounded-lg border border-stone-200/50 min-w-[80px]">
-                            <p className="font-albert text-[12px] md:text-[13px] text-stone-500 leading-tight mb-0.5">
+                            <p className="font-albert text-[13px] md:text-[14px] text-stone-500 leading-tight mb-0.5">
                               Servings
                             </p>
-                            <p className="font-albert text-[15px] md:text-[16px] text-stone-700 leading-tight font-semibold">
+                            <p className="font-albert text-[17px] md:text-[18px] text-stone-700 leading-tight font-semibold">
                               {servings}
                             </p>
                           </div>
@@ -1109,7 +1109,7 @@ export default function ParsedRecipePage({
                                   unoptimized={true}
                                   className="w-4.5 h-4.5 object-contain"
                                 />
-                                <span className="font-albert text-[14px] font-medium text-stone-700">
+                                <span className="font-albert text-[15px] font-medium text-stone-700">
                                   {cuisineName}
                                 </span>
                               </div>
@@ -1143,7 +1143,7 @@ export default function ParsedRecipePage({
                         </motion.div>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className={`font-albert font-medium text-[15px] md:text-[16px] ${activeTab === 'prep' ? 'text-[#0C0A09]' : 'text-[#79716b] group-hover:text-[#0C0A09]'}`}>
+                            <span className={`font-albert font-medium text-[17px] md:text-[18px] ${activeTab === 'prep' ? 'text-[#0C0A09]' : 'text-[#79716b] group-hover:text-[#0C0A09]'}`}>
                               Prep
                             </span>
                           </TooltipTrigger>
@@ -1167,7 +1167,7 @@ export default function ParsedRecipePage({
                         </motion.div>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className={`font-albert font-medium text-[15px] md:text-[16px] ${activeTab === 'cook' ? 'text-[#0C0A09]' : 'text-[#79716b] group-hover:text-[#0C0A09]'}`}>
+                            <span className={`font-albert font-medium text-[17px] md:text-[18px] ${activeTab === 'cook' ? 'text-[#0C0A09]' : 'text-[#79716b] group-hover:text-[#0C0A09]'}`}>
                               Cook
                             </span>
                           </TooltipTrigger>
@@ -1191,7 +1191,7 @@ export default function ParsedRecipePage({
                         </motion.div>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className={`font-albert font-medium text-[15px] md:text-[16px] ${activeTab === 'plate' ? 'text-[#0C0A09]' : 'text-[#79716b] group-hover:text-[#0C0A09]'}`}>
+                            <span className={`font-albert font-medium text-[17px] md:text-[18px] ${activeTab === 'plate' ? 'text-[#0C0A09]' : 'text-[#79716b] group-hover:text-[#0C0A09]'}`}>
                               Plate
                             </span>
                           </TooltipTrigger>
