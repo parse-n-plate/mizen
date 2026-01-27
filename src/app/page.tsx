@@ -29,7 +29,7 @@ function HomeContent() {
         <div className="max-w-6xl mx-auto px-4 md:px-8 pt-24 md:pt-32 pb-16 md:pb-20">
           {/* Hero Section */}
           <div className={`text-center space-y-5 md:space-y-6 ${isPageLoaded ? 'page-fade-in-up' : 'opacity-0'}`}>
-              <h1 className="font-domine text-[57.6px] sm:text-[67.2px] md:text-[76.8px] font-bold text-black leading-[1.05] flex flex-col items-center justify-center gap-2 md:gap-3">
+              <h1 className="font-domine text-hero sm:text-hero-tablet md:text-hero-desktop font-bold text-black leading-[1.05] flex flex-col items-center justify-center gap-2 md:gap-3">
                 <span className="flex items-center gap-2 md:gap-3">
                   Clean recipes,
                   <motion.img
