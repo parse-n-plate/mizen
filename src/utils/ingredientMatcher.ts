@@ -61,64 +61,78 @@ export function findIngredientsInText(text: string, ingredients: IngredientInfo[
   const foundIngredients: IngredientMatch[] = [];
   const lowerText = text.toLowerCase();
 
+  // Helper to find ALL occurrences of a term in the text
+  const findAllOccurrences = (term: string): string[] => {
+    const results: string[] = [];
+    const lowerTerm = term.toLowerCase();
+    let searchIdx = 0;
+    while ((searchIdx = lowerText.indexOf(lowerTerm, searchIdx)) !== -1) {
+      results.push(text.substring(searchIdx, searchIdx + lowerTerm.length));
+      searchIdx += lowerTerm.length;
+    }
+    return results;
+  };
+
   for (const ingredient of ingredients) {
     const lowerName = ingredient.name.toLowerCase();
     let isMatched = false;
     const matchedTerms: string[] = [];
 
-    // Check for exact name match
-    if (lowerText.includes(lowerName)) {
-      matchedTerms.push(ingredient.name);
+    // Stage 1: Check for exact full name match (highest priority for compound ingredients)
+    // This ensures "cottage cheese" matches as a whole unit before individual words
+    const exactMatches = findAllOccurrences(lowerName);
+    if (exactMatches.length > 0) {
+      matchedTerms.push(...exactMatches);
       isMatched = true;
     }
 
-    // Check for singular/plural versions (basic check)
+    // Stage 2: Check for singular/plural versions (find ALL occurrences)
     if (!isMatched) {
       if (lowerName.endsWith('s')) {
         const singular = lowerName.slice(0, -1);
-        if (singular.length > 3 && lowerText.includes(singular)) {
-          // Find the actual case-preserved term in the text
-          const idx = lowerText.indexOf(singular);
-          matchedTerms.push(text.substring(idx, idx + singular.length));
-          isMatched = true;
+        if (singular.length > 3) {
+          const singularMatches = findAllOccurrences(singular);
+          if (singularMatches.length > 0) {
+            matchedTerms.push(...singularMatches);
+            isMatched = true;
+          }
         }
       } else {
         const plural = lowerName + 's';
-        if (lowerText.includes(plural)) {
-          const idx = lowerText.indexOf(plural);
-          matchedTerms.push(text.substring(idx, idx + plural.length));
+        const pluralMatches = findAllOccurrences(plural);
+        if (pluralMatches.length > 0) {
+          matchedTerms.push(...pluralMatches);
           isMatched = true;
         }
       }
     }
 
-    // Check for common variations (e.g., "onion" in "green onions")
-    // This is a simple fuzzy match
+    // Stage 3: Check for common variations (e.g., "onion" in "green onions")
+    // Match ALL significant words, not just the first one (no break)
     if (!isMatched) {
       const words = lowerName.split(' ');
+
       for (const word of words) {
         if (word.length > 3 && lowerText.includes(word)) {
-          // If we found a significant word, consider it a match
-          // but avoid generic words like "oil", "water", "salt", "sugar" unless exact
-          const genericWords = ['oil', 'water', 'salt', 'sugar', 'flour', 'milk', 'egg'];
-          if (!genericWords.includes(word)) {
-            const idx = lowerText.indexOf(word);
-            matchedTerms.push(text.substring(idx, idx + word.length));
+          const wordMatches = findAllOccurrences(word);
+          if (wordMatches.length > 0) {
+            matchedTerms.push(...wordMatches);
             isMatched = true;
-            break;
+            // No break - continue to find all significant words
           }
         }
       }
     }
 
-    // Check for synonym matches
+    // Stage 4: Check for synonym matches
     // If text contains a synonym term (e.g., "meat"), check if ingredient matches that category
     if (!isMatched) {
       for (const [synonymTerm, relatedTerms] of Object.entries(INGREDIENT_SYNONYMS)) {
         // Check if text contains the synonym term (as a whole word to avoid false matches)
+        // Find ALL occurrences of the synonym term
         const synonymRegex = new RegExp(`\\b${synonymTerm}\\b`, 'gi');
-        const synonymMatch = synonymRegex.exec(text);
-        if (synonymMatch) {
+        let synonymMatch;
+        while ((synonymMatch = synonymRegex.exec(text)) !== null) {
           // Check if ingredient name contains any of the related terms
           for (const relatedTerm of relatedTerms) {
             if (lowerName.includes(relatedTerm.toLowerCase())) {
@@ -128,10 +142,10 @@ export function findIngredientsInText(text: string, ingredients: IngredientInfo[
               break;
             }
           }
-          // If we found a match via synonym, break out of synonym loop
-          if (isMatched) {
-            break;
-          }
+        }
+        // If we found matches via synonym, break out of synonym loop
+        if (isMatched) {
+          break;
         }
       }
     }
@@ -139,7 +153,7 @@ export function findIngredientsInText(text: string, ingredients: IngredientInfo[
     if (isMatched) {
       foundIngredients.push({
         ...ingredient,
-        matchedTerms,
+        matchedTerms: [...new Set(matchedTerms)], // Dedupe matched terms
       });
     }
   }
