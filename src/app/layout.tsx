@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import { Domine, Albert_Sans } from 'next/font/google';
-import Navbar from '@/components/ui/Navbar';
+import Sidebar from '@/components/ui/Sidebar';
 import Footer from '@/components/ui/footer';
 import { AdminSettingsProvider } from '@/contexts/AdminSettingsContext';
 import { RecipeProvider } from '@/contexts/RecipeContext';
@@ -63,9 +63,15 @@ export default function RootLayout({
               <TimerProvider>
                 <CommandKProvider>
                   <ImageProtection />
-                  <Navbar />
-                  {children}
-                  <Footer />
+                  <div className="flex h-screen overflow-hidden">
+                    <Sidebar />
+                    <div className="flex-1 flex flex-col min-h-0">
+                      <main className="flex-1 overflow-y-auto">
+                        {children}
+                        <Footer />
+                      </main>
+                    </div>
+                  </div>
                   <Toaster />
                   <SpeedInsights />
                   {process.env.NODE_ENV === 'development' && <Agentation />}
