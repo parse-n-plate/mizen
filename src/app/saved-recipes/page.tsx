@@ -181,7 +181,7 @@ function RecipeListItem({
               {recipe.cuisine.map((cuisine, index) => (
                 <span
                   key={index}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-stone-100 border border-stone-200 rounded-full font-albert text-[12px] text-stone-600"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-100 rounded-full font-albert text-[14px] text-stone-700"
                 >
                   {CUISINE_ICON_MAP[cuisine] && (
                     <Image
@@ -464,9 +464,9 @@ function SavedRecipesContent() {
                 className="flex items-center gap-2 text-stone-600 hover:text-stone-800 transition-colors cursor-pointer group"
                 aria-label="Back to Home"
               >
-                <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
+                <ArrowLeft className="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1" />
                 {/* Desktop: Show "Back to Home" text */}
-                <span className="hidden md:inline font-albert text-[var(--text-body-sm)] font-medium">Back to Home</span>
+                <span className="hidden md:inline font-albert text-[15px] font-medium">Back to Home</span>
               </button>
             </div>
           </div>
