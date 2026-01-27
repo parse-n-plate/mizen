@@ -32,6 +32,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { convertTextFractionsToSymbols } from '@/lib/utils';
+import { generateShareableUrl } from '@/lib/urlEncoder';
 import PlatePhotoCapture from '@/components/ui/plate-photo-capture';
 import PlatingGuidanceCard from '@/components/ui/plating-guidance-card';
 import StorageGuidanceCard from '@/components/ui/storage-guidance-card';
@@ -224,6 +225,7 @@ export default function ParsedRecipePage({
   // Settings popover state
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedPlainText, setCopiedPlainText] = useState(false);
+  const [copiedShareLink, setCopiedShareLink] = useState(false);
   
   // Bookmark success animation state - tracks when bookmark is just saved
   const [justBookmarked, setJustBookmarked] = useState(false);
@@ -549,6 +551,20 @@ export default function ParsedRecipePage({
       setTimeout(() => setCopiedLink(false), 2000);
     } catch (err) {
       console.error('Failed to copy link:', err);
+    }
+  };
+
+  // Handle share recipe with shareable URL
+  const handleShareRecipe = async () => {
+    if (!parsedRecipe) return;
+
+    try {
+      const shareUrl = generateShareableUrl(parsedRecipe);
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedShareLink(true);
+      setTimeout(() => setCopiedShareLink(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy share link:', err);
     }
   };
 
@@ -925,15 +941,22 @@ export default function ParsedRecipePage({
                           </motion.button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-60">
+                          <DropdownMenuItem onSelect={handleShareRecipe}>
+                            <span className={copiedShareLink ? 'text-green-600 font-medium' : ''}>
+                              {copiedShareLink ? 'Share link copied' : 'Share recipe'}
+                            </span>
+                            {copiedShareLink && <Check className="w-4 h-4 text-green-600 ml-auto" />}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem onSelect={handleCopyLink}>
                             <span className={copiedLink ? 'text-green-600 font-medium' : ''}>
-                              {copiedLink ? 'Link copied' : 'Copy link'}
+                              {copiedLink ? 'Link copied' : 'Copy original link'}
                             </span>
                             {copiedLink && <Check className="w-4 h-4 text-green-600 ml-auto" />}
                           </DropdownMenuItem>
                           <DropdownMenuItem onSelect={handleCopyPlainText}>
                             <span className={copiedPlainText ? 'text-green-600 font-medium' : ''}>
-                              {copiedPlainText ? 'Recipe copied' : 'Copy recipe'}
+                              {copiedPlainText ? 'Recipe copied' : 'Copy as text'}
                             </span>
                             {copiedPlainText && <Check className="w-4 h-4 text-green-600 ml-auto" />}
                           </DropdownMenuItem>
