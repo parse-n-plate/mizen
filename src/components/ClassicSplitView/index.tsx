@@ -240,6 +240,12 @@ export default function ClassicSplitView({ steps, title = 'Recipe Steps', allIng
     if (index >= 0 && index < steps.length) {
       setCurrentStep(index);
       setView('card');
+
+      // Scroll to top of the cook section
+      const element = document.querySelector('.classic-split-view-container');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
   };
 
