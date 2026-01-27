@@ -2,8 +2,15 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  // Hide footer on parsed recipe pages
+  if (pathname === '/parsed-recipe-page') {
+    return null;
+  }
   // Social profile URLs for team members
   const linkedInProfiles = {
     gage: 'https://gageminamoto.vercel.app/',
