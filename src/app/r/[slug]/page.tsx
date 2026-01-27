@@ -27,7 +27,7 @@ export default function SharedRecipePage({
   const searchParams = useSearchParams();
   const router = useRouter();
   const { setParsedRecipe } = useRecipe();
-  const { addRecipe } = useParsedRecipes();
+  const { addRecipe, recentRecipes, toggleBookmark } = useParsedRecipes();
 
   const [decodeResult, setDecodeResult] = useState<DecodeResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,13 +56,14 @@ export default function SharedRecipePage({
 
     try {
       const recipe = decodeResult.recipe;
+      const recipeUrl = recipe.sourceUrl || `shared:${slug}`;
 
       // Add to recent recipes (this persists to localStorage)
       // The addRecipe function generates the id and parsedAt automatically
-      addRecipe({
+      const recipeToSave = {
         title: recipe.title || 'Untitled Recipe',
         summary: recipe.summary || '',
-        url: recipe.sourceUrl || `shared:${slug}`,
+        url: recipeUrl,
         sourceUrl: recipe.sourceUrl,
         author: recipe.author,
         prepTimeMinutes: recipe.prepTimeMinutes,
@@ -71,10 +72,28 @@ export default function SharedRecipePage({
         cuisine: recipe.cuisine,
         ingredients: recipe.ingredients,
         instructions: recipe.instructions,
-      });
+      };
 
-      // Set as current recipe and navigate to full view
-      setParsedRecipe(recipe);
+      addRecipe(recipeToSave);
+
+      // Get the newly added recipe's ID from localStorage
+      // (it's the most recent one with matching URL)
+      const stored = localStorage.getItem('recentRecipes');
+      if (stored) {
+        const recipes = JSON.parse(stored);
+        const newRecipe = recipes.find((r: { url: string }) => r.url === recipeUrl);
+        if (newRecipe?.id) {
+          // Bookmark the recipe so it appears in Saved Recipes
+          toggleBookmark(newRecipe.id);
+
+          // Set as current recipe with the ID
+          setParsedRecipe({ ...recipe, id: newRecipe.id });
+        } else {
+          setParsedRecipe(recipe);
+        }
+      } else {
+        setParsedRecipe(recipe);
+      }
 
       toast.success('Recipe saved to your collection!');
 

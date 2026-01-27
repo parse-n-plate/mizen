@@ -10,6 +10,7 @@ import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import Settings from '@solar-icons/react/csr/settings/Settings';
 import LinkIcon from '@solar-icons/react/csr/text-formatting/Link';
 import TrashBinTrash from '@solar-icons/react/csr/ui/TrashBinTrash';
+import SquareShareLine from '@solar-icons/react/csr/messages/SquareShareLine';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useSwipeable } from 'react-swipeable';
 import { scaleIngredients } from '@/utils/ingredientScaler';
@@ -872,8 +873,42 @@ export default function ParsedRecipePage({
                       <span className="hidden md:inline font-albert text-[15px] font-medium">Back to Home</span>
                     </button>
                     
-                    {/* Bookmark and Settings Buttons */}
+                    {/* Share, Bookmark and Settings Buttons */}
                     <div className="flex items-center gap-2 flex-shrink-0">
+                      {/* Share Button */}
+                      <motion.button
+                        onClick={handleShareRecipe}
+                        className="flex-shrink-0 p-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 cursor-pointer"
+                        aria-label={copiedShareLink ? 'Link copied!' : 'Share recipe'}
+                        initial={{ scale: 1, rotate: 0 }}
+                        whileHover={shouldReduceMotion ? {} : {
+                          scale: 1.08,
+                          rotate: 5,
+                          transition: {
+                            duration: 0.2,
+                            ease: [0.25, 0.46, 0.45, 0.94]
+                          }
+                        }}
+                        whileTap={shouldReduceMotion ? {} : {
+                          scale: 0.97,
+                          rotate: 0,
+                          transition: { duration: 0.1 }
+                        }}
+                        animate={copiedShareLink && !shouldReduceMotion ? {
+                          scale: [1, 1.15, 1.05, 1],
+                          transition: {
+                            duration: 0.3,
+                            ease: [0.23, 1, 0.32, 1]
+                          }
+                        } : { scale: 1, rotate: 0 }}
+                      >
+                        {copiedShareLink ? (
+                          <Check className="w-6 h-6 text-green-600" />
+                        ) : (
+                          <Share2 className="w-6 h-6 text-stone-400 hover:text-stone-600 transition-colors duration-200" />
+                        )}
+                      </motion.button>
+
                       {/* Bookmark Button */}
                       {recipeId && (
                         <motion.button
@@ -881,15 +916,15 @@ export default function ParsedRecipePage({
                           className={`flex-shrink-0 p-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 cursor-pointer ${justBookmarked && !shouldReduceMotion ? 'bookmark-just-saved' : ''}`}
                           aria-label={isBookmarkedState ? 'Remove bookmark' : 'Bookmark recipe'}
                           initial={{ scale: 1, rotate: 0 }}
-                          whileHover={shouldReduceMotion ? {} : { 
+                          whileHover={shouldReduceMotion ? {} : {
                             scale: 1.08,
                             rotate: -3,
-                            transition: { 
-                              duration: 0.2, 
+                            transition: {
+                              duration: 0.2,
                               ease: [0.25, 0.46, 0.45, 0.94] // ease-out-quad
                             }
                           }}
-                          whileTap={shouldReduceMotion ? {} : { 
+                          whileTap={shouldReduceMotion ? {} : {
                             scale: 0.97,
                             rotate: 0,
                             transition: { duration: 0.1 }
