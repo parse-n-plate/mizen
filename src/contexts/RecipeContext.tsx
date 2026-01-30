@@ -178,16 +178,10 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
 
   const setParsedRecipeWithStorage = (recipe: ParsedRecipe | null) => {
     if (recipe) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RecipeContext.tsx:136',message:'setParsedRecipeWithStorage entry',data:{hasServings:'servings' in recipe,servings:recipe.servings,hasAuthor:'author' in recipe,author:recipe.author,keys:Object.keys(recipe)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       const normalizedRecipe: ParsedRecipe = {
         ...recipe,
         instructions: normalizeInstructions(recipe.instructions),
       };
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RecipeContext.tsx:142',message:'normalizedRecipe before storage',data:{hasServings:'servings' in normalizedRecipe,servings:normalizedRecipe.servings,keys:Object.keys(normalizedRecipe)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       setParsedRecipe(normalizedRecipe);
       localStorage.setItem('parsedRecipe', JSON.stringify(normalizedRecipe));
 
@@ -203,12 +197,6 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
       } else {
         console.warn('[RecipeContext] ⚠️ Recipe has no ID, cannot sync to recentRecipes');
       }
-
-      // #region agent log
-      const stored = localStorage.getItem('parsedRecipe');
-      const parsed = stored ? JSON.parse(stored) : null;
-      fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RecipeContext.tsx:143',message:'After localStorage.setItem',data:{hasServings:parsed&&'servings' in parsed,servings:parsed?.servings,servingsType:typeof parsed?.servings,normalizedRecipeServings:normalizedRecipe.servings,normalizedRecipeServingsType:typeof normalizedRecipe.servings,storedKeys:parsed?Object.keys(parsed):[],normalizedKeys:Object.keys(normalizedRecipe)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
     } else {
       setParsedRecipe(null);
       localStorage.removeItem('parsedRecipe');
