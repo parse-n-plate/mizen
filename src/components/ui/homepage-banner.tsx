@@ -5,7 +5,7 @@ import ChefHatHeartBold from '@solar-icons/react/csr/food/ChefHatHeart';
 /**
  * HomepageBanner Component
  * 
- * Displays a banner directly under the navigation bar, flush against it.
+ * Displays a sticky banner directly under the navigation bar, flush against it.
  * Features a filled heart chef hat icon from Solar icons and spans only
  * the width of the content (matching navbar max-w-6xl).
  * 
@@ -15,14 +15,16 @@ import ChefHatHeartBold from '@solar-icons/react/csr/food/ChefHatHeart';
  * - Only bottom left and right corners are rounded (rounded-b-lg)
  * - Uses filled Solar icon ChefHatHeartBold
  * - Fully responsive
+ * - Sticky positioning: remains visible at top of viewport when scrolling
  */
 export default function HomepageBanner() {
   return (
-    <div className="w-full">
+    <div className="w-full sticky top-0 z-10">
       {/* Container matches navbar width for consistent alignment - same max-w-6xl and padding */}
       <div className="max-w-6xl mx-auto px-4 md:px-6">
         {/* Banner with rounded bottom corners only - flush against navbar, no top margin/padding */}
         {/* Using rounded-b-lg for bottom corners only */}
+        {/* Sticky positioning: stays at top of viewport when scrolling */}
         <div className="flex items-center justify-center gap-3 py-3 md:py-4 bg-blue-100 rounded-b-lg">
           {/* Chef Hat Icon with Heart - using filled Solar icon */}
           {/* Icon size responsive: smaller on mobile, larger on desktop */}

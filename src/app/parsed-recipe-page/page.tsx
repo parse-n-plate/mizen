@@ -36,6 +36,8 @@ import PlatePhotoCapture from '@/components/ui/plate-photo-capture';
 import PlatingGuidanceCard from '@/components/ui/plating-guidance-card';
 import StorageGuidanceCard from '@/components/ui/storage-guidance-card';
 import IngredientsOverlay from '@/components/ui/ingredients-overlay';
+import { useSidebar } from '@/contexts/SidebarContext';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 // Helper function to extract domain from URL for display
 const getDomainFromUrl = (url: string): string => {
@@ -197,6 +199,8 @@ export default function ParsedRecipePage({
   const { parsedRecipe, setParsedRecipe, isLoaded } = useRecipe();
   const { recentRecipes, isBookmarked, toggleBookmark, removeRecipe } = useParsedRecipes();
   const router = useRouter();
+  const { showMobileNav } = useSidebar();
+  const isMobileViewport = useMediaQuery('(max-width: 767px)');
   // #region agent log
   if (parsedRecipe) {
     fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'parsed-recipe-page/page.tsx:155',message:'parsedRecipe from context',data:{hasServings:'servings' in parsedRecipe,servings:parsedRecipe.servings,servingsType:typeof parsedRecipe.servings,servingsValue:parsedRecipe.servings,hasAuthor:'author' in parsedRecipe,author:parsedRecipe.author,keys:Object.keys(parsedRecipe)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'C'})}).catch(()=>{});
@@ -847,13 +851,20 @@ export default function ParsedRecipePage({
                   <div className="flex items-center justify-between">
                     {/* Back Button - Visible on all screen sizes */}
                     <button
-                      onClick={() => router.push('/')}
+                      onClick={() => {
+                        if (isMobileViewport) {
+                          showMobileNav();
+                        } else {
+                          router.push('/');
+                        }
+                      }}
                       className="flex items-center gap-2 text-stone-600 hover:text-stone-800 transition-colors cursor-pointer group"
                       aria-label="Back to Home"
                     >
                       <ArrowLeft className="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1" />
-                      {/* Desktop: Show "Back to Home" text */}
+                      {/* Desktop: Show "Back to Home" text, Mobile: Show "Menu" */}
                       <span className="hidden md:inline font-albert text-[14px] font-medium">Back to Home</span>
+                      <span className="md:hidden font-albert text-[14px] font-medium">Menu</span>
                     </button>
                     
                     {/* Bookmark and Settings Buttons */}

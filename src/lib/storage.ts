@@ -181,8 +181,20 @@ export function addRecentRecipe(
     // Add new recipe to the beginning
     const updatedRecipes = [newRecipe, ...filteredRecipes];
 
-    // Keep only the most recent MAX_RECENT_RECIPES
-    const limitedRecipes = updatedRecipes.slice(0, MAX_RECENT_RECIPES);
+    // Keep only the most recent MAX_RECENT_RECIPES, but never evict bookmarked recipes
+    const bookmarkedIds = getBookmarkedRecipeIds();
+    const bookmarked: ParsedRecipe[] = [];
+    const nonBookmarked: ParsedRecipe[] = [];
+    for (const r of updatedRecipes) {
+      if (bookmarkedIds.includes(r.id)) {
+        bookmarked.push(r);
+      } else {
+        nonBookmarked.push(r);
+      }
+    }
+    const slotsForNonBookmarked = Math.max(0, MAX_RECENT_RECIPES - bookmarked.length);
+    const limitedRecipes = [...bookmarked, ...nonBookmarked.slice(0, slotsForNonBookmarked)]
+      .sort((a, b) => new Date(b.parsedAt).getTime() - new Date(a.parsedAt).getTime());
 
     localStorage.setItem(RECENT_RECIPES_KEY, JSON.stringify(limitedRecipes));
     console.log('[Storage] ✅ Recipe saved to localStorage successfully');

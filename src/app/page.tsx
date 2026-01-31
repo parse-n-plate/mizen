@@ -4,6 +4,7 @@ import HomepageSkeleton from '@/components/ui/homepage-skeleton';
 import HomepageSearch from '@/components/ui/homepage-search';
 import HomepageRecentRecipes from '@/components/ui/homepage-recent-recipes';
 import HomepageBanner from '@/components/ui/homepage-banner';
+import MobileBackButton from '@/components/ui/MobileBackButton';
 import { useState, useEffect, Suspense, use } from 'react';
 import { motion } from 'framer-motion';
 
@@ -21,6 +22,7 @@ function HomeContent() {
 
   return (
     <div className="bg-white relative">
+      <MobileBackButton />
       {/* Homepage Banner - Only on landing page */}
       <HomepageBanner />
 

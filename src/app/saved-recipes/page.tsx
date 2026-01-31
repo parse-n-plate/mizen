@@ -12,7 +12,8 @@ import ClipboardText from '@solar-icons/react/csr/notes/ClipboardText';
 import Magnifer from '@solar-icons/react/csr/search/Magnifer';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRecipe } from '@/contexts/RecipeContext';
-import CuisinePills, { type SelectedCuisines } from '@/components/ui/cuisine-pills';
+import { useSidebar } from '@/contexts/SidebarContext';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 import RecipeCard, { type RecipeCardData } from '@/components/ui/recipe-card';
 import RecipeQuickViewModal from '@/components/ui/recipe-quick-view-modal';
 import {
@@ -26,7 +27,8 @@ import {
   DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
+import { SUPPORTED_CUISINES, CUISINE_ICON_MAP } from '@/config/cuisineConfig';
+import { cn } from '@/lib/utils';
 import type { ParsedRecipe } from '@/lib/storage';
 
 // Recipe List Item Component for List View
@@ -251,6 +253,7 @@ function RecipeListItem({
 
 export type SortOption = 'date-newest' | 'date-oldest' | 'name-asc' | 'name-desc' | 'cuisine';
 export type ViewMode = 'grid' | 'list';
+type SelectedCuisines = (typeof SUPPORTED_CUISINES)[number][];
 
 function SavedRecipesContent() {
   const {
@@ -262,7 +265,9 @@ function SavedRecipesContent() {
   } = useParsedRecipes();
   const { setParsedRecipe } = useRecipe();
   const router = useRouter();
-  
+  const { showMobileNav } = useSidebar();
+  const isMobileViewport = useMediaQuery('(max-width: 767px)');
+
   const [selectedCuisines, setSelectedCuisines] = useState<SelectedCuisines>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [showCookedOnly, setShowCookedOnly] = useState<boolean>(false);
@@ -294,10 +299,6 @@ function SavedRecipesContent() {
       return () => clearTimeout(timer);
     }
   }, [isLoaded]);
-
-  const handleCuisineChange = (cuisines: SelectedCuisines) => {
-    setSelectedCuisines(cuisines);
-  };
 
   const handleRecipeClick = (recipeId: string) => {
     const fullRecipe = getRecipeById(recipeId);
@@ -415,13 +416,17 @@ function SavedRecipesContent() {
             <div className="flex items-center justify-between">
               {/* Back Button - Visible on all screen sizes */}
               <button
-                onClick={() => router.push('/')}
+                onClick={() => {
+                  if (isMobileViewport) showMobileNav();
+                  router.push('/');
+                }}
                 className="flex items-center gap-2 text-stone-600 hover:text-stone-800 transition-colors cursor-pointer group"
                 aria-label="Back to Home"
               >
                 <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
-                {/* Desktop: Show "Back to Home" text */}
+                {/* Desktop: Show "Back to Home" text, Mobile: Show "Menu" */}
                 <span className="hidden md:inline font-albert text-[14px] font-medium">Back to Home</span>
+                <span className="md:hidden font-albert text-[14px] font-medium">Menu</span>
               </button>
             </div>
           </div>
@@ -533,14 +538,67 @@ function SavedRecipesContent() {
           </div>
         </div>
 
-        {/* Cuisine Filter Pills and Cooked Toggle - Below Search Bar */}
-        {/* Extend to container edges to align pills with search bar and recipe items */}
-        <div className={`mb-6 md:mb-8 overflow-visible -mx-4 md:-mx-8 ${isPageLoaded ? 'page-fade-in-up page-fade-delay-1' : 'opacity-0'}`}>
-          <CuisinePills
-            onCuisineChange={handleCuisineChange}
-            showCookedOnly={showCookedOnly}
-            onShowCookedOnlyChange={setShowCookedOnly}
-          />
+        {/* Browse by Cuisine Grid */}
+        <div className={cn('mb-8', isPageLoaded ? 'page-fade-in-up page-fade-delay-1' : 'opacity-0')}>
+          <h2 className="font-domine text-[18px] md:text-[20px] font-semibold text-stone-900 mb-4 text-balance">
+            Browse by Cuisine
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {SUPPORTED_CUISINES.map((cuisine) => {
+              const isSelected = selectedCuisines.includes(cuisine);
+              return (
+                <button
+                  key={cuisine}
+                  onClick={() =>
+                    setSelectedCuisines(prev =>
+                      prev.includes(cuisine)
+                        ? prev.filter(c => c !== cuisine)
+                        : [...prev, cuisine]
+                    )
+                  }
+                  aria-pressed={isSelected}
+                  aria-label={`Filter by ${cuisine} cuisine`}
+                  className={cn(
+                    'relative overflow-hidden rounded-xl border transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 text-left aspect-square',
+                    isSelected
+                      ? 'bg-stone-200 border-stone-300'
+                      : 'bg-stone-50 border-stone-200 hover:bg-stone-100'
+                  )}
+                >
+                  <span className="absolute top-3 left-3 font-albert text-[15px] md:text-[17px] font-semibold text-stone-700 z-10">
+                    {cuisine}
+                  </span>
+                  <Image
+                    src={CUISINE_ICON_MAP[cuisine] || ''}
+                    alt={`${cuisine} cuisine`}
+                    width={256}
+                    height={256}
+                    quality={100}
+                    unoptimized={true}
+                    className="absolute -bottom-[12%] -right-[15%] w-[100%] h-[100%] object-contain"
+                    draggable={false}
+                  />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Cooked Filter */}
+        <div className={cn('mb-6', isPageLoaded ? 'page-fade-in-up page-fade-delay-1' : 'opacity-0')}>
+          <button
+            onClick={() => setShowCookedOnly(prev => !prev)}
+            aria-pressed={showCookedOnly}
+            aria-label={showCookedOnly ? 'Show all recipes' : 'Show cooked dishes only'}
+            className={cn(
+              'px-4 py-2 rounded-full font-albert text-[14px] font-medium border whitespace-nowrap transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300',
+              showCookedOnly
+                ? 'bg-stone-200 border-stone-300 text-stone-900'
+                : 'bg-white border-stone-200 text-stone-600 hover:bg-stone-50'
+            )}
+          >
+            Cooked
+          </button>
         </div>
 
         {/* Recipe Display - animate in with delay (main content) */}

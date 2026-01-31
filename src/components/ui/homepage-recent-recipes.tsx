@@ -6,8 +6,26 @@ import { useRecipe } from '@/contexts/RecipeContext';
 import { useRouter } from 'next/navigation';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import History from '@solar-icons/react/csr/time/History';
-import { X } from 'lucide-react';
+import { Ellipsis, ExternalLink, Link, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/useToast';
 
 /**
  * HomepageRecentRecipes Component
@@ -21,11 +39,18 @@ export default function HomepageRecentRecipes() {
   const { setParsedRecipe } = useRecipe();
   const router = useRouter();
   const [showAll, setShowAll] = useState(false);
+  const { showSuccess, showInfo } = useToast();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [recipeToDelete, setRecipeToDelete] = useState<string | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  // Filter out bookmarked recipes — they live in Saved/Cookbook, not Recent
+  const unbookmarkedRecipes = recentRecipes.filter((r) => !isBookmarked(r.id));
 
   // Determine which recipes to display
   // Show 5 by default, or all if showAll is true
-  const displayRecipes = showAll ? recentRecipes : recentRecipes.slice(0, 5);
-  const hasMoreThanFive = recentRecipes.length > 5;
+  const displayRecipes = showAll ? unbookmarkedRecipes : unbookmarkedRecipes.slice(0, 5);
+  const hasMoreThanFive = unbookmarkedRecipes.length > 5;
 
   // Format time display (e.g., "35m", "3h 30m", "48m")
   const formatTime = (minutes?: number): string => {
@@ -149,6 +174,47 @@ export default function HomepageRecentRecipes() {
     }
   };
 
+  // Handle opening recipe in new tab
+  const handleOpenNewTab = (e: React.MouseEvent, recipe: typeof recentRecipes[0]) => {
+    e.stopPropagation();
+    const sourceUrl = recipe.sourceUrl || recipe.url;
+    if (sourceUrl) {
+      window.open(sourceUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  // Handle copy link
+  const handleCopyLink = async (e: React.MouseEvent, recipe: typeof recentRecipes[0]) => {
+    e.stopPropagation();
+    const sourceUrl = recipe.sourceUrl || recipe.url;
+    if (sourceUrl) {
+      try {
+        await navigator.clipboard.writeText(sourceUrl);
+        showSuccess('Link copied', 'Recipe URL copied to clipboard.');
+      } catch {
+        showInfo('Could not copy', 'Your browser blocked clipboard access.');
+      }
+    } else {
+      showInfo('No link available', 'This recipe does not have a source URL.');
+    }
+  };
+
+  // Handle delete with dialog
+  const handleOpenDeleteDialog = (e: React.MouseEvent, recipeId: string) => {
+    e.stopPropagation();
+    setRecipeToDelete(recipeId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (recipeToDelete) {
+      removeRecipe(recipeToDelete);
+      showSuccess('Recipe deleted', 'The recipe was removed from your recent recipes.');
+      setRecipeToDelete(null);
+      setDeleteDialogOpen(false);
+    }
+  };
+
   // Don't render if no recipes
   if (displayRecipes.length === 0) {
     return null;
@@ -170,7 +236,7 @@ export default function HomepageRecentRecipes() {
             variant="ghost"
             size="sm"
             onClick={handleClearAll}
-            className="font-albert text-xs text-stone-500 hover:text-stone-700 mr-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            className="font-albert text-xs text-stone-500 hover:text-stone-700 mr-4 opacity-0 group-hover:opacity-100"
           >
             Clear all
           </Button>
@@ -190,7 +256,6 @@ export default function HomepageRecentRecipes() {
                 w-full flex items-center justify-between
                 py-2 pr-2
                 hover:bg-stone-50 rounded-lg
-                transition-colors duration-200
                 group
               "
             >
@@ -202,14 +267,13 @@ export default function HomepageRecentRecipes() {
                   className="
                     flex-shrink-0 p-1
                     rounded-full
-                    transition-colors duration-200
                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-1
                   "
                   aria-label={isBookmarkedState ? 'Remove bookmark' : 'Bookmark recipe'}
                 >
                   <Bookmark
                     className={`
-                      w-5 h-5 transition-colors duration-200
+                      w-5 h-5
                       ${isBookmarkedState 
                         ? 'fill-[#78716C] text-[#78716C]' 
                         : 'fill-[#D6D3D1] text-[#D6D3D1] hover:fill-[#A8A29E] hover:text-[#A8A29E]'
@@ -242,22 +306,56 @@ export default function HomepageRecentRecipes() {
                 </button>
               </div>
 
-              {/* Right: Delete Icon - Only visible on hover */}
-              <div className="flex items-center gap-1 flex-shrink-0 ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                {/* Delete Icon */}
-                <button
-                  onClick={(e) => handleDeleteRecipe(e, recipe.id)}
-                  className="
-                    flex-shrink-0 p-1
-                    rounded-full
-                    transition-colors duration-200
-                    text-stone-400 hover:text-stone-600
-                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-1
-                  "
-                  aria-label="Delete recipe"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+              {/* Right: 3-Dot Menu - Only visible on hover or when open */}
+              <div className={`flex items-center gap-1 flex-shrink-0 ml-2 ${openMenuId === recipe.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                <DropdownMenu open={openMenuId === recipe.id} onOpenChange={(open) => setOpenMenuId(open ? recipe.id : null)}>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      onClick={(e) => e.stopPropagation()}
+                      className="
+                        flex-shrink-0 p-1
+                        rounded-full
+                        text-stone-400 hover:text-stone-600
+                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-1
+                      "
+                      aria-label="More options"
+                    >
+                      <Ellipsis className="w-4 h-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    {(recipe.sourceUrl || recipe.url) && (
+                      <DropdownMenuItem onSelect={() => handleOpenNewTab({} as any, recipe)}>
+                        <ExternalLink className="w-4 h-4" />
+                        <span>Open in new tab</span>
+                      </DropdownMenuItem>
+                    )}
+
+                    <DropdownMenuSeparator />
+
+                    <DropdownMenuItem onSelect={() => handleBookmarkToggle({} as any, recipe.id)}>
+                      <Bookmark className="w-4 h-4" />
+                      <span>{isBookmarkedState ? 'Unsave recipe' : 'Save recipe'}</span>
+                    </DropdownMenuItem>
+
+                    {(recipe.sourceUrl || recipe.url) && (
+                      <DropdownMenuItem onSelect={() => handleCopyLink({} as any, recipe)}>
+                        <Link className="w-4 h-4" />
+                        <span>Copy link</span>
+                      </DropdownMenuItem>
+                    )}
+
+                    <DropdownMenuSeparator />
+
+                    <DropdownMenuItem
+                      onSelect={() => handleOpenDeleteDialog({} as any, recipe.id)}
+                      className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>Delete</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           );
@@ -270,13 +368,36 @@ export default function HomepageRecentRecipes() {
               variant="ghost"
               size="sm"
               onClick={() => setShowAll(true)}
-              className="font-albert text-xs text-stone-500 hover:text-stone-700 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+              className="font-albert text-xs text-stone-500 hover:text-stone-700 opacity-0 group-hover:opacity-100"
             >
               See more
             </Button>
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete recipe?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this recipe? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setRecipeToDelete(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

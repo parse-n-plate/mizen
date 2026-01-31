@@ -70,7 +70,7 @@
     margin: 0;
     padding: 0;
     overflow-x: hidden;
-    background-color: #FAFAF9; /* Match footer background to eliminate black negative space behind rounded corners */
+    background-color: #FFFFFF;
   }
 
   * {
@@ -1410,6 +1410,56 @@
   @keyframes tooltip-in {
     from { opacity: 0; transform: translate(-50%, 4px); }
     to { opacity: 1; transform: translate(-50%, 0); }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     HOVER CARD ANIMATION
+     Uses CSS transitions + @starting-style for enter/exit.
+     Radix Presence detects the transition and waits for transitionend
+     before unmounting on close.
+     Enter: 150ms ease-out-cubic — snappy popover entry.
+     Exit: 100ms ease-out-quad — quick, non-blocking dismiss.
+     data-instant skips the enter animation when moving between cards.
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  .hover-card-content[data-state="open"] {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    transform-origin: var(--radix-hover-card-content-transform-origin);
+    transition:
+      opacity 150ms var(--ease-out-cubic),
+      transform 150ms var(--ease-out-cubic);
+  }
+
+  /* Entry state — defines "from" values when element first renders */
+  @starting-style {
+    .hover-card-content[data-state="open"] {
+      opacity: 0;
+      transform: scale(0.96) translateY(2px);
+    }
+  }
+
+  .hover-card-content[data-state="closed"] {
+    opacity: 0;
+    transform: scale(0.97) translateY(2px);
+    transform-origin: var(--radix-hover-card-content-transform-origin);
+    transition:
+      opacity 100ms var(--ease-out-quad),
+      transform 100ms var(--ease-out-quad);
+  }
+
+  /* When moving between cards, skip the enter animation only */
+  .hover-card-content[data-state="open"][data-instant] {
+    transition-duration: 0ms;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hover-card-content[data-state="open"],
+    .hover-card-content[data-state="closed"] {
+      transition: none;
+      opacity: 1;
+      transform: none;
+    }
   }
 
   /* Recipe Step List Layout */
