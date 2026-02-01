@@ -9,12 +9,10 @@ import React, {
   ReactNode,
 } from 'react';
 
-export type IngredientExpandStyle = 'accordion' | 'modal' | 'sidepanel' | 'things3' | 'mobile-drawer';
 export type StepSizing = 'sm' | 'med' | 'lg';
 export type FontFamily = 'sans' | 'serif';
 
 type UISettingsState = {
-  ingredientExpandStyle: IngredientExpandStyle;
   stepSizing: StepSizing;
   fontFamily: FontFamily;
 };
@@ -22,7 +20,6 @@ type UISettingsState = {
 type UISettingsContextType = {
   settings: UISettingsState;
   isReady: boolean;
-  setIngredientExpandStyle: (style: IngredientExpandStyle) => void;
   setStepSizing: (sizing: StepSizing) => void;
   setFontFamily: (family: FontFamily) => void;
 };
@@ -30,7 +27,6 @@ type UISettingsContextType = {
 const STORAGE_KEY = 'uiSettings';
 
 const defaultSettings: UISettingsState = {
-  ingredientExpandStyle: 'accordion',
   stepSizing: 'med',
   fontFamily: 'sans',
 };
@@ -50,8 +46,6 @@ export function UISettingsProvider({ children }: { children: ReactNode }) {
       if (stored) {
         const parsed = JSON.parse(stored) as Partial<UISettingsState>;
         setSettings({
-          ingredientExpandStyle:
-            parsed.ingredientExpandStyle ?? defaultSettings.ingredientExpandStyle,
           stepSizing:
             parsed.stepSizing ?? defaultSettings.stepSizing,
           fontFamily:
@@ -76,10 +70,6 @@ export function UISettingsProvider({ children }: { children: ReactNode }) {
     }
   }, [isReady, settings]);
 
-  const setIngredientExpandStyle = (style: IngredientExpandStyle) => {
-    setSettings((prev) => ({ ...prev, ingredientExpandStyle: style }));
-  };
-
   const setStepSizing = (sizing: StepSizing) => {
     setSettings((prev) => ({ ...prev, stepSizing: sizing }));
   };
@@ -92,7 +82,6 @@ export function UISettingsProvider({ children }: { children: ReactNode }) {
     () => ({
       settings,
       isReady,
-      setIngredientExpandStyle,
       setStepSizing,
       setFontFamily,
     }),
