@@ -182,11 +182,11 @@ export function addRecentRecipe(
     const updatedRecipes = [newRecipe, ...filteredRecipes];
 
     // Keep only the most recent MAX_RECENT_RECIPES, but never evict bookmarked recipes
-    const bookmarkedIds = getBookmarkedRecipeIds();
+    const bookmarkedIdSet = new Set(getBookmarkedRecipeIds());
     const bookmarked: ParsedRecipe[] = [];
     const nonBookmarked: ParsedRecipe[] = [];
     for (const r of updatedRecipes) {
-      if (bookmarkedIds.includes(r.id)) {
+      if (bookmarkedIdSet.has(r.id)) {
         bookmarked.push(r);
       } else {
         nonBookmarked.push(r);

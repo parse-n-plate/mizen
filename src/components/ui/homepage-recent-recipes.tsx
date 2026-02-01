@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRecipe } from '@/contexts/RecipeContext';
 import { useRouter } from 'next/navigation';
@@ -35,7 +35,15 @@ import { useToast } from '@/hooks/useToast';
  * Based on Figma design - clean, minimal vertical list.
  */
 export default function HomepageRecentRecipes() {
-  const { recentRecipes, getRecipeById, removeRecipe, clearRecipes, isBookmarked, toggleBookmark } = useParsedRecipes();
+  const {
+    recentRecipes,
+    bookmarkedRecipeIds,
+    getRecipeById,
+    removeRecipe,
+    clearRecipes,
+    isBookmarked,
+    toggleBookmark,
+  } = useParsedRecipes();
   const { setParsedRecipe } = useRecipe();
   const router = useRouter();
   const [showAll, setShowAll] = useState(false);
@@ -45,7 +53,14 @@ export default function HomepageRecentRecipes() {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   // Filter out bookmarked recipes — they live in Saved/Cookbook, not Recent
-  const unbookmarkedRecipes = recentRecipes.filter((r) => !isBookmarked(r.id));
+  const bookmarkedIdSet = useMemo(
+    () => new Set(bookmarkedRecipeIds),
+    [bookmarkedRecipeIds],
+  );
+  const unbookmarkedRecipes = useMemo(
+    () => recentRecipes.filter((r) => !bookmarkedIdSet.has(r.id)),
+    [recentRecipes, bookmarkedIdSet],
+  );
 
   // Determine which recipes to display
   // Show 5 by default, or all if showAll is true
@@ -121,9 +136,7 @@ export default function HomepageRecentRecipes() {
   };
 
   // Handle bookmark toggle - shows confirmation dialog if currently bookmarked
-  const handleBookmarkToggle = (e: React.MouseEvent, recipeId: string) => {
-    e.stopPropagation(); // Prevent triggering the recipe click
-    
+  const handleBookmarkToggle = (recipeId: string) => {
     // Check if recipe is currently bookmarked
     const isCurrentlyBookmarked = isBookmarked(recipeId);
     
@@ -142,23 +155,6 @@ export default function HomepageRecentRecipes() {
     }
   };
 
-  // Handle individual recipe deletion
-  const handleDeleteRecipe = (e: React.MouseEvent, recipeId: string) => {
-    e.stopPropagation(); // Prevent triggering the recipe click
-    
-    // Show confirmation dialog before deleting
-    const confirmed = window.confirm(
-      'Are you sure you want to delete this recipe? This action cannot be undone.'
-    );
-
-    if (confirmed) {
-      // Remove recipe from storage and context
-      // Note: If recipe was bookmarked, it will be removed from bookmarks automatically
-      // when the recipe is deleted (bookmarks reference recipe IDs that no longer exist)
-      removeRecipe(recipeId);
-    }
-  };
-
   // Handle clearing all recipes
   const handleClearAll = () => {
     // Show confirmation dialog before clearing
@@ -174,19 +170,20 @@ export default function HomepageRecentRecipes() {
     }
   };
 
+  const getSourceUrl = (recipe: typeof recentRecipes[0]) =>
+    recipe.sourceUrl || recipe.url;
+
   // Handle opening recipe in new tab
-  const handleOpenNewTab = (e: React.MouseEvent, recipe: typeof recentRecipes[0]) => {
-    e.stopPropagation();
-    const sourceUrl = recipe.sourceUrl || recipe.url;
+  const handleOpenNewTab = (recipe: typeof recentRecipes[0]) => {
+    const sourceUrl = getSourceUrl(recipe);
     if (sourceUrl) {
       window.open(sourceUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
   // Handle copy link
-  const handleCopyLink = async (e: React.MouseEvent, recipe: typeof recentRecipes[0]) => {
-    e.stopPropagation();
-    const sourceUrl = recipe.sourceUrl || recipe.url;
+  const handleCopyLink = async (recipe: typeof recentRecipes[0]) => {
+    const sourceUrl = getSourceUrl(recipe);
     if (sourceUrl) {
       try {
         await navigator.clipboard.writeText(sourceUrl);
@@ -200,8 +197,7 @@ export default function HomepageRecentRecipes() {
   };
 
   // Handle delete with dialog
-  const handleOpenDeleteDialog = (e: React.MouseEvent, recipeId: string) => {
-    e.stopPropagation();
+  const handleOpenDeleteDialog = (recipeId: string) => {
     setRecipeToDelete(recipeId);
     setDeleteDialogOpen(true);
   };
@@ -263,7 +259,10 @@ export default function HomepageRecentRecipes() {
               <div className="flex items-center gap-3 flex-1 min-w-0 pl-4">
                 {/* Bookmark Icon - Always visible */}
                 <button
-                  onClick={(e) => handleBookmarkToggle(e, recipe.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleBookmarkToggle(recipe.id);
+                      }}
                   className="
                     flex-shrink-0 p-1
                     rounded-full
@@ -325,7 +324,7 @@ export default function HomepageRecentRecipes() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
                     {(recipe.sourceUrl || recipe.url) && (
-                      <DropdownMenuItem onSelect={() => handleOpenNewTab({} as any, recipe)}>
+                      <DropdownMenuItem onSelect={() => handleOpenNewTab(recipe)}>
                         <ExternalLink className="w-4 h-4" />
                         <span>Open in new tab</span>
                       </DropdownMenuItem>
@@ -333,13 +332,13 @@ export default function HomepageRecentRecipes() {
 
                     <DropdownMenuSeparator />
 
-                    <DropdownMenuItem onSelect={() => handleBookmarkToggle({} as any, recipe.id)}>
+                    <DropdownMenuItem onSelect={() => handleBookmarkToggle(recipe.id)}>
                       <Bookmark className="w-4 h-4" />
                       <span>{isBookmarkedState ? 'Unsave recipe' : 'Save recipe'}</span>
                     </DropdownMenuItem>
 
                     {(recipe.sourceUrl || recipe.url) && (
-                      <DropdownMenuItem onSelect={() => handleCopyLink({} as any, recipe)}>
+                      <DropdownMenuItem onSelect={() => handleCopyLink(recipe)}>
                         <Link className="w-4 h-4" />
                         <span>Copy link</span>
                       </DropdownMenuItem>
@@ -348,7 +347,7 @@ export default function HomepageRecentRecipes() {
                     <DropdownMenuSeparator />
 
                     <DropdownMenuItem
-                      onSelect={() => handleOpenDeleteDialog({} as any, recipe.id)}
+                      onSelect={() => handleOpenDeleteDialog(recipe.id)}
                       className="text-red-600 focus:text-red-600 focus:bg-red-50"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -401,4 +400,3 @@ export default function HomepageRecentRecipes() {
     </div>
   );
 }
-

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
@@ -39,7 +39,7 @@ import {
 export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showAllSaved, setShowAllSaved] = useState(false);
-  const { recentRecipes, getBookmarkedRecipes, isBookmarked, isLoaded, getRecipeById } = useParsedRecipes();
+  const { recentRecipes, bookmarkedRecipeIds, getBookmarkedRecipes, isLoaded, getRecipeById } = useParsedRecipes();
   const { setParsedRecipe } = useRecipe();
   const router = useRouter();
   const pathname = usePathname();
@@ -56,6 +56,14 @@ export default function Sidebar() {
   });
 
   const bookmarkedRecipes = getBookmarkedRecipes();
+  const bookmarkedIdSet = useMemo(
+    () => new Set(bookmarkedRecipeIds),
+    [bookmarkedRecipeIds],
+  );
+  const recentUnbookmarked = useMemo(
+    () => recentRecipes.filter((recipe) => !bookmarkedIdSet.has(recipe.id)),
+    [recentRecipes, bookmarkedIdSet],
+  );
 
   const formatTime = (minutes?: number): string => {
     if (!minutes) return '';
@@ -295,7 +303,7 @@ export default function Sidebar() {
             )}
 
             {/* Recent Recipes Section — exclude saved/bookmarked recipes */}
-            {isLoaded && recentRecipes.filter((r) => !isBookmarked(r.id)).length > 0 && (
+            {isLoaded && recentUnbookmarked.length > 0 && (
               <div className="py-2">
                 <div className="px-3 py-1.5 flex items-center gap-2">
                   <span className="font-albert text-xs font-medium text-stone-400 uppercase tracking-wider whitespace-nowrap">
@@ -303,7 +311,7 @@ export default function Sidebar() {
                   </span>
                 </div>
                 <div className="space-y-0.5">
-                  {recentRecipes.filter((r) => !isBookmarked(r.id)).map((recipe) => (
+                  {recentUnbookmarked.map((recipe) => (
                     <RecipeItemWrapper key={recipe.id} recipe={recipe}>
                       <button
                         onClick={() => handleRecipeClick(recipe.id)}
