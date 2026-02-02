@@ -37,7 +37,7 @@ import PlatingGuidanceCard from '@/components/ui/plating-guidance-card';
 import StorageGuidanceCard from '@/components/ui/storage-guidance-card';
 import IngredientsOverlay from '@/components/ui/ingredients-overlay';
 import { useSidebar } from '@/contexts/SidebarContext';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 // Helper function to extract domain from URL for display
 const getDomainFromUrl = (url: string): string => {
@@ -200,7 +200,7 @@ export default function ParsedRecipePage({
   const { recentRecipes, isBookmarked, toggleBookmark, removeRecipe } = useParsedRecipes();
   const router = useRouter();
   const { showMobileNav } = useSidebar();
-  const isMobileViewport = useMediaQuery('(max-width: 767px)');
+  const isMobileViewport = useIsMobile();
   // #region agent log
   if (parsedRecipe) {
     fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'parsed-recipe-page/page.tsx:155',message:'parsedRecipe from context',data:{hasServings:'servings' in parsedRecipe,servings:parsedRecipe.servings,servingsType:typeof parsedRecipe.servings,servingsValue:parsedRecipe.servings,hasAuthor:'author' in parsedRecipe,author:parsedRecipe.author,keys:Object.keys(parsedRecipe)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'C'})}).catch(()=>{});

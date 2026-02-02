@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 type SidebarContextType = {
   isMobileNavVisible: boolean;
@@ -14,7 +14,7 @@ const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [isMobileNavVisible, setIsMobileNavVisible] = useState(true);
-  const isMobile = useMediaQuery('(max-width: 767px)');
+  const isMobile = useIsMobile();
   const pathname = usePathname();
   const initializedRef = useRef(false);
   const prevPathnameRef = useRef(pathname);
@@ -29,7 +29,7 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     initializedRef.current = true;
     prevPathnameRef.current = pathname;
 
-    if (pathname !== '/' && pathname !== '/search') {
+    if (pathname !== '/') {
       setIsMobileNavVisible(false);
     }
   }, [isMobile, pathname]);

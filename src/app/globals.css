@@ -2003,6 +2003,49 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   SEARCH COMMAND MODAL — Slide-down entrance from upper viewport
+   Overrides the default dialog zoom animation with a snappier slide
+   using ease-out-quint for a responsive, Spotlight-like feel.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* Ensure centering — Tailwind v4 translate-x and translate-y both write to the
+   CSS `translate` property, and the animation's `transform` with `forwards`
+   can interfere. This explicit rule guarantees correct centering. */
+[data-slot="dialog-content"].search-command-modal {
+  translate: -50% -50%;
+}
+
+[data-slot="dialog-content"].search-command-modal[data-state="open"] {
+  animation: search-cmd-enter 200ms var(--ease-out-quint) forwards;
+}
+
+[data-slot="dialog-content"].search-command-modal[data-state="closed"] {
+  animation: search-cmd-exit 150ms var(--ease-out-quad) forwards;
+}
+
+@keyframes search-cmd-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes search-cmd-exit {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    REDUCED MOTION - Accessibility support for users who prefer reduced motion
    Disables all animations and transitions when the user has enabled
    "Reduce motion" in their system preferences.

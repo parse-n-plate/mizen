@@ -13,7 +13,7 @@ import Magnifer from '@solar-icons/react/csr/search/Magnifer';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRecipe } from '@/contexts/RecipeContext';
 import { useSidebar } from '@/contexts/SidebarContext';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import RecipeCard, { type RecipeCardData } from '@/components/ui/recipe-card';
 import RecipeQuickViewModal from '@/components/ui/recipe-quick-view-modal';
 import {
@@ -266,7 +266,7 @@ function SavedRecipesContent() {
   const { setParsedRecipe } = useRecipe();
   const router = useRouter();
   const { showMobileNav } = useSidebar();
-  const isMobileViewport = useMediaQuery('(max-width: 767px)');
+  const isMobileViewport = useIsMobile();
 
   const [selectedCuisines, setSelectedCuisines] = useState<SelectedCuisines>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');

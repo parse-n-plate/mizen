@@ -1,11 +1,11 @@
 'use client';
 
 import { useSidebar } from '@/contexts/SidebarContext';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { ArrowLeft } from 'lucide-react';
 
 export default function MobileBackButton() {
-  const isMobile = useMediaQuery('(max-width: 767px)');
+  const isMobile = useIsMobile();
   const { showMobileNav } = useSidebar();
 
   if (!isMobile) return null;

@@ -2,11 +2,11 @@
 
 import React from 'react';
 import { useSidebar } from '@/contexts/SidebarContext';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import Sidebar from '@/components/ui/Sidebar';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const isMobile = useMediaQuery('(max-width: 767px)');
+  const isMobile = useIsMobile();
   const { isMobileNavVisible } = useSidebar();
 
   return (

@@ -88,16 +88,16 @@ export default function RecipeHoverCard({
             {recipe.title}
           </h4>
 
-          {/* Meta row: time + source */}
+          {/* Meta row: source + time */}
           <div className="flex items-center gap-3 text-sm text-stone-500 font-albert">
+            {hostname && (
+              <span className="truncate">{hostname}</span>
+            )}
             {displayTime && (
               <span className="flex items-center gap-1.5">
                 <Clock className="w-4 h-4" />
                 {displayTime}
               </span>
-            )}
-            {hostname && (
-              <span className="truncate">{hostname}</span>
             )}
           </div>
 

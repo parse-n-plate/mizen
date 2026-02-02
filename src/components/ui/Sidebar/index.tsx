@@ -7,7 +7,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRecipe } from '@/contexts/RecipeContext';
 import { useSidebar } from '@/contexts/SidebarContext';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useCommandK } from '@/contexts/CommandKContext';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { useSidebarResize } from '@/hooks/useSidebarResize';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
@@ -44,8 +45,9 @@ export default function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const isMobile = useMediaQuery('(max-width: 767px)');
+  const isMobile = useIsMobile();
   const { hideMobileNav } = useSidebar();
+  const { openSearch } = useCommandK();
 
   const { width: sidebarWidth, isDragging, handleMouseDown } = useSidebarResize({
     minWidth: 200,
@@ -122,9 +124,8 @@ export default function Sidebar() {
 
 
   const navItems = [
-    { icon: Magnifer, label: 'Search', href: '/search', action: 'search' },
-    { icon: ClockCircle, label: 'Timers', href: '/timers', action: 'timers' },
-    { icon: Book, label: 'Cookbook', href: '/saved-recipes', action: 'cookbook' },
+    { icon: ClockCircle, label: 'Timers', href: '/timers' },
+    { icon: Book, label: 'Cookbook', href: '/saved-recipes' },
   ];
 
   const displayedSavedRecipes = showAllSaved
@@ -224,6 +225,19 @@ export default function Sidebar() {
 
           {/* Navigation */}
           <nav className="px-2 py-2">
+            {/* Search — opens command modal */}
+            <button
+              onClick={openSearch}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors font-albert text-sm text-stone-600 hover:bg-stone-100 hover:text-stone-900"
+              aria-label="Search recipes"
+            >
+              <Magnifer className="w-5 h-5 flex-shrink-0" />
+              <span>Search</span>
+              <kbd className="ml-auto hidden md:inline-flex font-albert text-[11px] text-stone-400 bg-stone-100 border border-stone-200 rounded px-1.5 py-0.5">
+                ⌘K
+              </kbd>
+            </button>
+
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -231,7 +245,6 @@ export default function Sidebar() {
                 <Link
                   key={item.label}
                   href={item.href}
-
                   className={`
                     flex items-center gap-3 px-3 py-2 rounded-lg transition-colors font-albert text-sm
                     ${isActive
