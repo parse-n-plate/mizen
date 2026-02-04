@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import { Search, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
@@ -22,8 +22,6 @@ export default function NavbarSearch() {
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [searchResults, setSearchResults] = useState<ParsedRecipe[]>([]);
   const [loading, setLoading] = useState(false);
   const [detectedCuisine, setDetectedCuisine] = useState<string[] | undefined>(undefined);
   const { recentRecipes, addRecipe } = useParsedRecipes();
@@ -57,49 +55,20 @@ export default function NavbarSearch() {
     }
   };
 
-  // Note: isUrl is now imported from @/utils/searchUtils
-  // It supports domain patterns like "allrecipes.com/recipe" without the http prefix
-
-  // Search through cached recipes
-  const searchRecipes = useCallback(
-    (searchQuery: string) => {
-      if (!searchQuery.trim() || isUrl(searchQuery)) {
-        setSearchResults([]);
-        return;
-      }
-
-      const filtered = recentRecipes.filter(
+  // Derive search results from query + recentRecipes (no effect needed)
+  const searchResults = useMemo(() => {
+    if (!query.trim() || isUrl(query)) return [];
+    return recentRecipes
+      .filter(
         (recipe) =>
-          recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          recipe.summary.toLowerCase().includes(searchQuery.toLowerCase()),
-      );
+          recipe.title.toLowerCase().includes(query.toLowerCase()) ||
+          recipe.summary.toLowerCase().includes(query.toLowerCase()),
+      )
+      .slice(0, 5);
+  }, [query, recentRecipes]);
 
-      setSearchResults(filtered.slice(0, 5)); // Show max 5 results
-    },
-    [recentRecipes],
-  );
-
-  // Handle input changes
-  useEffect(() => {
-    searchRecipes(query);
-    setShowDropdown(isFocused && query.trim() !== '' && !isUrl(query));
-  }, [query, isFocused, recentRecipes, searchRecipes]);
-
-  // Handle ESC key to blur/unfocus the search input
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // If ESC is pressed and the search input is focused, blur it
-      if (e.key === 'Escape' && document.activeElement === inputRef.current) {
-        e.preventDefault();
-        inputRef.current?.blur();
-        setIsFocused(false);
-        setShowDropdown(false);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  // Derive dropdown visibility (no effect needed)
+  const showDropdown = isFocused && query.trim() !== '' && !isUrl(query);
 
   // Handle focus - when on parsed recipe page, clear the displayed URL and allow editing
   const handleFocus = () => {
@@ -130,7 +99,7 @@ export default function NavbarSearch() {
   const handleBlur = () => {
     setTimeout(() => {
       setIsFocused(false);
-      setShowDropdown(false);
+  
     }, 200);
   };
 
@@ -151,7 +120,7 @@ export default function NavbarSearch() {
       servings: recipe.servings, // Include servings if available
     });
     setQuery('');
-    setShowDropdown(false);
+
     setIsFocused(false);
     router.push('/parsed-recipe-page');
   };
@@ -284,7 +253,7 @@ export default function NavbarSearch() {
         router.push('/parsed-recipe-page');
         setQuery('');
         setIsFocused(false);
-        setShowDropdown(false);
+    
       }, 1500);
     } catch (err) {
       console.error('[Navbar] Parse error:', err);
@@ -321,11 +290,17 @@ export default function NavbarSearch() {
 
     setQuery('');
     setIsFocused(false);
-    setShowDropdown(false);
+
   };
 
-  // Handle Enter key
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  // Handle keyboard events (Enter to submit, ESC to blur)
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      inputRef.current?.blur();
+      setIsFocused(false);
+      return;
+    }
     if (e.key === 'Enter') {
       e.preventDefault();
       handleSubmit(e as React.FormEvent);
@@ -336,7 +311,7 @@ export default function NavbarSearch() {
   const clearInput = () => {
     setQuery('');
     setIsFocused(false);
-    setShowDropdown(false);
+
     setTimeout(() => {
       inputRef.current?.focus();
     }, 100);
@@ -410,7 +385,7 @@ export default function NavbarSearch() {
                   placeholder={isFocused ? "Enter URL" : "Enter recipe URL"}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleKeyDown}
                   onFocus={handleFocus}
                   onBlur={handleBlur}
                   onPaste={(e) => {
