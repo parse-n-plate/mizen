@@ -358,8 +358,8 @@ export default function Sidebar() {
               );
             })}
 
-            {/* Prototype Lab — dev only */}
-            {process.env.NODE_ENV === 'development' && (
+            {/* Prototype Lab — dev + preview only */}
+            {(process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview') && (
               <NavTooltip label="Prototype Lab">
                 <button
                   onClick={openLab}
