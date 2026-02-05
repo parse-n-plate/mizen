@@ -71,7 +71,7 @@ export default function RootLayout({
                       <Toaster />
                       <SpeedInsights />
                       {process.env.NODE_ENV === 'development' && <Agentation />}
-                      {process.env.NODE_ENV === 'development' && <AdminPrototypingPanel />}
+                      {(process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview') && <AdminPrototypingPanel />}
                     </PrototypeLabProvider>
                   </SidebarProvider>
                 </CommandKProvider>
