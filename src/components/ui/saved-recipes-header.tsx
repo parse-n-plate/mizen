@@ -61,7 +61,7 @@ export function SavedRecipesHeader({
     <div className="flex items-center justify-between gap-4">
       {/* Title */}
       <h2 className="font-domine text-[28px] md:text-[24px] font-normal text-black leading-[1.1] tracking-tight">
-        Saved Recipes
+        Cookbook
       </h2>
 
       {/* Right side: Search and Settings */}
@@ -74,7 +74,7 @@ export function SavedRecipesHeader({
               size="icon"
               onClick={handleSearchIconClick}
               className="h-9 w-9 text-stone-600 hover:text-stone-900 hover:bg-stone-100"
-              aria-label="Search saved recipes"
+              aria-label="Search Cookbook"
             >
               <Magnifer className="h-4 w-4" />
             </Button>

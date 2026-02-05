@@ -9,20 +9,34 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   const { isMobileNavVisible } = useSidebar();
 
+  // Desktop: original flex layout, unchanged
+  if (!isMobile) {
+    return (
+      <div className="flex h-screen overflow-hidden">
+        <div className="contents">
+          <Sidebar />
+        </div>
+        <div className="flex-1 flex flex-col min-h-0">
+          <main className="flex-1 overflow-y-auto">{children}</main>
+        </div>
+      </div>
+    );
+  }
+
+  // Mobile: both panels always rendered, slide via translateX
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sidebar: on mobile, hidden when viewing a page */}
-      <div className={isMobile && !isMobileNavVisible ? 'hidden' : 'contents'}>
+    <div className="relative h-screen overflow-hidden">
+      <div
+        className={`absolute inset-0 mobile-slide-panel ${!isMobileNavVisible ? 'pointer-events-none' : ''}`}
+        style={{ translate: isMobileNavVisible ? '0 0' : '-100% 0' }}
+      >
         <Sidebar />
       </div>
-
-      {/* Main content: on mobile, hidden when sidebar is showing */}
       <div
-        className={`flex-1 flex flex-col min-h-0 ${
-          isMobile && isMobileNavVisible ? 'hidden' : ''
-        }`}
+        className={`absolute inset-0 mobile-slide-panel ${isMobileNavVisible ? 'pointer-events-none' : ''}`}
+        style={{ translate: isMobileNavVisible ? '100% 0' : '0 0' }}
       >
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="h-full overflow-y-auto">{children}</main>
       </div>
     </div>
   );

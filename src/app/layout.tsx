@@ -8,6 +8,8 @@ import { ParsedRecipesProvider } from '@/contexts/ParsedRecipesContext';
 import { TimerProvider } from '@/contexts/TimerContext';
 import { CommandKProvider } from '@/contexts/CommandKContext';
 import { SidebarProvider } from '@/contexts/SidebarContext';
+import { PrototypeLabProvider } from '@/contexts/PrototypeLabContext';
+import { AdminPrototypingPanel } from '@/components/ui/admin-prototyping-panel';
 import { Toaster } from '@/components/ui/sonner';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Agentation } from 'agentation';
@@ -63,11 +65,14 @@ export default function RootLayout({
               <TimerProvider>
                 <CommandKProvider>
                   <SidebarProvider>
-                    <ImageProtection />
-                    <AppShell>{children}</AppShell>
-                    <Toaster />
-                    <SpeedInsights />
-                    {process.env.NODE_ENV === 'development' && <Agentation />}
+                    <PrototypeLabProvider>
+                      <ImageProtection />
+                      <AppShell>{children}</AppShell>
+                      <Toaster />
+                      <SpeedInsights />
+                      {process.env.NODE_ENV === 'development' && <Agentation />}
+                      {process.env.NODE_ENV === 'development' && <AdminPrototypingPanel />}
+                    </PrototypeLabProvider>
                   </SidebarProvider>
                 </CommandKProvider>
               </TimerProvider>

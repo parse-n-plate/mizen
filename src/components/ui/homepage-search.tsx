@@ -396,14 +396,14 @@ export default function HomepageSearch() {
       <div className="w-full max-w-2xl mx-auto">
         <form onSubmit={handleSubmit} className="w-full">
           <div 
-            className={`bg-[#fafaf9] content-stretch flex min-h-[77px] items-center px-[24px] py-[12px] relative rounded-[999px] shrink-0 w-full transition-all group ${
+            className={`bg-[#fafaf9] content-stretch flex min-h-[77px] items-center px-[24px] py-[12px] relative rounded-[24px] shrink-0 w-full transition-all group ${
               isSearchFocused ? 'bg-white shadow-[0_0_0_3px_rgba(0,114,251,0.15)]' : ''
             }`}
           >
             {/* Border overlay - changes color on focus */}
             <div 
               aria-hidden="true" 
-              className={`absolute border-2 border-solid inset-0 pointer-events-none rounded-[999px] transition-all ${
+              className={`absolute border-2 border-solid inset-0 pointer-events-none rounded-[24px] transition-all ${
                 isSearchFocused ? 'border-[#0072fb]' : 'border-[#e7e5e4]'
               }`} 
             />
@@ -521,8 +521,8 @@ export default function HomepageSearch() {
 
               {/* Command+K Shortcut Indicator - Only shown when not focused and no text, hidden on mobile */}
               {!isSearchFocused && !searchValue && !selectedImage && (
-                <div className="shrink-0 hidden md:flex items-center gap-1 px-2 py-1 bg-[#e7e5e4] rounded border border-[#d6d3d1]">
-                  <kbd className="text-[12px] text-[#57534e] font-albert font-medium">⌘K</kbd>
+                <div className="shrink-0 hidden md:flex items-center">
+                  <kbd className="font-albert text-[11px] text-stone-400 bg-stone-100 border border-stone-200 rounded px-1.5 py-0.5">⌘K</kbd>
                 </div>
               )}
             </div>

@@ -41,10 +41,10 @@ export default function RecipeHoverCard({
     e.stopPropagation();
     toggleBookmark(recipe.id);
     showSuccess(
-      bookmarked ? 'Removed from Cookbook' : 'Saved to Cookbook',
+      bookmarked ? 'Removed from Cookbook' : 'Added to Cookbook',
       bookmarked
-        ? `"${recipe.title}" was removed from your saved recipes.`
-        : `"${recipe.title}" was saved to your Cookbook.`
+        ? `"${recipe.title}" was removed from your Cookbook.`
+        : `"${recipe.title}" was added to your Cookbook.`
     );
   };
 
@@ -115,7 +115,7 @@ export default function RecipeHoverCard({
             <button
               onClick={handleToggleBookmark}
               className="p-2 rounded-md hover:bg-stone-100 transition-colors duration-150"
-              aria-label={bookmarked ? 'Unsave recipe' : 'Save recipe'}
+              aria-label={bookmarked ? 'Remove from Cookbook' : 'Add to Cookbook'}
             >
               <Bookmark
                 weight={bookmarked ? 'Bold' : 'Linear'}

@@ -61,10 +61,10 @@ export default function RecipeContextMenu({
   const handleToggleBookmark = () => {
     toggleBookmark(recipe.id);
     showSuccess(
-      bookmarked ? 'Removed from Cookbook' : 'Saved to Cookbook',
+      bookmarked ? 'Removed from Cookbook' : 'Added to Cookbook',
       bookmarked
-        ? `"${recipe.title}" was removed from your saved recipes.`
-        : `"${recipe.title}" was saved to your Cookbook.`
+        ? `"${recipe.title}" was removed from your Cookbook.`
+        : `"${recipe.title}" was added to your Cookbook.`
     );
   };
 
@@ -111,38 +111,38 @@ export default function RecipeContextMenu({
         </ContextMenuTrigger>
         <ContextMenuContent className="w-56">
           <ContextMenuItem onSelect={handleOpenNewTab} disabled={!sourceUrl}>
-            <ExternalLink className="w-4 h-4" />
             <span>Open in new tab</span>
+            <ExternalLink className="w-4 h-4 ml-auto" />
           </ContextMenuItem>
 
           <ContextMenuSeparator />
 
           <ContextMenuItem onSelect={handleToggleBookmark}>
-            <Bookmark className="w-4 h-4" />
-            <span>{bookmarked ? 'Unsave recipe' : 'Save recipe'}</span>
+            <span>{bookmarked ? 'Remove from Cookbook' : 'Add to Cookbook'}</span>
+            <Bookmark className="w-4 h-4 ml-auto" />
           </ContextMenuItem>
           <ContextMenuItem onSelect={handlePin}>
-            <Pin className="w-4 h-4" />
             <span>Pin</span>
+            <Pin className="w-4 h-4 ml-auto" />
           </ContextMenuItem>
           <ContextMenuItem onSelect={handleRename}>
-            <PenLine className="w-4 h-4" />
             <span>Rename</span>
+            <PenLine className="w-4 h-4 ml-auto" />
           </ContextMenuItem>
 
           <ContextMenuSeparator />
 
           <ContextMenuItem onSelect={handleReport}>
-            <Flag className="w-4 h-4" />
             <span>Report</span>
+            <Flag className="w-4 h-4 ml-auto" />
           </ContextMenuItem>
           <ContextMenuItem onSelect={handleArchive}>
-            <Archive className="w-4 h-4" />
             <span>Archive</span>
+            <Archive className="w-4 h-4 ml-auto" />
           </ContextMenuItem>
           <ContextMenuItem onSelect={handleCopyLink} disabled={!sourceUrl}>
-            <Link className="w-4 h-4" />
             <span>Copy link</span>
+            <Link className="w-4 h-4 ml-auto" />
           </ContextMenuItem>
 
           <ContextMenuSeparator />
@@ -151,8 +151,8 @@ export default function RecipeContextMenu({
             variant="destructive"
             onSelect={() => setDeleteDialogOpen(true)}
           >
-            <Trash2 className="w-4 h-4" />
             <span>Delete</span>
+            <Trash2 className="w-4 h-4 ml-auto" />
           </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>

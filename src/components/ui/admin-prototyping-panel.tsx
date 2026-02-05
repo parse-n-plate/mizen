@@ -1,41 +1,43 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { MousePointer2, Play, X, ShoppingBasket } from 'lucide-react';
+import React, { useState } from 'react';
+import * as Tabs from '@radix-ui/react-tabs';
+import { MousePointer2, Play, X, Database, Trash2, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useAdminSettings } from '@/contexts/AdminSettingsContext';
+import { toast } from 'sonner';
+import { usePrototypeLab } from '@/contexts/PrototypeLabContext';
+import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
+import { TEST_FIXTURE_RECIPES } from '@/lib/mockRecipeData';
 import LoadingAnimation from '@/components/ui/loading-animation';
 import { Button } from '@/components/ui/button';
 
-interface AdminPrototypingPanelProps {
-  /** Optional callback when ingredients button is clicked */
-  onIngredientsClick?: () => void;
-}
-
-export function AdminPrototypingPanel({ onIngredientsClick }: AdminPrototypingPanelProps = {}) {
-  const [isOpen, setIsOpen] = useState(false);
+export function AdminPrototypingPanel() {
+  const { isOpen, closeLab } = usePrototypeLab();
+  const { addRecipe, clearRecipes, recentRecipes } = useParsedRecipes();
   const [showLoadingAnimation, setShowLoadingAnimation] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingPhase, setLoadingPhase] = useState<'gathering' | 'reading' | 'plating' | 'done' | undefined>(undefined);
-  const { settings: adminSettings, toggleShowIngredientsForStepList } = useAdminSettings();
+  const [selectedFixtures, setSelectedFixtures] = useState<Set<number>>(
+    () => new Set(TEST_FIXTURE_RECIPES.map((_, i) => i)),
+  );
+  const [isSeeding, setIsSeeding] = useState(false);
 
-  // Add keyboard shortcut support (Cmd/Ctrl + Shift + P)
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Check for Cmd (Mac) or Ctrl (Windows/Linux) + Shift + P
-      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === 'P') {
-        event.preventDefault();
-        setIsOpen((prev) => !prev);
-      }
-      // Also support Escape to close
-      if (event.key === 'Escape' && isOpen) {
-        setIsOpen(false);
-      }
-    };
+  const toggleFixture = (index: number) => {
+    setSelectedFixtures(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
+  const toggleAll = () => {
+    if (selectedFixtures.size === TEST_FIXTURE_RECIPES.length) {
+      setSelectedFixtures(new Set());
+    } else {
+      setSelectedFixtures(new Set(TEST_FIXTURE_RECIPES.map((_, i) => i)));
+    }
+  };
 
   // Function to trigger loading animation for 5 seconds with progress simulation
   const triggerLoadingAnimation = () => {
@@ -78,57 +80,32 @@ export function AdminPrototypingPanel({ onIngredientsClick }: AdminPrototypingPa
     requestAnimationFrame(updateProgress);
   };
 
+  const handleSeedRecipes = () => {
+    if (selectedFixtures.size === 0) return;
+    setIsSeeding(true);
+    try {
+      clearRecipes();
+      const recipesToSeed = TEST_FIXTURE_RECIPES.filter((_, i) => selectedFixtures.has(i));
+      for (const fixture of recipesToSeed) {
+        addRecipe(fixture.recipe as Parameters<typeof addRecipe>[0]);
+      }
+      toast.success(`Seeded ${recipesToSeed.length} test recipes`, {
+        description: recipesToSeed.map(f => f.label).join(', '),
+      });
+    } catch {
+      toast.error('Failed to seed recipes');
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
+  const handleClearRecipes = () => {
+    clearRecipes();
+    toast.success('Cleared all recipes');
+  };
+
   return (
     <>
-      {/* Floating buttons container - only visible when panel is closed */}
-      {!isOpen && (
-        <div className="fixed bottom-6 right-6 z-[99] flex items-center gap-2">
-          {/* Ingredients Button - positioned to the left of prototype button */}
-          {onIngredientsClick && (
-            <button
-              onClick={onIngredientsClick}
-              className={cn(
-                "w-10 h-10 rounded-full",
-                "bg-stone-900/60 backdrop-blur-sm",
-                "border border-stone-700/40",
-                "flex items-center justify-center",
-                "text-white/70 hover:text-white",
-                "hover:bg-stone-900/80",
-                "transition-all duration-200",
-                "shadow-lg hover:shadow-xl",
-                "opacity-60 hover:opacity-100",
-                "group"
-              )}
-              aria-label="Go to Ingredients"
-              title="Go to Ingredients"
-            >
-              <ShoppingBasket className="h-4 w-4 transition-transform group-hover:scale-110" />
-            </button>
-          )}
-          
-          {/* Prototype Lab Button - shifted left to make room for ingredients button */}
-          <button
-            onClick={() => setIsOpen(true)}
-            className={cn(
-              "w-10 h-10 rounded-full",
-              "bg-stone-900/60 backdrop-blur-sm",
-              "border border-stone-700/40",
-              "flex items-center justify-center",
-              "text-white/70 hover:text-white",
-              "hover:bg-stone-900/80",
-              "transition-all duration-200",
-              "shadow-lg hover:shadow-xl",
-              "opacity-60 hover:opacity-100",
-              "group"
-            )}
-            aria-label="Open Prototype Lab (Cmd/Ctrl + Shift + P)"
-            title="Open Prototype Lab (Cmd/Ctrl + Shift + P)"
-          >
-            <MousePointer2 className="h-4 w-4 transition-transform group-hover:scale-110" />
-          </button>
-        </div>
-      )}
-
       {/* Modal Backdrop - appears when modal is open */}
       {isOpen && (
         <div
@@ -137,14 +114,14 @@ export function AdminPrototypingPanel({ onIngredientsClick }: AdminPrototypingPa
             "bg-black/40 backdrop-blur-sm",
             "animate-in fade-in duration-200"
           )}
-          onClick={() => setIsOpen(false)}
+          onClick={closeLab}
           aria-hidden="true"
         />
       )}
 
       {/* Centered Modal - completely hidden when closed */}
       {isOpen && (
-        <div 
+        <div
           className={cn(
             "fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[101]",
             "bg-white border border-[#E0E0E0]",
@@ -156,15 +133,15 @@ export function AdminPrototypingPanel({ onIngredientsClick }: AdminPrototypingPa
           )}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="p-6 space-y-6">
-            {/* Header with close button */}
-            <div className="flex items-center justify-between pb-2 border-b border-stone-100">
+          {/* Header */}
+          <div className="px-6 pt-6 pb-0">
+            <div className="flex items-center justify-between pb-4">
               <div className="flex items-center gap-2">
                 <MousePointer2 className="h-4 w-4 text-[#FFBA25]" />
                 <h2 className="font-domine font-bold text-stone-900">Prototype Lab</h2>
               </div>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={closeLab}
                 className={cn(
                   "w-6 h-6 rounded-full",
                   "flex items-center justify-center",
@@ -178,40 +155,111 @@ export function AdminPrototypingPanel({ onIngredientsClick }: AdminPrototypingPa
                 <X className="h-4 w-4" />
               </button>
             </div>
+          </div>
 
-            {/* Toggle Controls Section */}
-            <div className="space-y-3">
-              <h3 className="text-[10px] font-albert font-bold uppercase tracking-widest text-stone-400">Display Options</h3>
-              
-              {/* Toggle for Ingredients List */}
-              <div className="flex items-center justify-between p-2 rounded-lg hover:bg-stone-50 transition-colors">
-                <div className="flex flex-col">
-                  <span className="text-xs font-albert font-medium text-stone-900">Ingredients for Step</span>
-                  <span className="text-[10px] font-albert text-stone-400 mt-0.5">Show ingredients list in context panel</span>
-                </div>
+          {/* Tabbed content */}
+          <Tabs.Root defaultValue="fixtures">
+            <Tabs.List className="flex border-b border-stone-200 px-6">
+              <Tabs.Trigger
+                value="fixtures"
+                className="px-3 py-2 text-xs font-albert font-medium text-stone-500 border-b-2 border-transparent data-[state=active]:text-stone-900 data-[state=active]:border-stone-900 transition-colors"
+              >
+                Test Fixtures
+              </Tabs.Trigger>
+              <Tabs.Trigger
+                value="animations"
+                className="px-3 py-2 text-xs font-albert font-medium text-stone-500 border-b-2 border-transparent data-[state=active]:text-stone-900 data-[state=active]:border-stone-900 transition-colors"
+              >
+                Animations
+              </Tabs.Trigger>
+            </Tabs.List>
+
+            {/* Test Fixtures Tab */}
+            <Tabs.Content value="fixtures" className="px-6 py-4 space-y-3">
+              {/* Select all / description row */}
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-albert text-stone-400">
+                  Select recipes to seed. Seeding replaces existing recipes.
+                </p>
                 <button
-                  onClick={toggleShowIngredientsForStepList}
-                  className={cn(
-                    "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#0C0A09]/20 focus:ring-offset-2",
-                    adminSettings.showIngredientsForStepList ? "bg-stone-900" : "bg-stone-200"
-                  )}
-                  aria-label="Toggle ingredients for step list"
+                  onClick={toggleAll}
+                  className="text-[10px] font-albert font-medium text-stone-500 hover:text-stone-900 transition-colors whitespace-nowrap ml-2"
                 >
-                  <span
-                    className={cn(
-                      "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                      adminSettings.showIngredientsForStepList ? "translate-x-6" : "translate-x-1"
-                    )}
-                  />
+                  {selectedFixtures.size === TEST_FIXTURE_RECIPES.length ? 'Deselect all' : 'Select all'}
                 </button>
               </div>
-            </div>
 
-            {/* Loading Animation Test Section */}
-            <div className="space-y-3 pt-4 border-t border-stone-100">
-              <h3 className="text-[10px] font-albert font-bold uppercase tracking-widest text-stone-400">Animation Tests</h3>
-              
-              {/* Button to trigger loading animation */}
+              {/* Fixture checklist */}
+              <div className="max-h-[240px] overflow-y-auto space-y-0.5">
+                {TEST_FIXTURE_RECIPES.map((fixture, index) => {
+                  const checked = selectedFixtures.has(index);
+                  return (
+                    <button
+                      key={fixture.label}
+                      onClick={() => toggleFixture(index)}
+                      className={cn(
+                        "w-full flex items-center gap-2.5 p-2 rounded-lg transition-colors text-left",
+                        "hover:bg-stone-50",
+                        checked ? "opacity-100" : "opacity-50"
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-colors",
+                          checked
+                            ? "bg-stone-900 border-stone-900"
+                            : "border-stone-300 bg-white"
+                        )}
+                      >
+                        {checked && <Check className="w-3 h-3 text-white" />}
+                      </div>
+                      <span className="text-xs font-albert font-medium text-stone-900 truncate">
+                        {fixture.label}
+                      </span>
+                      <div className="flex gap-1 flex-shrink-0 ml-auto">
+                        {fixture.tags.slice(0, 2).map(tag => (
+                          <span
+                            key={tag}
+                            className="text-[9px] font-albert px-1.5 py-0.5 rounded-full bg-stone-100 text-stone-500"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSeedRecipes}
+                  disabled={isSeeding || selectedFixtures.size === 0}
+                  className="flex-1 bg-stone-900 hover:bg-stone-800 text-white text-xs font-albert font-medium py-2"
+                >
+                  <Database className="h-3 w-3 mr-2" />
+                  {isSeeding ? 'Seeding...' : `Seed ${selectedFixtures.size} Recipe${selectedFixtures.size !== 1 ? 's' : ''}`}
+                </Button>
+                <Button
+                  onClick={handleClearRecipes}
+                  disabled={recentRecipes.length === 0}
+                  variant="destructive"
+                  className="text-xs font-albert font-medium py-2"
+                >
+                  <Trash2 className="h-3 w-3 mr-2" />
+                  Clear All
+                </Button>
+              </div>
+
+              {/* Current storage indicator */}
+              <p className="text-[10px] font-albert text-stone-400 text-center">
+                {recentRecipes.length} recipe{recentRecipes.length !== 1 ? 's' : ''} currently in storage
+              </p>
+            </Tabs.Content>
+
+            {/* Animations Tab */}
+            <Tabs.Content value="animations" className="px-6 py-4 space-y-3">
               <Button
                 onClick={triggerLoadingAnimation}
                 disabled={showLoadingAnimation}
@@ -226,13 +274,13 @@ export function AdminPrototypingPanel({ onIngredientsClick }: AdminPrototypingPa
                   Animation will run for 5 seconds
                 </p>
               )}
-            </div>
-          </div>
+            </Tabs.Content>
+          </Tabs.Root>
         </div>
       )}
 
       {/* Loading Animation Component */}
-      <LoadingAnimation 
+      <LoadingAnimation
         isVisible={showLoadingAnimation}
         progress={loadingProgress}
         phase={loadingPhase}
@@ -240,4 +288,3 @@ export function AdminPrototypingPanel({ onIngredientsClick }: AdminPrototypingPa
     </>
   );
 }
-

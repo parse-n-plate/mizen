@@ -12,10 +12,11 @@ import {
   addRecentRecipe,
   getRecipeById,
   updateRecipe as updateRecipeInStorage,
+  removeRecentRecipe,
   getBookmarkedRecipeIds,
+  getBookmarkedRecipes as getBookmarkedRecipesFromStorage,
   addBookmark as addBookmarkToStorage,
   removeBookmark as removeBookmarkFromStorage,
-  isRecipeBookmarked as isRecipeBookmarkedInStorage,
 } from '@/lib/storage';
 
 interface ParsedRecipesContextType {
@@ -47,8 +48,8 @@ export function ParsedRecipesProvider({ children }: { children: ReactNode }) {
     try {
       const storedRecipes = getRecentRecipes();
       setRecentRecipes(storedRecipes);
-      
-      // Load bookmarked recipe IDs
+
+      // Load bookmarked recipe IDs (derived from full bookmark store)
       const bookmarkedIds = getBookmarkedRecipeIds();
       setBookmarkedRecipeIds(bookmarkedIds);
     } catch (error) {
@@ -73,12 +74,11 @@ export function ParsedRecipesProvider({ children }: { children: ReactNode }) {
 
   const updateRecipe = (id: string, updates: Partial<ParsedRecipe>) => {
     try {
-      // Update in localStorage
+      // Update in localStorage (handles both recents and bookmarks)
       updateRecipeInStorage(id, updates);
 
-      // Update state by re-fetching from localStorage
-      const updatedRecipes = getRecentRecipes();
-      setRecentRecipes(updatedRecipes);
+      // Refresh state from localStorage
+      setRecentRecipes(getRecentRecipes());
     } catch (error) {
       console.error('Error updating recipe:', error);
     }
@@ -98,15 +98,12 @@ export function ParsedRecipesProvider({ children }: { children: ReactNode }) {
 
   const removeRecipe = (id: string) => {
     try {
-      // Remove from localStorage
-      const currentRecipes = getRecentRecipes();
-      const filteredRecipes = currentRecipes.filter(
-        (recipe) => recipe.id !== id,
-      );
-      localStorage.setItem('recentRecipes', JSON.stringify(filteredRecipes));
+      // removeRecentRecipe handles both recents and bookmarks
+      removeRecentRecipe(id);
 
-      // Update state
-      setRecentRecipes(filteredRecipes);
+      // Refresh state from both stores
+      setRecentRecipes(getRecentRecipes());
+      setBookmarkedRecipeIds(getBookmarkedRecipeIds());
     } catch (error) {
       console.error('Error removing recipe:', error);
     }
@@ -122,14 +119,14 @@ export function ParsedRecipesProvider({ children }: { children: ReactNode }) {
       const isCurrentlyBookmarked = bookmarkedRecipeIds.includes(id);
 
       if (isCurrentlyBookmarked) {
-        // Remove bookmark
         removeBookmarkFromStorage(id);
-        setBookmarkedRecipeIds((prev) => prev.filter((bookmarkId) => bookmarkId !== id));
       } else {
-        // Add bookmark
         addBookmarkToStorage(id);
-        setBookmarkedRecipeIds((prev) => [...prev, id]);
       }
+
+      // Refresh both slices — addBookmark/removeBookmark move data between stores
+      setRecentRecipes(getRecentRecipes());
+      setBookmarkedRecipeIds(getBookmarkedRecipeIds());
     } catch (error) {
       console.error('Error toggling bookmark:', error);
     }
@@ -139,11 +136,9 @@ export function ParsedRecipesProvider({ children }: { children: ReactNode }) {
     return bookmarkedRecipeIds.includes(id);
   };
 
-  // Get full recipe objects for all bookmarked IDs
+  // Get full recipe objects for all bookmarks
   const getBookmarkedRecipes = (): ParsedRecipe[] => {
-    return bookmarkedRecipeIds
-      .map((id) => getRecipeById(id))
-      .filter((recipe): recipe is ParsedRecipe => recipe !== null);
+    return getBookmarkedRecipesFromStorage();
   };
 
   return (

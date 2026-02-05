@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 
+export const RAIL_WIDTH = 64;
+
 interface UseSidebarResizeOptions {
   minWidth: number;
   maxWidth: number;
@@ -23,15 +25,19 @@ export function useSidebarResize({
   storageKey,
   isCollapsed,
 }: UseSidebarResizeOptions): UseSidebarResizeReturn {
-  const [width, setWidth] = useState(() => {
-    if (typeof window === 'undefined') return defaultWidth;
+  const [width, setWidth] = useState(defaultWidth);
+
+  // Read persisted width after hydration to avoid SSR mismatch
+  useEffect(() => {
     const stored = localStorage.getItem(storageKey);
     if (stored) {
       const parsed = parseInt(stored, 10);
-      if (!isNaN(parsed) && parsed >= minWidth && parsed <= maxWidth) return parsed;
+      if (!isNaN(parsed) && parsed >= minWidth && parsed <= maxWidth) {
+        setWidth(parsed);
+      }
     }
-    return defaultWidth;
-  });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [isDragging, setIsDragging] = useState(false);
   const widthRef = useRef(width);
@@ -98,7 +104,7 @@ export function useSidebarResize({
   }, [handleMouseMove, handleMouseUp]);
 
   if (isCollapsed) {
-    return { width: 0, isDragging: false, handleMouseDown: () => {} };
+    return { width: RAIL_WIDTH, isDragging: false, handleMouseDown: () => {} };
   }
 
   return { width, isDragging, handleMouseDown };

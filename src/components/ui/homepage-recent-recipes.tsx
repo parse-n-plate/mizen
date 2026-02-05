@@ -143,7 +143,7 @@ export default function HomepageRecentRecipes() {
     if (isCurrentlyBookmarked) {
       // If bookmarked, show confirmation dialog
       const confirmed = window.confirm(
-        'Are you sure you want to remove this recipe from your bookmarks? You can bookmark it again later.'
+        'Are you sure you want to remove this recipe from your Cookbook? You can add it back later.'
       );
       
       if (confirmed) {
@@ -268,7 +268,7 @@ export default function HomepageRecentRecipes() {
                     rounded-full
                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-1
                   "
-                  aria-label={isBookmarkedState ? 'Remove bookmark' : 'Bookmark recipe'}
+                  aria-label={isBookmarkedState ? 'Remove from Cookbook' : 'Add to Cookbook'}
                 >
                   <Bookmark
                     className={`
@@ -325,22 +325,22 @@ export default function HomepageRecentRecipes() {
                   <DropdownMenuContent align="end" className="w-56">
                     {(recipe.sourceUrl || recipe.url) && (
                       <DropdownMenuItem onSelect={() => handleOpenNewTab(recipe)}>
-                        <ExternalLink className="w-4 h-4" />
                         <span>Open in new tab</span>
+                        <ExternalLink className="w-4 h-4 ml-auto" />
                       </DropdownMenuItem>
                     )}
 
                     <DropdownMenuSeparator />
 
                     <DropdownMenuItem onSelect={() => handleBookmarkToggle(recipe.id)}>
-                      <Bookmark className="w-4 h-4" />
-                      <span>{isBookmarkedState ? 'Unsave recipe' : 'Save recipe'}</span>
+                      <span>{isBookmarkedState ? 'Remove from Cookbook' : 'Add to Cookbook'}</span>
+                      <Bookmark className="w-4 h-4 ml-auto" />
                     </DropdownMenuItem>
 
                     {(recipe.sourceUrl || recipe.url) && (
                       <DropdownMenuItem onSelect={() => handleCopyLink(recipe)}>
-                        <Link className="w-4 h-4" />
                         <span>Copy link</span>
+                        <Link className="w-4 h-4 ml-auto" />
                       </DropdownMenuItem>
                     )}
 
@@ -350,8 +350,8 @@ export default function HomepageRecentRecipes() {
                       onSelect={() => handleOpenDeleteDialog(recipe.id)}
                       className="text-red-600 focus:text-red-600 focus:bg-red-50"
                     >
-                      <Trash2 className="w-4 h-4" />
                       <span>Delete</span>
+                      <Trash2 className="w-4 h-4 ml-auto" />
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -361,13 +361,14 @@ export default function HomepageRecentRecipes() {
         })}
         
         {/* See More Button - Only shows if more than 5 recipes and not already showing all */}
+        {/* Made always visible (removed opacity-0 group-hover:opacity-100) for better discoverability */}
         {hasMoreThanFive && !showAll && (
-          <div className="pl-4 group">
+          <div className="pl-4">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowAll(true)}
-              className="font-albert text-xs text-stone-500 hover:text-stone-700 opacity-0 group-hover:opacity-100"
+              className="font-albert text-xs text-stone-500 hover:text-stone-700"
             >
               See more
             </Button>
