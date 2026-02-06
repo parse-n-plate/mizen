@@ -52,7 +52,7 @@ export default function HomepageRecentRecipes() {
   const [recipeToDelete, setRecipeToDelete] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
-  // Filter out bookmarked recipes — they live in Saved Recipes, not Recent
+  // Filter out bookmarked recipes — they live in Cookbook, not Recent
   const bookmarkedIdSet = useMemo(
     () => new Set(bookmarkedRecipeIds),
     [bookmarkedRecipeIds],
@@ -143,7 +143,7 @@ export default function HomepageRecentRecipes() {
     if (isCurrentlyBookmarked) {
       // If bookmarked, show confirmation dialog
       const confirmed = window.confirm(
-        'Are you sure you want to remove this recipe from your Saved Recipes? You can add it back later.'
+        'Are you sure you want to remove this recipe from your Cookbook? You can add it back later.'
       );
       
       if (confirmed) {
@@ -265,17 +265,18 @@ export default function HomepageRecentRecipes() {
                       }}
                   className="
                     flex-shrink-0 p-1
-                    rounded-full
+                    rounded-full group/bookmark
                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-1
                   "
-                  aria-label={isBookmarkedState ? 'Remove from Saved Recipes' : 'Add to Saved Recipes'}
+                  aria-label={isBookmarkedState ? 'Remove from Cookbook' : 'Add to Cookbook'}
                 >
                   <Bookmark
+                    weight={isBookmarkedState ? 'Bold' : 'Linear'}
                     className={`
-                      w-5 h-5
-                      ${isBookmarkedState 
-                        ? 'fill-[#78716C] text-[#78716C]' 
-                        : 'fill-[#D6D3D1] text-[#D6D3D1] hover:fill-[#A8A29E] hover:text-[#A8A29E]'
+                      w-5 h-5 transition-colors
+                      ${isBookmarkedState
+                        ? 'text-[#78716C] group-hover/bookmark:text-[#57534E]'
+                        : 'text-[#D6D3D1] group-hover/bookmark:text-[#A8A29E]'
                       }
                     `}
                   />
@@ -333,7 +334,7 @@ export default function HomepageRecentRecipes() {
                     <DropdownMenuSeparator />
 
                     <DropdownMenuItem onSelect={() => handleBookmarkToggle(recipe.id)}>
-                      <span>{isBookmarkedState ? 'Remove from Saved Recipes' : 'Add to Saved Recipes'}</span>
+                      <span>{isBookmarkedState ? 'Remove from Cookbook' : 'Add to Cookbook'}</span>
                       <Bookmark className="w-4 h-4 ml-auto" />
                     </DropdownMenuItem>
 

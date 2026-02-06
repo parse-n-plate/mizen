@@ -17,7 +17,7 @@ import SquareDoubleAltArrowLeft from '@solar-icons/react/csr/arrows/SquareDouble
 import SquareDoubleAltArrowRight from '@solar-icons/react/csr/arrows/SquareDoubleAltArrowRight';
 import Magnifer from '@solar-icons/react/csr/search/Magnifer';
 import ClockCircle from '@solar-icons/react/csr/time/ClockCircle';
-import BookmarkIcon from '@solar-icons/react/csr/school/Bookmark';
+import BookBookmarkIcon from '@solar-icons/react/csr/school/BookBookmark';
 import SettingsIcon from '@solar-icons/react/csr/settings/Settings';
 import QuestionCircle from '@solar-icons/react/csr/ui/QuestionCircle';
 import { MousePointer2 } from 'lucide-react';
@@ -147,7 +147,7 @@ export default function Sidebar() {
 
   const navItems = [
     { icon: ClockCircle, label: 'Timers', href: '/timers', disabled: true },
-    { icon: BookmarkIcon, label: 'Saved Recipes', href: '/saved-recipes', disabled: true },
+    { icon: BookBookmarkIcon, label: 'Cookbook', href: '/cookbook', disabled: true },
   ];
 
   const displayedSavedRecipes = showAllSaved
@@ -385,12 +385,12 @@ export default function Sidebar() {
           {!isRail ? (
             <HoverCardGroup>
             <div className="flex-1 overflow-y-auto overflow-x-hidden px-2">
-              {/* Saved Recipes Section */}
+              {/* Cookbook Section */}
               {isLoaded && bookmarkedRecipes.length > 0 && (
                 <div className="py-2">
                   <div className="px-3 py-1.5 flex items-center gap-2">
                     <span className="font-albert text-xs font-medium text-stone-400 uppercase tracking-wider whitespace-nowrap">
-                      Saved Recipes
+                      Cookbook
                     </span>
                   </div>
                   <div className="space-y-0.5">

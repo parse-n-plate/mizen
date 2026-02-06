@@ -52,6 +52,7 @@
     color: var(--color-text-body);
     background-color: white; /* White background for landing page */
     overflow-x: hidden;
+    scrollbar-gutter: stable;
   }
 
   h1,

@@ -71,10 +71,10 @@ export default function RecipeContextMenu({
   const handleToggleBookmark = () => {
     toggleBookmark(recipe.id);
     showSuccess(
-      bookmarked ? 'Removed from Saved Recipes' : 'Added to Saved Recipes',
+      bookmarked ? 'Removed from Cookbook' : 'Added to Cookbook',
       bookmarked
-        ? `"${recipe.title}" was removed from your Saved Recipes.`
-        : `"${recipe.title}" was added to your Saved Recipes.`
+        ? `"${recipe.title}" was removed from your Cookbook.`
+        : `"${recipe.title}" was added to your Cookbook.`
     );
   };
 
@@ -142,7 +142,7 @@ export default function RecipeContextMenu({
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem onSelect={handleToggleBookmark}>
-                  <span>{bookmarked ? 'Remove from Saved Recipes' : 'Add to Saved Recipes'}</span>
+                  <span>{bookmarked ? 'Remove from Cookbook' : 'Add to Cookbook'}</span>
                   <Bookmark className="w-4 h-4 ml-auto" />
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={handlePin}>
@@ -191,7 +191,7 @@ export default function RecipeContextMenu({
           <ContextMenuSeparator />
 
           <ContextMenuItem onSelect={handleToggleBookmark}>
-            <span>{bookmarked ? 'Remove from Saved Recipes' : 'Add to Saved Recipes'}</span>
+            <span>{bookmarked ? 'Remove from Cookbook' : 'Add to Cookbook'}</span>
             <Bookmark className="w-4 h-4 ml-auto" />
           </ContextMenuItem>
           <ContextMenuItem onSelect={handlePin}>
