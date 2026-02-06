@@ -1,10 +1,9 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { XIcon } from 'lucide-react';
-import Bookmark from '@solar-icons/react/csr/school/Bookmark';
+import { XIcon, Link, Upload } from 'lucide-react';
 import {
   CommandDialog,
   CommandInput,
@@ -15,8 +14,8 @@ import {
 } from '@/components/ui/command';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRecipe } from '@/contexts/RecipeContext';
-import { useToast } from '@/hooks/useToast';
 import { getCuisineIcon } from '@/config/cuisineConfig';
+import { isUrl } from '@/utils/searchUtils';
 import type { ParsedRecipe } from '@/lib/storage';
 
 interface SearchCommandModalProps {
@@ -25,13 +24,29 @@ interface SearchCommandModalProps {
 }
 
 export default function SearchCommandModal({ open, onOpenChange }: SearchCommandModalProps) {
-  const { recentRecipes, getRecipeById, isBookmarked, toggleBookmark } = useParsedRecipes();
+  const { recentRecipes, getRecipeById, getBookmarkedRecipes, bookmarkedRecipeIds } =
+    useParsedRecipes();
   const { setParsedRecipe } = useRecipe();
-  const { showSuccess } = useToast();
   const router = useRouter();
   const [search, setSearch] = useState('');
 
-  const displayedRecipes = search ? recentRecipes : recentRecipes.slice(0, 3);
+  const isUrlInput = search.trim().length > 0 && isUrl(search);
+
+  const bookmarkedRecipes = getBookmarkedRecipes();
+
+  const bookmarkedIdSet = useMemo(
+    () => new Set(bookmarkedRecipeIds),
+    [bookmarkedRecipeIds],
+  );
+
+  const recentUnbookmarked = useMemo(
+    () => recentRecipes.filter((recipe) => !bookmarkedIdSet.has(recipe.id)),
+    [recentRecipes, bookmarkedIdSet],
+  );
+
+  const displayedRecentRecipes = search ? recentUnbookmarked : recentUnbookmarked.slice(0, 3);
+
+  const hasAnyRecipes = recentUnbookmarked.length > 0 || bookmarkedRecipes.length > 0;
 
   const handleOpenChange = useCallback(
     (open: boolean) => {
@@ -39,21 +54,6 @@ export default function SearchCommandModal({ open, onOpenChange }: SearchCommand
       onOpenChange(open);
     },
     [onOpenChange],
-  );
-
-  const handleBookmarkToggle = useCallback(
-    (e: React.MouseEvent, recipe: ParsedRecipe) => {
-      e.stopPropagation();
-      const wasBookmarked = isBookmarked(recipe.id);
-      toggleBookmark(recipe.id);
-      showSuccess(
-        wasBookmarked ? 'Removed from Cookbook' : 'Added to Cookbook',
-        wasBookmarked
-          ? `"${recipe.title}" was removed from your Cookbook.`
-          : `"${recipe.title}" was added to your Cookbook.`,
-      );
-    },
-    [isBookmarked, toggleBookmark, showSuccess],
   );
 
   const formatTime = (minutes?: number): string => {
@@ -101,7 +101,6 @@ export default function SearchCommandModal({ open, onOpenChange }: SearchCommand
           prepTimeMinutes: fullRecipe.prepTimeMinutes,
           cookTimeMinutes: fullRecipe.cookTimeMinutes,
           totalTimeMinutes: fullRecipe.totalTimeMinutes,
-          servings: fullRecipe.servings,
           plate: fullRecipe.plate,
         });
         onOpenChange(false);
@@ -109,6 +108,50 @@ export default function SearchCommandModal({ open, onOpenChange }: SearchCommand
       }
     },
     [getRecipeById, setParsedRecipe, router, onOpenChange],
+  );
+
+  const handleAddViaUrl = useCallback(() => {
+    onOpenChange(false);
+    router.push('/');
+  }, [onOpenChange, router]);
+
+  const handleAddViaImage = useCallback(() => {
+    onOpenChange(false);
+    router.push('/?action=upload-image');
+  }, [onOpenChange, router]);
+
+  const handleParseDetectedUrl = useCallback(() => {
+    const url = search.trim();
+    onOpenChange(false);
+    router.push(`/?url=${encodeURIComponent(url)}`);
+  }, [onOpenChange, router, search]);
+
+  const renderRecipeItem = (recipe: ParsedRecipe) => (
+    <CommandItem
+      key={recipe.id}
+      value={`${recipe.title} ${recipe.author || ''} ${(recipe.cuisine || []).join(' ')}`}
+      onSelect={() => handleSelectRecipe(recipe.id)}
+      className="flex items-center gap-3 px-3 py-3 rounded-xl font-albert cursor-pointer data-[selected=true]:bg-stone-100/80 data-[selected=true]:text-stone-900"
+    >
+      <Image
+        src={getRecipeIconPath(recipe)}
+        alt=""
+        width={28}
+        height={28}
+        className="w-7 h-7 flex-shrink-0 object-contain"
+        unoptimized
+      />
+      <div className="flex-1 min-w-0">
+        <span className="text-sm text-stone-900 font-medium truncate block">
+          {recipe.title}
+        </span>
+        <span className="text-xs text-stone-500 truncate block">
+          {[recipe.author, recipe.cuisine?.[0], getDisplayTime(recipe)]
+            .filter(Boolean)
+            .join(' \u00b7 ')}
+        </span>
+      </div>
+    </CommandItem>
   );
 
   return (
@@ -132,59 +175,88 @@ export default function SearchCommandModal({ open, onOpenChange }: SearchCommand
         </button>
       </div>
       <CommandInput
-        placeholder="Search recipes..."
+        placeholder="Search or paste a URL..."
         value={search}
         onValueChange={setSearch}
         className="font-albert text-base text-stone-800 placeholder:text-stone-400"
       />
-      <CommandList className="max-h-[360px] max-md:max-h-none max-md:flex-1">
-        <CommandEmpty className="font-albert text-stone-500 px-3 py-8">
-          No recipes found.
+      <CommandList className="max-h-[400px] max-md:max-h-none max-md:flex-1 px-2 pb-2">
+        <CommandEmpty className="font-albert text-stone-400 px-4 py-10 text-center">
+          No results found.
         </CommandEmpty>
-        <CommandGroup heading={search ? 'Recipes' : 'Recent'} className="font-albert">
-          {displayedRecipes.map((recipe) => (
+
+        {/* URL detected: show parse action */}
+        {isUrlInput ? (
+          <CommandGroup heading="Add Recipe" className="font-albert pt-2">
             <CommandItem
-              key={recipe.id}
-              value={`${recipe.title} ${recipe.author || ''} ${(recipe.cuisine || []).join(' ')}`}
-              onSelect={() => handleSelectRecipe(recipe.id)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-albert cursor-pointer data-[selected=true]:bg-stone-100 data-[selected=true]:text-stone-900"
+              value={`parse add recipe url ${search}`}
+              onSelect={handleParseDetectedUrl}
+              className="flex items-center gap-3 px-3 py-3 rounded-xl font-albert cursor-pointer data-[selected=true]:bg-stone-100/80 data-[selected=true]:text-stone-900"
             >
-              <Image
-                src={getRecipeIconPath(recipe)}
-                alt=""
-                width={28}
-                height={28}
-                className="w-7 h-7 flex-shrink-0 object-contain"
-                unoptimized
-              />
+              <Link className="w-5 h-5 text-stone-400 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <span className="text-sm text-stone-900 font-medium truncate block">
-                  {recipe.title}
+                  Parse recipe from URL
                 </span>
-                <span className="text-xs text-stone-500 truncate block">
-                  {[recipe.author, recipe.cuisine?.[0], getDisplayTime(recipe)]
-                    .filter(Boolean)
-                    .join(' \u00b7 ')}
+                <span className="text-xs text-stone-400 truncate block mt-0.5">
+                  {search.trim()}
                 </span>
               </div>
-              <button
-                onClick={(e) => handleBookmarkToggle(e, recipe)}
-                className="p-1.5 rounded-lg flex-shrink-0 transition-colors hover:bg-stone-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300"
-                aria-label={isBookmarked(recipe.id) ? 'Remove from Cookbook' : 'Save to Cookbook'}
-              >
-                <Bookmark
-                  className={`w-4.5 h-4.5 transition-colors ${
-                    isBookmarked(recipe.id)
-                      ? 'fill-[#78716C] text-[#78716C]'
-                      : 'fill-[#D6D3D1] text-[#D6D3D1] hover:fill-[#A8A29E] hover:text-[#A8A29E]'
-                  }`}
-                />
-              </button>
             </CommandItem>
-          ))}
-        </CommandGroup>
+          </CommandGroup>
+        ) : (
+          /* Default: show add via URL and add via image */
+          <CommandGroup heading="Add Recipe" className="font-albert pt-2">
+            <CommandItem
+              value="add recipe via url link paste"
+              onSelect={handleAddViaUrl}
+              className="flex items-center gap-3 px-3 py-3 rounded-xl font-albert cursor-pointer data-[selected=true]:bg-stone-100/80 data-[selected=true]:text-stone-900"
+            >
+              <Link className="w-5 h-5 text-stone-400 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="text-sm text-stone-900 font-medium">Add via URL</span>
+                <span className="text-xs text-stone-400 block mt-0.5">Paste a recipe link</span>
+              </div>
+            </CommandItem>
+            <CommandItem
+              value="add recipe via image upload photo scan"
+              onSelect={handleAddViaImage}
+              className="flex items-center gap-3 px-3 py-3 rounded-xl font-albert cursor-pointer data-[selected=true]:bg-stone-100/80 data-[selected=true]:text-stone-900"
+            >
+              <Upload className="w-5 h-5 text-stone-400 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="text-sm text-stone-900 font-medium">Add via Image</span>
+                <span className="text-xs text-stone-400 block mt-0.5">Upload a recipe photo</span>
+              </div>
+            </CommandItem>
+          </CommandGroup>
+        )}
+
+        {/* Recent recipes */}
+        {displayedRecentRecipes.length > 0 && (
+          <CommandGroup heading="Recent" className="font-albert pt-3">
+            {displayedRecentRecipes.map(renderRecipeItem)}
+          </CommandGroup>
+        )}
+
+        {/* Cookbook (bookmarked/saved recipes) */}
+        {bookmarkedRecipes.length > 0 && (
+          <CommandGroup heading="Cookbook" className="font-albert pt-3">
+            {bookmarkedRecipes.map(renderRecipeItem)}
+          </CommandGroup>
+        )}
+
+        {/* Empty state when no recipes exist */}
+        {!hasAnyRecipes && !search && (
+          <div className="px-4 py-10 text-center">
+            <p className="font-albert text-sm text-stone-400">No recipes yet</p>
+            <p className="font-albert text-xs text-stone-300 mt-1.5">
+              Add your first recipe via URL or image
+            </p>
+          </div>
+        )}
       </CommandList>
-      <div className="border-t border-stone-200 px-3 py-2 hidden md:flex items-center justify-end gap-1">
+      <div className="border-t border-stone-100 px-4 py-2.5 hidden md:flex items-center justify-end gap-1">
         <kbd className="font-albert text-[11px] text-stone-400 bg-stone-100 border border-stone-200 rounded px-1.5 py-0.5">
           Esc
         </kbd>

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, Upload, X } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRecipe } from '@/contexts/RecipeContext';
 import {
@@ -42,6 +42,7 @@ export default function HomepageSearch() {
   const { addRecipe } = useParsedRecipes();
   const { showError, showInfo } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Note: Command+K handling is now done globally via CommandKContext
   // This component's input will be focused when Command+K is pressed on the homepage
@@ -362,6 +363,25 @@ export default function HomepageSearch() {
     },
     [setParsedRecipe, addRecipe, showError, showInfo, router],
   );
+
+  // Handle query params from SearchCommandModal (e.g. ?action=upload-image or ?url=...)
+  useEffect(() => {
+    const action = searchParams.get('action');
+    const urlParam = searchParams.get('url');
+
+    if (action === 'upload-image') {
+      router.replace('/', { scroll: false });
+      setTimeout(() => {
+        fileInputRef.current?.click();
+      }, 200);
+    } else if (urlParam) {
+      router.replace('/', { scroll: false });
+      setSearchValue(urlParam);
+      setTimeout(() => {
+        handleParse(urlParam);
+      }, 200);
+    }
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
