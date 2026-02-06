@@ -11,7 +11,7 @@ export default function Navbar() {
   const { bookmarkedRecipeIds, isLoaded } = useParsedRecipes();
   const hasSavedRecipes = bookmarkedRecipeIds.length > 0;
   const pathname = usePathname();
-  const isOnSavedRecipesPage = pathname === '/cookbook';
+  const isOnSavedRecipesPage = pathname === '/saved-recipes';
 
   return (
     <div className="bg-white px-4 md:px-6 py-3 md:py-4 sticky top-0 z-[10000] border-b border-stone-200">
@@ -35,13 +35,13 @@ export default function Navbar() {
         {isLoaded && (
           <div className="flex items-center flex-shrink-0">
             <Link
-              href="/cookbook"
+              href="/saved-recipes"
               className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 border border-stone-200 ${
                 isOnSavedRecipesPage
                   ? 'bg-stone-200'
                   : 'hover:bg-stone-100'
               }`}
-              aria-label="View Cookbook"
+              aria-label="View Saved Recipes"
               aria-current={isOnSavedRecipesPage ? 'page' : undefined}
             >
               <Bookmark
@@ -61,7 +61,7 @@ export default function Navbar() {
                   ? 'text-stone-600'
                   : 'text-stone-400'
               }`}>
-                Cookbook
+                Saved Recipes
               </span>
             </Link>
           </div>

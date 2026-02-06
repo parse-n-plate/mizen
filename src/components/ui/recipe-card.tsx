@@ -68,7 +68,7 @@ export default function RecipeCard({
     // If recipe is currently bookmarked, show confirmation dialog
     if (isBookmarkedState) {
       const confirmed = window.confirm(
-        'Are you sure you want to remove this recipe from your Cookbook? You can add it back later.'
+        'Are you sure you want to remove this recipe from your Saved Recipes? You can add it back later.'
       );
 
       if (confirmed) {
@@ -169,7 +169,7 @@ export default function RecipeCard({
     // If recipe is currently bookmarked, show confirmation dialog before unsaving
     if (isBookmarkedState) {
       const confirmed = window.confirm(
-        'Are you sure you want to remove this recipe from your Cookbook? You can add it back later.'
+        'Are you sure you want to remove this recipe from your Saved Recipes? You can add it back later.'
       );
 
       if (confirmed) {
@@ -207,7 +207,7 @@ export default function RecipeCard({
         onPointerUpCapture={(e) => e.stopPropagation()}
         onClick={handleBookmarkToggle}
         className="absolute top-4 right-12 z-20 p-1.5 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 bg-white/50 backdrop-blur-sm"
-        aria-label={isBookmarkedState ? 'Remove from Cookbook' : 'Add to Cookbook'}
+        aria-label={isBookmarkedState ? 'Remove from Saved Recipes' : 'Add to Saved Recipes'}
       >
         <Bookmark
           className={`
@@ -244,7 +244,7 @@ export default function RecipeCard({
             <ClipboardText weight="Bold" className={`w-4 h-4 ml-auto ${copiedRecipe ? 'text-green-600' : ''}`} />
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={handleUnsave}>
-            <span>Remove from Cookbook</span>
+            <span>Remove from Saved Recipes</span>
             <Bookmark weight="Bold" className="w-4 h-4 ml-auto" />
           </DropdownMenuItem>
         </DropdownMenuContent>

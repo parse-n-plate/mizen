@@ -147,7 +147,7 @@ export default function Sidebar() {
 
   const navItems = [
     { icon: ClockCircle, label: 'Timers', href: '/timers', disabled: true },
-    { icon: BookmarkIcon, label: 'Cookbook', href: '/cookbook', disabled: true },
+    { icon: BookmarkIcon, label: 'Saved Recipes', href: '/saved-recipes', disabled: true },
   ];
 
   const displayedSavedRecipes = showAllSaved
@@ -390,7 +390,7 @@ export default function Sidebar() {
                 <div className="py-2">
                   <div className="px-3 py-1.5 flex items-center gap-2">
                     <span className="font-albert text-xs font-medium text-stone-400 uppercase tracking-wider whitespace-nowrap">
-                      Cookbook
+                      Saved Recipes
                     </span>
                   </div>
                   <div className="space-y-0.5">
@@ -441,7 +441,7 @@ export default function Sidebar() {
                 <div className="py-2">
                   <div className="px-3 py-1.5 flex items-center gap-2">
                     <span className="font-albert text-xs font-medium text-stone-400 uppercase tracking-wider whitespace-nowrap">
-                      Recent
+                      Your Recipes
                     </span>
                   </div>
                   <div className="space-y-0.5">

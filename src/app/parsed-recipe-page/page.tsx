@@ -264,7 +264,7 @@ export default function ParsedRecipePage({
     // If recipe is currently bookmarked, show confirmation dialog
     if (isBookmarkedState) {
       const confirmed = window.confirm(
-        'Are you sure you want to remove this recipe from your Cookbook? You can add it back later.'
+        'Are you sure you want to remove this recipe from your Saved Recipes? You can add it back later.'
       );
       
       if (confirmed) {
@@ -875,7 +875,7 @@ export default function ParsedRecipePage({
                         <motion.button
                           onClick={handleBookmarkToggle}
                           className={`flex-shrink-0 p-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 cursor-pointer ${justBookmarked && !shouldReduceMotion ? 'bookmark-just-saved' : ''}`}
-                          aria-label={isBookmarkedState ? 'Remove from Cookbook' : 'Add to Cookbook'}
+                          aria-label={isBookmarkedState ? 'Remove from Saved Recipes' : 'Add to Saved Recipes'}
                           initial={{ scale: 1, rotate: 0 }}
                           whileHover={shouldReduceMotion ? {} : { 
                             scale: 1.08,

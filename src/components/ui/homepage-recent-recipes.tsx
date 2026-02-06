@@ -52,7 +52,7 @@ export default function HomepageRecentRecipes() {
   const [recipeToDelete, setRecipeToDelete] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
-  // Filter out bookmarked recipes — they live in Saved/Cookbook, not Recent
+  // Filter out bookmarked recipes — they live in Saved Recipes, not Recent
   const bookmarkedIdSet = useMemo(
     () => new Set(bookmarkedRecipeIds),
     [bookmarkedRecipeIds],
@@ -143,7 +143,7 @@ export default function HomepageRecentRecipes() {
     if (isCurrentlyBookmarked) {
       // If bookmarked, show confirmation dialog
       const confirmed = window.confirm(
-        'Are you sure you want to remove this recipe from your Cookbook? You can add it back later.'
+        'Are you sure you want to remove this recipe from your Saved Recipes? You can add it back later.'
       );
       
       if (confirmed) {
@@ -268,7 +268,7 @@ export default function HomepageRecentRecipes() {
                     rounded-full
                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-1
                   "
-                  aria-label={isBookmarkedState ? 'Remove from Cookbook' : 'Add to Cookbook'}
+                  aria-label={isBookmarkedState ? 'Remove from Saved Recipes' : 'Add to Saved Recipes'}
                 >
                   <Bookmark
                     className={`
@@ -333,7 +333,7 @@ export default function HomepageRecentRecipes() {
                     <DropdownMenuSeparator />
 
                     <DropdownMenuItem onSelect={() => handleBookmarkToggle(recipe.id)}>
-                      <span>{isBookmarkedState ? 'Remove from Cookbook' : 'Add to Cookbook'}</span>
+                      <span>{isBookmarkedState ? 'Remove from Saved Recipes' : 'Add to Saved Recipes'}</span>
                       <Bookmark className="w-4 h-4 ml-auto" />
                     </DropdownMenuItem>
 
