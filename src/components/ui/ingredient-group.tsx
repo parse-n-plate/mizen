@@ -80,7 +80,7 @@ export function IngredientGroup({
         {/* Container for title and progress pie */}
         <div className="flex items-center gap-3 flex-1">
           {/* Group Title */}
-          <h3 className="font-domine text-[18px] text-[#0C0A09] font-semibold leading-[1.2] capitalize">
+          <h3 className="font-albert text-[16px] text-[#0C0A09] font-semibold leading-[17.9px] capitalize">
             {title}
           </h3>
 
@@ -129,8 +129,8 @@ export function IngredientGroup({
           {/* Chevron Icon - After progress pie, rotates when expanded, fades in on hover */}
           <motion.div
             animate={{ rotate: isExpanded ? 0 : -90 }}
-            transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: 'easeInOut' }}
-            className="flex-shrink-0 ingredient-group-chevron"
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className={`flex-shrink-0 ${isExpanded ? 'ingredient-group-chevron' : ''}`}
           >
             <ChevronDown className="w-5 h-5 text-stone-400 group-hover:text-stone-600 transition-colors duration-[180ms]" />
           </motion.div>

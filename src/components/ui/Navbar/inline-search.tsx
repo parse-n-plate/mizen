@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Search, X } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
@@ -27,9 +27,6 @@ export default function InlineSearch() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [detectedCuisine, setDetectedCuisine] = useState<string[] | undefined>(undefined);
-  const [recentRecipes, setRecentRecipes] = useState<ParsedRecipe[]>([]);
-  const [filteredRecipes, setFilteredRecipes] = useState<ParsedRecipe[]>([]);
-  const [showRecents, setShowRecents] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -42,46 +39,34 @@ export default function InlineSearch() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Load recent recipes
-  useEffect(() => {
-    const allRecipes = contextRecipes.slice(0, 10); // Load more recipes for searching
-    setRecentRecipes(allRecipes);
-    setFilteredRecipes(allRecipes.slice(0, 5)); // Initially show last 5
-  }, [contextRecipes]);
+  // Derive recent and filtered recipes from context (no effect needed)
+  const recentRecipes = useMemo(() => contextRecipes.slice(0, 10), [contextRecipes]);
 
-  // Filter recipes based on query (progressive disclosure)
-  useEffect(() => {
-    if (!isExpanded) {
-      setShowRecents(false);
-      return;
-    }
-
-    if (!query.trim() || isUrl(query)) {
-      // Show recent recipes when empty or URL detected
-      setFilteredRecipes(recentRecipes.slice(0, 5));
-      setShowRecents(recentRecipes.length > 0 && !isUrl(query));
-    } else {
-      // Filter recipes by title or summary
-      const searchQuery = query.toLowerCase().trim();
-      const filtered = recentRecipes.filter(
+  const filteredRecipes = useMemo(() => {
+    if (!isExpanded) return [];
+    if (!query.trim() || isUrl(query)) return recentRecipes.slice(0, 5);
+    const searchQuery = query.toLowerCase().trim();
+    return recentRecipes
+      .filter(
         (recipe) =>
           recipe.title.toLowerCase().includes(searchQuery) ||
           recipe.summary?.toLowerCase().includes(searchQuery) ||
           recipe.description?.toLowerCase().includes(searchQuery)
-      );
-      setFilteredRecipes(filtered.slice(0, 8)); // Show up to 8 filtered results
-      setShowRecents(filtered.length > 0);
-    }
-    // Reset selected index when query changes
-    setSelectedIndex(-1);
+      )
+      .slice(0, 8);
   }, [query, recentRecipes, isExpanded]);
+
+  const showRecents = isExpanded && (
+    (!query.trim() && recentRecipes.length > 0) ||
+    (query.trim() && !isUrl(query) && filteredRecipes.length > 0)
+  );
 
   // Handle clicks outside to collapse
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsExpanded(false);
-        setShowRecents(false);
+
         setQuery('');
       }
     };
@@ -95,10 +80,9 @@ export default function InlineSearch() {
     };
   }, [isExpanded]);
 
-  // Handle focus - expand and show recents
+  // Handle focus - expand (showRecents is derived from isExpanded)
   const handleFocus = () => {
     setIsExpanded(true);
-    // Show recents will be handled by the useEffect based on query
   };
 
   // Handle URL parsing
@@ -108,7 +92,7 @@ export default function InlineSearch() {
 
       try {
         setLoading(true);
-        setShowRecents(false);
+
 
         // Step 0: Check if input looks like a URL (early validation)
         if (!isUrl(url)) {
@@ -222,7 +206,7 @@ export default function InlineSearch() {
           router.push('/parsed-recipe-page');
           setQuery('');
           setIsExpanded(false);
-          setShowRecents(false);
+  
         }, 1500);
       } catch (err) {
         console.error('[InlineSearch] Parse error:', err);
@@ -259,7 +243,6 @@ export default function InlineSearch() {
     router.push('/parsed-recipe-page');
     setQuery('');
     setIsExpanded(false);
-    setShowRecents(false);
   };
 
   // Handle form submission
@@ -283,7 +266,7 @@ export default function InlineSearch() {
       // Handle ESC to close
       if (e.key === 'Escape') {
         setIsExpanded(false);
-        setShowRecents(false);
+
         setQuery('');
         setSelectedIndex(-1);
       }
@@ -312,7 +295,7 @@ export default function InlineSearch() {
       case 'Escape':
         e.preventDefault();
         setIsExpanded(false);
-        setShowRecents(false);
+
         setQuery('');
         setSelectedIndex(-1);
         break;
@@ -344,7 +327,7 @@ export default function InlineSearch() {
               type="text"
               placeholder={isExpanded ? "Enter recipe URL" : "Enter recipe URL"}
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => { setQuery(e.target.value); setSelectedIndex(-1); }}
               onFocus={handleFocus}
               onKeyDown={handleKeyDown}
               className="ingredients-search-input"
