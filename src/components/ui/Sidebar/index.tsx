@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
@@ -10,7 +10,12 @@ import { useSidebar } from '@/contexts/SidebarContext';
 import { useCommandK } from '@/contexts/CommandKContext';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useSidebarResize } from '@/hooks/useSidebarResize';
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { Pin, Plus } from 'lucide-react';
 import SquareDoubleAltArrowLeft from '@solar-icons/react/csr/arrows/SquareDoubleAltArrowLeft';
@@ -37,6 +42,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import FeedbackDialog from './FeedbackDialog';
+import SidebarControlPopover from './SidebarControlPopover';
 
 // Shared easing for all sidebar transitions — ease-in-out-cubic
 const SIDEBAR_EASING = 'cubic-bezier(0.645,0.045,0.355,1)';
@@ -49,19 +55,68 @@ const SIDEBAR_EASING = 'cubic-bezier(0.645,0.045,0.355,1)';
  * On desktop, collapses to a 64px icon rail instead of fully hiding.
  */
 export default function Sidebar() {
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const { recentRecipes, getBookmarkedRecipes, isLoaded, getRecipeById, isPinned, touchRecipe } = useParsedRecipes();
+  const {
+    recentRecipes,
+    getBookmarkedRecipes,
+    isLoaded,
+    getRecipeById,
+    isPinned,
+    touchRecipe,
+  } = useParsedRecipes();
   const { parsedRecipe, setParsedRecipe } = useRecipe();
   const router = useRouter();
   const pathname = usePathname();
 
   const isMobile = useIsMobile();
-  const { hideMobileNav } = useSidebar();
+  const {
+    hideMobileNav,
+    sidebarMode,
+    isCollapsed,
+    setIsCollapsed,
+    setIsHoverExpanded,
+  } = useSidebar();
   const { openSearch } = useCommandK();
   const { openLab } = usePrototypeLab();
 
-  const { width: sidebarWidth, isDragging, handleMouseDown } = useSidebarResize({
+  // Track whether a popover/dropdown is open to suppress hover-collapse
+  const popoverOpenRef = useRef(false);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleMouseEnter = useCallback(() => {
+    if (sidebarMode !== 'hover' || isMobile) return;
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    setIsHoverExpanded(true);
+  }, [sidebarMode, isMobile, setIsHoverExpanded]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (sidebarMode !== 'hover' || isMobile) return;
+    if (popoverOpenRef.current) return;
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHoverExpanded(false);
+    }, 150);
+  }, [sidebarMode, isMobile, setIsHoverExpanded]);
+
+  const handlePopoverOpenChange = useCallback(
+    (open: boolean) => {
+      popoverOpenRef.current = open;
+      if (!open && sidebarMode === 'hover' && !isMobile) {
+        hoverTimeoutRef.current = setTimeout(() => {
+          setIsHoverExpanded(false);
+        }, 150);
+      }
+    },
+    [sidebarMode, isMobile, setIsHoverExpanded],
+  );
+
+  const {
+    width: sidebarWidth,
+    isDragging,
+    handleMouseDown,
+  } = useSidebarResize({
     minWidth: 200,
     maxWidth: 480,
     defaultWidth: 288,
@@ -75,7 +130,10 @@ export default function Sidebar() {
     const combined = [...recentRecipes, ...bookmarked];
     const pinned = combined.filter((r) => r.pinnedAt);
     const unpinned = combined.filter((r) => !r.pinnedAt);
-    pinned.sort((a, b) => new Date(b.pinnedAt!).getTime() - new Date(a.pinnedAt!).getTime());
+    pinned.sort(
+      (a, b) =>
+        new Date(b.pinnedAt!).getTime() - new Date(a.pinnedAt!).getTime(),
+    );
     return [...pinned, ...unpinned];
   }, [recentRecipes, getBookmarkedRecipes]);
 
@@ -86,7 +144,9 @@ export default function Sidebar() {
     // Fallback: match by sourceUrl
     if (!parsedRecipe.sourceUrl) return null;
     const match = allRecipes.find(
-      (r) => r.sourceUrl === parsedRecipe.sourceUrl || r.url === parsedRecipe.sourceUrl,
+      (r) =>
+        r.sourceUrl === parsedRecipe.sourceUrl ||
+        r.url === parsedRecipe.sourceUrl,
     );
     return match?.id ?? null;
   }, [pathname, parsedRecipe, allRecipes]);
@@ -148,14 +208,24 @@ export default function Sidebar() {
     }
   };
 
-
   const navItems = [
     { icon: ClockCircle, label: 'Timers', href: '/timers', disabled: true },
-    { icon: BookBookmarkIcon, label: 'Cookbook', href: '/cookbook', disabled: true },
+    {
+      icon: BookBookmarkIcon,
+      label: 'Cookbook',
+      href: '/cookbook',
+      disabled: true,
+    },
   ];
 
   // Helper to wrap recipe items — skip HoverCard on mobile (no hover on touch)
-  const RecipeItemWrapper = ({ recipe, children }: { recipe: ParsedRecipe; children: React.ReactNode }) => {
+  const RecipeItemWrapper = ({
+    recipe,
+    children,
+  }: {
+    recipe: ParsedRecipe;
+    children: React.ReactNode;
+  }) => {
     if (isMobile) {
       return (
         <RecipeContextMenu recipe={recipe} onRecipeClick={handleRecipeClick}>
@@ -173,7 +243,13 @@ export default function Sidebar() {
   };
 
   // Helper: wrap children in a tooltip only when collapsed (desktop)
-  const NavTooltip = ({ label, children }: { label: string; children: React.ReactNode }) => {
+  const NavTooltip = ({
+    label,
+    children,
+  }: {
+    label: string;
+    children: React.ReactNode;
+  }) => {
     if (!isCollapsed || isMobile) return <>{children}</>;
     return (
       <Tooltip>
@@ -194,18 +270,27 @@ export default function Sidebar() {
           // Desktop styles
           !isMobile && [
             'border-r border-stone-200',
-            !isDragging && `transition-[width] duration-200 ease-[${SIDEBAR_EASING}]`,
+            !isDragging &&
+              `transition-[width] duration-200 ease-[${SIDEBAR_EASING}]`,
           ],
+          // Hover mode: overlay instead of pushing content
+          !isMobile &&
+            sidebarMode === 'hover' &&
+            'absolute z-30 left-0 top-0',
           // Mobile styles
           isMobile && 'w-full border-r-0',
         )}
         style={!isMobile ? { width: sidebarWidth } : undefined}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         {/* Inner container — transitions width in sync with aside */}
         <div
           className={cn(
             'h-full flex flex-col',
-            !isMobile && !isDragging && `transition-[width,min-width] duration-200 ease-[${SIDEBAR_EASING}]`,
+            !isMobile &&
+              !isDragging &&
+              `transition-[width,min-width] duration-200 ease-[${SIDEBAR_EASING}]`,
           )}
           style={
             !isMobile
@@ -227,8 +312,8 @@ export default function Sidebar() {
               Mizen
             </Link>
 
-            {/* Collapse button — fades out when collapsed */}
-            {!isMobile && (
+            {/* Collapse button — only in expanded mode */}
+            {!isMobile && sidebarMode === 'expanded' && (
               <button
                 onClick={() => setIsCollapsed(true)}
                 className={cn(
@@ -238,12 +323,15 @@ export default function Sidebar() {
                 aria-label="Collapse sidebar"
                 tabIndex={isRail ? -1 : undefined}
               >
-                <SquareDoubleAltArrowLeft weight="Outline" className="w-4 h-4 text-stone-300" />
+                <SquareDoubleAltArrowLeft
+                  weight="Outline"
+                  className="w-4 h-4 text-stone-300"
+                />
               </button>
             )}
 
-            {/* Expand button — fades in when collapsed, positioned at left edge */}
-            {!isMobile && (
+            {/* Expand button — only in expanded mode, fades in when collapsed */}
+            {!isMobile && sidebarMode === 'expanded' && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
@@ -255,10 +343,15 @@ export default function Sidebar() {
                     aria-label="Expand sidebar"
                     tabIndex={isRail ? undefined : -1}
                   >
-                    <SquareDoubleAltArrowRight weight="Outline" className="w-5 h-5 text-stone-400" />
+                    <SquareDoubleAltArrowRight
+                      weight="Outline"
+                      className="w-5 h-5 text-stone-400"
+                    />
                   </button>
                 </TooltipTrigger>
-                {isRail && <TooltipContent side="right">Expand sidebar</TooltipContent>}
+                {isRail && (
+                  <TooltipContent side="right">Expand sidebar</TooltipContent>
+                )}
               </Tooltip>
             )}
           </div>
@@ -278,10 +371,14 @@ export default function Sidebar() {
                 aria-label="New Recipe"
               >
                 <Plus className="w-5 h-5 flex-shrink-0" />
-                <div className={cn(
-                  'overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200',
-                  isRail ? 'max-w-0 opacity-0 ml-0' : 'max-w-[200px] opacity-100 ml-2',
-                )}>
+                <div
+                  className={cn(
+                    'overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200',
+                    isRail
+                      ? 'max-w-0 opacity-0 ml-0'
+                      : 'max-w-[200px] opacity-100 ml-2',
+                  )}
+                >
                   <span>New Recipe</span>
                 </div>
               </button>
@@ -298,10 +395,14 @@ export default function Sidebar() {
                 aria-label="Search recipes"
               >
                 <Magnifer className="w-5 h-5 flex-shrink-0" />
-                <div className={cn(
-                  'flex-1 flex items-center overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200',
-                  isRail ? 'max-w-0 opacity-0 ml-0' : 'max-w-[250px] opacity-100 ml-3',
-                )}>
+                <div
+                  className={cn(
+                    'flex-1 flex items-center overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200',
+                    isRail
+                      ? 'max-w-0 opacity-0 ml-0'
+                      : 'max-w-[250px] opacity-100 ml-3',
+                  )}
+                >
                   <span>Search</span>
                   <kbd className="ml-auto hidden md:inline-flex opacity-0 group-hover:opacity-100 font-albert text-[11px] text-stone-400 bg-stone-100 border border-stone-200 rounded px-1.5 py-0.5 transition-opacity duration-200">
                     ⌘K
@@ -323,10 +424,14 @@ export default function Sidebar() {
                       aria-disabled="true"
                     >
                       <Icon className="w-5 h-5 flex-shrink-0" />
-                      <div className={cn(
-                        'flex-1 flex items-center overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200',
-                        isRail ? 'max-w-0 opacity-0 ml-0' : 'max-w-[250px] opacity-100 ml-3',
-                      )}>
+                      <div
+                        className={cn(
+                          'flex-1 flex items-center overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200',
+                          isRail
+                            ? 'max-w-0 opacity-0 ml-0'
+                            : 'max-w-[250px] opacity-100 ml-3',
+                        )}
+                      >
                         <span>{item.label}</span>
                         <span className="ml-auto hidden md:inline-flex opacity-0 group-hover:opacity-100 font-albert text-[11px] text-stone-400 bg-stone-100 border border-stone-200 rounded px-1.5 py-0.5 transition-opacity duration-200">
                           Coming soon
@@ -350,10 +455,14 @@ export default function Sidebar() {
                     aria-label={item.label}
                   >
                     <Icon className="w-5 h-5 flex-shrink-0" />
-                    <div className={cn(
-                      'overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200',
-                      isRail ? 'max-w-0 opacity-0 ml-0' : 'max-w-[200px] opacity-100 ml-3',
-                    )}>
+                    <div
+                      className={cn(
+                        'overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200',
+                        isRail
+                          ? 'max-w-0 opacity-0 ml-0'
+                          : 'max-w-[200px] opacity-100 ml-3',
+                      )}
+                    >
                       <span>{item.label}</span>
                     </div>
                   </Link>
@@ -362,7 +471,8 @@ export default function Sidebar() {
             })}
 
             {/* Prototype Lab — dev + preview only */}
-            {(process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview') && (
+            {(process.env.NODE_ENV === 'development' ||
+              process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview') && (
               <NavTooltip label="Prototype Lab">
                 <button
                   onClick={openLab}
@@ -370,10 +480,14 @@ export default function Sidebar() {
                   aria-label="Open Prototype Lab"
                 >
                   <MousePointer2 className="w-5 h-5 flex-shrink-0" />
-                  <div className={cn(
-                    'overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200',
-                    isRail ? 'max-w-0 opacity-0 ml-0' : 'max-w-[200px] opacity-100 ml-3',
-                  )}>
+                  <div
+                    className={cn(
+                      'overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200',
+                      isRail
+                        ? 'max-w-0 opacity-0 ml-0'
+                        : 'max-w-[200px] opacity-100 ml-3',
+                    )}
+                  >
                     <span>Prototype Lab</span>
                   </div>
                 </button>
@@ -387,53 +501,57 @@ export default function Sidebar() {
           {/* Scrollable recipes section — hidden when collapsed */}
           {!isRail ? (
             <HoverCardGroup>
-            <div className="flex-1 overflow-y-auto overflow-x-hidden px-2">
-              {/* Recipes Section — pinned first, then by last accessed */}
-              {isLoaded && allRecipes.length > 0 && (
-                <div className="py-2">
-                  <div className="px-3 py-1.5 flex items-center gap-2">
-                    <span className="font-albert text-xs font-medium text-stone-400 uppercase tracking-wider whitespace-nowrap">
-                      Recipes
-                    </span>
-                  </div>
-                  <div className="space-y-0.5">
-                    {allRecipes.map((recipe) => (
-                      <RecipeItemWrapper key={recipe.id} recipe={recipe}>
-                        <button
-                          onClick={() => handleRecipeClick(recipe.id)}
-                          className={cn(
-                            "w-full flex items-center justify-between px-3 py-2 rounded-lg text-left group",
-                            activeRecipeId === recipe.id
-                              ? "bg-stone-200/70"
-                              : "hover:bg-stone-100",
-                          )}
-                        >
-                          <span className="flex items-center gap-2 min-w-0 pr-2">
-                            <Image
-                              src={getRecipeIconPath(recipe)}
-                              alt=""
-                              width={28}
-                              height={28}
-                              className="w-7 h-7 flex-shrink-0 object-contain"
-                              unoptimized
-                            />
-                            <span className={cn(
-                              "font-albert text-sm truncate",
-                              activeRecipeId === recipe.id ? "text-stone-900 font-medium" : "text-stone-700",
-                            )}>
-                              {recipe.title}
-                            </span>
-                            {recipe.pinnedAt && (
-                              <Pin className="w-3 h-3 text-stone-400 flex-shrink-0" />
+              <div className="flex-1 overflow-y-auto overflow-x-hidden px-2">
+                {/* Recipes Section — pinned first, then by last accessed */}
+                {isLoaded && allRecipes.length > 0 && (
+                  <div className="py-2">
+                    <div className="px-3 py-1.5 flex items-center gap-2">
+                      <span className="font-albert text-xs font-medium text-stone-400 uppercase tracking-wider whitespace-nowrap">
+                        Recipes
+                      </span>
+                    </div>
+                    <div className="space-y-0.5">
+                      {allRecipes.map((recipe) => (
+                        <RecipeItemWrapper key={recipe.id} recipe={recipe}>
+                          <button
+                            onClick={() => handleRecipeClick(recipe.id)}
+                            className={cn(
+                              'w-full flex items-center justify-between px-3 py-2 rounded-lg text-left group',
+                              activeRecipeId === recipe.id
+                                ? 'bg-stone-200/70'
+                                : 'hover:bg-stone-100',
                             )}
-                          </span>
-                        </button>
-                      </RecipeItemWrapper>
-                    ))}
+                          >
+                            <span className="flex items-center gap-2 min-w-0 pr-2">
+                              <Image
+                                src={getRecipeIconPath(recipe)}
+                                alt=""
+                                width={28}
+                                height={28}
+                                className="w-7 h-7 flex-shrink-0 object-contain"
+                                unoptimized
+                              />
+                              <span
+                                className={cn(
+                                  'font-albert text-sm truncate',
+                                  activeRecipeId === recipe.id
+                                    ? 'text-stone-900 font-medium'
+                                    : 'text-stone-700',
+                                )}
+                              >
+                                {recipe.title}
+                              </span>
+                              {recipe.pinnedAt && (
+                                <Pin className="w-3 h-3 text-stone-400 flex-shrink-0" />
+                              )}
+                            </span>
+                          </button>
+                        </RecipeItemWrapper>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
             </HoverCardGroup>
           ) : (
             /* Spacer to push footer to bottom when collapsed */
@@ -441,12 +559,22 @@ export default function Sidebar() {
           )}
 
           {/* Footer - Settings & Help */}
-          <div className={cn(
-            'py-3 border-t border-stone-200 flex items-center',
-            isRail ? 'px-2 flex-col gap-2 justify-center' : 'px-4 justify-end gap-1',
-          )}>
+          <div
+            className={cn(
+              'py-3 border-t border-stone-200 flex items-center',
+              isRail
+                ? 'px-2 flex-col gap-2 justify-center'
+                : 'px-4 justify-end gap-1',
+            )}
+          >
+            {!isMobile && (
+              <SidebarControlPopover
+                isRail={isRail}
+                onOpenChange={handlePopoverOpenChange}
+              />
+            )}
             <NavTooltip label="Help">
-              <DropdownMenu>
+              <DropdownMenu onOpenChange={handlePopoverOpenChange}>
                 <DropdownMenuTrigger asChild>
                   <button
                     className="p-2 rounded-lg hover:bg-stone-100 transition-colors"
@@ -455,7 +583,10 @@ export default function Sidebar() {
                     <QuestionCircle className="w-5 h-5 text-stone-400" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent side={isRail ? 'right' : 'top'} align={isRail ? 'start' : 'end'}>
+                <DropdownMenuContent
+                  side={isRail ? 'right' : 'top'}
+                  align={isRail ? 'start' : 'end'}
+                >
                   <DropdownMenuItem onClick={() => setFeedbackOpen(true)}>
                     <ChatRoundLine className="w-4 h-4 text-stone-400" />
                     Leave Feedback
@@ -481,11 +612,10 @@ export default function Sidebar() {
               </span>
             </NavTooltip>
           </div>
-
         </div>
 
-        {/* Resize handle - desktop only */}
-        {!isMobile && !isCollapsed && (
+        {/* Resize handle - desktop expanded mode only */}
+        {!isMobile && !isCollapsed && sidebarMode === 'expanded' && (
           <div
             onMouseDown={handleMouseDown}
             className={cn(

@@ -4,20 +4,61 @@ import React, { createContext, useContext, useState, useMemo, useCallback, useEf
 import { usePathname } from 'next/navigation';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
+export type SidebarMode = 'expanded' | 'collapsed' | 'hover';
+
 type SidebarContextType = {
   isMobileNavVisible: boolean;
   showMobileNav: () => void;
   hideMobileNav: () => void;
+  sidebarMode: SidebarMode;
+  setSidebarMode: (mode: SidebarMode) => void;
+  isCollapsed: boolean;
+  setIsCollapsed: (collapsed: boolean) => void;
+  isHoverExpanded: boolean;
+  setIsHoverExpanded: (expanded: boolean) => void;
 };
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [isMobileNavVisible, setIsMobileNavVisible] = useState(true);
+  const [sidebarMode, setSidebarModeState] = useState<SidebarMode>('expanded');
+  const [manualCollapsed, setManualCollapsed] = useState(false);
+  const [isHoverExpanded, setIsHoverExpanded] = useState(false);
+
   const isMobile = useIsMobile();
   const pathname = usePathname();
   const initializedRef = useRef(false);
   const prevPathnameRef = useRef(pathname);
+
+  // Hydration-safe: read persisted mode from localStorage after mount
+  useEffect(() => {
+    const stored = localStorage.getItem('sidebar-mode');
+    if (stored === 'expanded' || stored === 'collapsed' || stored === 'hover') {
+      setSidebarModeState(stored);
+    }
+  }, []);
+
+  const setSidebarMode = useCallback((mode: SidebarMode) => {
+    setSidebarModeState(mode);
+    localStorage.setItem('sidebar-mode', mode);
+    // Reset transient states when switching modes
+    setManualCollapsed(false);
+    setIsHoverExpanded(false);
+  }, []);
+
+  // Derived isCollapsed based on mode
+  const isCollapsed = useMemo(() => {
+    if (sidebarMode === 'collapsed') return true;
+    if (sidebarMode === 'hover') return !isHoverExpanded;
+    return manualCollapsed; // 'expanded' mode
+  }, [sidebarMode, isHoverExpanded, manualCollapsed]);
+
+  const setIsCollapsed = useCallback((collapsed: boolean) => {
+    if (sidebarMode === 'expanded') {
+      setManualCollapsed(collapsed);
+    }
+  }, [sidebarMode]);
 
   const showMobileNav = useCallback(() => setIsMobileNavVisible(true), []);
   const hideMobileNav = useCallback(() => setIsMobileNavVisible(false), []);
@@ -47,8 +88,18 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   }, [isMobile, pathname]);
 
   const value = useMemo(
-    () => ({ isMobileNavVisible, showMobileNav, hideMobileNav }),
-    [isMobileNavVisible, showMobileNav, hideMobileNav],
+    () => ({
+      isMobileNavVisible,
+      showMobileNav,
+      hideMobileNav,
+      sidebarMode,
+      setSidebarMode,
+      isCollapsed,
+      setIsCollapsed,
+      isHoverExpanded,
+      setIsHoverExpanded,
+    }),
+    [isMobileNavVisible, showMobileNav, hideMobileNav, sidebarMode, setSidebarMode, isCollapsed, setIsCollapsed, isHoverExpanded],
   );
 
   return <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>;
