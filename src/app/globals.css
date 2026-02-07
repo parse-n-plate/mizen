@@ -30,6 +30,11 @@
   --text-nav-md: 18px;
 }
 
+/* Prevent layout shift when modals toggle body overflow: hidden */
+html {
+  scrollbar-gutter: stable;
+}
+
 /* Custom CSS Variables for Parse & Plate Design System */
 :root {
   /* Colors */
@@ -1556,7 +1561,8 @@
     transition: opacity 0.18s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .group:hover .ingredient-group-chevron {
+  .group:hover .ingredient-group-chevron,
+  [aria-expanded="false"] .ingredient-group-chevron {
     opacity: 1;
   }
 

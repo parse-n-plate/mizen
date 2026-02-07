@@ -1264,6 +1264,8 @@ export default function ParsedRecipePage({
                                                   amount?: string;
                                                   units?: string;
                                                   ingredient: string;
+                                                  description?: string;
+                                                  substitutions?: string[];
                                                 },
                                             index: number,
                                           ) => {
@@ -1282,7 +1284,7 @@ export default function ParsedRecipePage({
                                               <div id={ingredientId} key={index}>
                                                 <IngredientCard
                                                   ingredient={ingredient}
-                                                  description={undefined}
+                                                  description={typeof ingredient === 'string' ? undefined : ingredient.description}
                                                   isLast={isLast}
                                                   recipeSteps={normalizedSteps.map(s => ({ instruction: s.detail, title: s.step }))}
                                                   groupName={groupName}

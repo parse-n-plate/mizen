@@ -1,261 +1,261 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
-import {
-  ArrowLeftRight,
-  Box,
-  ShoppingCart,
-  ChefHat,
-  Info,
-  Lightbulb,
-  CheckCircle2,
-  RotateCcw,
-  Edit2
-} from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Sparkles, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { useRecipe } from '@/contexts/RecipeContext';
+
+interface AiSubstitution {
+  name: string;
+  description: string;
+}
 
 interface IngredientDrawerContentProps {
   ingredientName: string;
   ingredientAmount?: string;
+  substitutions?: string[];
   linkedSteps: number[];
-  stepTitlesMap?: Record<number, string>; // Map of step numbers to step titles
+  stepTitlesMap?: Record<number, string>;
   onStepClick: (stepNumber: number) => void;
 }
 
 export function IngredientDrawerContent({
   ingredientName,
   ingredientAmount,
+  substitutions,
   linkedSteps,
   stepTitlesMap,
   onStepClick
 }: IngredientDrawerContentProps) {
-  // Mock data for the "fun/visual" sections
-  const substitutes = [
-    { name: "Alternative A", icon: "🌱" },
-    { name: "Alternative B", icon: "✨" }
-  ];
-
-  // Default storage text
-  const defaultStorageText = "Keep in a cool, dry place. Best used within 3-5 days.";
-
-  // State for storage and shelf life editing
-  const [storageText, setStorageText] = useState<string>(defaultStorageText);
-  const [isEditing, setIsEditing] = useState(false);
+  const [notes, setNotes] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { parsedRecipe } = useRecipe();
 
-  // Auto-focus textarea when editing starts
+  // AI substitution state
+  const [aiSubstitutions, setAiSubstitutions] = useState<AiSubstitution[] | null>(null);
+  const [isLoadingAi, setIsLoadingAi] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  // Auto-resize textarea to fit content
   useEffect(() => {
-    if (isEditing && textareaRef.current) {
-      textareaRef.current.focus();
-      const length = textareaRef.current.value.length;
-      textareaRef.current.setSelectionRange(length, length);
-    }
-  }, [isEditing]);
-
-  // Handle reset
-  const handleReset = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setStorageText(defaultStorageText);
-    setIsEditing(false);
-  };
-
-  // Handle blur (when user clicks away)
-  const handleBlur = () => {
-    setIsEditing(false);
     if (textareaRef.current) {
-      setStorageText(textareaRef.current.value);
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
-  };
+  }, [notes]);
 
-  // Handle click to start editing
-  const handleClick = () => {
-    setIsEditing(true);
-  };
+  const handleGetAiSubstitutions = async () => {
+    if (!parsedRecipe) return;
 
-  // Handle key press (Escape to cancel)
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Escape') {
-      setIsEditing(false);
-      if (textareaRef.current) {
-        textareaRef.current.value = storageText;
+    setIsLoadingAi(true);
+    setAiError(null);
+
+    try {
+      const response = await fetch('/api/generateSubstitutions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ingredientName,
+          ingredientAmount: ingredientAmount || '',
+          recipeTitle: parsedRecipe.title || '',
+          cuisine: parsedRecipe.cuisine || [],
+          ingredients: parsedRecipe.ingredients,
+          instructions: parsedRecipe.instructions,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate substitutions');
       }
+
+      const { data } = await response.json();
+      setAiSubstitutions(data.substitutions);
+    } catch (error) {
+      console.error('Failed to generate AI substitutions:', error);
+      setAiError('Could not generate suggestions.');
+    } finally {
+      setIsLoadingAi(false);
     }
   };
 
-  const isDefault = storageText === defaultStorageText;
+  // Build the "used in" description
+  const capitalizedName = ingredientName.charAt(0).toUpperCase() + ingredientName.slice(1);
+  const usedInDescription = linkedSteps.length > 0
+    ? `${capitalizedName} is essential in this dish, enhancing the depth and bringing out the vibrant flavors.${ingredientAmount ? ` You'll need ${ingredientAmount} for this recipe.` : ''}`
+    : 'Unable to identify the steps where this ingredient is used.';
+
+  const hasStaticSubstitutes = substitutions && substitutions.length > 0;
+  const hasAiSubstitutes = aiSubstitutions && aiSubstitutions.length > 0;
 
   return (
-    <div className="space-y-8 pb-12">
-      {/* Header Info */}
-      <div className="bg-[#FDFCFB] p-6 rounded-2xl border border-[#F3EFE9] space-y-3">
-        <div className="flex items-center gap-2 text-[#D4A373]">
-          <Info className="h-4 w-4" />
-          <span className="text-[11px] font-albert font-bold uppercase tracking-widest">About this ingredient</span>
-        </div>
-        <p className="text-stone-600 text-sm leading-relaxed font-albert">
-          {ingredientName} is a staple in this dish, providing that signature flavor and texture you love. 
-          {ingredientAmount && ` You'll need ${ingredientAmount} for this recipe.`}
+    <div className="space-y-6 pb-12">
+      {/* Substitutes */}
+      <div className="space-y-3">
+        <p className="text-[11px] font-albert font-bold uppercase tracking-widest text-stone-400">
+          Substitute
         </p>
-      </div>
 
-      {/* Grid for Substitutes and Storage */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* Substitutes */}
-        <div className="bg-[#F0F4F8] p-5 rounded-2xl space-y-3">
-          <div className="flex items-center gap-2 text-[#4A6FA5]">
-            <ArrowLeftRight className="h-4 w-4" />
-            <h4 className="text-xs font-albert font-bold uppercase tracking-wider">Substitutes</h4>
-          </div>
-          <ul className="space-y-2">
-            {substitutes.map((sub, i) => (
-              <li key={i} className="flex items-center gap-2 text-sm text-stone-600 font-albert">
-                <span>{sub.icon}</span>
-                <span>{sub.name}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* How to Store - Editable with Reset */}
-        <div className="bg-[#EBF5EE] p-5 rounded-2xl space-y-3 group relative">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[#4F772D]">
-              <Box className="h-4 w-4" />
-              <h4 className="text-xs font-albert font-bold uppercase tracking-wider">Store</h4>
-            </div>
-            {/* Reset button - only show if text has been modified */}
-            {!isDefault && (
-              <button
-                onClick={handleReset}
-                className="p-1.5 rounded-lg bg-white/80 hover:bg-white text-[#4F772D] opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-105 active:scale-95"
-                title="Reset to default"
+        {/* State: Loading */}
+        {isLoadingAi && (
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="flex-shrink-0 w-[260px] bg-white border border-stone-200 rounded-xl p-4 space-y-2 animate-pulse"
               >
-                <RotateCcw className="h-3.5 w-3.5" />
-              </button>
-            )}
+                <div className="flex items-center justify-between">
+                  <div className="h-4 bg-stone-100 rounded w-2/3" />
+                </div>
+                <div className="space-y-1.5">
+                  <div className="h-3 bg-stone-100 rounded w-full" />
+                  <div className="h-3 bg-stone-100 rounded w-4/5" />
+                </div>
+              </div>
+            ))}
           </div>
-          {isEditing ? (
-            <textarea
-              ref={textareaRef}
-              defaultValue={storageText}
-              onBlur={handleBlur}
-              onKeyDown={handleKeyDown}
-              placeholder="Add storage and shelf life instructions..."
-              className={cn(
-                "w-full min-h-[48px] p-2 bg-white rounded-lg border border-[#4F772D]/20",
-                "text-stone-700 text-xs font-albert leading-relaxed",
-                "focus:outline-none focus:ring-2 focus:ring-[#4F772D]/30 focus:border-transparent",
-                "resize-none transition-all duration-200",
-                "placeholder:text-stone-400"
-              )}
-              rows={2}
-            />
-          ) : (
-            <div
-              onClick={handleClick}
-              className={cn(
-                "min-h-[48px] p-2 bg-white/50 rounded-lg border border-dashed border-[#4F772D]/20",
-                "text-xs text-stone-600 leading-relaxed font-albert cursor-text transition-all duration-200",
-                "hover:bg-white/80 hover:border-[#4F772D]/30",
-                "relative"
-              )}
+        )}
+
+        {/* State: AI results */}
+        {!isLoadingAi && hasAiSubstitutes && (
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
+            {aiSubstitutions.map((sub, i) => (
+              <div
+                key={i}
+                className="flex-shrink-0 w-[260px] bg-white border border-stone-200 rounded-xl p-4 space-y-2"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[15px] font-albert font-semibold text-stone-800">
+                    {sub.name}
+                  </span>
+                </div>
+                <p className="text-[13px] text-stone-500 font-albert leading-relaxed">
+                  {sub.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* State: Error — retry button below heading */}
+        {!isLoadingAi && !hasAiSubstitutes && aiError && (
+          <div>
+            <button
+              onClick={handleGetAiSubstitutions}
+              className="flex items-center gap-1.5 text-[13px] font-albert font-medium text-stone-500 hover:text-stone-800 transition-colors cursor-pointer"
             >
-              <div className="whitespace-pre-wrap break-words">
-                {storageText}
-              </div>
-              {/* Edit icon hint on hover */}
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Edit2 className="h-3 w-3 text-[#4F772D]/40" />
-              </div>
+              <RefreshCw className="h-3 w-3" />
+              Try again
+            </button>
+          </div>
+        )}
+
+        {/* State: Idle with static subs — show cards + suggest button */}
+        {!isLoadingAi && !hasAiSubstitutes && !aiError && hasStaticSubstitutes && (
+          <>
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
+              {substitutions.map((sub, i) => (
+                <div
+                  key={i}
+                  className="flex-shrink-0 w-[260px] bg-white border border-stone-200 rounded-xl p-4 space-y-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[15px] font-albert font-semibold text-stone-800">
+                      {sub}
+                    </span>
+                  </div>
+                  <p className="text-[13px] text-stone-500 font-albert leading-relaxed">
+                    Use {sub.toLowerCase()} for a unique twist in this recipe.
+                  </p>
+                </div>
+              ))}
             </div>
-          )}
-        </div>
+            {parsedRecipe && (
+              <div>
+                <button
+                  onClick={handleGetAiSubstitutions}
+                  className="flex items-center gap-1.5 text-[13px] font-albert font-medium text-stone-500 hover:text-stone-800 transition-colors cursor-pointer"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Suggest Substitutes
+                </button>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* State: Idle, no static subs, recipe available — just the button */}
+        {!isLoadingAi && !hasAiSubstitutes && !aiError && !hasStaticSubstitutes && parsedRecipe && (
+          <div>
+            <button
+              onClick={handleGetAiSubstitutions}
+              className="flex items-center gap-1.5 text-[13px] font-albert font-medium text-stone-500 hover:text-stone-800 transition-colors cursor-pointer"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Suggest Substitutes
+            </button>
+          </div>
+        )}
+
+        {/* State: No static subs, no recipe context — nothing can be done */}
+        {!isLoadingAi && !hasAiSubstitutes && !aiError && !hasStaticSubstitutes && !parsedRecipe && (
+          <p className="text-[13px] text-stone-400 font-albert">
+            No substitutions available.
+          </p>
+        )}
       </div>
 
-      {/* Shopping Tips */}
-      <div className="bg-[#FFF9E6] p-6 rounded-2xl border border-[#FEF3C7] space-y-4">
-        <div className="flex items-center gap-2 text-[#D97706]">
-          <ShoppingCart className="h-4 w-4" />
-          <h4 className="text-sm font-albert font-bold uppercase tracking-wider">Shopping Tips</h4>
-        </div>
-        <div className="space-y-3">
-          <div className="flex gap-3 items-start">
-            <div className="h-5 w-5 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
-              <CheckCircle2 className="h-3 w-3 text-[#D97706]" />
-            </div>
-            <p className="text-xs text-stone-600 font-albert">Look for a firm texture and vibrant color.</p>
-          </div>
-          <div className="flex gap-3 items-start">
-            <div className="h-5 w-5 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
-              <CheckCircle2 className="h-3 w-3 text-[#D97706]" />
-            </div>
-            <p className="text-xs text-stone-600 font-albert">Organic options often have more concentrated flavor.</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Related Steps (Functional) */}
-      <div className="space-y-4 pt-4">
-        <div className="flex items-center gap-2 text-stone-400">
-          <ChefHat className="h-4 w-4" />
-          <span className="text-[11px] font-albert font-bold uppercase tracking-widest">Where to use it</span>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {linkedSteps.length > 0 ? (
-            linkedSteps.map((stepNum) => {
-              // Get the step title from the map, if available
+      {/* Used In */}
+      <div className="space-y-3">
+        <p className="text-[11px] font-albert font-bold uppercase tracking-widest text-stone-400">
+          Used in
+        </p>
+        <p className="text-stone-600 text-[15px] leading-relaxed font-albert">
+          {usedInDescription}
+        </p>
+        {linkedSteps.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {linkedSteps.map((stepNum) => {
               const stepTitle = stepTitlesMap?.[stepNum];
-              // Check if stepTitle is meaningful (not just "Step X" repeated)
-              // If stepTitle exists and is different from just the step number, include it
-              const hasMeaningfulTitle = stepTitle && 
-                stepTitle.trim() !== `Step ${stepNum}` && 
+              const hasMeaningfulTitle = stepTitle &&
+                stepTitle.trim() !== `Step ${stepNum}` &&
                 stepTitle.trim() !== `step ${stepNum}`;
-              // Format button text: "Go to Step 3: Cook Beans and Meats" or just "Go to Step 3" if no meaningful title
               const buttonText = hasMeaningfulTitle
-                ? `Go to Step ${stepNum}: ${stepTitle}`
-                : `Go to Step ${stepNum}`;
-              
+                ? `Step ${stepNum}: ${stepTitle}`
+                : `Step ${stepNum}`;
+
               return (
                 <Button
                   key={stepNum}
                   variant="outline"
                   size="sm"
                   onClick={() => onStepClick(stepNum)}
-                  className="h-9 px-4 bg-white hover:bg-stone-50 border-stone-200 text-stone-600 text-xs font-albert rounded-xl shadow-sm transition-all active:scale-95"
+                  className="h-9 px-4 bg-white hover:bg-stone-50 border-stone-200 text-stone-600 text-[13px] font-albert rounded-xl shadow-sm transition-colors motion-safe:active:scale-95"
                 >
                   {buttonText}
                 </Button>
               );
-            })
-          ) : (
-            <div className="flex items-center gap-2 p-4 bg-stone-50 rounded-xl w-full">
-              <Lightbulb className="h-4 w-4 text-stone-300" />
-              <span className="text-xs text-stone-400 italic font-albert">Used throughout the preparation.</span>
-            </div>
-          )}
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Notes */}
+      <div className="space-y-3">
+        <p className="text-[11px] font-albert font-bold uppercase tracking-widest text-stone-400">
+          Notes
+        </p>
+        <div className="flex items-start gap-3 p-3 bg-stone-100 rounded-lg border-2 border-transparent transition-all duration-200 focus-within:bg-white focus-within:border-stone-200 focus-within:shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+          <textarea
+            ref={textareaRef}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Add a note"
+            rows={2}
+            className="flex-1 bg-transparent border-none outline-none resize-none font-albert text-[15px] font-normal text-stone-800 placeholder:text-stone-400 placeholder:font-normal p-0 m-0"
+            aria-label={`Notes for ${ingredientName}`}
+          />
         </div>
       </div>
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

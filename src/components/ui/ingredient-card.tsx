@@ -2,14 +2,14 @@
 
 import { ChefHat } from 'lucide-react';
 import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { findStepsForIngredient } from '@/utils/ingredientMatcher';
-import { useUISettings } from '@/contexts/UISettingsContext';
-import { IngredientExpandedAccordion } from './ingredient-expanded-accordion';
-import { IngredientExpandedModal } from './ingredient-expanded-modal';
-import { IngredientExpandedSidePanel } from './ingredient-expanded-sidepanel';
-import { IngredientExpandedThings3 } from './ingredient-expanded-things3';
-import { IngredientExpandedDrawer } from './ingredient-expanded-drawer';
+import dynamic from 'next/dynamic';
+
+const IngredientExpandedDrawer = dynamic(
+  () => import('./ingredient-expanded-drawer').then(m => m.IngredientExpandedDrawer),
+  { ssr: false }
+);
 import { cn, convertTextFractionsToSymbols } from '@/lib/utils';
 
 /**
@@ -48,6 +48,8 @@ interface IngredientCardProps {
     amount?: string;
     units?: string;
     ingredient: string;
+    description?: string;
+    substitutions?: string[];
   };
   description?: string; // Future: will be populated from backend
   isLast?: boolean; // Hide divider if this is the last item
@@ -83,12 +85,11 @@ export default function IngredientCard({
 }: IngredientCardProps) {
   const [internalChecked, setInternalChecked] = useState(false);
   const isChecked = checked !== undefined ? checked : internalChecked;
+  const shouldReduceMotion = useReducedMotion();
   
   // Use controlled expansion state if provided, otherwise fall back to internal state
   const [internalExpanded, setInternalExpanded] = useState(false);
   const isExpanded = controlledIsExpanded !== undefined ? controlledIsExpanded : internalExpanded;
-  const { settings } = useUISettings();
-
   // Helper function to parse amount/unit from ingredient string
   const parseIngredientString = (ingredientStr: string): { amount: string; unit: string; name: string } => {
     // Pattern 1: matches amount (can include fractions like 1½, 2½, ⅛) + unit + ingredient name
@@ -245,6 +246,17 @@ export default function IngredientCard({
     return '';
   }, [ingredient]);
 
+  // Extract AI-generated description and substitutions from the ingredient object
+  const ingredientDescription = useMemo(() => {
+    if (typeof ingredient === 'string') return undefined;
+    return ingredient.description;
+  }, [ingredient]);
+
+  const ingredientSubstitutions = useMemo(() => {
+    if (typeof ingredient === 'string') return undefined;
+    return ingredient.substitutions;
+  }, [ingredient]);
+
   const ingredientText = formatIngredientText();
   const hasDescription = description && description.trim() !== '';
 
@@ -270,17 +282,51 @@ export default function IngredientCard({
 
   return (
     <div className="relative">
-      <motion.div
+      <div
         id={`ingredient-${ingredientNameOnly.toLowerCase().replace(/\s+/g, '-')}`}
         onClick={toggleExpand}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggleExpand();
+          }
+          // Arrow key navigation between sibling ingredient cards
+          if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            const current = e.currentTarget;
+            const parent = current.closest('.ingredient-group');
+            if (!parent) return;
+            const items = Array.from(
+              parent.querySelectorAll<HTMLElement>('.ingredient-list-item[tabindex="0"]')
+            );
+            const idx = items.indexOf(current);
+            if (idx === -1) return;
+            const next = e.key === 'ArrowDown' ? items[idx + 1] : items[idx - 1];
+            if (next) next.focus();
+          }
+          // Home/End to jump to first/last ingredient in group
+          if (e.key === 'Home' || e.key === 'End') {
+            e.preventDefault();
+            const parent = e.currentTarget.closest('.ingredient-group');
+            if (!parent) return;
+            const items = Array.from(
+              parent.querySelectorAll<HTMLElement>('.ingredient-list-item[tabindex="0"]')
+            );
+            if (items.length === 0) return;
+            const target = e.key === 'Home' ? items[0] : items[items.length - 1];
+            target.focus();
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-expanded={isExpanded}
         className={cn(
           "ingredient-list-item group cursor-pointer",
-          isChecked ? 'is-checked' : '',
-          isExpanded && settings.ingredientExpandStyle === 'things3' ? "bg-stone-50/50 shadow-sm rounded-xl border border-stone-100 -mx-1 px-1" : ""
+          isChecked ? 'is-checked' : ''
         )}
       >
-        {/* Divider line at the bottom (hidden for last item or when expanded in things3) */}
-        {!isLast && !(isExpanded && settings.ingredientExpandStyle === 'things3') && (
+        {/* Divider line at the bottom (hidden for last item) */}
+        {!isLast && (
           <div className="ingredient-list-divider group-hover:opacity-0" />
         )}
         
@@ -289,7 +335,7 @@ export default function IngredientCard({
           {/* Checkbox on the left */}
           <div className="ingredient-list-checkbox">
             <motion.input
-              whileTap={{ scale: 0.8 }}
+              whileTap={shouldReduceMotion ? undefined : { scale: 0.8 }}
               type="checkbox"
               className="ingredient-checkbox-input cursor-pointer"
               aria-label={`Select ${ingredientText}`}
@@ -302,11 +348,11 @@ export default function IngredientCard({
           {/* Ingredient details in the center */}
           <div className="ingredient-list-text-content">
             {/* Primary text: Ingredient name with amount/units - matching cook mode format */}
-            <motion.div 
-              animate={{ 
-                opacity: isChecked ? 0.5 : 1
-              }}
-              className="ingredient-list-primary flex items-baseline justify-between transition-all duration-[180ms]"
+            <div
+              className={cn(
+                "ingredient-list-primary flex items-baseline justify-between transition-opacity duration-[180ms] motion-reduce:transition-none",
+                isChecked ? "opacity-50" : "opacity-100"
+              )}
             >
               {/* Format: ingredient name first (medium, stone-800, 16px), then amount/units (regular, stone-400, 14px) */}
               {typeof ingredient === 'string' ? (
@@ -360,95 +406,32 @@ export default function IngredientCard({
                   )}
                 </>
               )}
-            </motion.div>
+            </div>
 
             {/* Secondary text: Description (hidden when empty) */}
-            <AnimatePresence>
-              {hasDescription && (
-                <motion.div 
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="ingredient-list-secondary overflow-hidden"
-                >
-                  <p className="ingredient-list-description">{description}</p>
-                </motion.div>
+            <div
+              className={cn(
+                "grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none",
+                hasDescription ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
               )}
-            </AnimatePresence>
+            >
+              <div className="overflow-hidden min-h-0 ingredient-list-secondary">
+                <p className="ingredient-list-description">{description}</p>
+              </div>
+            </div>
           </div>
         </div>
-      </motion.div>
-
-      {/* Expansion Views based on UISettings */}
-      {settings.ingredientExpandStyle === 'accordion' && (
-        <IngredientExpandedAccordion
-          ingredientName={ingredientNameOnly}
-          ingredientAmount={ingredientAmount}
-          ingredientUnits={ingredientUnits}
-          groupName={groupName}
-          description={description}
-          linkedSteps={linkedSteps}
-          stepTitlesMap={stepTitlesMap}
-          onStepClick={handleStepClick}
-          isOpen={isExpanded}
-          recipeUrl={recipeUrl}
-          onNotesChange={onNotesChange}
-        />
-      )}
-
-      {settings.ingredientExpandStyle === 'things3' && (
-        <IngredientExpandedThings3
-          ingredientName={ingredientNameOnly}
-          ingredientAmount={ingredientAmount}
-          ingredientUnits={ingredientUnits}
-          groupName={groupName}
-          description={description}
-          linkedSteps={linkedSteps}
-          stepTitlesMap={stepTitlesMap}
-          onStepClick={handleStepClick}
-          isOpen={isExpanded}
-          recipeUrl={recipeUrl}
-          onNotesChange={onNotesChange}
-        />
-      )}
-
-      <IngredientExpandedModal
-        ingredientName={ingredientNameOnly}
-        ingredientAmount={ingredientAmount}
-        ingredientUnits={ingredientUnits}
-        groupName={groupName}
-        description={description}
-        linkedSteps={linkedSteps}
-        stepTitlesMap={stepTitlesMap}
-        onStepClick={handleStepClick}
-        isOpen={isExpanded && settings.ingredientExpandStyle === 'modal'}
-        onClose={() => onExpandChange ? onExpandChange(false) : setInternalExpanded(false)}
-        recipeUrl={recipeUrl}
-        onNotesChange={onNotesChange}
-      />
-
-      <IngredientExpandedSidePanel
-        ingredientName={ingredientNameOnly}
-        ingredientAmount={ingredientAmount}
-        ingredientUnits={ingredientUnits}
-        groupName={groupName}
-        description={description}
-        linkedSteps={linkedSteps}
-        stepTitlesMap={stepTitlesMap}
-        onStepClick={handleStepClick}
-        isOpen={isExpanded && settings.ingredientExpandStyle === 'sidepanel'}
-        onClose={() => onExpandChange ? onExpandChange(false) : setInternalExpanded(false)}
-        recipeUrl={recipeUrl}
-        onNotesChange={onNotesChange}
-      />
+      </div>
 
       <IngredientExpandedDrawer
         ingredientName={ingredientNameOnly}
         ingredientAmount={ingredientAmount}
+        description={ingredientDescription}
+        substitutions={ingredientSubstitutions}
         linkedSteps={linkedSteps}
         stepTitlesMap={stepTitlesMap}
         onStepClick={handleStepClick}
-        isOpen={isExpanded && settings.ingredientExpandStyle === 'mobile-drawer'}
+        isOpen={isExpanded}
         onClose={() => onExpandChange ? onExpandChange(false) : setInternalExpanded(false)}
       />
     </div>

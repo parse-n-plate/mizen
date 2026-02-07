@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { ProgressPie } from './progress-pie';
 
 /**
@@ -42,6 +43,8 @@ export function IngredientGroup({
   children,
   onToggleAll
 }: IngredientGroupProps) {
+  const shouldReduceMotion = useReducedMotion();
+
   // Internal state for expansion (can be controlled via onToggle)
   const [isExpanded, setIsExpanded] = useState(isInitialExpanded);
 
@@ -87,10 +90,10 @@ export function IngredientGroup({
             <AnimatePresence>
               {checkedCount > 0 && (
                 <motion.div
-                  initial={{ opacity: 0 }}
+                  initial={shouldReduceMotion ? false : { opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  exit={shouldReduceMotion ? undefined : { opacity: 0 }}
+                  transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: 'easeOut' }}
                   className="flex items-center gap-2 flex-shrink-0 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent triggering the expand/collapse button
@@ -140,10 +143,10 @@ export function IngredientGroup({
         <AnimatePresence>
           {checkedCount > 0 && (
             <motion.div
-              initial={{ opacity: 0 }}
+              initial={shouldReduceMotion ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
+              exit={shouldReduceMotion ? undefined : { opacity: 0 }}
+              transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: 'easeOut' }}
               className="flex items-center gap-2 px-8 pb-2 cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
@@ -177,19 +180,16 @@ export function IngredientGroup({
       )}
 
       {/* Collapsible Content - Ingredient List */}
-      <AnimatePresence initial={false}>
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="overflow-hidden"
-          >
-            {children}
-          </motion.div>
+      <div
+        className={cn(
+          "grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none",
+          isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
         )}
-      </AnimatePresence>
+      >
+        <div className="overflow-hidden">
+          {children}
+        </div>
+      </div>
     </div>
   );
 }
