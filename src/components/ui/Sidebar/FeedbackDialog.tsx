@@ -167,7 +167,7 @@ export default function FeedbackDialog({ open, onOpenChange }: FeedbackDialogPro
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md p-0 gap-0 min-h-[360px]" showCloseButton={step === 1}>
+      <DialogContent className="max-w-md p-0 gap-0" showCloseButton={step === 1}>
 
         <AnimatePresence mode="wait" initial={false}>
           {/* Success State */}
@@ -177,7 +177,7 @@ export default function FeedbackDialog({ open, onOpenChange }: FeedbackDialogPro
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-              className="flex flex-col items-center justify-center py-16 px-6"
+              className="flex flex-col items-center justify-center px-6 h-[340px]"
             >
               <Confetti className="size-12 text-[#0088ff] mb-4" />
               <p className="font-domine text-xl font-semibold text-stone-900 text-balance">Thank you!</p>
@@ -191,7 +191,7 @@ export default function FeedbackDialog({ open, onOpenChange }: FeedbackDialogPro
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
-              className="p-6"
+              className="p-6 h-[340px]"
             >
               <DialogHeader className="mb-5">
                 <DialogTitle className="text-balance">Send us a message</DialogTitle>
@@ -223,7 +223,7 @@ export default function FeedbackDialog({ open, onOpenChange }: FeedbackDialogPro
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
-              className="flex flex-col min-h-[360px]"
+              className="flex flex-col h-[340px]"
             >
               {/* Header */}
               <div className="flex items-center gap-3 px-6 py-4 border-b border-stone-100">

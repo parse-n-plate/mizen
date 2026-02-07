@@ -151,8 +151,8 @@ export default function Sidebar() {
 
 
   const navItems = [
-    { icon: ClockCircle, label: 'Timers', comingSoon: true },
-    { icon: BookBookmarkIcon, label: 'Cookbook', comingSoon: true },
+    { icon: ClockCircle, label: 'Timers', href: '/timers', disabled: true },
+    { icon: BookBookmarkIcon, label: 'Cookbook', href: '/cookbook', disabled: true },
   ];
 
   // Helper to wrap recipe items — skip HoverCard on mobile (no hover on touch)
@@ -313,27 +313,51 @@ export default function Sidebar() {
 
             {navItems.map((item) => {
               const Icon = item.icon;
+              const isActive = !item.disabled && pathname === item.href;
 
-              return (
-                <NavTooltip key={item.label} label={item.label}>
-                  <span
-                    className="group w-full flex items-center px-3 py-2 rounded-lg font-albert text-sm text-stone-300 cursor-not-allowed"
-                    aria-label={item.label}
-                    aria-disabled="true"
-                  >
-                    <Icon className="w-5 h-5 flex-shrink-0" />
-                    <div className={cn(
-                      'flex-1 flex items-center overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200',
-                      isRail ? 'max-w-0 opacity-0 ml-0' : 'max-w-[250px] opacity-100 ml-3',
-                    )}>
-                      <span>{item.label}</span>
-                      {item.comingSoon && (
+              if (item.disabled) {
+                return (
+                  <NavTooltip key={item.label} label={item.label}>
+                    <span
+                      className="group w-full flex items-center px-3 py-2 rounded-lg font-albert text-sm text-stone-300 cursor-not-allowed"
+                      aria-label={item.label}
+                      aria-disabled="true"
+                    >
+                      <Icon className="w-5 h-5 flex-shrink-0" />
+                      <div className={cn(
+                        'flex-1 flex items-center overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200',
+                        isRail ? 'max-w-0 opacity-0 ml-0' : 'max-w-[250px] opacity-100 ml-3',
+                      )}>
+                        <span>{item.label}</span>
                         <span className="ml-auto hidden md:inline-flex opacity-0 group-hover:opacity-100 font-albert text-[11px] text-stone-400 bg-stone-100 border border-stone-200 rounded px-1.5 py-0.5 transition-opacity duration-200">
                           Coming soon
                         </span>
-                      )}
+                      </div>
+                    </span>
+                  </NavTooltip>
+                );
+              }
+
+              return (
+                <NavTooltip key={item.label} label={item.label}>
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      'w-full flex items-center px-3 py-2 rounded-lg transition-colors font-albert text-sm',
+                      isActive
+                        ? 'bg-stone-100 text-stone-900 font-medium'
+                        : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900',
+                    )}
+                    aria-label={item.label}
+                  >
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    <div className={cn(
+                      'overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200',
+                      isRail ? 'max-w-0 opacity-0 ml-0' : 'max-w-[200px] opacity-100 ml-3',
+                    )}>
+                      <span>{item.label}</span>
                     </div>
-                  </span>
+                  </Link>
                 </NavTooltip>
               );
             })}
