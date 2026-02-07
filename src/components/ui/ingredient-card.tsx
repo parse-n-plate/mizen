@@ -48,6 +48,8 @@ interface IngredientCardProps {
     amount?: string;
     units?: string;
     ingredient: string;
+    description?: string;
+    substitutions?: string[];
   };
   description?: string; // Future: will be populated from backend
   isLast?: boolean; // Hide divider if this is the last item
@@ -244,6 +246,17 @@ export default function IngredientCard({
     return '';
   }, [ingredient]);
 
+  // Extract AI-generated description and substitutions from the ingredient object
+  const ingredientDescription = useMemo(() => {
+    if (typeof ingredient === 'string') return undefined;
+    return ingredient.description;
+  }, [ingredient]);
+
+  const ingredientSubstitutions = useMemo(() => {
+    if (typeof ingredient === 'string') return undefined;
+    return ingredient.substitutions;
+  }, [ingredient]);
+
   const ingredientText = formatIngredientText();
   const hasDescription = description && description.trim() !== '';
 
@@ -413,6 +426,8 @@ export default function IngredientCard({
       <IngredientExpandedDrawer
         ingredientName={ingredientNameOnly}
         ingredientAmount={ingredientAmount}
+        description={ingredientDescription}
+        substitutions={ingredientSubstitutions}
         linkedSteps={linkedSteps}
         stepTitlesMap={stepTitlesMap}
         onStepClick={handleStepClick}

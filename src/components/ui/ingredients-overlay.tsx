@@ -62,24 +62,18 @@ export default function IngredientsOverlay({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Prevent body scroll on desktop only (Vaul handles mobile scroll lock)
+  // Prevent body scroll on desktop when open
+  // Note: scrollbar-gutter: stable in globals.css prevents layout shift
   useEffect(() => {
     if (isOpen && !isMobile) {
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       const originalOverflow = document.body.style.overflow;
-      const originalPaddingRight = document.body.style.paddingRight;
-
       document.body.style.overflow = 'hidden';
-      if (scrollbarWidth > 0) {
-        document.body.style.paddingRight = `${scrollbarWidth}px`;
-      }
-
       return () => {
         document.body.style.overflow = originalOverflow;
-        document.body.style.paddingRight = originalPaddingRight;
       };
     }
   }, [isOpen, isMobile]);
+
 
   // Format ingredient for display
   const formatIngredient = (
@@ -121,7 +115,7 @@ export default function IngredientsOverlay({
                 key={idx}
                 className="font-albert text-base text-stone-700 flex items-start gap-2"
               >
-                <span className="text-stone-400 mt-1.5 flex-shrink-0">•</span>
+                <span className="text-stone-400 mt-1 flex-shrink-0">•</span>
                 <span>{formatIngredient(ingredient)}</span>
               </li>
             ))}
@@ -135,13 +129,14 @@ export default function IngredientsOverlay({
   if (isMobile) {
     return (
       <Drawer.Root
+        modal={false}
         open={isOpen}
         onOpenChange={(open) => { if (!open) onClose(); }}
       >
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-[200]" />
           <Drawer.Content className="fixed inset-x-0 bottom-0 max-h-[85vh] bg-white rounded-t-[32px] shadow-2xl z-[201] outline-none flex flex-col">
-            <Drawer.Handle className="mt-3 mb-2 !w-12 !h-1.5 !bg-stone-200" />
+            <Drawer.Handle className="mt-3 mb-2 !w-12 !h-1 !bg-stone-200" />
 
             {/* Header */}
             <div className="px-8 pb-6 flex items-start justify-between flex-shrink-0">
@@ -150,7 +145,7 @@ export default function IngredientsOverlay({
                   Ingredients
                 </Drawer.Title>
               </div>
-              <Drawer.Close className="mt-2 p-2.5 bg-stone-50 hover:bg-stone-100 rounded-full text-stone-400 hover:text-stone-900 transition-[background-color,color,transform] active:scale-90 focus-visible:ring-2 focus-visible:ring-stone-400 focus-visible:outline-none"
+              <Drawer.Close className="mt-2 p-3 bg-stone-50 hover:bg-stone-100 rounded-full text-stone-400 hover:text-stone-900 transition-[background-color,color,transform] active:scale-90 focus-visible:ring-2 focus-visible:ring-stone-400 focus-visible:outline-none"
                 aria-label="Close ingredients"
               >
                 <X className="h-5 w-5" />
@@ -179,7 +174,7 @@ export default function IngredientsOverlay({
             exit={shouldReduceMotion ? undefined : { opacity: 0 }}
             transition={{ duration: shouldReduceMotion ? 0 : 0.15 }}
             onClick={onClose}
-            className="fixed inset-0 z-[200] bg-black/40 backdrop-blur-[2px]"
+            className="fixed inset-0 z-[200]"
           />
 
           {/* Desktop Modal */}

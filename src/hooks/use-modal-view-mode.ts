@@ -5,7 +5,7 @@ import { useSyncExternalStore, useCallback } from 'react';
 export type ModalViewMode = 'side-peek' | 'floating';
 
 const STORAGE_KEY = 'modalViewMode';
-const DEFAULT_MODE: ModalViewMode = 'floating';
+const DEFAULT_MODE: ModalViewMode = 'side-peek';
 
 function isValidMode(value: unknown): value is ModalViewMode {
   return value === 'side-peek' || value === 'floating';
