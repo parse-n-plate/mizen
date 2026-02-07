@@ -40,9 +40,9 @@ export default function HomepageRecentRecipes() {
     bookmarkedRecipeIds,
     getRecipeById,
     removeRecipe,
-    clearRecipes,
     isBookmarked,
     toggleBookmark,
+    touchRecipe,
   } = useParsedRecipes();
   const { setParsedRecipe } = useRecipe();
   const router = useRouter();
@@ -109,6 +109,7 @@ export default function HomepageRecentRecipes() {
   // Handle recipe click - navigate to parsed recipe page
   const handleRecipeClick = (recipeId: string) => {
     try {
+      touchRecipe(recipeId);
       const fullRecipe = getRecipeById(recipeId);
       if (fullRecipe && fullRecipe.ingredients && fullRecipe.instructions) {
         setParsedRecipe({
@@ -152,21 +153,6 @@ export default function HomepageRecentRecipes() {
     } else {
       // If not bookmarked, just add the bookmark directly
       toggleBookmark(recipeId);
-    }
-  };
-
-  // Handle clearing all recipes
-  const handleClearAll = () => {
-    // Show confirmation dialog before clearing
-    const confirmed = window.confirm(
-      'Are you sure you want to clear all recent recipes? This action cannot be undone.'
-    );
-
-    if (confirmed) {
-      // Clear all recipes from storage and context
-      // Note: Bookmarks will remain, but they'll reference recipes that no longer exist
-      // This is intentional - bookmarks persist independently
-      clearRecipes();
     }
   };
 
@@ -218,8 +204,8 @@ export default function HomepageRecentRecipes() {
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      {/* Section Title and Clear All Button */}
-      <div className="flex items-center justify-between mb-4 pl-4 group">
+      {/* Section Title */}
+      <div className="flex items-center mb-4 pl-4">
         <div className="flex items-center gap-2">
           {/* History Icon - Visual indicator for recent recipes */}
           <History className="w-5 h-5 text-stone-500" />
@@ -227,16 +213,6 @@ export default function HomepageRecentRecipes() {
             Recent Recipes
           </h2>
         </div>
-        {displayRecipes.length > 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleClearAll}
-            className="font-albert text-xs text-stone-500 hover:text-stone-700 mr-4 opacity-0 group-hover:opacity-100"
-          >
-            Clear all
-          </Button>
-        )}
       </div>
 
       {/* Recipe List */}
@@ -255,33 +231,8 @@ export default function HomepageRecentRecipes() {
                 group
               "
             >
-              {/* Left: Bookmark Icon (always visible), Recipe Name and Time */}
+              {/* Left: Recipe Name and Time */}
               <div className="flex items-center gap-3 flex-1 min-w-0 pl-4">
-                {/* Bookmark Icon - Always visible */}
-                <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleBookmarkToggle(recipe.id);
-                      }}
-                  className="
-                    flex-shrink-0 p-1
-                    rounded-full group/bookmark
-                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-1
-                  "
-                  aria-label={isBookmarkedState ? 'Remove from Cookbook' : 'Add to Cookbook'}
-                >
-                  <Bookmark
-                    weight={isBookmarkedState ? 'Bold' : 'Linear'}
-                    className={`
-                      w-5 h-5 transition-colors
-                      ${isBookmarkedState
-                        ? 'text-[#78716C] group-hover/bookmark:text-[#57534E]'
-                        : 'text-[#D6D3D1] group-hover/bookmark:text-[#A8A29E]'
-                      }
-                    `}
-                  />
-                </button>
-
                 {/* Recipe Name and Time - Clickable */}
                 <button
                   onClick={() => handleRecipeClick(recipe.id)}
@@ -306,8 +257,8 @@ export default function HomepageRecentRecipes() {
                 </button>
               </div>
 
-              {/* Right: 3-Dot Menu - Only visible on hover or when open */}
-              <div className={`flex items-center gap-1 flex-shrink-0 ml-2 ${openMenuId === recipe.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+              {/* Right: 3-Dot Menu - Always visible */}
+              <div className="flex items-center gap-1 flex-shrink-0 ml-2">
                 <DropdownMenu open={openMenuId === recipe.id} onOpenChange={(open) => setOpenMenuId(open ? recipe.id : null)}>
                   <DropdownMenuTrigger asChild>
                     <button

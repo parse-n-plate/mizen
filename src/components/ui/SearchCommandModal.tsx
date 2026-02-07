@@ -24,7 +24,7 @@ interface SearchCommandModalProps {
 }
 
 export default function SearchCommandModal({ open, onOpenChange }: SearchCommandModalProps) {
-  const { recentRecipes, getRecipeById, getBookmarkedRecipes, bookmarkedRecipeIds } =
+  const { recentRecipes, getRecipeById, getBookmarkedRecipes, bookmarkedRecipeIds, touchRecipe } =
     useParsedRecipes();
   const { setParsedRecipe } = useRecipe();
   const router = useRouter();
@@ -85,6 +85,7 @@ export default function SearchCommandModal({ open, onOpenChange }: SearchCommand
 
   const handleSelectRecipe = useCallback(
     (recipeId: string) => {
+      touchRecipe(recipeId);
       const fullRecipe = getRecipeById(recipeId);
       if (fullRecipe && fullRecipe.ingredients && fullRecipe.instructions) {
         setParsedRecipe({
@@ -107,7 +108,7 @@ export default function SearchCommandModal({ open, onOpenChange }: SearchCommand
         router.push('/parsed-recipe-page');
       }
     },
-    [getRecipeById, setParsedRecipe, router, onOpenChange],
+    [getRecipeById, setParsedRecipe, router, onOpenChange, touchRecipe],
   );
 
   const handleAddViaUrl = useCallback(() => {

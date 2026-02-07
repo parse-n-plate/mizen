@@ -35,6 +35,8 @@ export type ParsedRecipe = {
     fridge?: number | null;  // Days in fridge (null if not fridge-safe)
     freezer?: number | null; // Days in freezer (null if not freezer-friendly)
   };
+  pinnedAt?: string | null;        // ISO timestamp when pinned, null/undefined if not pinned
+  lastAccessedAt?: string | null;  // ISO timestamp of last access/view
   plate?: {
     // Legacy single photo support (backward compatibility)
     photoData?: string;
@@ -179,7 +181,7 @@ export function getRecentRecipes(): ParsedRecipe[] {
       }))
       .sort(
         (a, b) =>
-          new Date(b.parsedAt).getTime() - new Date(a.parsedAt).getTime(),
+          new Date(b.lastAccessedAt || b.parsedAt).getTime() - new Date(a.lastAccessedAt || a.parsedAt).getTime(),
       );
     
     // Log cuisine data for each recipe
@@ -439,4 +441,34 @@ export function isRecipeBookmarked(id: string): boolean {
     console.error('Error checking bookmark status:', error);
     return false;
   }
+}
+
+/**
+ * Pin a recipe by ID. Sets pinnedAt timestamp on the recipe
+ * in whichever store (recents or bookmarks) it lives in.
+ */
+export function pinRecipe(id: string): void {
+  updateRecipe(id, { pinnedAt: new Date().toISOString() });
+}
+
+/**
+ * Unpin a recipe by ID. Clears pinnedAt on the recipe.
+ */
+export function unpinRecipe(id: string): void {
+  updateRecipe(id, { pinnedAt: null });
+}
+
+/**
+ * Check if a recipe is pinned.
+ */
+export function isRecipePinned(id: string): boolean {
+  const recipe = getRecipeById(id);
+  return !!recipe?.pinnedAt;
+}
+
+/**
+ * Update lastAccessedAt on a recipe (in whichever store it lives).
+ */
+export function touchRecipeAccess(id: string): void {
+  updateRecipe(id, { lastAccessedAt: new Date().toISOString() });
 }

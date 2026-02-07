@@ -12,7 +12,7 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 import { useSidebarResize } from '@/hooks/useSidebarResize';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { Plus } from 'lucide-react';
+import { Pin, Plus } from 'lucide-react';
 import SquareDoubleAltArrowLeft from '@solar-icons/react/csr/arrows/SquareDoubleAltArrowLeft';
 import SquareDoubleAltArrowRight from '@solar-icons/react/csr/arrows/SquareDoubleAltArrowRight';
 import Magnifer from '@solar-icons/react/csr/search/Magnifer';
@@ -20,6 +20,10 @@ import ClockCircle from '@solar-icons/react/csr/time/ClockCircle';
 import BookBookmarkIcon from '@solar-icons/react/csr/school/BookBookmark';
 import SettingsIcon from '@solar-icons/react/csr/settings/Settings';
 import QuestionCircle from '@solar-icons/react/csr/ui/QuestionCircle';
+import ChatRoundLine from '@solar-icons/react/csr/messages/ChatRoundLine';
+import Phone from '@solar-icons/react/csr/call/Phone';
+import Keyboard from '@solar-icons/react/csr/devices/Keyboard';
+import InfoCircle from '@solar-icons/react/csr/ui/InfoCircle';
 import { MousePointer2 } from 'lucide-react';
 import { usePrototypeLab } from '@/contexts/PrototypeLabContext';
 import type { ParsedRecipe } from '@/lib/storage';
@@ -33,6 +37,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
+import FeedbackDialog from './FeedbackDialog';
 
 // Shared easing for all sidebar transitions — ease-in-out-cubic
 const SIDEBAR_EASING = 'cubic-bezier(0.645,0.045,0.355,1)';
@@ -46,8 +51,8 @@ const SIDEBAR_EASING = 'cubic-bezier(0.645,0.045,0.355,1)';
  */
 export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [showAllSaved, setShowAllSaved] = useState(false);
-  const { recentRecipes, bookmarkedRecipeIds, getBookmarkedRecipes, isLoaded, getRecipeById } = useParsedRecipes();
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const { recentRecipes, getBookmarkedRecipes, isLoaded, getRecipeById, isPinned, touchRecipe } = useParsedRecipes();
   const { parsedRecipe, setParsedRecipe } = useRecipe();
   const router = useRouter();
   const pathname = usePathname();
@@ -65,15 +70,15 @@ export default function Sidebar() {
     isCollapsed: isMobile ? false : isCollapsed,
   });
 
-  const bookmarkedRecipes = getBookmarkedRecipes();
-  const bookmarkedIdSet = useMemo(
-    () => new Set(bookmarkedRecipeIds),
-    [bookmarkedRecipeIds],
-  );
-  const recentUnbookmarked = useMemo(
-    () => recentRecipes.filter((recipe) => !bookmarkedIdSet.has(recipe.id)),
-    [recentRecipes, bookmarkedIdSet],
-  );
+  // Unified recipe list: pinned first (by pinnedAt desc), then unpinned (by lastAccessedAt/parsedAt desc)
+  const allRecipes = useMemo(() => {
+    const bookmarked = getBookmarkedRecipes();
+    const combined = [...recentRecipes, ...bookmarked];
+    const pinned = combined.filter((r) => r.pinnedAt);
+    const unpinned = combined.filter((r) => !r.pinnedAt);
+    pinned.sort((a, b) => new Date(b.pinnedAt!).getTime() - new Date(a.pinnedAt!).getTime());
+    return [...pinned, ...unpinned];
+  }, [recentRecipes, getBookmarkedRecipes]);
 
   // Determine which recipe is currently being viewed
   const activeRecipeId = useMemo(() => {
@@ -81,12 +86,11 @@ export default function Sidebar() {
     if (parsedRecipe.id) return parsedRecipe.id;
     // Fallback: match by sourceUrl
     if (!parsedRecipe.sourceUrl) return null;
-    const allRecipes = [...bookmarkedRecipes, ...recentUnbookmarked];
     const match = allRecipes.find(
       (r) => r.sourceUrl === parsedRecipe.sourceUrl || r.url === parsedRecipe.sourceUrl,
     );
     return match?.id ?? null;
-  }, [pathname, parsedRecipe, bookmarkedRecipes, recentUnbookmarked]);
+  }, [pathname, parsedRecipe, allRecipes]);
 
   const formatTime = (minutes?: number): string => {
     if (!minutes) return '';
@@ -117,6 +121,7 @@ export default function Sidebar() {
 
   const handleRecipeClick = (recipeId: string) => {
     try {
+      touchRecipe(recipeId);
       const fullRecipe = getRecipeById(recipeId);
       if (fullRecipe && fullRecipe.ingredients && fullRecipe.instructions) {
         setParsedRecipe({
@@ -146,13 +151,9 @@ export default function Sidebar() {
 
 
   const navItems = [
-    { icon: ClockCircle, label: 'Timers', href: '/timers', disabled: true },
-    { icon: BookBookmarkIcon, label: 'Cookbook', href: '/cookbook', disabled: true },
+    { icon: ClockCircle, label: 'Timers', comingSoon: true },
+    { icon: BookBookmarkIcon, label: 'Cookbook', comingSoon: true },
   ];
-
-  const displayedSavedRecipes = showAllSaved
-    ? bookmarkedRecipes
-    : bookmarkedRecipes.slice(0, 3);
 
   // Helper to wrap recipe items — skip HoverCard on mobile (no hover on touch)
   const RecipeItemWrapper = ({ recipe, children }: { recipe: ParsedRecipe; children: React.ReactNode }) => {
@@ -312,48 +313,27 @@ export default function Sidebar() {
 
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = !item.disabled && pathname === item.href;
-
-              if (item.disabled) {
-                return (
-                  <NavTooltip key={item.label} label={item.label}>
-                    <span
-                      className="w-full flex items-center px-3 py-2 rounded-lg font-albert text-sm text-stone-300 cursor-not-allowed"
-                      aria-label={item.label}
-                      aria-disabled="true"
-                    >
-                      <Icon className="w-5 h-5 flex-shrink-0" />
-                      <div className={cn(
-                        'overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200',
-                        isRail ? 'max-w-0 opacity-0 ml-0' : 'max-w-[200px] opacity-100 ml-3',
-                      )}>
-                        <span>{item.label}</span>
-                      </div>
-                    </span>
-                  </NavTooltip>
-                );
-              }
 
               return (
                 <NavTooltip key={item.label} label={item.label}>
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      'w-full flex items-center px-3 py-2 rounded-lg transition-colors font-albert text-sm',
-                      isActive
-                        ? 'bg-stone-100 text-stone-900 font-medium'
-                        : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900',
-                    )}
+                  <span
+                    className="group w-full flex items-center px-3 py-2 rounded-lg font-albert text-sm text-stone-300 cursor-not-allowed"
                     aria-label={item.label}
+                    aria-disabled="true"
                   >
                     <Icon className="w-5 h-5 flex-shrink-0" />
                     <div className={cn(
-                      'overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200',
-                      isRail ? 'max-w-0 opacity-0 ml-0' : 'max-w-[200px] opacity-100 ml-3',
+                      'flex-1 flex items-center overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200',
+                      isRail ? 'max-w-0 opacity-0 ml-0' : 'max-w-[250px] opacity-100 ml-3',
                     )}>
                       <span>{item.label}</span>
+                      {item.comingSoon && (
+                        <span className="ml-auto hidden md:inline-flex opacity-0 group-hover:opacity-100 font-albert text-[11px] text-stone-400 bg-stone-100 border border-stone-200 rounded px-1.5 py-0.5 transition-opacity duration-200">
+                          Coming soon
+                        </span>
+                      )}
                     </div>
-                  </Link>
+                  </span>
                 </NavTooltip>
               );
             })}
@@ -385,16 +365,16 @@ export default function Sidebar() {
           {!isRail ? (
             <HoverCardGroup>
             <div className="flex-1 overflow-y-auto overflow-x-hidden px-2">
-              {/* Cookbook Section */}
-              {isLoaded && bookmarkedRecipes.length > 0 && (
+              {/* Recipes Section — pinned first, then by last accessed */}
+              {isLoaded && allRecipes.length > 0 && (
                 <div className="py-2">
                   <div className="px-3 py-1.5 flex items-center gap-2">
                     <span className="font-albert text-xs font-medium text-stone-400 uppercase tracking-wider whitespace-nowrap">
-                      Cookbook
+                      Recipes
                     </span>
                   </div>
                   <div className="space-y-0.5">
-                    {displayedSavedRecipes.map((recipe) => (
+                    {allRecipes.map((recipe) => (
                       <RecipeItemWrapper key={recipe.id} recipe={recipe}>
                         <button
                           onClick={() => handleRecipeClick(recipe.id)}
@@ -420,57 +400,9 @@ export default function Sidebar() {
                             )}>
                               {recipe.title}
                             </span>
-                          </span>
-                        </button>
-                      </RecipeItemWrapper>
-                    ))}
-                  </div>
-                  {bookmarkedRecipes.length > 3 && (
-                    <button
-                      onClick={() => setShowAllSaved(!showAllSaved)}
-                      className="px-3 py-1.5 font-albert text-xs text-stone-500 hover:text-stone-700"
-                    >
-                      {showAllSaved ? 'Show Less' : 'See More'}
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {/* Recent Recipes Section — exclude saved/bookmarked recipes */}
-              {isLoaded && recentUnbookmarked.length > 0 && (
-                <div className="py-2">
-                  <div className="px-3 py-1.5 flex items-center gap-2">
-                    <span className="font-albert text-xs font-medium text-stone-400 uppercase tracking-wider whitespace-nowrap">
-                      Your Recipes
-                    </span>
-                  </div>
-                  <div className="space-y-0.5">
-                    {recentUnbookmarked.map((recipe) => (
-                      <RecipeItemWrapper key={recipe.id} recipe={recipe}>
-                        <button
-                          onClick={() => handleRecipeClick(recipe.id)}
-                          className={cn(
-                            "w-full flex items-center justify-between px-3 py-2 rounded-lg text-left group",
-                            activeRecipeId === recipe.id
-                              ? "bg-stone-200/70"
-                              : "hover:bg-stone-100",
-                          )}
-                        >
-                          <span className="flex items-center gap-2 min-w-0 pr-2">
-                            <Image
-                              src={getRecipeIconPath(recipe)}
-                              alt=""
-                              width={28}
-                              height={28}
-                              className="w-7 h-7 flex-shrink-0 object-contain"
-                              unoptimized
-                            />
-                            <span className={cn(
-                              "font-albert text-sm truncate",
-                              activeRecipeId === recipe.id ? "text-stone-900 font-medium" : "text-stone-700",
-                            )}>
-                              {recipe.title}
-                            </span>
+                            {recipe.pinnedAt && (
+                              <Pin className="w-3 h-3 text-stone-400 flex-shrink-0" />
+                            )}
                           </span>
                         </button>
                       </RecipeItemWrapper>
@@ -501,13 +433,20 @@ export default function Sidebar() {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side={isRail ? 'right' : 'top'} align={isRail ? 'start' : 'end'}>
+                  <DropdownMenuItem onClick={() => setFeedbackOpen(true)}>
+                    <ChatRoundLine className="w-4 h-4 text-stone-400" />
+                    Leave Feedback
+                  </DropdownMenuItem>
                   <DropdownMenuItem disabled>
+                    <Phone className="w-4 h-4 text-stone-300" />
                     Contact Support
                   </DropdownMenuItem>
                   <DropdownMenuItem disabled>
+                    <Keyboard className="w-4 h-4 text-stone-300" />
                     Keyboard Shortcuts
                   </DropdownMenuItem>
                   <DropdownMenuItem disabled>
+                    <InfoCircle className="w-4 h-4 text-stone-300" />
                     About Mizen
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -542,6 +481,7 @@ export default function Sidebar() {
           </div>
         )}
       </aside>
+      <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
     </TooltipProvider>
   );
 }

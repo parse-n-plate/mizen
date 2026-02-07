@@ -539,12 +539,6 @@ export default function HomepageSearch() {
                 </div>
               )}
 
-              {/* Command+K Shortcut Indicator - Only shown when not focused and no text, hidden on mobile */}
-              {!isSearchFocused && !searchValue && !selectedImage && (
-                <div className="shrink-0 hidden md:flex items-center">
-                  <kbd className="font-albert text-[11px] text-stone-400 bg-stone-100 border border-stone-200 rounded px-1.5 py-0.5">⌘K</kbd>
-                </div>
-              )}
             </div>
           </div>
         </form>

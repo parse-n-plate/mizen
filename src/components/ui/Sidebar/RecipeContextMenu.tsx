@@ -52,12 +52,13 @@ export default function RecipeContextMenu({
   recipe,
   onRecipeClick,
 }: RecipeContextMenuProps) {
-  const { isBookmarked, toggleBookmark, removeRecipe } = useParsedRecipes();
+  const { isBookmarked, toggleBookmark, removeRecipe, isPinned, togglePin } = useParsedRecipes();
   const { showSuccess, showInfo } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const bookmarked = isBookmarked(recipe.id);
+  const pinned = isPinned(recipe.id);
   const sourceUrl = recipe.sourceUrl || recipe.url;
 
   const handleOpenNewTab = () => {
@@ -79,7 +80,13 @@ export default function RecipeContextMenu({
   };
 
   const handlePin = () => {
-    showInfo('Coming soon', 'Pinning recipes will be available in a future update.');
+    togglePin(recipe.id);
+    showSuccess(
+      pinned ? 'Unpinned' : 'Pinned',
+      pinned
+        ? `"${recipe.title}" was unpinned.`
+        : `"${recipe.title}" was pinned to the top.`
+    );
   };
 
   const handleRename = () => {
@@ -146,8 +153,8 @@ export default function RecipeContextMenu({
                   <Bookmark className="w-4 h-4 ml-auto" />
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={handlePin}>
-                  <span>Pin</span>
-                  <Pin className="w-4 h-4 ml-auto" />
+                  <span>{pinned ? 'Unpin' : 'Pin'}</span>
+                  <Pin className={cn("w-4 h-4 ml-auto", pinned && "text-stone-600")} />
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={handleRename}>
                   <span>Rename</span>
@@ -195,8 +202,8 @@ export default function RecipeContextMenu({
             <Bookmark className="w-4 h-4 ml-auto" />
           </ContextMenuItem>
           <ContextMenuItem onSelect={handlePin}>
-            <span>Pin</span>
-            <Pin className="w-4 h-4 ml-auto" />
+            <span>{pinned ? 'Unpin' : 'Pin'}</span>
+            <Pin className={cn("w-4 h-4 ml-auto", pinned && "text-stone-600")} />
           </ContextMenuItem>
           <ContextMenuItem onSelect={handleRename}>
             <span>Rename</span>

@@ -32,6 +32,8 @@ export const ERROR_CODES = {
   ERR_NOT_A_URL: 'ERR_NOT_A_URL',
   ERR_RATE_LIMIT: 'ERR_RATE_LIMIT',
   ERR_API_UNAVAILABLE: 'ERR_API_UNAVAILABLE',
+  ERR_FEEDBACK_SUBMIT_FAILED: 'ERR_FEEDBACK_SUBMIT_FAILED',
+  ERR_FEEDBACK_UPLOAD_FAILED: 'ERR_FEEDBACK_UPLOAD_FAILED',
 } as const;
 
 export const ERROR_MESSAGES = {
@@ -49,6 +51,8 @@ export const ERROR_MESSAGES = {
   [ERROR_CODES.ERR_NOT_A_URL]: 'Paste a recipe URL',
   [ERROR_CODES.ERR_RATE_LIMIT]: 'Too many requests',
   [ERROR_CODES.ERR_API_UNAVAILABLE]: 'Service temporarily unavailable',
+  [ERROR_CODES.ERR_FEEDBACK_SUBMIT_FAILED]: 'Failed to submit feedback',
+  [ERROR_CODES.ERR_FEEDBACK_UPLOAD_FAILED]: 'Failed to upload screenshots',
 } as const;
 
 // Enhanced error information with details and suggestions
@@ -166,6 +170,24 @@ export const ERROR_DETAILS: Record<string, EnhancedErrorInfo> = {
       'Wait a few minutes and try again',
       'The service should be back online shortly',
       'Try a different recipe if the issue persists',
+    ],
+  },
+  [ERROR_CODES.ERR_FEEDBACK_SUBMIT_FAILED]: {
+    userMessage: 'Failed to submit feedback',
+    detailedExplanation: 'We encountered an error while submitting your feedback. Please try again.',
+    suggestions: [
+      'Check your internet connection',
+      'Try submitting again in a few moments',
+      'Make sure all required fields are filled',
+    ],
+  },
+  [ERROR_CODES.ERR_FEEDBACK_UPLOAD_FAILED]: {
+    userMessage: 'Failed to upload screenshots',
+    detailedExplanation: 'We encountered an error while uploading your screenshots. Your feedback may still be submitted without images.',
+    suggestions: [
+      'Try uploading smaller images',
+      'Check your internet connection',
+      'You can submit without screenshots and add them later',
     ],
   },
 };

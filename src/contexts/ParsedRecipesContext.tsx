@@ -17,6 +17,10 @@ import {
   getBookmarkedRecipes as getBookmarkedRecipesFromStorage,
   addBookmark as addBookmarkToStorage,
   removeBookmark as removeBookmarkFromStorage,
+  pinRecipe as pinRecipeInStorage,
+  unpinRecipe as unpinRecipeInStorage,
+  isRecipePinned as isRecipePinnedInStorage,
+  touchRecipeAccess,
 } from '@/lib/storage';
 
 interface ParsedRecipesContextType {
@@ -32,6 +36,11 @@ interface ParsedRecipesContextType {
   toggleBookmark: (id: string) => void;
   isBookmarked: (id: string) => boolean;
   getBookmarkedRecipes: () => ParsedRecipe[];
+  // Pin functionality
+  togglePin: (id: string) => void;
+  isPinned: (id: string) => boolean;
+  // Last-accessed tracking
+  touchRecipe: (id: string) => void;
 }
 
 const ParsedRecipesContext = createContext<
@@ -141,6 +150,34 @@ export function ParsedRecipesProvider({ children }: { children: ReactNode }) {
     return getBookmarkedRecipesFromStorage();
   };
 
+  // Pin management
+  const togglePin = (id: string) => {
+    try {
+      if (isRecipePinnedInStorage(id)) {
+        unpinRecipeInStorage(id);
+      } else {
+        pinRecipeInStorage(id);
+      }
+      setRecentRecipes(getRecentRecipes());
+    } catch (error) {
+      console.error('Error toggling pin:', error);
+    }
+  };
+
+  const isPinned = (id: string): boolean => {
+    return isRecipePinnedInStorage(id);
+  };
+
+  // Last-accessed tracking
+  const touchRecipe = (id: string) => {
+    try {
+      touchRecipeAccess(id);
+      setRecentRecipes(getRecentRecipes());
+    } catch (error) {
+      console.error('Error touching recipe:', error);
+    }
+  };
+
   return (
     <ParsedRecipesContext.Provider
       value={{
@@ -155,6 +192,9 @@ export function ParsedRecipesProvider({ children }: { children: ReactNode }) {
         toggleBookmark,
         isBookmarked,
         getBookmarkedRecipes,
+        togglePin,
+        isPinned,
+        touchRecipe,
       }}
     >
       {children}
