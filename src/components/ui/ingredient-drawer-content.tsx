@@ -1,8 +1,14 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeftRight } from 'lucide-react';
+import { Sparkles, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useRecipe } from '@/contexts/RecipeContext';
+
+interface AiSubstitution {
+  name: string;
+  description: string;
+}
 
 interface IngredientDrawerContentProps {
   ingredientName: string;
@@ -23,6 +29,12 @@ export function IngredientDrawerContent({
 }: IngredientDrawerContentProps) {
   const [notes, setNotes] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { parsedRecipe } = useRecipe();
+
+  // AI substitution state
+  const [aiSubstitutions, setAiSubstitutions] = useState<AiSubstitution[] | null>(null);
+  const [isLoadingAi, setIsLoadingAi] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   // Auto-resize textarea to fit content
   useEffect(() => {
@@ -32,48 +44,171 @@ export function IngredientDrawerContent({
     }
   }, [notes]);
 
+  const handleGetAiSubstitutions = async () => {
+    if (!parsedRecipe) return;
+
+    setIsLoadingAi(true);
+    setAiError(null);
+
+    try {
+      const response = await fetch('/api/generateSubstitutions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ingredientName,
+          ingredientAmount: ingredientAmount || '',
+          recipeTitle: parsedRecipe.title || '',
+          cuisine: parsedRecipe.cuisine || [],
+          ingredients: parsedRecipe.ingredients,
+          instructions: parsedRecipe.instructions,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate substitutions');
+      }
+
+      const { data } = await response.json();
+      setAiSubstitutions(data.substitutions);
+    } catch (error) {
+      console.error('Failed to generate AI substitutions:', error);
+      setAiError('Could not generate suggestions.');
+    } finally {
+      setIsLoadingAi(false);
+    }
+  };
+
   // Build the "used in" description
   const capitalizedName = ingredientName.charAt(0).toUpperCase() + ingredientName.slice(1);
   const usedInDescription = linkedSteps.length > 0
     ? `${capitalizedName} is essential in this dish, enhancing the depth and bringing out the vibrant flavors.${ingredientAmount ? ` You'll need ${ingredientAmount} for this recipe.` : ''}`
     : 'Unable to identify the steps where this ingredient is used.';
 
-  const hasSubstitutes = substitutions && substitutions.length > 0;
+  const hasStaticSubstitutes = substitutions && substitutions.length > 0;
+  const hasAiSubstitutes = aiSubstitutions && aiSubstitutions.length > 0;
 
   return (
     <div className="space-y-6 pb-12">
       {/* Substitutes */}
-      {hasSubstitutes && (
-        <div className="space-y-3">
-          <span className="text-[11px] font-albert font-bold uppercase tracking-widest text-stone-400">
-            Substitute
-          </span>
-          <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
-            {substitutions.map((sub, i) => (
+      <div className="space-y-3">
+        <p className="text-[11px] font-albert font-bold uppercase tracking-widest text-stone-400">
+          Substitute
+        </p>
+
+        {/* State: Loading */}
+        {isLoadingAi && (
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
+            {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="flex-shrink-0 min-w-[180px] max-w-[220px] bg-white border border-stone-200 rounded-xl p-4 space-y-2"
+                className="flex-shrink-0 w-[260px] bg-white border border-stone-200 rounded-xl p-4 space-y-2 animate-pulse"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="h-4 bg-stone-100 rounded w-2/3" />
+                </div>
+                <div className="space-y-1.5">
+                  <div className="h-3 bg-stone-100 rounded w-full" />
+                  <div className="h-3 bg-stone-100 rounded w-4/5" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* State: AI results */}
+        {!isLoadingAi && hasAiSubstitutes && (
+          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
+            {aiSubstitutions.map((sub, i) => (
+              <div
+                key={i}
+                className="flex-shrink-0 w-[260px] bg-white border border-stone-200 rounded-xl p-4 space-y-2"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-[15px] font-albert font-semibold text-stone-800">
-                    {sub}
+                    {sub.name}
                   </span>
-                  <ArrowLeftRight className="h-3.5 w-3.5 text-stone-300 flex-shrink-0 ml-2" aria-hidden="true" />
                 </div>
                 <p className="text-[13px] text-stone-500 font-albert leading-relaxed">
-                  Use {sub.toLowerCase()} for a unique twist in this recipe.
+                  {sub.description}
                 </p>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+
+        {/* State: Error — retry button below heading */}
+        {!isLoadingAi && !hasAiSubstitutes && aiError && (
+          <div>
+            <button
+              onClick={handleGetAiSubstitutions}
+              className="flex items-center gap-1.5 text-[13px] font-albert font-medium text-stone-500 hover:text-stone-800 transition-colors cursor-pointer"
+            >
+              <RefreshCw className="h-3 w-3" />
+              Try again
+            </button>
+          </div>
+        )}
+
+        {/* State: Idle with static subs — show cards + suggest button */}
+        {!isLoadingAi && !hasAiSubstitutes && !aiError && hasStaticSubstitutes && (
+          <>
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
+              {substitutions.map((sub, i) => (
+                <div
+                  key={i}
+                  className="flex-shrink-0 w-[260px] bg-white border border-stone-200 rounded-xl p-4 space-y-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[15px] font-albert font-semibold text-stone-800">
+                      {sub}
+                    </span>
+                  </div>
+                  <p className="text-[13px] text-stone-500 font-albert leading-relaxed">
+                    Use {sub.toLowerCase()} for a unique twist in this recipe.
+                  </p>
+                </div>
+              ))}
+            </div>
+            {parsedRecipe && (
+              <div>
+                <button
+                  onClick={handleGetAiSubstitutions}
+                  className="flex items-center gap-1.5 text-[13px] font-albert font-medium text-stone-500 hover:text-stone-800 transition-colors cursor-pointer"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Suggest Substitutes
+                </button>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* State: Idle, no static subs, recipe available — just the button */}
+        {!isLoadingAi && !hasAiSubstitutes && !aiError && !hasStaticSubstitutes && parsedRecipe && (
+          <div>
+            <button
+              onClick={handleGetAiSubstitutions}
+              className="flex items-center gap-1.5 text-[13px] font-albert font-medium text-stone-500 hover:text-stone-800 transition-colors cursor-pointer"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Suggest Substitutes
+            </button>
+          </div>
+        )}
+
+        {/* State: No static subs, no recipe context — nothing can be done */}
+        {!isLoadingAi && !hasAiSubstitutes && !aiError && !hasStaticSubstitutes && !parsedRecipe && (
+          <p className="text-[13px] text-stone-400 font-albert">
+            No substitutions available.
+          </p>
+        )}
+      </div>
 
       {/* Used In */}
       <div className="space-y-3">
-        <span className="text-[11px] font-albert font-bold uppercase tracking-widest text-stone-400">
+        <p className="text-[11px] font-albert font-bold uppercase tracking-widest text-stone-400">
           Used in
-        </span>
+        </p>
         <p className="text-stone-600 text-[15px] leading-relaxed font-albert">
           {usedInDescription}
         </p>
@@ -106,9 +241,9 @@ export function IngredientDrawerContent({
 
       {/* Notes */}
       <div className="space-y-3">
-        <span className="text-[11px] font-albert font-bold uppercase tracking-widest text-stone-400">
+        <p className="text-[11px] font-albert font-bold uppercase tracking-widest text-stone-400">
           Notes
-        </span>
+        </p>
         <div className="flex items-start gap-3 p-3 bg-stone-100 rounded-lg border-2 border-transparent transition-all duration-200 focus-within:bg-white focus-within:border-stone-200 focus-within:shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
           <textarea
             ref={textareaRef}
