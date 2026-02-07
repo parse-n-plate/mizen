@@ -250,7 +250,7 @@ export default function FeedbackDialog({ open, onOpenChange }: FeedbackDialogPro
                   placeholder="Tell us more..."
                   value={message}
                   onChange={e => setMessage(e.target.value)}
-                  className="flex-1 min-h-0 border-none bg-transparent px-0 py-0 focus:ring-0 resize-none placeholder-stone-400"
+                  className="flex-1 min-h-0 border-none bg-transparent px-0 pt-1 pb-0 focus:ring-0 resize-none placeholder-stone-400"
                   autoFocus
                 />
               </div>
