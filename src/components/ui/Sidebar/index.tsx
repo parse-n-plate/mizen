@@ -21,8 +21,6 @@ import BookBookmarkIcon from '@solar-icons/react/csr/school/BookBookmark';
 import SettingsIcon from '@solar-icons/react/csr/settings/Settings';
 import QuestionCircle from '@solar-icons/react/csr/ui/QuestionCircle';
 import ChatRoundLine from '@solar-icons/react/csr/messages/ChatRoundLine';
-import Phone from '@solar-icons/react/csr/call/Phone';
-import Keyboard from '@solar-icons/react/csr/devices/Keyboard';
 import InfoCircle from '@solar-icons/react/csr/ui/InfoCircle';
 import { MousePointer2 } from 'lucide-react';
 import { usePrototypeLab } from '@/contexts/PrototypeLabContext';
@@ -36,6 +34,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import FeedbackDialog from './FeedbackDialog';
 
@@ -462,17 +461,13 @@ export default function Sidebar() {
                     Leave Feedback
                   </DropdownMenuItem>
                   <DropdownMenuItem disabled>
-                    <Phone className="w-4 h-4 text-stone-300" />
-                    Contact Support
-                  </DropdownMenuItem>
-                  <DropdownMenuItem disabled>
-                    <Keyboard className="w-4 h-4 text-stone-300" />
-                    Keyboard Shortcuts
-                  </DropdownMenuItem>
-                  <DropdownMenuItem disabled>
                     <InfoCircle className="w-4 h-4 text-stone-300" />
                     About Mizen
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <div className="px-2 py-1.5 text-[11px] text-stone-400 font-albert leading-relaxed">
+                    <div>Mizen v0.1.0</div>
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
             </NavTooltip>

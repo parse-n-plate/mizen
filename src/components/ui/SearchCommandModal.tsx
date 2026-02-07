@@ -181,7 +181,7 @@ export default function SearchCommandModal({ open, onOpenChange }: SearchCommand
         onValueChange={setSearch}
         className="font-albert text-base text-stone-800 placeholder:text-stone-400"
       />
-      <CommandList className="max-h-[400px] max-md:max-h-none max-md:flex-1 px-2 pb-2">
+      <CommandList className="h-[400px] max-md:h-auto max-md:flex-1 px-2 pb-2">
         <CommandEmpty className="font-albert text-stone-400 px-4 py-10 text-center">
           No results found.
         </CommandEmpty>
