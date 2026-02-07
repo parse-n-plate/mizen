@@ -40,7 +40,7 @@ export default function HomepageSearch() {
 
   const { setParsedRecipe } = useRecipe();
   const { addRecipe } = useParsedRecipes();
-  const { showError, showInfo } = useToast();
+  const { showError, showSuccess, showInfo } = useToast();
   const router = useRouter();
 
   // Note: Command+K handling is now done globally via CommandKContext
@@ -266,6 +266,7 @@ export default function HomepageSearch() {
           showError({
             code: validUrlResponse.error.code,
             message: validUrlResponse.error.message,
+            sourceUrl: normalizedUrl,
           });
           setLoading(false);
           return;
@@ -275,6 +276,7 @@ export default function HomepageSearch() {
           errorLogger.log('ERR_NO_RECIPE_FOUND', 'No recipe found on this page', normalizedUrl);
           showError({
             code: 'ERR_NO_RECIPE_FOUND',
+            sourceUrl: normalizedUrl,
           });
           setLoading(false);
           return;
@@ -290,6 +292,7 @@ export default function HomepageSearch() {
             code: errorCode,
             message: response.error?.message,
             retryAfter: response.error?.retryAfter, // Pass through retry-after timestamp
+            sourceUrl: normalizedUrl,
           });
           setLoading(false);
           return;
@@ -345,6 +348,9 @@ export default function HomepageSearch() {
 
         // Add to search history
         addToSearchHistory(normalizedUrl, response.title);
+
+        // Show success toast
+        showSuccess('Recipe parsed successfully!', 'Navigating to recipe page...', normalizedUrl);
 
         // Navigate to recipe page
         router.push('/parsed-recipe-page');

@@ -326,6 +326,7 @@ export default function SearchForm({
         showError({
           code: validUrlResponse.error.code,
           message: validUrlResponse.error.message,
+          sourceUrl: normalizedUrl,
         });
         return;
       }
@@ -341,6 +342,7 @@ export default function SearchForm({
         );
         showError({
           code: 'ERR_NO_RECIPE_FOUND',
+          sourceUrl: normalizedUrl,
         });
         return;
       }
@@ -372,6 +374,7 @@ export default function SearchForm({
           code: errorCode,
           message: response.error?.message,
           retryAfter: response.error?.retryAfter, // Pass through retry-after timestamp
+          sourceUrl: normalizedUrl,
         });
         return;
       }
@@ -448,7 +451,7 @@ export default function SearchForm({
       });
 
       // Show success toast
-      showSuccess('Recipe parsed successfully!', 'Navigating to recipe page...');
+      showSuccess('Recipe parsed successfully!', 'Navigating to recipe page...', normalizedUrl);
 
       // Wait a moment for the loading animation to show the reveal before navigating
       setTimeout(() => {
