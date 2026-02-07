@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils';
 import { useAdminSettings } from '@/contexts/AdminSettingsContext';
 import LoadingAnimation from '@/components/ui/loading-animation';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/useToast';
+import { ERROR_CODES } from '@/utils/formatError';
 
 interface AdminPrototypingPanelProps {
   /** Optional callback when ingredients button is clicked */
@@ -18,6 +20,9 @@ export function AdminPrototypingPanel({ onIngredientsClick }: AdminPrototypingPa
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingPhase, setLoadingPhase] = useState<'gathering' | 'reading' | 'plating' | 'done' | undefined>(undefined);
   const { settings: adminSettings, toggleShowIngredientsForStepList } = useAdminSettings();
+  const { showError, showSuccess, showWarning, showInfo } = useToast();
+
+  const sampleUrl = 'https://www.allrecipes.com/recipe/example';
 
   // Add keyboard shortcut support (Cmd/Ctrl + Shift + P)
   useEffect(() => {
@@ -210,7 +215,7 @@ export function AdminPrototypingPanel({ onIngredientsClick }: AdminPrototypingPa
             {/* Loading Animation Test Section */}
             <div className="space-y-3 pt-4 border-t border-stone-100">
               <h3 className="text-[10px] font-albert font-bold uppercase tracking-widest text-stone-400">Animation Tests</h3>
-              
+
               {/* Button to trigger loading animation */}
               <Button
                 onClick={triggerLoadingAnimation}
@@ -226,6 +231,110 @@ export function AdminPrototypingPanel({ onIngredientsClick }: AdminPrototypingPa
                   Animation will run for 5 seconds
                 </p>
               )}
+            </div>
+
+            {/* Toast Previews Section */}
+            <div className="space-y-3 pt-4 border-t border-stone-100">
+              <h3 className="text-[10px] font-albert font-bold uppercase tracking-widest text-stone-400">Toast Previews</h3>
+
+              {/* Success */}
+              <button
+                onClick={() => showSuccess('Recipe parsed successfully!', 'Navigating to recipe page...', sampleUrl)}
+                className="w-full text-left p-2 rounded-lg hover:bg-stone-50 transition-colors"
+              >
+                <span className="text-xs font-albert font-medium text-stone-900">Success</span>
+                <span className="block text-[10px] font-albert text-stone-400 mt-0.5">With "View original" link</span>
+              </button>
+
+              {/* Error: No Recipe Found */}
+              <button
+                onClick={() => showError({ code: ERROR_CODES.ERR_NO_RECIPE_FOUND, sourceUrl: sampleUrl })}
+                className="w-full text-left p-2 rounded-lg hover:bg-stone-50 transition-colors"
+              >
+                <span className="text-xs font-albert font-medium text-stone-900">No Recipe Found</span>
+                <span className="block text-[10px] font-albert text-stone-400 mt-0.5">With "Visit page" action</span>
+              </button>
+
+              {/* Error: Fetch Failed */}
+              <button
+                onClick={() => showError({ code: ERROR_CODES.ERR_FETCH_FAILED, sourceUrl: sampleUrl })}
+                className="w-full text-left p-2 rounded-lg hover:bg-stone-50 transition-colors"
+              >
+                <span className="text-xs font-albert font-medium text-stone-900">Fetch Failed</span>
+                <span className="block text-[10px] font-albert text-stone-400 mt-0.5">Site unreachable / blocking</span>
+              </button>
+
+              {/* Error: AI Parse Failed */}
+              <button
+                onClick={() => showError({ code: ERROR_CODES.ERR_AI_PARSE_FAILED, sourceUrl: sampleUrl })}
+                className="w-full text-left p-2 rounded-lg hover:bg-stone-50 transition-colors"
+              >
+                <span className="text-xs font-albert font-medium text-stone-900">AI Parse Failed</span>
+                <span className="block text-[10px] font-albert text-stone-400 mt-0.5">Page found but extraction failed</span>
+              </button>
+
+              {/* Error: Timeout */}
+              <button
+                onClick={() => showError({ code: ERROR_CODES.ERR_TIMEOUT, sourceUrl: sampleUrl })}
+                className="w-full text-left p-2 rounded-lg hover:bg-stone-50 transition-colors"
+              >
+                <span className="text-xs font-albert font-medium text-stone-900">Timeout</span>
+                <span className="block text-[10px] font-albert text-stone-400 mt-0.5">Website too slow</span>
+              </button>
+
+              {/* Error: Invalid URL */}
+              <button
+                onClick={() => showError({ code: ERROR_CODES.ERR_INVALID_URL })}
+                className="w-full text-left p-2 rounded-lg hover:bg-stone-50 transition-colors"
+              >
+                <span className="text-xs font-albert font-medium text-stone-900">Invalid URL</span>
+                <span className="block text-[10px] font-albert text-stone-400 mt-0.5">No action button</span>
+              </button>
+
+              {/* Error: Rate Limit */}
+              <button
+                onClick={() => showError({ code: ERROR_CODES.ERR_RATE_LIMIT, retryAfter: Date.now() + 45000 })}
+                className="w-full text-left p-2 rounded-lg hover:bg-stone-50 transition-colors"
+              >
+                <span className="text-xs font-albert font-medium text-stone-900">Rate Limit</span>
+                <span className="block text-[10px] font-albert text-stone-400 mt-0.5">With retry countdown</span>
+              </button>
+
+              {/* Error: API Unavailable */}
+              <button
+                onClick={() => showError({ code: ERROR_CODES.ERR_API_UNAVAILABLE })}
+                className="w-full text-left p-2 rounded-lg hover:bg-stone-50 transition-colors"
+              >
+                <span className="text-xs font-albert font-medium text-stone-900">API Unavailable</span>
+                <span className="block text-[10px] font-albert text-stone-400 mt-0.5">Service down</span>
+              </button>
+
+              {/* Error: Unknown */}
+              <button
+                onClick={() => showError({ code: ERROR_CODES.ERR_UNKNOWN })}
+                className="w-full text-left p-2 rounded-lg hover:bg-stone-50 transition-colors"
+              >
+                <span className="text-xs font-albert font-medium text-stone-900">Unknown Error</span>
+                <span className="block text-[10px] font-albert text-stone-400 mt-0.5">Generic fallback</span>
+              </button>
+
+              {/* Info: Not a URL */}
+              <button
+                onClick={() => showInfo({ code: ERROR_CODES.ERR_NOT_A_URL })}
+                className="w-full text-left p-2 rounded-lg hover:bg-stone-50 transition-colors"
+              >
+                <span className="text-xs font-albert font-medium text-stone-900">Not a URL</span>
+                <span className="block text-[10px] font-albert text-stone-400 mt-0.5">Info toast</span>
+              </button>
+
+              {/* Warning */}
+              <button
+                onClick={() => showWarning('Check your input', 'Something looks off but we can still try.')}
+                className="w-full text-left p-2 rounded-lg hover:bg-stone-50 transition-colors"
+              >
+                <span className="text-xs font-albert font-medium text-stone-900">Warning</span>
+                <span className="block text-[10px] font-albert text-stone-400 mt-0.5">Generic warning toast</span>
+              </button>
             </div>
           </div>
         </div>
