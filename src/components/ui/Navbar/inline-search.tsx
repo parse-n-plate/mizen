@@ -35,7 +35,7 @@ export default function InlineSearch() {
   const { recentRecipes: contextRecipes } = useParsedRecipes();
   const { setParsedRecipe } = useRecipe();
   const { addRecipe } = useParsedRecipes();
-  const { showError, showInfo } = useToast();
+  const { showError, showSuccess, showInfo } = useToast();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -120,6 +120,7 @@ export default function InlineSearch() {
           showError({
             code: validUrlResponse.error.code,
             message: validUrlResponse.error.message,
+            sourceUrl: normalizedUrl,
           });
           setLoading(false);
           return;
@@ -129,6 +130,7 @@ export default function InlineSearch() {
           errorLogger.log('ERR_NO_RECIPE_FOUND', 'No recipe found on this page', normalizedUrl);
           showError({
             code: 'ERR_NO_RECIPE_FOUND',
+            sourceUrl: normalizedUrl,
           });
           setLoading(false);
           return;
@@ -145,6 +147,7 @@ export default function InlineSearch() {
             code: errorCode,
             message: response.error?.message,
             retryAfter: response.error?.retryAfter, // Pass through retry-after timestamp
+            sourceUrl: normalizedUrl,
           });
           return;
         }
@@ -199,6 +202,9 @@ export default function InlineSearch() {
 
         // Add to search history
         addToSearchHistory(normalizedUrl, response.title);
+
+        // Show success toast
+        showSuccess('Recipe parsed successfully!', 'Navigating to recipe page...', normalizedUrl);
 
         // Navigate to recipe page with delay for reveal
         setTimeout(() => {

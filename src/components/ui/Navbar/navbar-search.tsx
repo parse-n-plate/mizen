@@ -159,6 +159,7 @@ export default function NavbarSearch() {
         showError({
           code: validUrlResponse.error.code,
           message: validUrlResponse.error.message,
+          sourceUrl: normalizedUrl,
         });
         return;
       }
@@ -172,6 +173,7 @@ export default function NavbarSearch() {
         );
         showError({
           code: 'ERR_NO_RECIPE_FOUND',
+          sourceUrl: normalizedUrl,
         });
         return;
       }
@@ -189,6 +191,7 @@ export default function NavbarSearch() {
           code: errorCode,
           message: response.error?.message,
           retryAfter: response.error?.retryAfter, // Pass through retry-after timestamp
+          sourceUrl: normalizedUrl,
         });
         return;
       }
@@ -245,7 +248,7 @@ export default function NavbarSearch() {
       });
 
       // Show success toast
-      showSuccess('Recipe parsed successfully!', 'Navigating to recipe page...');
+      showSuccess('Recipe parsed successfully!', 'Navigating to recipe page...', normalizedUrl);
 
       // Step 5: Navigate to the parsed recipe page with delay for reveal
       setTimeout(() => {
