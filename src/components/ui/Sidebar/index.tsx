@@ -393,7 +393,10 @@ export default function Sidebar() {
             {/* Search — opens command modal */}
             <NavTooltip label="Search  ⌘K">
               <button
-                onClick={openSearch}
+                onClick={() => {
+                  openSearch();
+                  if (isMobile) hideMobileNav();
+                }}
                 className="group w-full flex items-center px-3 py-2 rounded-lg transition-colors font-albert text-sm text-stone-600 hover:bg-stone-100 hover:text-stone-900"
                 aria-label="Search recipes"
               >
