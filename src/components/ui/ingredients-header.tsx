@@ -243,45 +243,45 @@ export function IngredientsHeader({
       <div className="ingredients-header">
         <div className="ingredients-header-left">
           <h2 className="ingredients-header-title">Ingredients</h2>
-          {/* Ellipsis menu icon - opens unit type options */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                className="p-2 rounded-full transition-colors text-stone-400 hover:bg-stone-50 data-[state=open]:bg-stone-100 data-[state=open]:text-stone-900"
-                aria-label="Unit type options"
-              >
-                <MoreHorizontal className="w-5 h-5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-[180px]">
-              <DropdownMenuRadioGroup value={unitSystem} onValueChange={(value) => onUnitSystemChange(value as UnitSystem)}>
-                <DropdownMenuRadioItem value="original">Original</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="metric">Metric</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="imperial">Imperial</DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        
-        {/* Servings/Scale Button - toggles slider card */}
-        <button
-          onClick={() => setIsSliderOpen(!isSliderOpen)}
-          className="ingredients-header-servings-btn"
-          aria-label={isMultiplierMode ? "Adjust scale" : "Adjust servings"}
-          aria-expanded={isSliderOpen}
-        >
-          <ChevronDown 
-            className={`w-4 h-4 text-stone-500 transition-transform duration-200 ${isSliderOpen ? 'rotate-180' : ''}`} 
-          />
-          {!isMultiplierMode && (
-            <span className="user-icon-wrapper">
-              <User weight="Bold" className="w-4 h-4 text-stone-600" />
+          {/* Servings/Scale Button - toggles slider card */}
+          <button
+            onClick={() => setIsSliderOpen(!isSliderOpen)}
+            className="ingredients-header-servings-btn"
+            aria-label={isMultiplierMode ? "Adjust scale" : "Adjust servings"}
+            aria-expanded={isSliderOpen}
+          >
+            <ChevronDown
+              className={`w-4 h-4 text-stone-500 transition-transform duration-200 ${isSliderOpen ? 'rotate-180' : ''}`}
+            />
+            {!isMultiplierMode && (
+              <span className="user-icon-wrapper">
+                <User weight="Bold" className="w-4 h-4 text-stone-600" />
+              </span>
+            )}
+            <span className="ingredients-header-servings-text">
+              {isMultiplierMode ? `Scale ${servingsDisplay}` : `Serves ${servingsDisplay}`}
             </span>
-          )}
-          <span className="ingredients-header-servings-text">
-            {isMultiplierMode ? `Scale ${servingsDisplay}` : `Serves ${servingsDisplay}`}
-          </span>
-        </button>
+          </button>
+        </div>
+
+        {/* Ellipsis menu icon - opens unit type options */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className="p-2 rounded-full transition-colors text-stone-400 hover:bg-stone-50 data-[state=open]:bg-stone-100 data-[state=open]:text-stone-900"
+              aria-label="Unit type options"
+            >
+              <MoreHorizontal className="w-5 h-5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[180px]">
+            <DropdownMenuRadioGroup value={unitSystem} onValueChange={(value) => onUnitSystemChange(value as UnitSystem)}>
+              <DropdownMenuRadioItem value="original">Original</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="metric">Metric</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="imperial">Imperial</DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Servings Slider Card - appears when toggled with snappy animation */}
