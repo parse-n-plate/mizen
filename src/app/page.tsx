@@ -31,24 +31,25 @@ function HomeContent() {
         <div className="max-w-6xl mx-auto px-4 md:px-8 pt-24 md:pt-32 pb-16 md:pb-20">
           {/* Hero Section */}
           <div className={`text-center space-y-5 md:space-y-6 ${isPageLoaded ? 'page-fade-in-up' : 'opacity-0'}`}>
-              <h1 className="font-domine text-[36px] sm:text-[42px] md:text-[48px] font-bold text-black leading-[1.1] flex flex-col items-center justify-center gap-1.5 md:gap-2">
-                <span className="flex items-center gap-1.5 md:gap-2">
+              {/* Desktop headline */}
+              <h1 className="hidden md:flex font-domine text-[64px] font-bold text-black leading-[1.1] flex-col items-center justify-center gap-2">
+                <span className="flex items-center gap-2">
                   Clean recipes,
                   <motion.img
                     src="/assets/Illustration Icons/Tomato_Icon.png"
                     alt=""
-                    className="hidden md:block w-8 h-8 sm:w-9 sm:h-9 md:w-11 md:h-11 flex-shrink-0 object-contain"
+                    className="w-16 h-16 flex-shrink-0 object-contain"
                     aria-hidden="true"
                     draggable={false}
                     whileHover={{ scale: 1.15, rotate: 8 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                   />
                 </span>
-                <span className="flex items-center gap-1.5 md:gap-2">
+                <span className="flex items-center gap-2">
                   <motion.img
                     src="/assets/Illustration Icons/Pan_Icon.png"
                     alt=""
-                    className="hidden md:block w-8 h-8 sm:w-9 sm:h-9 md:w-11 md:h-11 flex-shrink-0 object-contain"
+                    className="w-16 h-16 flex-shrink-0 object-contain"
                     aria-hidden="true"
                     draggable={false}
                     whileHover={{ scale: 1.15, rotate: -8 }}
@@ -57,7 +58,11 @@ function HomeContent() {
                   calm cooking.
                 </span>
               </h1>
-              <p className="font-albert text-[15px] sm:text-base md:text-[17px] text-stone-600 leading-[1.6] max-w-md mx-auto">
+              {/* Tablet & mobile headline */}
+              <h1 className="md:hidden font-domine text-[36px] sm:text-[42px] font-bold text-black leading-[1.1]">
+                Clean recipes,<br />calm cooking.
+              </h1>
+              <p className="font-albert text-base sm:text-[17px] md:text-[19px] text-stone-600 leading-[1.6] max-w-lg mx-auto">
                 No distractions. No clutter. Just clear, elegant recipes<span className="responsive-break"></span> designed for people who love to cook.
               </p>
               
