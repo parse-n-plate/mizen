@@ -245,13 +245,13 @@ export default function SearchForm({
       // Show success toast
       showSuccess('Recipe parsed successfully!', 'Navigating to recipe page...');
 
-      // Wait a moment for the loading animation to show the reveal before navigating
+      // Brief pause for the loading animation to flash completion before navigating
       setTimeout(() => {
         setLoading(false);
         setLoadingProgress(0);
         setLoadingPhase(undefined);
         router.push('/parsed-recipe-page');
-      }, 1500);
+      }, 500);
     } catch (err) {
       console.error('[Client] Image parse error:', err);
       errorLogger.log(
@@ -453,11 +453,11 @@ export default function SearchForm({
       // Show success toast
       showSuccess('Recipe parsed successfully!', 'Navigating to recipe page...', normalizedUrl);
 
-      // Wait a moment for the loading animation to show the reveal before navigating
+      // Brief pause for the loading animation to flash completion before navigating
       setTimeout(() => {
         setLoading(false);
         router.push('/parsed-recipe-page');
-      }, 1500);
+      }, 500);
     } catch (err) {
       console.error('[Client] Parse error:', err);
       errorLogger.log(
@@ -501,12 +501,12 @@ export default function SearchForm({
     if (initialUrl) {
       setQuery(initialUrl);
       setIsFocused(true);
-      // Auto-trigger parsing after a short delay
+      // Auto-trigger parsing after mount settles
       setTimeout(() => {
         if (isUrl(initialUrl)) {
           handleParse();
         }
-      }, 500);
+      }, 100);
     }
   }, [initialUrl, handleParse]);
 

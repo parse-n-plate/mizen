@@ -146,7 +146,7 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
         if (i === 1) return { ...s, status: 'in_progress' };
         return s;
       }));
-    }, 2500);
+    }, 1500);
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);

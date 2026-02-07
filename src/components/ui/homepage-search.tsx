@@ -35,6 +35,8 @@ export default function HomepageSearch() {
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState<number>(0);
+  const [loadingPhase, setLoadingPhase] = useState<'gathering' | 'reading' | 'plating' | 'done' | undefined>(undefined);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -134,6 +136,8 @@ export default function HomepageSearch() {
 
     try {
       setLoading(true);
+      setLoadingProgress(10);
+      setLoadingPhase('gathering');
 
       console.log('[HomepageSearch] Parsing recipe from image:', selectedImage.name);
 
@@ -151,6 +155,9 @@ export default function HomepageSearch() {
       // Call the image parsing function
       const response = await parseRecipeFromImage(selectedImage);
 
+      setLoadingProgress(30);
+      setLoadingPhase('reading');
+
       // Check if parsing failed
       if (!response.success || response.error) {
         const errorCode = response.error?.code || 'ERR_NO_RECIPE_FOUND';
@@ -161,10 +168,14 @@ export default function HomepageSearch() {
           retryAfter: response.error?.retryAfter, // Pass through retry-after timestamp
         });
         setLoading(false);
+        setLoadingProgress(0);
+        setLoadingPhase(undefined);
         return;
       }
 
       console.log('[HomepageSearch] Successfully parsed recipe from image:', response.title);
+
+      setLoadingProgress(85);
 
       // Wait for image data conversion to complete
       const imageData = await imageDataPromise;
@@ -185,6 +196,9 @@ export default function HomepageSearch() {
         imageData: imageData, // Store base64 image data for preview
         imageFilename: selectedImage.name, // Store original filename
       };
+
+      setLoadingProgress(90);
+      setLoadingPhase('plating');
 
       setParsedRecipe(recipeToStore);
 
@@ -216,10 +230,18 @@ export default function HomepageSearch() {
         imageFilename: selectedImage.name, // Store original filename
       });
 
-      // Navigate to recipe page
-      router.push('/parsed-recipe-page');
-      setSelectedImage(null);
-      setSearchValue('');
+      setLoadingProgress(100);
+      setLoadingPhase('done');
+
+      // Brief pause for the loading animation to flash completion before navigating
+      setTimeout(() => {
+        setLoading(false);
+        setLoadingProgress(0);
+        setLoadingPhase(undefined);
+        router.push('/parsed-recipe-page');
+        setSelectedImage(null);
+        setSearchValue('');
+      }, 500);
     } catch (err) {
       console.error('[HomepageSearch] Image parse error:', err);
       errorLogger.log('ERR_UNKNOWN', 'An unexpected error occurred during image parsing', selectedImage.name);
@@ -227,8 +249,9 @@ export default function HomepageSearch() {
         code: 'ERR_UNKNOWN',
         message: 'An unexpected error occurred. Please try again.',
       });
-    } finally {
       setLoading(false);
+      setLoadingProgress(0);
+      setLoadingPhase(undefined);
     }
   }, [selectedImage, setParsedRecipe, addRecipe, showError, router]);
 
@@ -239,6 +262,8 @@ export default function HomepageSearch() {
 
       try {
         setLoading(true);
+        setLoadingProgress(0);
+        setLoadingPhase('gathering');
 
         // Step 0: Check if input looks like a URL (early validation)
         if (!isUrl(url)) {
@@ -247,6 +272,8 @@ export default function HomepageSearch() {
             code: 'ERR_NOT_A_URL',
           });
           setLoading(false);
+          setLoadingProgress(0);
+          setLoadingPhase(undefined);
           return;
         }
 
@@ -254,8 +281,12 @@ export default function HomepageSearch() {
         // This enables users to type "allrecipes.com/recipe" instead of full URL
         const normalizedUrl = normalizeUrl(url);
 
+        setLoadingProgress(10);
+
         // Step 1: Validate URL format and check if it's a recipe page
         const validUrlResponse = await validateRecipeUrl(normalizedUrl);
+
+        setLoadingProgress(20);
 
         if (!validUrlResponse.success) {
           errorLogger.log(
@@ -269,6 +300,8 @@ export default function HomepageSearch() {
             sourceUrl: normalizedUrl,
           });
           setLoading(false);
+          setLoadingProgress(0);
+          setLoadingPhase(undefined);
           return;
         }
 
@@ -279,11 +312,18 @@ export default function HomepageSearch() {
             sourceUrl: normalizedUrl,
           });
           setLoading(false);
+          setLoadingProgress(0);
+          setLoadingPhase(undefined);
           return;
         }
 
+        setLoadingProgress(30);
+        setLoadingPhase('reading');
+
         // Step 2: Parse recipe using unified AI-based parser
         const response = await recipeScrape(normalizedUrl);
+
+        setLoadingProgress(85);
 
         if (!response.success || response.error) {
           const errorCode = response.error?.code || 'ERR_NO_RECIPE_FOUND';
@@ -295,8 +335,13 @@ export default function HomepageSearch() {
             sourceUrl: normalizedUrl,
           });
           setLoading(false);
+          setLoadingProgress(0);
+          setLoadingPhase(undefined);
           return;
         }
+
+        setLoadingProgress(90);
+        setLoadingPhase('plating');
 
         // Store parsed recipe
         const recipeToStore = {
@@ -349,12 +394,20 @@ export default function HomepageSearch() {
         // Add to search history
         addToSearchHistory(normalizedUrl, response.title);
 
+        setLoadingProgress(100);
+        setLoadingPhase('done');
+
         // Show success toast
         showSuccess('Recipe parsed successfully!', 'Navigating to recipe page...', normalizedUrl);
 
-        // Navigate to recipe page
-        router.push('/parsed-recipe-page');
-        setSearchValue('');
+        // Brief pause for the loading animation to flash completion before navigating
+        setTimeout(() => {
+          setLoading(false);
+          setLoadingProgress(0);
+          setLoadingPhase(undefined);
+          router.push('/parsed-recipe-page');
+          setSearchValue('');
+        }, 500);
       } catch (err) {
         console.error('[HomepageSearch] Parse error:', err);
         errorLogger.log('ERR_UNKNOWN', 'An unexpected error occurred', url.trim());
@@ -362,8 +415,9 @@ export default function HomepageSearch() {
           code: 'ERR_UNKNOWN',
           message: 'An unexpected error occurred. Please try again.',
         });
-      } finally {
         setLoading(false);
+        setLoadingProgress(0);
+        setLoadingPhase(undefined);
       }
     },
     [setParsedRecipe, addRecipe, showError, showInfo, router],
@@ -394,11 +448,13 @@ export default function HomepageSearch() {
   // Handle cancel loading
   const handleCancelLoading = () => {
     setLoading(false);
+    setLoadingProgress(0);
+    setLoadingPhase(undefined);
   };
 
   return (
     <>
-      <LoadingAnimation isVisible={loading} onCancel={handleCancelLoading} />
+      <LoadingAnimation isVisible={loading} progress={loadingProgress} phase={loadingPhase} onCancel={handleCancelLoading} />
       <div className="w-full max-w-2xl mx-auto">
         <form onSubmit={handleSubmit} className="w-full">
           <div 
