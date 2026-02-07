@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, Upload, X } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRecipe } from '@/contexts/RecipeContext';
 import {
@@ -42,6 +42,7 @@ export default function HomepageSearch() {
   const { addRecipe } = useParsedRecipes();
   const { showError, showInfo } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Note: Command+K handling is now done globally via CommandKContext
   // This component's input will be focused when Command+K is pressed on the homepage
@@ -363,6 +364,25 @@ export default function HomepageSearch() {
     [setParsedRecipe, addRecipe, showError, showInfo, router],
   );
 
+  // Handle query params from SearchCommandModal (e.g. ?action=upload-image or ?url=...)
+  useEffect(() => {
+    const action = searchParams.get('action');
+    const urlParam = searchParams.get('url');
+
+    if (action === 'upload-image') {
+      router.replace('/', { scroll: false });
+      setTimeout(() => {
+        fileInputRef.current?.click();
+      }, 200);
+    } else if (urlParam) {
+      router.replace('/', { scroll: false });
+      setSearchValue(urlParam);
+      setTimeout(() => {
+        handleParse(urlParam);
+      }, 200);
+    }
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -396,14 +416,14 @@ export default function HomepageSearch() {
       <div className="w-full max-w-2xl mx-auto">
         <form onSubmit={handleSubmit} className="w-full">
           <div 
-            className={`bg-[#fafaf9] content-stretch flex min-h-[77px] items-center px-[24px] py-[12px] relative rounded-[999px] shrink-0 w-full transition-all group ${
+            className={`bg-[#fafaf9] content-stretch flex min-h-[77px] items-center px-[24px] py-[12px] relative rounded-[24px] shrink-0 w-full transition-all group ${
               isSearchFocused ? 'bg-white shadow-[0_0_0_3px_rgba(0,114,251,0.15)]' : ''
             }`}
           >
             {/* Border overlay - changes color on focus */}
             <div 
               aria-hidden="true" 
-              className={`absolute border-2 border-solid inset-0 pointer-events-none rounded-[999px] transition-all ${
+              className={`absolute border-2 border-solid inset-0 pointer-events-none rounded-[24px] transition-all ${
                 isSearchFocused ? 'border-[#0072fb]' : 'border-[#e7e5e4]'
               }`} 
             />
@@ -519,12 +539,6 @@ export default function HomepageSearch() {
                 </div>
               )}
 
-              {/* Command+K Shortcut Indicator - Only shown when not focused and no text, hidden on mobile */}
-              {!isSearchFocused && !searchValue && !selectedImage && (
-                <div className="shrink-0 hidden md:flex items-center gap-1 px-2 py-1 bg-[#e7e5e4] rounded border border-[#d6d3d1]">
-                  <kbd className="text-[12px] text-[#57534e] font-albert font-medium">⌘K</kbd>
-                </div>
-              )}
             </div>
           </div>
         </form>

@@ -1,12 +1,15 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import { Domine, Albert_Sans } from 'next/font/google';
-import Sidebar from '@/components/ui/Sidebar';
+import AppShell from '@/components/ui/AppShell';
 import { AdminSettingsProvider } from '@/contexts/AdminSettingsContext';
 import { RecipeProvider } from '@/contexts/RecipeContext';
 import { ParsedRecipesProvider } from '@/contexts/ParsedRecipesContext';
 import { TimerProvider } from '@/contexts/TimerContext';
 import { CommandKProvider } from '@/contexts/CommandKContext';
+import { SidebarProvider } from '@/contexts/SidebarContext';
+import { PrototypeLabProvider } from '@/contexts/PrototypeLabContext';
+import { AdminPrototypingPanel } from '@/components/ui/admin-prototyping-panel';
 import { Toaster } from '@/components/ui/sonner';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Agentation } from 'agentation';
@@ -61,18 +64,16 @@ export default function RootLayout({
             <ParsedRecipesProvider>
               <TimerProvider>
                 <CommandKProvider>
-                  <ImageProtection />
-                  <div className="flex h-screen overflow-hidden">
-                    <Sidebar />
-                    <div className="flex-1 flex flex-col min-h-0">
-                      <main className="flex-1 overflow-y-auto">
-                        {children}
-                      </main>
-                    </div>
-                  </div>
-                  <Toaster />
-                  <SpeedInsights />
-                  {process.env.NODE_ENV === 'development' && <Agentation />}
+                  <SidebarProvider>
+                    <PrototypeLabProvider>
+                      <ImageProtection />
+                      <AppShell>{children}</AppShell>
+                      <Toaster />
+                      <SpeedInsights />
+                      {process.env.NODE_ENV === 'development' && <Agentation />}
+                      {(process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview') && <AdminPrototypingPanel />}
+                    </PrototypeLabProvider>
+                  </SidebarProvider>
                 </CommandKProvider>
               </TimerProvider>
             </ParsedRecipesProvider>

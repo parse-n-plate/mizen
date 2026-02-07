@@ -5,7 +5,6 @@ import TimerCard from './TimerCard';
 import TipsCard from './TipsCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { findIngredientsInText } from '@/utils/ingredientMatcher';
-import { useAdminSettings } from '@/contexts/AdminSettingsContext';
 
 /**
  * Converts text to title case (capitalizes first letter of each word)
@@ -33,8 +32,6 @@ interface ContextPanelProps {
 export default function ContextPanel({ step, allIngredients }: ContextPanelProps) {
   // Find ingredients mentioned in the step text for detailed view
   const matchedIngredients = findIngredientsInText(step.detail, allIngredients);
-  const { settings: adminSettings } = useAdminSettings();
-
   const handleIngredientClick = (name: string) => {
     // Dispatch a custom event for the page to handle tab switching and scrolling
     const event = new CustomEvent('navigate-to-ingredient', { detail: { name } });
@@ -42,10 +39,8 @@ export default function ContextPanel({ step, allIngredients }: ContextPanelProps
   };
 
   // Check if there's any content to show
-  const hasIngredients = adminSettings.showIngredientsForStepList && (
-    matchedIngredients.length > 0 || 
-    (step.ingredients && step.ingredients.length > 0)
-  );
+  const hasIngredients = matchedIngredients.length > 0 ||
+    (step.ingredients && step.ingredients.length > 0);
   const hasTimer = step.time && step.time > 0;
   const hasTip = step.tips && step.tips.trim().length > 0;
 
@@ -66,7 +61,7 @@ export default function ContextPanel({ step, allIngredients }: ContextPanelProps
           className="space-y-8 cursor-default"
         >
           {/* Ingredients List Section - Detailed View */}
-          {adminSettings.showIngredientsForStepList && matchedIngredients.length > 0 && (
+          {matchedIngredients.length > 0 && (
             <div className="flex flex-col gap-4">
               <div className="grid grid-cols-1 gap-2">
                 {matchedIngredients.map((ing, index) => (
@@ -93,7 +88,7 @@ export default function ContextPanel({ step, allIngredients }: ContextPanelProps
           )}
 
           {/* Fallback to legacy ingredients if no matches found in text but they exist in step object */}
-          {adminSettings.showIngredientsForStepList && matchedIngredients.length === 0 && step.ingredients && step.ingredients.length > 0 && (
+          {matchedIngredients.length === 0 && step.ingredients && step.ingredients.length > 0 && (
             <div className="flex flex-col gap-4">
               <div className="grid grid-cols-1 gap-2">
                 {step.ingredients.map((ingredient, index) => (

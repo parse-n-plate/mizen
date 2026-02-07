@@ -35,6 +35,8 @@ export type ParsedRecipe = {
     fridge?: number | null;  // Days in fridge (null if not fridge-safe)
     freezer?: number | null; // Days in freezer (null if not freezer-friendly)
   };
+  pinnedAt?: string | null;        // ISO timestamp when pinned, null/undefined if not pinned
+  lastAccessedAt?: string | null;  // ISO timestamp of last access/view
   plate?: {
     // Legacy single photo support (backward compatibility)
     photoData?: string;
@@ -65,6 +67,46 @@ export type ParsedRecipe = {
 const RECENT_RECIPES_KEY = 'recentRecipes';
 const BOOKMARKED_RECIPES_KEY = 'bookmarkedRecipes';
 const MAX_RECENT_RECIPES = 10;
+
+/**
+ * Migrate legacy bookmark storage (array of IDs) to full-recipe storage.
+ * Old format: string[] of recipe IDs stored under BOOKMARKED_RECIPES_KEY.
+ * New format: ParsedRecipe[] stored under BOOKMARKED_RECIPES_KEY.
+ * Runs once on first access; a no-op when already migrated.
+ */
+function migrateBookmarksIfNeeded(): void {
+  try {
+    const raw = localStorage.getItem(BOOKMARKED_RECIPES_KEY);
+    if (!raw) return;
+
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed) || parsed.length === 0) return;
+
+    // Already migrated — first element is an object (ParsedRecipe)
+    if (typeof parsed[0] === 'object') return;
+
+    // Legacy format: string IDs → look up full recipes in recents
+    const recents = getRecentRecipes();
+    const recentsById = new Map(recents.map((r) => [r.id, r]));
+
+    const fullBookmarks: ParsedRecipe[] = (parsed as string[])
+      .map((id) => recentsById.get(id))
+      .filter((r): r is ParsedRecipe => r !== undefined);
+
+    localStorage.setItem(BOOKMARKED_RECIPES_KEY, JSON.stringify(fullBookmarks));
+
+    // Remove migrated bookmarks from the recents list
+    const bookmarkIdSet = new Set(fullBookmarks.map((r) => r.id));
+    const cleanedRecents = recents.filter((r) => !bookmarkIdSet.has(r.id));
+    localStorage.setItem(RECENT_RECIPES_KEY, JSON.stringify(cleanedRecents));
+
+    console.log(
+      `[Storage] Migrated ${fullBookmarks.length} bookmarks from ID-only to full-recipe format`,
+    );
+  } catch (error) {
+    console.error('[Storage] Bookmark migration failed:', error);
+  }
+}
 
 // Derive a concise title from a full instruction for legacy data
 // Normalize instructions into titled steps, tolerating legacy string arrays
@@ -139,7 +181,7 @@ export function getRecentRecipes(): ParsedRecipe[] {
       }))
       .sort(
         (a, b) =>
-          new Date(b.parsedAt).getTime() - new Date(a.parsedAt).getTime(),
+          new Date(b.lastAccessedAt || b.parsedAt).getTime() - new Date(a.lastAccessedAt || a.parsedAt).getTime(),
       );
     
     // Log cuisine data for each recipe
@@ -165,27 +207,25 @@ export function addRecentRecipe(
     const recentRecipes = getRecentRecipes();
 
     // Create new recipe with id and parsedAt
-    console.log('[Storage] 🍽️ Adding recipe to localStorage with cuisine:', recipe.cuisine || 'none');
+    console.log('[Storage] Adding recipe to localStorage with cuisine:', recipe.cuisine || 'none');
     const newRecipe: ParsedRecipe = {
       ...recipe,
       instructions: normalizeInstructions(recipe.instructions),
       id: generateId(),
       parsedAt: new Date().toISOString(),
     };
-    
-    console.log('[Storage] 🍽️ Recipe stored with cuisine:', newRecipe.cuisine || 'none');
 
     // Remove duplicate if same URL exists
     const filteredRecipes = recentRecipes.filter((r) => r.url !== recipe.url);
 
-    // Add new recipe to the beginning
-    const updatedRecipes = [newRecipe, ...filteredRecipes];
-
-    // Keep only the most recent MAX_RECENT_RECIPES
-    const limitedRecipes = updatedRecipes.slice(0, MAX_RECENT_RECIPES);
+    // Add new recipe to the beginning, then strictly cap
+    const limitedRecipes = [newRecipe, ...filteredRecipes].slice(
+      0,
+      MAX_RECENT_RECIPES,
+    );
 
     localStorage.setItem(RECENT_RECIPES_KEY, JSON.stringify(limitedRecipes));
-    console.log('[Storage] ✅ Recipe saved to localStorage successfully');
+    console.log('[Storage] Recipe saved to localStorage successfully');
   } catch (error) {
     console.error('Error adding recent recipe to localStorage:', error);
   }
@@ -198,8 +238,13 @@ export function addRecentRecipe(
  */
 export function getRecipeById(id: string): ParsedRecipe | null {
   try {
+    // Check recents first, then bookmarks
     const recentRecipes = getRecentRecipes();
-    return recentRecipes.find((recipe) => recipe.id === id) || null;
+    const found = recentRecipes.find((recipe) => recipe.id === id);
+    if (found) return found;
+
+    const bookmarks = getBookmarkedRecipes();
+    return bookmarks.find((recipe) => recipe.id === id) || null;
   } catch (error) {
     console.error('Error getting recipe by ID from localStorage:', error);
     return null;
@@ -213,39 +258,39 @@ export function getRecipeById(id: string): ParsedRecipe | null {
  */
 export function updateRecipe(id: string, updates: Partial<ParsedRecipe>): void {
   try {
+    // Try recents first
     const recentRecipes = getRecentRecipes();
-    const recipeIndex = recentRecipes.findIndex((recipe) => recipe.id === id);
+    const recentIndex = recentRecipes.findIndex((recipe) => recipe.id === id);
 
-    if (recipeIndex !== -1) {
-      // Merge updates with existing recipe
-      recentRecipes[recipeIndex] = {
-        ...recentRecipes[recipeIndex],
+    if (recentIndex !== -1) {
+      recentRecipes[recentIndex] = {
+        ...recentRecipes[recentIndex],
         ...updates,
-        id, // Preserve the original ID
-        parsedAt: recentRecipes[recipeIndex].parsedAt, // Preserve original parsedAt
+        id,
+        parsedAt: recentRecipes[recentIndex].parsedAt,
       };
-
-      console.log('[Storage] 📸 Updating recipe with plate data:', {
-        recipeId: id,
-        hasPlateData: !!updates.plate,
-        hasPhotoData: !!updates.plate?.photoData,
-        photoDataLength: updates.plate?.photoData?.length || 0,
-      });
-
       localStorage.setItem(RECENT_RECIPES_KEY, JSON.stringify(recentRecipes));
-
-      // Verify it was saved
-      const saved = getRecentRecipes();
-      const savedRecipe = saved.find(r => r.id === id);
-      console.log('[Storage] ✅ Recipe updated successfully. Verification:', {
-        recipeId: id,
-        savedHasPlate: !!savedRecipe?.plate,
-        savedHasPhoto: !!savedRecipe?.plate?.photoData,
-        savedPhotoLength: savedRecipe?.plate?.photoData?.length || 0,
-      });
-    } else {
-      console.warn('[Storage] ⚠️ Recipe not found for update:', id);
+      console.log('[Storage] Recipe updated in recents:', id);
+      return;
     }
+
+    // Try bookmarks
+    const bookmarks = getBookmarkedRecipes();
+    const bookmarkIndex = bookmarks.findIndex((recipe) => recipe.id === id);
+
+    if (bookmarkIndex !== -1) {
+      bookmarks[bookmarkIndex] = {
+        ...bookmarks[bookmarkIndex],
+        ...updates,
+        id,
+        parsedAt: bookmarks[bookmarkIndex].parsedAt,
+      };
+      localStorage.setItem(BOOKMARKED_RECIPES_KEY, JSON.stringify(bookmarks));
+      console.log('[Storage] Recipe updated in bookmarks:', id);
+      return;
+    }
+
+    console.warn('[Storage] Recipe not found for update:', id);
   } catch (error) {
     console.error('Error updating recipe in localStorage:', error);
   }
@@ -257,11 +302,19 @@ export function updateRecipe(id: string, updates: Partial<ParsedRecipe>): void {
  */
 export function removeRecentRecipe(id: string): void {
   try {
+    // Remove from recents
     const recentRecipes = getRecentRecipes();
     const filteredRecipes = recentRecipes.filter((recipe) => recipe.id !== id);
     localStorage.setItem(RECENT_RECIPES_KEY, JSON.stringify(filteredRecipes));
+
+    // Also remove from bookmarks if present
+    const bookmarks = getBookmarkedRecipes();
+    if (bookmarks.some((r) => r.id === id)) {
+      const filteredBookmarks = bookmarks.filter((r) => r.id !== id);
+      localStorage.setItem(BOOKMARKED_RECIPES_KEY, JSON.stringify(filteredBookmarks));
+    }
   } catch (error) {
-    console.error('Error removing recent recipe from localStorage:', error);
+    console.error('Error removing recipe from localStorage:', error);
   }
 }
 
@@ -285,23 +338,27 @@ function generateId(): string {
 }
 
 /**
- * Get all bookmarked recipe IDs from localStorage
- * @returns Array of bookmarked recipe IDs
+ * Get all bookmarked recipes (full data) from localStorage.
+ * Handles migration from the legacy ID-only format on first call.
  */
-export function getBookmarkedRecipeIds(): string[] {
+export function getBookmarkedRecipes(): ParsedRecipe[] {
   try {
+    migrateBookmarksIfNeeded();
+
     const stored = localStorage.getItem(BOOKMARKED_RECIPES_KEY);
-    if (!stored) {
-      return [];
-    }
-    const ids = JSON.parse(stored) as string[];
-    // Validate that we got an array of strings
-    if (!Array.isArray(ids)) {
+    if (!stored) return [];
+
+    const recipes = JSON.parse(stored);
+    if (!Array.isArray(recipes)) {
       console.warn('[Storage] Invalid bookmarked recipes format, resetting');
       localStorage.removeItem(BOOKMARKED_RECIPES_KEY);
       return [];
     }
-    return ids;
+
+    return (recipes as ParsedRecipe[]).map((recipe) => ({
+      ...recipe,
+      instructions: normalizeInstructions(recipe.instructions),
+    }));
   } catch (error) {
     console.error('Error reading bookmarked recipes from localStorage:', error);
     return [];
@@ -309,33 +366,66 @@ export function getBookmarkedRecipeIds(): string[] {
 }
 
 /**
- * Add a recipe ID to bookmarks
- * @param id - The recipe ID to bookmark
+ * Get all bookmarked recipe IDs from localStorage.
+ * Derived from the full bookmark store.
+ */
+export function getBookmarkedRecipeIds(): string[] {
+  return getBookmarkedRecipes().map((r) => r.id);
+}
+
+/**
+ * Add a recipe to bookmarks by ID.
+ * Copies the full recipe from recents into the bookmark store and
+ * removes it from recents so the two lists stay disjoint.
  */
 export function addBookmark(id: string): void {
   try {
-    const bookmarkedIds = getBookmarkedRecipeIds();
-    // Only add if not already bookmarked
-    if (!bookmarkedIds.includes(id)) {
-      const updatedIds = [...bookmarkedIds, id];
-      localStorage.setItem(BOOKMARKED_RECIPES_KEY, JSON.stringify(updatedIds));
-      console.log(`[Storage] ✅ Bookmarked recipe ID: ${id}`);
+    const bookmarks = getBookmarkedRecipes();
+    if (bookmarks.some((r) => r.id === id)) return; // already bookmarked
+
+    // Find the recipe in recents
+    const recentRecipes = getRecentRecipes();
+    const recipe = recentRecipes.find((r) => r.id === id);
+    if (!recipe) {
+      console.warn('[Storage] Cannot bookmark — recipe not found:', id);
+      return;
     }
+
+    // Add to bookmarks
+    localStorage.setItem(
+      BOOKMARKED_RECIPES_KEY,
+      JSON.stringify([...bookmarks, recipe]),
+    );
+
+    // Remove from recents
+    const updatedRecents = recentRecipes.filter((r) => r.id !== id);
+    localStorage.setItem(RECENT_RECIPES_KEY, JSON.stringify(updatedRecents));
+
+    console.log(`[Storage] Bookmarked recipe: ${id}`);
   } catch (error) {
     console.error('Error adding bookmark to localStorage:', error);
   }
 }
 
 /**
- * Remove a recipe ID from bookmarks
- * @param id - The recipe ID to unbookmark
+ * Remove a recipe from bookmarks by ID.
+ * Moves the recipe back into recents (respecting the cap).
  */
 export function removeBookmark(id: string): void {
   try {
-    const bookmarkedIds = getBookmarkedRecipeIds();
-    const filteredIds = bookmarkedIds.filter((bookmarkId) => bookmarkId !== id);
-    localStorage.setItem(BOOKMARKED_RECIPES_KEY, JSON.stringify(filteredIds));
-    console.log(`[Storage] ✅ Unbookmarked recipe ID: ${id}`);
+    const bookmarks = getBookmarkedRecipes();
+    const recipe = bookmarks.find((r) => r.id === id);
+    const filtered = bookmarks.filter((r) => r.id !== id);
+    localStorage.setItem(BOOKMARKED_RECIPES_KEY, JSON.stringify(filtered));
+
+    // Move back to recents if we found the recipe
+    if (recipe) {
+      const recents = getRecentRecipes();
+      const updatedRecents = [recipe, ...recents].slice(0, MAX_RECENT_RECIPES);
+      localStorage.setItem(RECENT_RECIPES_KEY, JSON.stringify(updatedRecents));
+    }
+
+    console.log(`[Storage] Unbookmarked recipe: ${id}`);
   } catch (error) {
     console.error('Error removing bookmark from localStorage:', error);
   }
@@ -343,15 +433,42 @@ export function removeBookmark(id: string): void {
 
 /**
  * Check if a recipe is bookmarked
- * @param id - The recipe ID to check
- * @returns True if the recipe is bookmarked, false otherwise
  */
 export function isRecipeBookmarked(id: string): boolean {
   try {
-    const bookmarkedIds = getBookmarkedRecipeIds();
-    return bookmarkedIds.includes(id);
+    return getBookmarkedRecipes().some((r) => r.id === id);
   } catch (error) {
     console.error('Error checking bookmark status:', error);
     return false;
   }
+}
+
+/**
+ * Pin a recipe by ID. Sets pinnedAt timestamp on the recipe
+ * in whichever store (recents or bookmarks) it lives in.
+ */
+export function pinRecipe(id: string): void {
+  updateRecipe(id, { pinnedAt: new Date().toISOString() });
+}
+
+/**
+ * Unpin a recipe by ID. Clears pinnedAt on the recipe.
+ */
+export function unpinRecipe(id: string): void {
+  updateRecipe(id, { pinnedAt: null });
+}
+
+/**
+ * Check if a recipe is pinned.
+ */
+export function isRecipePinned(id: string): boolean {
+  const recipe = getRecipeById(id);
+  return !!recipe?.pinnedAt;
+}
+
+/**
+ * Update lastAccessedAt on a recipe (in whichever store it lives).
+ */
+export function touchRecipeAccess(id: string): void {
+  updateRecipe(id, { lastAccessedAt: new Date().toISOString() });
 }

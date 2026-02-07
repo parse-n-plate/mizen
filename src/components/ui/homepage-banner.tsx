@@ -1,13 +1,20 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import ChefHatHeartBold from '@solar-icons/react/csr/food/ChefHatHeart';
+import { X } from 'lucide-react';
 
 /**
  * HomepageBanner Component
  * 
- * Displays a banner directly under the navigation bar, flush against it.
+ * Displays a sticky banner directly under the navigation bar, flush against it.
  * Features a filled heart chef hat icon from Solar icons and spans only
  * the width of the content (matching navbar max-w-6xl).
+ * 
+ * Progressive Disclosure Enhancement:
+ * - Banner can be dismissed by clicking the X button
+ * - Dismissal state persists in localStorage (per session)
+ * - Once dismissed, banner stays hidden until localStorage is cleared
  * 
  * Design specifications from Figma:
  * - Flush against the nav bar (no gap)
@@ -15,15 +22,40 @@ import ChefHatHeartBold from '@solar-icons/react/csr/food/ChefHatHeart';
  * - Only bottom left and right corners are rounded (rounded-b-lg)
  * - Uses filled Solar icon ChefHatHeartBold
  * - Fully responsive
+ * - Sticky positioning: remains visible at top of viewport when scrolling
  */
 export default function HomepageBanner() {
+  // Check localStorage on mount to see if banner was previously dismissed
+  const [isDismissed, setIsDismissed] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Check if banner was dismissed in a previous session
+    const dismissed = localStorage.getItem('homepage-banner-dismissed');
+    if (dismissed === 'true') {
+      setIsDismissed(true);
+    }
+  }, []);
+
+  // Handle dismiss button click
+  const handleDismiss = () => {
+    setIsDismissed(true);
+    // Persist dismissal state in localStorage
+    localStorage.setItem('homepage-banner-dismissed', 'true');
+  };
+
+  // Don't render if dismissed
+  if (isDismissed) {
+    return null;
+  }
+
   return (
-    <div className="w-full">
+    <div className="w-full sticky top-0 z-20">
       {/* Container matches navbar width for consistent alignment - same max-w-6xl and padding */}
       <div className="max-w-6xl mx-auto px-4 md:px-6">
         {/* Banner with rounded bottom corners only - flush against navbar, no top margin/padding */}
         {/* Using rounded-b-lg for bottom corners only */}
-        <div className="flex items-center justify-center gap-3 py-3 md:py-4 bg-blue-100 rounded-b-lg">
+        {/* Sticky positioning: stays at top of viewport when scrolling */}
+        <div className="flex items-center justify-center gap-3 py-3 md:py-4 bg-blue-100 rounded-b-lg relative">
           {/* Chef Hat Icon with Heart - using filled Solar icon */}
           {/* Icon size responsive: smaller on mobile, larger on desktop */}
           <ChefHatHeartBold 
@@ -36,6 +68,15 @@ export default function HomepageBanner() {
           <p className="font-albert text-[14px] md:text-[15px] text-blue-600 font-medium">
             This website is still being cooked up
           </p>
+
+          {/* Dismiss Button - positioned absolutely on the right */}
+          <button
+            onClick={handleDismiss}
+            className="absolute right-4 p-1 rounded-full hover:bg-blue-200/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
+            aria-label="Dismiss banner"
+          >
+            <X className="w-4 h-4 text-blue-600" />
+          </button>
         </div>
       </div>
     </div>
