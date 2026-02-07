@@ -62,7 +62,3 @@ nvm use      # switches to the correct version
 - **Backend**: Next.js API Routes
 - **AI/ML**: Groq AI API (llama-3.3-70b-versatile)
 - **Parsing**: Cheerio, JSON-LD extraction with AI fallback
-
-## Documentation
-
-For detailed technical information, see [TECHNICAL_SUMMARY.md](./TECHNICAL_SUMMARY.md).
