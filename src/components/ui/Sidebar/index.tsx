@@ -124,10 +124,15 @@ export default function Sidebar() {
     isCollapsed: isMobile ? false : isCollapsed,
   });
 
-  // Unified recipe list: pinned first (by pinnedAt desc), then unpinned (by lastAccessedAt/parsedAt desc)
+  // Unified recipe list: pinned first (by pinnedAt desc), then unpinned
   const allRecipes = useMemo(() => {
     const bookmarked = getBookmarkedRecipes();
-    const combined = [...recentRecipes, ...bookmarked];
+    // Deduplicate: prefer recents entry, add bookmarked-only recipes at end
+    const fromRecents = recentRecipes;
+    const bookmarkedOnly = bookmarked.filter(
+      (r) => !fromRecents.some((rc) => rc.id === r.id),
+    );
+    const combined = [...fromRecents, ...bookmarkedOnly];
     const pinned = combined.filter((r) => r.pinnedAt);
     const unpinned = combined.filter((r) => !r.pinnedAt);
     pinned.sort(
@@ -274,9 +279,7 @@ export default function Sidebar() {
               `transition-[width] duration-200 ease-[${SIDEBAR_EASING}]`,
           ],
           // Hover mode: overlay instead of pushing content
-          !isMobile &&
-            sidebarMode === 'hover' &&
-            'absolute z-30 left-0 top-0',
+          !isMobile && sidebarMode === 'hover' && 'absolute z-30 left-0 top-0',
           // Mobile styles
           isMobile && 'w-full border-r-0',
         )}

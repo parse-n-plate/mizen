@@ -9,8 +9,9 @@ import {
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useToast } from '@/hooks/useToast';
 import type { ParsedRecipe } from '@/lib/storage';
-import { ExternalLink, Link, Clock } from 'lucide-react';
+import { Link, Clock } from 'lucide-react';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
+import Pin from '@solar-icons/react/csr/ui/Pin';
 
 interface RecipeHoverCardProps {
   children: React.ReactNode;
@@ -21,20 +22,27 @@ export default function RecipeHoverCard({
   children,
   recipe,
 }: RecipeHoverCardProps) {
-  const { isBookmarked, toggleBookmark } = useParsedRecipes();
+  const { isBookmarked, toggleBookmark, isPinned, togglePin } =
+    useParsedRecipes();
   const { showSuccess, showInfo } = useToast();
 
   const bookmarked = isBookmarked(recipe.id);
+  const pinned = isPinned(recipe.id);
   const sourceUrl = recipe.sourceUrl || recipe.url;
 
   const displayTime = getDisplayTime(recipe);
   const recipeImage = recipe.imageData || recipe.imageUrl;
 
-  const handleOpenSource = (e: React.MouseEvent) => {
+  // Handle pin/unpin action - replaces the previous "open source URL" functionality
+  const handleTogglePin = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (sourceUrl) {
-      window.open(sourceUrl, '_blank', 'noopener,noreferrer');
-    }
+    togglePin(recipe.id);
+    showSuccess(
+      pinned ? 'Recipe unpinned' : 'Recipe pinned',
+      pinned
+        ? `"${recipe.title}" was unpinned.`
+        : `"${recipe.title}" was pinned.`,
+    );
   };
 
   const handleToggleBookmark = (e: React.MouseEvent) => {
@@ -44,7 +52,7 @@ export default function RecipeHoverCard({
       bookmarked ? 'Removed from Cookbook' : 'Added to Cookbook',
       bookmarked
         ? `"${recipe.title}" was removed from your Cookbook.`
-        : `"${recipe.title}" was added to your Cookbook.`
+        : `"${recipe.title}" was added to your Cookbook.`,
     );
   };
 
@@ -67,7 +75,11 @@ export default function RecipeHoverCard({
       <HoverCardTrigger asChild>
         <div>{children}</div>
       </HoverCardTrigger>
-      <HoverCardContent side="right" align="start" className="w-72 p-0 overflow-hidden">
+      <HoverCardContent
+        side="right"
+        align="start"
+        className="w-72 p-0 overflow-hidden"
+      >
         {/* Recipe Image */}
         {recipeImage && (
           <div className="relative w-full h-32 bg-stone-100">
@@ -90,9 +102,7 @@ export default function RecipeHoverCard({
 
           {/* Meta row: source + time */}
           <div className="flex items-center gap-3 text-sm text-stone-500 font-albert">
-            {hostname && (
-              <span className="truncate">{hostname}</span>
-            )}
+            {hostname && <span className="truncate">{hostname}</span>}
             {displayTime && (
               <span className="flex items-center gap-1.5">
                 <Clock className="w-4 h-4" />
@@ -103,19 +113,27 @@ export default function RecipeHoverCard({
 
           {/* Quick Actions */}
           <div className="flex items-center gap-1.5 pt-2 border-t border-stone-100">
-            {sourceUrl && (
-              <button
-                onClick={handleOpenSource}
-                className="p-2 rounded-md text-stone-400 hover:bg-stone-100 hover:text-stone-700 transition-colors duration-150"
-                aria-label="Open source URL"
-              >
-                <ExternalLink className="w-4 h-4" />
-              </button>
-            )}
+            {/* Pin button - replaces the "Open source URL" button */}
+            <button
+              onClick={handleTogglePin}
+              className="p-2 rounded-md hover:bg-stone-100 transition-colors duration-150"
+              aria-label={pinned ? 'Unpin recipe' : 'Pin recipe'}
+            >
+              <Pin
+                weight={pinned ? 'Bold' : 'Linear'}
+                className={`w-4 h-4 ${
+                  pinned
+                    ? 'text-stone-500'
+                    : 'text-stone-400 hover:text-stone-500'
+                }`}
+              />
+            </button>
             <button
               onClick={handleToggleBookmark}
               className="p-2 rounded-md hover:bg-stone-100 transition-colors duration-150"
-              aria-label={bookmarked ? 'Remove from Cookbook' : 'Add to Cookbook'}
+              aria-label={
+                bookmarked ? 'Remove from Cookbook' : 'Add to Cookbook'
+              }
             >
               <Bookmark
                 weight={bookmarked ? 'Bold' : 'Linear'}
