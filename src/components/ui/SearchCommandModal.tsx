@@ -3,7 +3,11 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { XIcon, Link, Upload } from 'lucide-react';
+import { Link, Upload } from 'lucide-react';
+import UndoLeftRound from '@solar-icons/react/csr/arrows-action/UndoLeftRound';
+import CloseCircle from '@solar-icons/react/csr/ui/CloseCircle';
+import ClockCircle from '@solar-icons/react/csr/time/ClockCircle';
+import BookBookmarkIcon from '@solar-icons/react/csr/school/BookBookmark';
 import {
   CommandDialog,
   CommandInput,
@@ -14,6 +18,7 @@ import {
 } from '@/components/ui/command';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRecipe } from '@/contexts/RecipeContext';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { getCuisineIcon } from '@/config/cuisineConfig';
 import { isUrl } from '@/utils/searchUtils';
 import type { ParsedRecipe } from '@/lib/storage';
@@ -23,30 +28,39 @@ interface SearchCommandModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export default function SearchCommandModal({ open, onOpenChange }: SearchCommandModalProps) {
-  const { recentRecipes, getRecipeById, getBookmarkedRecipes, bookmarkedRecipeIds, touchRecipe } =
-    useParsedRecipes();
+export default function SearchCommandModal({
+  open,
+  onOpenChange,
+}: SearchCommandModalProps) {
+  const {
+    recentRecipes,
+    bookmarkedRecipeIds,
+    getRecipeById,
+    getBookmarkedRecipes,
+    touchRecipe,
+  } = useParsedRecipes();
   const { setParsedRecipe } = useRecipe();
   const router = useRouter();
+  const isMobile = useIsMobile();
   const [search, setSearch] = useState('');
 
   const isUrlInput = search.trim().length > 0 && isUrl(search);
 
-  const bookmarkedRecipes = getBookmarkedRecipes();
+  const allRecipes = useMemo(() => {
+    const bookmarkedRecipes = getBookmarkedRecipes();
+    const mergedRecipes: ParsedRecipe[] = [];
+    const seenRecipeIds = new Set<string>();
 
-  const bookmarkedIdSet = useMemo(
-    () => new Set(bookmarkedRecipeIds),
-    [bookmarkedRecipeIds],
-  );
+    for (const recipe of [...recentRecipes, ...bookmarkedRecipes]) {
+      if (seenRecipeIds.has(recipe.id)) continue;
+      seenRecipeIds.add(recipe.id);
+      mergedRecipes.push(recipe);
+    }
 
-  const recentUnbookmarked = useMemo(
-    () => recentRecipes.filter((recipe) => !bookmarkedIdSet.has(recipe.id)),
-    [recentRecipes, bookmarkedIdSet],
-  );
+    return mergedRecipes;
+  }, [recentRecipes, bookmarkedRecipeIds, getBookmarkedRecipes]);
 
-  const displayedRecentRecipes = search ? recentUnbookmarked : recentUnbookmarked.slice(0, 3);
-
-  const hasAnyRecipes = recentUnbookmarked.length > 0 || bookmarkedRecipes.length > 0;
+  const displayedRecipes = search ? allRecipes : allRecipes.slice(0, 3);
 
   const handleOpenChange = useCallback(
     (open: boolean) => {
@@ -132,25 +146,29 @@ export default function SearchCommandModal({ open, onOpenChange }: SearchCommand
       key={recipe.id}
       value={`${recipe.title} ${recipe.author || ''} ${(recipe.cuisine || []).join(' ')}`}
       onSelect={() => handleSelectRecipe(recipe.id)}
-      className="flex items-center gap-3 px-3 py-3 rounded-xl font-albert cursor-pointer data-[selected=true]:bg-stone-100/80 data-[selected=true]:text-stone-900"
+      className="group flex items-center gap-3 px-3 py-3 rounded-xl font-albert cursor-pointer data-[selected=true]:bg-stone-100/80 data-[selected=true]:text-stone-900"
     >
       <Image
         src={getRecipeIconPath(recipe)}
         alt=""
-        width={28}
-        height={28}
-        className="w-7 h-7 flex-shrink-0 object-contain"
+        width={32}
+        height={32}
+        className="w-8 h-8 flex-shrink-0 object-contain"
         unoptimized
       />
       <div className="flex-1 min-w-0">
         <span className="text-sm text-stone-900 font-medium truncate block">
           {recipe.title}
         </span>
-        <span className="text-xs text-stone-500 truncate block">
+        <span className="text-sm text-stone-500 truncate block">
           {[recipe.author, recipe.cuisine?.[0], getDisplayTime(recipe)]
             .filter(Boolean)
             .join(' \u00b7 ')}
         </span>
+      </div>
+      <div className="hidden group-data-[selected=true]:flex items-center gap-1.5 text-stone-400 flex-shrink-0 ml-2">
+        <UndoLeftRound size={20} className="!size-5 text-stone-400" />
+        <span className="text-sm font-albert">Jump to</span>
       </div>
     </CommandItem>
   );
@@ -163,25 +181,45 @@ export default function SearchCommandModal({ open, onOpenChange }: SearchCommand
       description="Find a recipe by name, author, or cuisine"
       showCloseButton={false}
       overlayClassName="search-command-overlay"
-      className="sm:max-w-xl search-command-modal max-md:inset-0 max-md:top-0 max-md:left-0 max-md:translate-x-0 max-md:translate-y-0 max-md:max-w-none max-md:w-full max-md:h-dvh max-md:rounded-none max-md:border-0 max-md:shadow-none [&_[data-slot=command-input-wrapper]]:border-stone-200 [&_[data-slot=command-input-wrapper]_svg]:text-stone-400 [&_[data-slot=command-input-wrapper]_svg]:opacity-100 [&_[cmdk-group-heading]]:text-stone-400"
+      className="sm:max-w-[44rem] search-command-modal max-md:inset-0 max-md:top-0 max-md:left-0 max-md:translate-x-0 max-md:translate-y-0 max-md:max-w-none max-md:w-full max-md:h-dvh max-md:rounded-none max-md:border-0 max-md:shadow-none [&_[data-slot=command-input-wrapper]]:border-stone-200 [&_[data-slot=command-input-wrapper]_svg]:text-stone-400 [&_[data-slot=command-input-wrapper]_svg]:opacity-100 [&_[cmdk-group-heading]]:text-stone-400"
     >
       <div className="flex items-center justify-between px-3 pt-3 pb-1 md:hidden">
-        <span className="font-albert text-sm font-medium text-stone-500">Search</span>
+        <span className="font-albert text-base font-medium text-stone-500">
+          Search
+        </span>
         <button
           onClick={() => onOpenChange(false)}
-          className="flex items-center justify-center w-8 h-8 rounded-full bg-stone-100 text-stone-500 hover:bg-stone-200 hover:text-stone-700 transition-colors"
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-stone-100 text-stone-500 hover:bg-stone-200 hover:text-stone-700 focus-visible:ring-2 focus-visible:ring-stone-400 focus-visible:outline-none transition-colors"
           aria-label="Close search"
         >
-          <XIcon className="w-4 h-4" />
+          <CloseCircle weight="Bold" className="w-5 h-5" />
         </button>
       </div>
       <CommandInput
-        placeholder="Search or paste a URL..."
+        placeholder="Search or paste a URL"
         value={search}
         onValueChange={setSearch}
         className="font-albert text-base text-stone-800 placeholder:text-stone-400"
+        suffix={
+          search.length > 0 ? (
+            <button
+              onClick={() => setSearch('')}
+              className="flex items-center justify-center w-7 h-7 rounded-full text-stone-400 hover:text-stone-600 focus-visible:ring-2 focus-visible:ring-stone-400 focus-visible:outline-none transition-colors flex-shrink-0"
+              aria-label="Clear search"
+            >
+              <CloseCircle weight="Bold" className="w-5 h-5" />
+            </button>
+          ) : null
+        }
       />
-      <CommandList className="h-[400px] max-md:h-auto max-md:flex-1 px-2 pb-2">
+      <CommandList
+        className="overflow-y-auto px-2 pb-2 max-h-none transition-[height] duration-150 ease-[cubic-bezier(0.215,0.61,0.355,1)] motion-reduce:transition-none max-md:!h-auto max-md:max-h-none max-md:flex-1 max-md:!transition-none"
+        style={
+          isMobile
+            ? undefined
+            : { height: 'clamp(320px, var(--cmdk-list-height, 320px), 640px)' }
+        }
+      >
         <CommandEmpty className="font-albert text-stone-400 px-4 py-10 text-center">
           No results found.
         </CommandEmpty>
@@ -194,12 +232,12 @@ export default function SearchCommandModal({ open, onOpenChange }: SearchCommand
               onSelect={handleParseDetectedUrl}
               className="flex items-center gap-3 px-3 py-3 rounded-xl font-albert cursor-pointer data-[selected=true]:bg-stone-100/80 data-[selected=true]:text-stone-900"
             >
-              <Link className="w-5 h-5 text-stone-400 flex-shrink-0" />
+              <Link className="w-6 h-6 text-stone-400 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <span className="text-sm text-stone-900 font-medium truncate block">
                   Parse recipe from URL
                 </span>
-                <span className="text-xs text-stone-400 truncate block mt-0.5">
+                <span className="text-sm text-stone-400 truncate block mt-1">
                   {search.trim()}
                 </span>
               </div>
@@ -213,10 +251,14 @@ export default function SearchCommandModal({ open, onOpenChange }: SearchCommand
               onSelect={handleAddViaUrl}
               className="flex items-center gap-3 px-3 py-3 rounded-xl font-albert cursor-pointer data-[selected=true]:bg-stone-100/80 data-[selected=true]:text-stone-900"
             >
-              <Link className="w-5 h-5 text-stone-400 flex-shrink-0" />
+              <Link className="w-6 h-6 text-stone-400 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <span className="text-sm text-stone-900 font-medium">Add via URL</span>
-                <span className="text-xs text-stone-400 block mt-0.5">Paste a recipe link</span>
+                <span className="text-sm text-stone-900 font-medium">
+                  Add via URL
+                </span>
+                <span className="text-sm text-stone-400 block mt-1">
+                  Paste a recipe link
+                </span>
               </div>
             </CommandItem>
             <CommandItem
@@ -224,41 +266,83 @@ export default function SearchCommandModal({ open, onOpenChange }: SearchCommand
               onSelect={handleAddViaImage}
               className="flex items-center gap-3 px-3 py-3 rounded-xl font-albert cursor-pointer data-[selected=true]:bg-stone-100/80 data-[selected=true]:text-stone-900"
             >
-              <Upload className="w-5 h-5 text-stone-400 flex-shrink-0" />
+              <Upload className="w-6 h-6 text-stone-400 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <span className="text-sm text-stone-900 font-medium">Add via Image</span>
-                <span className="text-xs text-stone-400 block mt-0.5">Upload a recipe photo</span>
+                <span className="text-sm text-stone-900 font-medium">
+                  Add via Image
+                </span>
+                <span className="text-sm text-stone-400 block mt-1">
+                  Upload a recipe photo
+                </span>
               </div>
             </CommandItem>
           </CommandGroup>
         )}
 
-        {/* Recent recipes */}
-        {displayedRecentRecipes.length > 0 && (
-          <CommandGroup heading="Recent" className="font-albert pt-3">
-            {displayedRecentRecipes.map(renderRecipeItem)}
+        {/* Navigation: Quick links to Timers and Cookbook */}
+        {!isUrlInput && (
+          <CommandGroup heading="Navigation" className="font-albert pt-3">
+            <CommandItem
+              value="timers timer navigation"
+              disabled
+              className="flex items-center gap-3 px-3 py-3 rounded-xl font-albert cursor-pointer data-[selected=true]:bg-stone-100/80 data-[selected=true]:text-stone-900"
+            >
+              <ClockCircle className="w-6 h-6 text-stone-400 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="text-sm text-stone-900 font-medium">
+                  Timers
+                </span>
+                <span className="text-sm text-stone-400 block mt-1">
+                  Coming soon
+                </span>
+              </div>
+              <span className="text-xs font-medium uppercase tracking-wide text-stone-400 border border-stone-300 rounded-full px-2 py-0.5">
+                Soon
+              </span>
+            </CommandItem>
+            <CommandItem
+              value="cookbook saved recipes bookmarks"
+              disabled
+              className="flex items-center gap-3 px-3 py-3 rounded-xl font-albert cursor-pointer data-[selected=true]:bg-stone-100/80 data-[selected=true]:text-stone-900"
+            >
+              <BookBookmarkIcon className="w-6 h-6 text-stone-400 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="text-sm text-stone-900 font-medium">
+                  Cookbook
+                </span>
+                <span className="text-sm text-stone-400 block mt-1">
+                  Coming soon
+                </span>
+              </div>
+              <span className="text-xs font-medium uppercase tracking-wide text-stone-400 border border-stone-300 rounded-full px-2 py-0.5">
+                Soon
+              </span>
+            </CommandItem>
           </CommandGroup>
         )}
 
-        {/* Cookbook (bookmarked/saved recipes) */}
-        {bookmarkedRecipes.length > 0 && (
-          <CommandGroup heading="Cookbook" className="font-albert pt-3">
-            {bookmarkedRecipes.map(renderRecipeItem)}
+        {/* Recipes: 3 recent when idle, all for search filtering */}
+        {displayedRecipes.length > 0 && (
+          <CommandGroup
+            heading={search ? 'Recipes' : 'Recent'}
+            className="font-albert pt-3"
+          >
+            {displayedRecipes.map(renderRecipeItem)}
           </CommandGroup>
         )}
 
         {/* Empty state when no recipes exist */}
-        {!hasAnyRecipes && !search && (
+        {allRecipes.length === 0 && !search && (
           <div className="px-4 py-10 text-center">
             <p className="font-albert text-sm text-stone-400">No recipes yet</p>
-            <p className="font-albert text-xs text-stone-300 mt-1.5">
+            <p className="font-albert text-sm text-stone-300 mt-1">
               Add your first recipe via URL or image
             </p>
           </div>
         )}
       </CommandList>
-      <div className="border-t border-stone-100 px-4 py-2.5 hidden md:flex items-center justify-end gap-1">
-        <kbd className="font-albert text-[11px] text-stone-400 bg-stone-100 border border-stone-200 rounded px-1.5 py-0.5">
+      <div className="border-t border-stone-100 px-4 py-2 hidden md:flex items-center justify-end gap-1">
+        <kbd className="font-albert text-xs text-stone-400 bg-stone-100 border border-stone-200 rounded px-2 py-1">
           Esc
         </kbd>
         <span className="font-albert text-xs text-stone-400">to close</span>

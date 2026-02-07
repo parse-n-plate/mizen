@@ -1,6 +1,6 @@
 export type InstructionStep = {
-  title: string;   // Short, high-level name for the step
-  detail: string;  // Full instruction text
+  title: string; // Short, high-level name for the step
+  detail: string; // Full instruction text
   timeMinutes?: number;
   ingredients?: string[];
   tips?: string;
@@ -32,11 +32,11 @@ export type ParsedRecipe = {
   // Storage guidance - generated during initial parse (top-level for immediate access)
   storageGuide?: string; // Storage instructions (e.g., "Store in airtight container in fridge")
   shelfLife?: {
-    fridge?: number | null;  // Days in fridge (null if not fridge-safe)
+    fridge?: number | null; // Days in fridge (null if not fridge-safe)
     freezer?: number | null; // Days in freezer (null if not freezer-friendly)
   };
-  pinnedAt?: string | null;        // ISO timestamp when pinned, null/undefined if not pinned
-  lastAccessedAt?: string | null;  // ISO timestamp of last access/view
+  pinnedAt?: string | null; // ISO timestamp when pinned, null/undefined if not pinned
+  lastAccessedAt?: string | null; // ISO timestamp of last access/view
   plate?: {
     // Legacy single photo support (backward compatibility)
     photoData?: string;
@@ -47,20 +47,20 @@ export type ParsedRecipe = {
       data: string;
       filename: string;
       capturedAt: string;
-      rating?: number;        // 1-5 star rating
+      rating?: number; // 1-5 star rating
     }>;
     // AI-generated guidance
-    platingNotes?: string;      // AI-generated plating suggestions
-    servingVessel?: string;     // e.g., "shallow bowl", "plate"
-    servingTemp?: string;       // e.g., "hot", "warm", "chilled"
-    storageGuide?: string;      // Storage instructions
+    platingNotes?: string; // AI-generated plating suggestions
+    servingVessel?: string; // e.g., "shallow bowl", "plate"
+    servingTemp?: string; // e.g., "hot", "warm", "chilled"
+    storageGuide?: string; // Storage instructions
     shelfLife?: {
-      fridge?: number | null;   // Days in fridge
-      freezer?: number | null;  // Days in freezer
+      fridge?: number | null; // Days in fridge
+      freezer?: number | null; // Days in freezer
     };
-    storedAt?: string;          // ISO timestamp when marked as stored
-    sharedAt?: string[];        // Array of ISO timestamps when shared
-    shareCount?: number;        // Number of times shared
+    storedAt?: string; // ISO timestamp when marked as stored
+    sharedAt?: string[]; // Array of ISO timestamps when shared
+    shareCount?: number; // Number of times shared
   };
 };
 
@@ -172,8 +172,10 @@ export function getRecentRecipes(): ParsedRecipe[] {
     }
 
     const recipes = JSON.parse(stored) as ParsedRecipe[];
-    console.log(`[Storage] 🍽️ Loading ${recipes.length} recipes from localStorage`);
-    
+    console.log(
+      `[Storage] 🍽️ Loading ${recipes.length} recipes from localStorage`,
+    );
+
     const normalized = recipes
       .map((recipe) => ({
         ...recipe,
@@ -181,14 +183,17 @@ export function getRecentRecipes(): ParsedRecipe[] {
       }))
       .sort(
         (a, b) =>
-          new Date(b.lastAccessedAt || b.parsedAt).getTime() - new Date(a.lastAccessedAt || a.parsedAt).getTime(),
+          new Date(b.lastAccessedAt || b.parsedAt).getTime() -
+          new Date(a.lastAccessedAt || a.parsedAt).getTime(),
       );
-    
+
     // Log cuisine data for each recipe
-    normalized.forEach(recipe => {
-      console.log(`[Storage] Recipe "${recipe.title}": cuisine=${recipe.cuisine || 'none'}`);
+    normalized.forEach((recipe) => {
+      console.log(
+        `[Storage] Recipe "${recipe.title}": cuisine=${recipe.cuisine || 'none'}`,
+      );
     });
-    
+
     return normalized;
   } catch (error) {
     console.error('Error reading recent recipes from localStorage:', error);
@@ -207,7 +212,10 @@ export function addRecentRecipe(
     const recentRecipes = getRecentRecipes();
 
     // Create new recipe with id and parsedAt
-    console.log('[Storage] Adding recipe to localStorage with cuisine:', recipe.cuisine || 'none');
+    console.log(
+      '[Storage] Adding recipe to localStorage with cuisine:',
+      recipe.cuisine || 'none',
+    );
     const newRecipe: ParsedRecipe = {
       ...recipe,
       instructions: normalizeInstructions(recipe.instructions),
@@ -311,7 +319,10 @@ export function removeRecentRecipe(id: string): void {
     const bookmarks = getBookmarkedRecipes();
     if (bookmarks.some((r) => r.id === id)) {
       const filteredBookmarks = bookmarks.filter((r) => r.id !== id);
-      localStorage.setItem(BOOKMARKED_RECIPES_KEY, JSON.stringify(filteredBookmarks));
+      localStorage.setItem(
+        BOOKMARKED_RECIPES_KEY,
+        JSON.stringify(filteredBookmarks),
+      );
     }
   } catch (error) {
     console.error('Error removing recipe from localStorage:', error);
@@ -375,8 +386,8 @@ export function getBookmarkedRecipeIds(): string[] {
 
 /**
  * Add a recipe to bookmarks by ID.
- * Copies the full recipe from recents into the bookmark store and
- * removes it from recents so the two lists stay disjoint.
+ * Marks the recipe as bookmarked without moving it between stores,
+ * so the sidebar order stays stable.
  */
 export function addBookmark(id: string): void {
   try {
@@ -397,10 +408,6 @@ export function addBookmark(id: string): void {
       JSON.stringify([...bookmarks, recipe]),
     );
 
-    // Remove from recents
-    const updatedRecents = recentRecipes.filter((r) => r.id !== id);
-    localStorage.setItem(RECENT_RECIPES_KEY, JSON.stringify(updatedRecents));
-
     console.log(`[Storage] Bookmarked recipe: ${id}`);
   } catch (error) {
     console.error('Error adding bookmark to localStorage:', error);
@@ -409,21 +416,13 @@ export function addBookmark(id: string): void {
 
 /**
  * Remove a recipe from bookmarks by ID.
- * Moves the recipe back into recents (respecting the cap).
+ * Simply removes from the bookmark store without reordering recents.
  */
 export function removeBookmark(id: string): void {
   try {
     const bookmarks = getBookmarkedRecipes();
-    const recipe = bookmarks.find((r) => r.id === id);
     const filtered = bookmarks.filter((r) => r.id !== id);
     localStorage.setItem(BOOKMARKED_RECIPES_KEY, JSON.stringify(filtered));
-
-    // Move back to recents if we found the recipe
-    if (recipe) {
-      const recents = getRecentRecipes();
-      const updatedRecents = [recipe, ...recents].slice(0, MAX_RECENT_RECIPES);
-      localStorage.setItem(RECENT_RECIPES_KEY, JSON.stringify(updatedRecents));
-    }
 
     console.log(`[Storage] Unbookmarked recipe: ${id}`);
   } catch (error) {
