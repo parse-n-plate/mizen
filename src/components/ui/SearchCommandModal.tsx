@@ -157,7 +157,7 @@ export default function SearchCommandModal({
         unoptimized
       />
       <div className="flex-1 min-w-0">
-        <span className="text-base text-stone-900 font-medium truncate block">
+        <span className="text-sm text-stone-900 font-medium truncate block">
           {recipe.title}
         </span>
         <span className="text-sm text-stone-500 truncate block">
