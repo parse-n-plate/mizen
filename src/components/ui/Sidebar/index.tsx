@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useCallback, useRef } from 'react';
+import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
@@ -42,7 +42,6 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import FeedbackDialog from './FeedbackDialog';
-import SidebarControlPopover from './SidebarControlPopover';
 
 // Shared easing for all sidebar transitions — ease-in-out-cubic
 const SIDEBAR_EASING = 'cubic-bezier(0.645,0.045,0.355,1)';
@@ -71,46 +70,11 @@ export default function Sidebar() {
   const isMobile = useIsMobile();
   const {
     hideMobileNav,
-    sidebarMode,
     isCollapsed,
     setIsCollapsed,
-    setIsHoverExpanded,
   } = useSidebar();
   const { openSearch } = useCommandK();
   const { openLab } = usePrototypeLab();
-
-  // Track whether a popover/dropdown is open to suppress hover-collapse
-  const popoverOpenRef = useRef(false);
-  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const handleMouseEnter = useCallback(() => {
-    if (sidebarMode !== 'hover' || isMobile) return;
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-      hoverTimeoutRef.current = null;
-    }
-    setIsHoverExpanded(true);
-  }, [sidebarMode, isMobile, setIsHoverExpanded]);
-
-  const handleMouseLeave = useCallback(() => {
-    if (sidebarMode !== 'hover' || isMobile) return;
-    if (popoverOpenRef.current) return;
-    hoverTimeoutRef.current = setTimeout(() => {
-      setIsHoverExpanded(false);
-    }, 150);
-  }, [sidebarMode, isMobile, setIsHoverExpanded]);
-
-  const handlePopoverOpenChange = useCallback(
-    (open: boolean) => {
-      popoverOpenRef.current = open;
-      if (!open && sidebarMode === 'hover' && !isMobile) {
-        hoverTimeoutRef.current = setTimeout(() => {
-          setIsHoverExpanded(false);
-        }, 150);
-      }
-    },
-    [sidebarMode, isMobile, setIsHoverExpanded],
-  );
 
   const {
     width: sidebarWidth,
@@ -278,14 +242,10 @@ export default function Sidebar() {
             !isDragging &&
               `transition-[width] duration-200 ease-[${SIDEBAR_EASING}]`,
           ],
-          // Hover mode: overlay instead of pushing content
-          !isMobile && sidebarMode === 'hover' && 'absolute z-30 left-0 top-0',
           // Mobile styles
           isMobile && 'w-full border-r-0',
         )}
         style={!isMobile ? { width: sidebarWidth } : undefined}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
       >
         {/* Inner container — transitions width in sync with aside */}
         <div
@@ -315,8 +275,8 @@ export default function Sidebar() {
               Mizen
             </Link>
 
-            {/* Collapse button — only in expanded mode */}
-            {!isMobile && sidebarMode === 'expanded' && (
+            {/* Collapse button */}
+            {!isMobile && (
               <button
                 onClick={() => setIsCollapsed(true)}
                 className={cn(
@@ -333,8 +293,8 @@ export default function Sidebar() {
               </button>
             )}
 
-            {/* Expand button — only in expanded mode, fades in when collapsed */}
-            {!isMobile && sidebarMode === 'expanded' && (
+            {/* Expand button — fades in when collapsed */}
+            {!isMobile && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
@@ -573,14 +533,8 @@ export default function Sidebar() {
                 : 'px-4 justify-end gap-1',
             )}
           >
-            {!isMobile && (
-              <SidebarControlPopover
-                isRail={isRail}
-                onOpenChange={handlePopoverOpenChange}
-              />
-            )}
             <NavTooltip label="Help">
-              <DropdownMenu onOpenChange={handlePopoverOpenChange}>
+              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
                     className="p-2 rounded-lg hover:bg-stone-100 transition-colors"
@@ -620,8 +574,8 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* Resize handle - desktop expanded mode only */}
-        {!isMobile && !isCollapsed && sidebarMode === 'expanded' && (
+        {/* Resize handle - desktop expanded only */}
+        {!isMobile && !isCollapsed && (
           <div
             onMouseDown={handleMouseDown}
             className={cn(
