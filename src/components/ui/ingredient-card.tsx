@@ -364,8 +364,8 @@ export default function IngredientCard({
                     const amountDisplay = parsed.unit ? `${parsed.amount} ${parsed.unit}` : parsed.amount;
                     return (
                       <>
-                        <p className={cn("font-albert font-medium text-[16px] text-stone-800 group-hover:text-black", isChecked && "line-through")}>{toTitleCase(parsed.name)}</p>
-                        <p className="font-albert font-medium text-[14px] text-stone-400">{toTitleCase(amountDisplay)}</p>
+                        <p className={cn("font-albert font-medium text-[14px] text-stone-800 group-hover:text-black", isChecked && "line-through")}>{toTitleCase(parsed.name)}</p>
+                        <p className="font-albert text-[13px] text-stone-400">{toTitleCase(amountDisplay)}</p>
                       </>
                     );
                   }
@@ -374,20 +374,20 @@ export default function IngredientCard({
                   if (parenMatch) {
                     return (
                       <>
-                        <p className={cn("font-albert font-medium text-[16px] text-stone-800 group-hover:text-black", isChecked && "line-through")}>{toTitleCase(parenMatch[1].trim())}</p>
-                        <p className="font-albert font-medium text-[14px] text-stone-400">{toTitleCase(parenMatch[2])}</p>
+                        <p className={cn("font-albert font-medium text-[14px] text-stone-800 group-hover:text-black", isChecked && "line-through")}>{toTitleCase(parenMatch[1].trim())}</p>
+                        <p className="font-albert text-[13px] text-stone-400">{toTitleCase(parenMatch[2])}</p>
                       </>
                     );
                   }
-                  return <p className={cn("font-albert font-medium text-[16px] text-stone-800", isChecked && "line-through")}>{toTitleCase(ingredientText)}</p>;
+                  return <p className={cn("font-albert font-medium text-[14px] text-stone-800", isChecked && "line-through")}>{toTitleCase(ingredientText)}</p>;
                 })()
               ) : (
                 <>
                   {ingredientAmount ? (
                     // Has amount/unit: show name first, then amount/unit
                     <>
-                      <p className={cn("font-albert font-medium text-[16px] text-stone-800 group-hover:text-black", isChecked && "line-through")}>{toTitleCase(ingredientNameOnly)}</p>
-                      <p className="font-albert font-medium text-[14px] text-stone-400">{toTitleCase(ingredientAmount)}</p>
+                      <p className={cn("font-albert font-medium text-[14px] text-stone-800 group-hover:text-black", isChecked && "line-through")}>{toTitleCase(ingredientNameOnly)}</p>
+                      <p className="font-albert text-[13px] text-stone-400">{toTitleCase(ingredientAmount)}</p>
                     </>
                   ) : (
                     // No amount/unit: show main name, check for parentheses
@@ -396,12 +396,12 @@ export default function IngredientCard({
                       if (parenMatch) {
                         return (
                           <>
-                            <p className={cn("font-albert font-medium text-[16px] text-stone-800 group-hover:text-black", isChecked && "line-through")}>{toTitleCase(parenMatch[1].trim())}</p>
-                            <p className="font-albert font-medium text-[14px] text-stone-400">{toTitleCase(parenMatch[2])}</p>
+                            <p className={cn("font-albert font-medium text-[14px] text-stone-800 group-hover:text-black", isChecked && "line-through")}>{toTitleCase(parenMatch[1].trim())}</p>
+                            <p className="font-albert text-[13px] text-stone-400">{toTitleCase(parenMatch[2])}</p>
                           </>
                         );
                       }
-                      return <p className={cn("font-albert font-medium text-[16px] text-stone-800 group-hover:text-black", isChecked && "line-through")}>{toTitleCase(ingredientText)}</p>;
+                      return <p className={cn("font-albert font-medium text-[14px] text-stone-800 group-hover:text-black", isChecked && "line-through")}>{toTitleCase(ingredientText)}</p>;
                     })()
                   )}
                 </>

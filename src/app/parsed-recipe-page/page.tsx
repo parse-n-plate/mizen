@@ -19,7 +19,7 @@ import IngredientCard from '@/components/ui/ingredient-card';
 import { IngredientGroup } from '@/components/ui/ingredient-group';
 import { IngredientsHeader } from '@/components/ui/ingredients-header';
 import { UISettingsProvider } from '@/contexts/UISettingsContext';
-import { AdminPrototypingPanel } from '@/components/ui/admin-prototyping-panel';
+
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 import Image from 'next/image';
 import ImagePreview from '@/components/ui/image-preview';
@@ -36,6 +36,8 @@ import PlatePhotoCapture from '@/components/ui/plate-photo-capture';
 import PlatingGuidanceCard from '@/components/ui/plating-guidance-card';
 import StorageGuidanceCard from '@/components/ui/storage-guidance-card';
 import IngredientsOverlay from '@/components/ui/ingredients-overlay';
+import { useSidebar } from '@/contexts/SidebarContext';
+import { useIsMobile } from '@/hooks/useIsMobile';
 
 // Helper function to extract domain from URL for display
 const getDomainFromUrl = (url: string): string => {
@@ -195,8 +197,10 @@ export default function ParsedRecipePage({
   if (searchParams) use(searchParams);
   
   const { parsedRecipe, setParsedRecipe, isLoaded } = useRecipe();
-  const { recentRecipes, isBookmarked, toggleBookmark, removeRecipe } = useParsedRecipes();
+  const { recentRecipes, isBookmarked, toggleBookmark, removeRecipe, getBookmarkedRecipes } = useParsedRecipes();
   const router = useRouter();
+  const { showMobileNav } = useSidebar();
+  const isMobileViewport = useIsMobile();
   // #region agent log
   if (parsedRecipe) {
     fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'parsed-recipe-page/page.tsx:155',message:'parsedRecipe from context',data:{hasServings:'servings' in parsedRecipe,servings:parsedRecipe.servings,servingsType:typeof parsedRecipe.servings,servingsValue:parsedRecipe.servings,hasAuthor:'author' in parsedRecipe,author:parsedRecipe.author,keys:Object.keys(parsedRecipe)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'C'})}).catch(()=>{});
@@ -234,15 +238,16 @@ export default function ParsedRecipePage({
   // Ingredients overlay state
   const [isIngredientsOverlayOpen, setIsIngredientsOverlayOpen] = useState(false);
 
-  // Find the recipe ID by matching sourceUrl with recipes in recentRecipes
+  // Find the recipe ID by matching sourceUrl across recents and bookmarks
   // This is needed because RecipeContext's parsedRecipe doesn't have an ID field
   const recipeId = useMemo(() => {
     if (!parsedRecipe?.sourceUrl) return null;
-    const matchingRecipe = recentRecipes.find(
+    const allRecipes = [...recentRecipes, ...getBookmarkedRecipes()];
+    const matchingRecipe = allRecipes.find(
       (recipe) => recipe.sourceUrl === parsedRecipe.sourceUrl || recipe.url === parsedRecipe.sourceUrl
     );
     return matchingRecipe?.id || null;
-  }, [parsedRecipe?.sourceUrl, recentRecipes]);
+  }, [parsedRecipe?.sourceUrl, recentRecipes, getBookmarkedRecipes]);
 
   // Check if current recipe is bookmarked
   const isBookmarkedState = recipeId ? isBookmarked(recipeId) : false;
@@ -259,7 +264,7 @@ export default function ParsedRecipePage({
     // If recipe is currently bookmarked, show confirmation dialog
     if (isBookmarkedState) {
       const confirmed = window.confirm(
-        'Are you sure you want to remove this recipe from your bookmarks? You can bookmark it again later.'
+        'Are you sure you want to remove this recipe from your Cookbook? You can add it back later.'
       );
       
       if (confirmed) {
@@ -847,13 +852,20 @@ export default function ParsedRecipePage({
                   <div className="flex items-center justify-between">
                     {/* Back Button - Visible on all screen sizes */}
                     <button
-                      onClick={() => router.push('/')}
+                      onClick={() => {
+                        if (isMobileViewport) {
+                          showMobileNav();
+                        } else {
+                          router.push('/');
+                        }
+                      }}
                       className="flex items-center gap-2 text-stone-600 hover:text-stone-800 transition-colors cursor-pointer group"
                       aria-label="Back to Home"
                     >
                       <ArrowLeft className="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1" />
-                      {/* Desktop: Show "Back to Home" text */}
+                      {/* Desktop: Show "Back to Home" text, Mobile: Show "Menu" */}
                       <span className="hidden md:inline font-albert text-[15px] font-medium">Back to Home</span>
+                      <span className="md:hidden font-albert text-[15px] font-medium">Menu</span>
                     </button>
                     
                     {/* Bookmark and Settings Buttons */}
@@ -863,7 +875,7 @@ export default function ParsedRecipePage({
                         <motion.button
                           onClick={handleBookmarkToggle}
                           className={`flex-shrink-0 p-2 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 cursor-pointer ${justBookmarked && !shouldReduceMotion ? 'bookmark-just-saved' : ''}`}
-                          aria-label={isBookmarkedState ? 'Remove bookmark' : 'Bookmark recipe'}
+                          aria-label={isBookmarkedState ? 'Remove from Cookbook' : 'Add to Cookbook'}
                           initial={{ scale: 1, rotate: 0 }}
                           whileHover={shouldReduceMotion ? {} : { 
                             scale: 1.08,
@@ -929,8 +941,8 @@ export default function ParsedRecipePage({
                             <>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem onSelect={handleDeleteRecipe} className="text-red-600 focus:text-red-600 focus:bg-red-50">
-                                <TrashBinTrash weight="Bold" className="w-4 h-4 flex-shrink-0" style={{ fill: 'currentColor' }} />
                                 <span>Delete Recipe</span>
+                                <TrashBinTrash weight="Bold" className="w-4 h-4 ml-auto" style={{ fill: 'currentColor' }} />
                               </DropdownMenuItem>
                             </>
                           )}
@@ -1548,11 +1560,6 @@ export default function ParsedRecipePage({
             </div>
           </Tabs.Root>
         </div>
-
-        {/* Admin Panel for Prototyping */}
-        <AdminPrototypingPanel 
-          onIngredientsClick={() => setIsIngredientsOverlayOpen(true)}
-        />
 
         {/* Ingredients Overlay - Modal (desktop) / Drawer (mobile) */}
         <IngredientsOverlay

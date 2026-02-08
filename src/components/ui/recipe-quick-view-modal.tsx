@@ -65,7 +65,7 @@ export default function RecipeQuickViewModal({
   const handleBookmarkToggle = () => {
     if (isBookmarkedState) {
       const confirmed = window.confirm(
-        'Are you sure you want to remove this recipe from your bookmarks? You can bookmark it again later.'
+        'Are you sure you want to remove this recipe from your Cookbook? You can add it back later.'
       );
       if (confirmed) {
         toggleBookmark(recipe.id);
@@ -179,7 +179,7 @@ export default function RecipeQuickViewModal({
               <button
                 onClick={handleBookmarkToggle}
                 className="p-1.5 rounded-full transition-colors hover:bg-stone-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300"
-                aria-label={isBookmarkedState ? 'Remove bookmark' : 'Bookmark recipe'}
+                aria-label={isBookmarkedState ? 'Remove from Cookbook' : 'Add to Cookbook'}
               >
                 <Bookmark
                   className={`w-5 h-5 transition-colors ${
@@ -202,14 +202,14 @@ export default function RecipeQuickViewModal({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-60">
                   <DropdownMenuItem onSelect={handleCopyRecipe}>
-                    <ClipboardText weight="Bold" className={`w-4 h-4 flex-shrink-0 ${copiedRecipe ? 'text-green-600' : 'text-stone-500'}`} />
-                    <span className={`font-medium whitespace-nowrap ${copiedRecipe ? 'text-green-600' : ''}`}>
+                    <span className={copiedRecipe ? 'text-green-600' : ''}>
                       {copiedRecipe ? 'Copied to Clipboard' : 'Copy Recipe to Clipboard'}
                     </span>
+                    <ClipboardText weight="Bold" className={`w-4 h-4 ml-auto ${copiedRecipe ? 'text-green-600' : ''}`} />
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={handleBookmarkToggle}>
-                    <Bookmark weight="Bold" className="w-4 h-4 text-stone-500 flex-shrink-0" />
-                    <span className="font-medium whitespace-nowrap">Unsave</span>
+                    <span>Remove from Cookbook</span>
+                    <Bookmark weight="Bold" className="w-4 h-4 ml-auto" />
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

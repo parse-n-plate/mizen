@@ -68,7 +68,7 @@ export default function RecipeCard({
     // If recipe is currently bookmarked, show confirmation dialog
     if (isBookmarkedState) {
       const confirmed = window.confirm(
-        'Are you sure you want to remove this recipe from your bookmarks? You can bookmark it again later.'
+        'Are you sure you want to remove this recipe from your Cookbook? You can add it back later.'
       );
 
       if (confirmed) {
@@ -169,7 +169,7 @@ export default function RecipeCard({
     // If recipe is currently bookmarked, show confirmation dialog before unsaving
     if (isBookmarkedState) {
       const confirmed = window.confirm(
-        'Are you sure you want to remove this recipe from your bookmarks? You can bookmark it again later.'
+        'Are you sure you want to remove this recipe from your Cookbook? You can add it back later.'
       );
 
       if (confirmed) {
@@ -207,7 +207,7 @@ export default function RecipeCard({
         onPointerUpCapture={(e) => e.stopPropagation()}
         onClick={handleBookmarkToggle}
         className="absolute top-4 right-12 z-20 p-1.5 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 bg-white/50 backdrop-blur-sm"
-        aria-label={isBookmarkedState ? 'Remove bookmark' : 'Bookmark recipe'}
+        aria-label={isBookmarkedState ? 'Remove from Cookbook' : 'Add to Cookbook'}
       >
         <Bookmark
           className={`
@@ -234,18 +234,18 @@ export default function RecipeCard({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-60">
           <DropdownMenuItem onSelect={handleEdit}>
-            <Pen weight="Bold" className="w-4 h-4 text-stone-500 flex-shrink-0" />
-            <span className="font-medium whitespace-nowrap">Edit</span>
+            <span>Edit</span>
+            <Pen weight="Bold" className="w-4 h-4 ml-auto" />
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={handleCopyRecipe}>
-            <ClipboardText weight="Bold" className={`w-4 h-4 flex-shrink-0 ${copiedRecipe ? 'text-green-600' : 'text-stone-500'}`} />
-            <span className={`font-medium whitespace-nowrap ${copiedRecipe ? 'text-green-600' : ''}`}>
+            <span className={copiedRecipe ? 'text-green-600' : ''}>
               {copiedRecipe ? 'Copied to Clipboard' : 'Copy Recipe to Clipboard'}
             </span>
+            <ClipboardText weight="Bold" className={`w-4 h-4 ml-auto ${copiedRecipe ? 'text-green-600' : ''}`} />
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={handleUnsave}>
-            <Bookmark weight="Bold" className="w-4 h-4 text-stone-500 flex-shrink-0" />
-            <span className="font-medium whitespace-nowrap">Unsave</span>
+            <span>Remove from Cookbook</span>
+            <Bookmark weight="Bold" className="w-4 h-4 ml-auto" />
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
