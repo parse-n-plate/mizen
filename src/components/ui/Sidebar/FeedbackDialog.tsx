@@ -19,9 +19,9 @@ import Lightbulb from '@solar-icons/react/csr/devices/Lightbulb';
 import ChatRoundLine from '@solar-icons/react/csr/messages/ChatRoundLine';
 import Confetti from '@solar-icons/react/csr/ui/Confetti';
 
-type FeedbackType = 'Bug Report' | 'Feature Idea' | 'User Feedback';
+export type FeedbackType = 'Bug Report' | 'Feature Idea' | 'User Feedback';
 
-const CATEGORIES: {
+export const CATEGORIES: {
   type: FeedbackType;
   icon: React.ComponentType<{ className?: string }>;
   subtitle: string;
@@ -54,14 +54,18 @@ const CATEGORIES: {
 interface FeedbackDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialType?: FeedbackType;
+  initialStep?: 1 | 2;
 }
 
 export default function FeedbackDialog({
   open,
   onOpenChange,
+  initialType,
+  initialStep,
 }: FeedbackDialogProps) {
-  const [step, setStep] = useState<1 | 2>(1);
-  const [type, setType] = useState<FeedbackType>('Bug Report');
+  const [step, setStep] = useState<1 | 2>(initialStep ?? 1);
+  const [type, setType] = useState<FeedbackType>(initialType ?? 'Bug Report');
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [screenshots, setScreenshots] = useState<File[]>([]);
@@ -70,6 +74,14 @@ export default function FeedbackDialog({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedCategory = CATEGORIES.find((c) => c.type === type)!;
+
+  // Sync initial props when dialog opens
+  useEffect(() => {
+    if (open) {
+      if (initialType) setType(initialType);
+      if (initialStep) setStep(initialStep);
+    }
+  }, [open, initialType, initialStep]);
 
   // Cmd+Enter to submit
   useEffect(() => {
@@ -239,7 +251,7 @@ export default function FeedbackDialog({
                     onClick={() => handleSelectType(t)}
                     className="flex items-center gap-3 w-full bg-stone-50 border border-stone-200 rounded-xl p-4 text-left hover:bg-stone-100 active:scale-[0.97] transition-[background-color,transform]"
                   >
-                    <Icon className="size-5 text-stone-500 flex-shrink-0" />
+                    <Icon className="size-5 text-stone-500 flex-shrink-0" aria-hidden="true" />
                     <div className="min-w-0">
                       <p className="font-albert text-sm font-semibold text-stone-900">
                         {t}
@@ -270,11 +282,11 @@ export default function FeedbackDialog({
                   className="p-1.5 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 active:scale-[0.9] transition-[color,background-color,transform]"
                   aria-label="Back"
                 >
-                  <ArrowLeftIcon className="size-4" />
+                  <ArrowLeftIcon className="size-4" aria-hidden="true" />
                 </button>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <selectedCategory.icon className="size-4 text-stone-500" />
+                    <selectedCategory.icon className="size-4 text-stone-500" aria-hidden="true" />
                     <span className="font-albert text-sm font-semibold text-stone-900">
                       {type}
                     </span>
@@ -298,7 +310,7 @@ export default function FeedbackDialog({
                   autoFocus
                 />
                 <Textarea
-                  placeholder="Tell us more..."
+                  placeholder="Tell us more"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   className="flex-1 min-h-0 border-none bg-transparent px-0 pt-3 pb-0 focus:ring-0 resize-none placeholder-stone-400"
@@ -313,14 +325,17 @@ export default function FeedbackDialog({
                       <img
                         src={URL.createObjectURL(file)}
                         alt={`Screenshot ${index + 1}`}
+                        width={64}
+                        height={64}
                         className="size-full object-cover rounded-lg border border-stone-200"
                       />
                       <button
                         type="button"
                         onClick={() => removeScreenshot(index)}
                         className="absolute -top-1.5 -right-1.5 size-5 bg-stone-700 text-white rounded-full flex items-center justify-center hover:bg-stone-900 transition-colors"
+                        aria-label={`Remove screenshot ${index + 1}`}
                       >
-                        <XIcon className="size-3" />
+                        <XIcon className="size-3" aria-hidden="true" />
                       </button>
                     </div>
                   ))}
@@ -336,7 +351,7 @@ export default function FeedbackDialog({
                     onClick={() => fileInputRef.current?.click()}
                     className="flex items-center gap-1.5 text-stone-400 hover:text-stone-600 transition-colors"
                   >
-                    <ImageIcon className="size-4" />
+                    <ImageIcon className="size-4" aria-hidden="true" />
                     <span className="font-albert text-xs">
                       Attach screenshot ({screenshots.length}/3)
                     </span>
@@ -354,6 +369,7 @@ export default function FeedbackDialog({
                   multiple
                   className="hidden"
                   onChange={handleFileChange}
+                  aria-label="Upload screenshots"
                 />
 
                 <div className="flex items-center gap-3">
@@ -366,8 +382,8 @@ export default function FeedbackDialog({
                     disabled={isSubmitting || !message.trim()}
                     className="flex items-center gap-1.5 px-4 py-2 bg-[#0088ff] text-white rounded-lg font-albert text-sm font-medium hover:bg-[#0072ff] active:scale-[0.97] transition-[background-color,transform,opacity] disabled:opacity-50 disabled:pointer-events-none"
                   >
-                    <SendIcon className="size-3.5" />
-                    {isSubmitting ? 'Sending...' : 'Send'}
+                    <SendIcon className="size-3.5" aria-hidden="true" />
+                    {isSubmitting ? 'Sending' : 'Send'}
                   </button>
                 </div>
               </div>
