@@ -6,7 +6,6 @@ import { Drawer } from 'vaul';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useModalViewMode } from '@/hooks/use-modal-view-mode';
-import { useFocusTrap } from '@/hooks/use-focus-trap';
 import { ModalViewSwitcher } from './modal-view-switcher';
 
 interface AdaptiveModalProps {
@@ -37,23 +36,18 @@ export function AdaptiveModal({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Focus trap for desktop modal
-  const focusTrapRef = useFocusTrap<HTMLDivElement>({
-    isActive: isOpen && !isMobile,
-    onEscape: onClose,
-  });
-
-  // Prevent body scroll on desktop when open
-  // Note: scrollbar-gutter: stable in globals.css prevents layout shift
+  // Escape key to close (no focus trap — page remains interactive)
   useEffect(() => {
-    if (isOpen && !isMobile) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = originalOverflow;
-      };
-    }
-  }, [isOpen, isMobile]);
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   // ── Mobile: Vaul drawer ──────────────────────────────────────────────
   if (isMobile) {
@@ -66,8 +60,7 @@ export function AdaptiveModal({
         }}
       >
         <Drawer.Portal>
-          <Drawer.Overlay className="fixed inset-0 bg-stone-900/40 z-[200]" />
-          <Drawer.Content className="fixed inset-x-0 bottom-0 max-h-[90vh] bg-white rounded-t-[32px] shadow-2xl z-[201] outline-none flex flex-col overscroll-contain">
+          <Drawer.Content className="fixed inset-x-0 bottom-0 max-h-[90vh] bg-white rounded-t-[32px] shadow-2xl z-[201] flex flex-col overscroll-contain focus-visible:ring-2 focus-visible:ring-stone-400 focus-visible:outline-none">
             <Drawer.Handle className="mt-3 mb-2 !w-12 !h-1 !bg-stone-200" />
 
             <div className="px-8 pb-6 flex-shrink-0">
@@ -115,24 +108,12 @@ export function AdaptiveModal({
     <AnimatePresence mode="wait">
       {isOpen && (
         <>
-          {/* Backdrop */}
-          <motion.div
-            key="adaptive-modal-backdrop"
-            initial={noMotion ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={noMotion ? undefined : { opacity: 0 }}
-            transition={{ duration: noMotion ? 0 : 0.15, ease: 'easeOut' }}
-            onClick={onClose}
-            className="fixed inset-0 z-[200]"
-          />
-
           {/* Panel */}
           {mode === 'side-peek' ? (
             <motion.div
-              ref={focusTrapRef}
               key="adaptive-modal-side-peek"
               role="dialog"
-              aria-modal="true"
+              aria-modal="false"
               aria-label={title}
               initial={noMotion ? false : { x: '100%' }}
               animate={{ x: 0 }}
@@ -160,10 +141,9 @@ export function AdaptiveModal({
             </motion.div>
           ) : (
             <motion.div
-              ref={focusTrapRef}
               key="adaptive-modal-floating"
               role="dialog"
-              aria-modal="true"
+              aria-modal="false"
               aria-label={title}
               initial={noMotion ? false : { opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
