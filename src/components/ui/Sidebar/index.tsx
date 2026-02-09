@@ -502,13 +502,13 @@ export default function Sidebar() {
                     router.push('/');
                   }
                 }}
-                className="w-full flex items-center px-3 py-2.5 bg-[#0072ff] text-white rounded-lg hover:bg-[#0066e6] transition-colors font-albert font-medium"
+                className="w-full flex items-center justify-center px-3 py-2.5 bg-[#0072ff] text-white rounded-lg hover:bg-[#0066e6] transition-colors font-albert font-medium"
                 aria-label="New Recipe"
               >
                 <Plus className="w-5 h-5 flex-shrink-0" />
                 <div
                   className={cn(
-                    'overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200',
+                    'overflow-hidden whitespace-nowrap min-w-0 transition-[max-width,opacity,margin] duration-200',
                     isRail
                       ? 'max-w-0 opacity-0 ml-0'
                       : 'max-w-[200px] opacity-100 ml-2',
@@ -529,16 +529,19 @@ export default function Sidebar() {
                   openSearch();
                   if (isMobile) hideMobileNav();
                 }}
-                className="group w-full flex items-center px-3 py-2 rounded-lg transition-colors font-albert text-sm text-stone-600 hover:bg-stone-100 hover:text-stone-900"
+                className={cn(
+                  "group w-full flex items-center px-3 py-2 rounded-lg transition-colors font-albert text-sm text-stone-600 hover:bg-stone-100 hover:text-stone-900",
+                  isRail && "justify-center"
+                )}
                 aria-label="Search recipes"
               >
                 <Magnifer className="w-5 h-5 flex-shrink-0" />
                 <div
                   className={cn(
-                    'flex-1 flex items-center overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200',
+                    'flex items-center overflow-hidden whitespace-nowrap min-w-0 transition-[max-width,opacity,margin] duration-200',
                     isRail
                       ? 'max-w-0 opacity-0 ml-0'
-                      : 'max-w-[250px] opacity-100 ml-3',
+                      : 'flex-1 max-w-[250px] opacity-100 ml-3',
                   )}
                 >
                   <span>Search</span>
@@ -614,13 +617,16 @@ export default function Sidebar() {
               <NavTooltip label="Prototype Lab">
                 <button
                   onClick={openLab}
-                  className="w-full flex items-center px-3 py-2 rounded-lg transition-colors font-albert text-sm text-stone-600 hover:bg-stone-100 hover:text-stone-900"
+                  className={cn(
+                    "w-full flex items-center px-3 py-2 rounded-lg transition-colors font-albert text-sm text-stone-600 hover:bg-stone-100 hover:text-stone-900",
+                    isRail && "justify-center"
+                  )}
                   aria-label="Open Prototype Lab"
                 >
                   <MousePointer2 className="w-5 h-5 flex-shrink-0" />
                   <div
                     className={cn(
-                      'overflow-hidden whitespace-nowrap transition-[max-width,opacity,margin] duration-200',
+                      'overflow-hidden whitespace-nowrap min-w-0 transition-[max-width,opacity,margin] duration-200',
                       isRail
                         ? 'max-w-0 opacity-0 ml-0'
                         : 'max-w-[200px] opacity-100 ml-3',

@@ -13,6 +13,7 @@ import {
   getRecipeById,
   updateRecipe as updateRecipeInStorage,
   removeRecentRecipe,
+  restoreRecentRecipe,
   getBookmarkedRecipeIds,
   getBookmarkedRecipes as getBookmarkedRecipesFromStorage,
   addBookmark as addBookmarkToStorage,
@@ -33,6 +34,7 @@ interface ParsedRecipesContextType {
   updateRecipe: (id: string, updates: Partial<ParsedRecipe>) => void;
   clearRecipes: () => void;
   removeRecipe: (id: string) => void;
+  restoreRecipe: (recipe: ParsedRecipe, wasBookmarked: boolean) => void;
   getRecipeById: (id: string) => ParsedRecipe | null;
   // Bookmark functionality
   bookmarkedRecipeIds: string[];
@@ -210,6 +212,16 @@ export function ParsedRecipesProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const restoreRecipe = (recipe: ParsedRecipe, wasBookmarked: boolean) => {
+    try {
+      restoreRecentRecipe(recipe, wasBookmarked);
+      setRecentRecipes(getRecentRecipes());
+      setBookmarkedRecipeIds(getBookmarkedRecipeIds());
+    } catch (error) {
+      console.error('Error restoring recipe:', error);
+    }
+  };
+
   const getRecipeByIdFromContext = (id: string) => {
     return getRecipeById(id);
   };
@@ -287,6 +299,7 @@ export function ParsedRecipesProvider({ children }: { children: ReactNode }) {
         updateRecipe,
         clearRecipes,
         removeRecipe,
+        restoreRecipe,
         getRecipeById: getRecipeByIdFromContext,
         bookmarkedRecipeIds,
         toggleBookmark,

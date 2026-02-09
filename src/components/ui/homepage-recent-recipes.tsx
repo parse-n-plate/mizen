@@ -15,17 +15,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/useToast';
+import { toast } from 'sonner';
 
 /**
  * HomepageRecentRecipes Component
@@ -40,6 +31,7 @@ export default function HomepageRecentRecipes() {
     bookmarkedRecipeIds,
     getRecipeById,
     removeRecipe,
+    restoreRecipe,
     isBookmarked,
     toggleBookmark,
   } = useParsedRecipes();
@@ -47,8 +39,6 @@ export default function HomepageRecentRecipes() {
   const router = useRouter();
   const [showAll, setShowAll] = useState(false);
   const { showSuccess, showInfo } = useToast();
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [recipeToDelete, setRecipeToDelete] = useState<string | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   // Filter out bookmarked recipes — they live in Cookbook, not Recent
@@ -180,19 +170,23 @@ export default function HomepageRecentRecipes() {
     }
   };
 
-  // Handle delete with dialog
-  const handleOpenDeleteDialog = (recipeId: string) => {
-    setRecipeToDelete(recipeId);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleConfirmDelete = () => {
-    if (recipeToDelete) {
-      removeRecipe(recipeToDelete);
-      showSuccess('Recipe deleted', 'The recipe was removed from your recent recipes.');
-      setRecipeToDelete(null);
-      setDeleteDialogOpen(false);
-    }
+  // Handle delete with undo toast
+  const handleDelete = (recipeId: string) => {
+    const savedRecipe = getRecipeById(recipeId);
+    const wasBookmarked = isBookmarked(recipeId);
+    removeRecipe(recipeId);
+    toast('Recipe deleted', {
+      description: 'The recipe was removed from your recent recipes.',
+      duration: 5000,
+      action: savedRecipe
+        ? {
+            label: 'Undo',
+            onClick: () => {
+              restoreRecipe(savedRecipe, wasBookmarked);
+            },
+          }
+        : undefined,
+    });
   };
 
   // Don't render if no recipes
@@ -297,7 +291,7 @@ export default function HomepageRecentRecipes() {
                     <DropdownMenuSeparator />
 
                     <DropdownMenuItem
-                      onSelect={() => handleOpenDeleteDialog(recipe.id)}
+                      onSelect={() => handleDelete(recipe.id)}
                       className="text-red-600 focus:text-red-600 focus:bg-red-50"
                     >
                       <span>Delete</span>
@@ -325,28 +319,6 @@ export default function HomepageRecentRecipes() {
         )}
       </div>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete recipe?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this recipe? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setRecipeToDelete(null)}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
