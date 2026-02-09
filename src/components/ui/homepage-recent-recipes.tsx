@@ -34,7 +34,6 @@ export default function HomepageRecentRecipes() {
     restoreRecipe,
     isBookmarked,
     toggleBookmark,
-    touchRecipe,
   } = useParsedRecipes();
   const { setParsedRecipe } = useRecipe();
   const router = useRouter();
@@ -99,7 +98,6 @@ export default function HomepageRecentRecipes() {
   // Handle recipe click - navigate to parsed recipe page
   const handleRecipeClick = (recipeId: string) => {
     try {
-      touchRecipe(recipeId);
       const fullRecipe = getRecipeById(recipeId);
       if (fullRecipe && fullRecipe.ingredients && fullRecipe.instructions) {
         setParsedRecipe({
@@ -305,9 +303,8 @@ export default function HomepageRecentRecipes() {
             </div>
           );
         })}
-        
-        {/* See More Button - Only shows if more than 5 recipes and not already showing all */}
-        {/* Made always visible (removed opacity-0 group-hover:opacity-100) for better discoverability */}
+
+        {/* See More Button */}
         {hasMoreThanFive && !showAll && (
           <div className="pl-4">
             <Button

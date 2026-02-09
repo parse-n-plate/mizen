@@ -44,7 +44,6 @@ export default function SearchCommandModal({
     bookmarkedRecipeIds,
     getRecipeById,
     getBookmarkedRecipes,
-    touchRecipe,
   } = useParsedRecipes();
   const { setParsedRecipe } = useRecipe();
   const router = useRouter();
@@ -117,7 +116,6 @@ export default function SearchCommandModal({
 
   const handleSelectRecipe = useCallback(
     (recipeId: string) => {
-      touchRecipe(recipeId);
       const fullRecipe = getRecipeById(recipeId);
       if (fullRecipe && fullRecipe.ingredients && fullRecipe.instructions) {
         setParsedRecipe({
@@ -140,7 +138,7 @@ export default function SearchCommandModal({
         router.push('/parsed-recipe-page');
       }
     },
-    [getRecipeById, setParsedRecipe, router, handleOpenChange, touchRecipe],
+    [getRecipeById, setParsedRecipe, router, handleOpenChange],
   );
 
   const handleAddViaUrl = useCallback(() => {
