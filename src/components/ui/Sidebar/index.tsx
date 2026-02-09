@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
+import { Reorder, useDragControls, useReducedMotion } from 'framer-motion';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRecipe } from '@/contexts/RecipeContext';
 import { useSidebar } from '@/contexts/SidebarContext';
@@ -17,7 +18,7 @@ import {
   TooltipProvider,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { Pin, Plus } from 'lucide-react';
+import { GripVertical, Pin, Plus } from 'lucide-react';
 import SquareDoubleAltArrowLeft from '@solar-icons/react/csr/arrows/SquareDoubleAltArrowLeft';
 import SquareDoubleAltArrowRight from '@solar-icons/react/csr/arrows/SquareDoubleAltArrowRight';
 import Magnifer from '@solar-icons/react/csr/search/Magnifer';
@@ -46,6 +47,98 @@ import FeedbackDialog from './FeedbackDialog';
 // Shared easing for all sidebar transitions — ease-in-out-cubic
 const SIDEBAR_EASING = 'cubic-bezier(0.645,0.045,0.355,1)';
 
+/** Draggable recipe item for the sidebar list */
+const DraggableRecipeItem = memo(function DraggableRecipeItem({
+  recipe,
+  isActive,
+  onRecipeClick,
+  getRecipeIconPath,
+  RecipeItemWrapper,
+  dragConstraints,
+  onDragEnd,
+  reduceMotion,
+}: {
+  recipe: ParsedRecipe;
+  isActive: boolean;
+  onRecipeClick: (id: string) => void;
+  getRecipeIconPath: (recipe: ParsedRecipe) => string;
+  dragConstraints: React.RefObject<HTMLDivElement | null>;
+  RecipeItemWrapper: React.ComponentType<{
+    recipe: ParsedRecipe;
+    children: React.ReactNode;
+  }>;
+  onDragEnd?: () => void;
+  reduceMotion?: boolean;
+}) {
+  const dragControls = useDragControls();
+
+  return (
+    <Reorder.Item
+      value={recipe}
+      dragListener={false}
+      dragControls={dragControls}
+      dragConstraints={dragConstraints}
+      onDragEnd={onDragEnd}
+      as="div"
+      whileDrag={
+        reduceMotion
+          ? { zIndex: 50 }
+          : {
+              zIndex: 50,
+              scale: 1.03,
+              boxShadow: '0 4px 14px rgba(0,0,0,0.08)',
+            }
+      }
+      transition={{
+        layout: reduceMotion
+          ? { duration: 0 }
+          : { type: 'spring', duration: 0.25, bounce: 0 },
+      }}
+      className="rounded-lg bg-[#FAFAF9]"
+      style={{ position: 'relative' }}
+    >
+      <RecipeItemWrapper recipe={recipe}>
+        <button
+          onClick={() => onRecipeClick(recipe.id)}
+          className={cn(
+            'w-full flex items-center justify-between px-3 py-2 rounded-lg text-left group',
+            isActive ? 'bg-stone-200/70' : 'hover:bg-stone-100',
+          )}
+        >
+          <span className="flex items-center gap-2 min-w-0 pr-2 flex-1">
+            <span
+              className="flex-shrink-0 cursor-grab active:cursor-grabbing touch-none opacity-30 mr-0.5"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                dragControls.start(e);
+              }}
+            >
+              <GripVertical className="w-3.5 h-3.5 text-stone-500" />
+            </span>
+            <Image
+              src={getRecipeIconPath(recipe)}
+              alt=""
+              width={28}
+              height={28}
+              className="w-7 h-7 flex-shrink-0 object-contain pointer-events-none"
+              unoptimized
+              draggable={false}
+            />
+            <span
+              className={cn(
+                'font-albert text-sm truncate',
+                isActive ? 'text-stone-900 font-medium' : 'text-stone-700',
+              )}
+            >
+              {recipe.title}
+            </span>
+          </span>
+        </button>
+      </RecipeItemWrapper>
+    </Reorder.Item>
+  );
+});
+
 /**
  * Sidebar Component
  *
@@ -55,13 +148,17 @@ const SIDEBAR_EASING = 'cubic-bezier(0.645,0.045,0.355,1)';
  */
 export default function Sidebar() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const pinnedListRef = useRef<HTMLDivElement>(null);
+  const recipeListRef = useRef<HTMLDivElement>(null);
+  const reduceMotion = useReducedMotion() ?? false;
   const {
     recentRecipes,
     getBookmarkedRecipes,
     isLoaded,
     getRecipeById,
     isPinned,
-    touchRecipe,
+    recipeOrder,
+    reorderRecipes,
   } = useParsedRecipes();
   const { parsedRecipe, setParsedRecipe } = useRecipe();
   const router = useRouter();
@@ -88,15 +185,40 @@ export default function Sidebar() {
     isCollapsed: isMobile ? false : isCollapsed,
   });
 
-  // Unified recipe list: pinned first (by pinnedAt desc), then unpinned
-  const allRecipes = useMemo(() => {
+  // Stable recipe list derived from context (pinned-first or persisted order)
+  const sortedRecipes = useMemo(() => {
     const bookmarked = getBookmarkedRecipes();
-    // Deduplicate: prefer recents entry, add bookmarked-only recipes at end
     const fromRecents = recentRecipes;
     const bookmarkedOnly = bookmarked.filter(
       (r) => !fromRecents.some((rc) => rc.id === r.id),
     );
     const combined = [...fromRecents, ...bookmarkedOnly];
+
+    // If a manual order exists, use it
+    if (recipeOrder.length > 0) {
+      const recipeMap = new Map(combined.map((r) => [r.id, r]));
+      const ordered: ParsedRecipe[] = [];
+      const seen = new Set<string>();
+
+      for (const id of recipeOrder) {
+        const recipe = recipeMap.get(id);
+        if (recipe) {
+          ordered.push(recipe);
+          seen.add(id);
+        }
+      }
+
+      // Keep any recipes missing from persisted order in their canonical order.
+      for (const recipe of combined) {
+        if (!seen.has(recipe.id)) {
+          ordered.push(recipe);
+        }
+      }
+
+      return ordered;
+    }
+
+    // Fallback: pinned first (by pinnedAt desc), then unpinned
     const pinned = combined.filter((r) => r.pinnedAt);
     const unpinned = combined.filter((r) => !r.pinnedAt);
     pinned.sort(
@@ -104,7 +226,30 @@ export default function Sidebar() {
         new Date(b.pinnedAt!).getTime() - new Date(a.pinnedAt!).getTime(),
     );
     return [...pinned, ...unpinned];
-  }, [recentRecipes, getBookmarkedRecipes]);
+  }, [recentRecipes, getBookmarkedRecipes, recipeOrder]);
+
+  // Split into pinned and unpinned for separate sidebar sections
+  const pinnedRecipes = useMemo(
+    () => sortedRecipes.filter((r) => r.pinnedAt),
+    [sortedRecipes],
+  );
+  const unpinnedRecipes = useMemo(
+    () => sortedRecipes.filter((r) => !r.pinnedAt),
+    [sortedRecipes],
+  );
+
+  // Local drag state — drives Reorder.Group visuals without touching context
+  const [localPinnedOrder, setLocalPinnedOrder] = useState<ParsedRecipe[] | null>(null);
+  const [localUnpinnedOrder, setLocalUnpinnedOrder] = useState<ParsedRecipe[] | null>(null);
+  const displayPinned = localPinnedOrder ?? pinnedRecipes;
+  const displayUnpinned = localUnpinnedOrder ?? unpinnedRecipes;
+  const allRecipes = [...displayPinned, ...displayUnpinned];
+
+  // Sync local state when the canonical order changes (e.g. recipe added/removed)
+  useEffect(() => {
+    setLocalPinnedOrder(null);
+    setLocalUnpinnedOrder(null);
+  }, [sortedRecipes]);
 
   // Determine which recipe is currently being viewed
   const activeRecipeId = useMemo(() => {
@@ -139,43 +284,65 @@ export default function Sidebar() {
     return '';
   };
 
-  const getRecipeIconPath = (recipe: ParsedRecipe): string => {
+  const getRecipeIconPath = useCallback((recipe: ParsedRecipe): string => {
     if (recipe.cuisine && recipe.cuisine.length > 0) {
       const icon = getCuisineIcon(recipe.cuisine[0]);
       if (icon) return icon;
     }
     return '/assets/cusineIcons/No_Cusine_Icon.png';
-  };
+  }, []);
 
-  const handleRecipeClick = (recipeId: string) => {
-    try {
-      touchRecipe(recipeId);
-      const fullRecipe = getRecipeById(recipeId);
-      if (fullRecipe && fullRecipe.ingredients && fullRecipe.instructions) {
-        setParsedRecipe({
-          id: fullRecipe.id,
-          title: fullRecipe.title,
-          ingredients: fullRecipe.ingredients,
-          instructions: fullRecipe.instructions,
-          author: fullRecipe.author,
-          sourceUrl: fullRecipe.sourceUrl || fullRecipe.url,
-          summary: fullRecipe.description || fullRecipe.summary,
-          cuisine: fullRecipe.cuisine,
-          imageData: fullRecipe.imageData,
-          imageFilename: fullRecipe.imageFilename,
-          prepTimeMinutes: fullRecipe.prepTimeMinutes,
-          cookTimeMinutes: fullRecipe.cookTimeMinutes,
-          totalTimeMinutes: fullRecipe.totalTimeMinutes,
-          servings: fullRecipe.servings,
-          plate: fullRecipe.plate,
-        });
-        router.push('/parsed-recipe-page');
-        if (isMobile) hideMobileNav();
+  const handleRecipeClick = useCallback(
+    (recipeId: string) => {
+      try {
+        const fullRecipe = getRecipeById(recipeId);
+        if (fullRecipe && fullRecipe.ingredients && fullRecipe.instructions) {
+          setParsedRecipe({
+            id: fullRecipe.id,
+            title: fullRecipe.title,
+            ingredients: fullRecipe.ingredients,
+            instructions: fullRecipe.instructions,
+            author: fullRecipe.author,
+            sourceUrl: fullRecipe.sourceUrl || fullRecipe.url,
+            summary: fullRecipe.description || fullRecipe.summary,
+            cuisine: fullRecipe.cuisine,
+            imageData: fullRecipe.imageData,
+            imageFilename: fullRecipe.imageFilename,
+            prepTimeMinutes: fullRecipe.prepTimeMinutes,
+            cookTimeMinutes: fullRecipe.cookTimeMinutes,
+            totalTimeMinutes: fullRecipe.totalTimeMinutes,
+            servings: fullRecipe.servings,
+            plate: fullRecipe.plate,
+          });
+          router.push('/parsed-recipe-page');
+          if (isMobile) hideMobileNav();
+        }
+      } catch (error) {
+        console.error('Error loading recipe:', error);
       }
-    } catch (error) {
-      console.error('Error loading recipe:', error);
-    }
-  };
+    },
+    [getRecipeById, setParsedRecipe, router, isMobile, hideMobileNav],
+  );
+
+  // Persist the reorder to context/localStorage only when the drag ends.
+  // Use refs so the callback stays stable across drag frames.
+  const localPinnedRef = useRef(localPinnedOrder);
+  localPinnedRef.current = localPinnedOrder;
+  const localUnpinnedRef = useRef(localUnpinnedOrder);
+  localUnpinnedRef.current = localUnpinnedOrder;
+  const pinnedRef = useRef(pinnedRecipes);
+  pinnedRef.current = pinnedRecipes;
+  const unpinnedRef = useRef(unpinnedRecipes);
+  unpinnedRef.current = unpinnedRecipes;
+
+  const handleDragEnd = useCallback(() => {
+    const currentPinned = localPinnedRef.current ?? pinnedRef.current;
+    const currentUnpinned = localUnpinnedRef.current ?? unpinnedRef.current;
+    const merged = [...currentPinned, ...currentUnpinned];
+    reorderRecipes(merged.map((r) => r.id));
+    setLocalPinnedOrder(null);
+    setLocalUnpinnedOrder(null);
+  }, [reorderRecipes]);
 
   const navItems = [
     { icon: ClockCircle, label: 'Timers', href: '/timers', disabled: true },
@@ -188,28 +355,33 @@ export default function Sidebar() {
   ];
 
   // Helper to wrap recipe items — skip HoverCard on mobile (no hover on touch)
-  const RecipeItemWrapper = ({
-    recipe,
-    children,
-  }: {
-    recipe: ParsedRecipe;
-    children: React.ReactNode;
-  }) => {
-    if (isMobile) {
+  // Memoized to keep a stable reference across renders
+  const RecipeItemWrapper = useMemo(() => {
+    const Wrapper = ({
+      recipe,
+      children,
+    }: {
+      recipe: ParsedRecipe;
+      children: React.ReactNode;
+    }) => {
+      if (isMobile) {
+        return (
+          <RecipeContextMenu recipe={recipe} onRecipeClick={handleRecipeClick}>
+            {children}
+          </RecipeContextMenu>
+        );
+      }
       return (
-        <RecipeContextMenu recipe={recipe} onRecipeClick={handleRecipeClick}>
-          {children}
-        </RecipeContextMenu>
+        <RecipeHoverCard recipe={recipe}>
+          <RecipeContextMenu recipe={recipe} onRecipeClick={handleRecipeClick}>
+            {children}
+          </RecipeContextMenu>
+        </RecipeHoverCard>
       );
-    }
-    return (
-      <RecipeHoverCard recipe={recipe}>
-        <RecipeContextMenu recipe={recipe} onRecipeClick={handleRecipeClick}>
-          {children}
-        </RecipeContextMenu>
-      </RecipeHoverCard>
-    );
-  };
+    };
+    Wrapper.displayName = 'RecipeItemWrapper';
+    return Wrapper;
+  }, [isMobile, handleRecipeClick]);
 
   // Helper: wrap children in a tooltip only when collapsed (desktop)
   const NavTooltip = ({
@@ -474,53 +646,70 @@ export default function Sidebar() {
           {!isRail ? (
             <HoverCardGroup>
               <div className="flex-1 overflow-y-auto overflow-x-hidden px-2">
-                {/* Recipes Section — pinned first, then by last accessed */}
-                {isLoaded && allRecipes.length > 0 && (
+                {/* Pinned Section */}
+                {isLoaded && displayPinned.length > 0 && (
+                  <div className="py-2">
+                    <div className="px-3 py-1.5 flex items-center gap-2">
+                      <Pin className="w-3.5 h-3.5 text-stone-400" />
+                      <span className="font-albert text-xs font-medium text-stone-400 uppercase tracking-wider whitespace-nowrap">
+                        Pinned
+                      </span>
+                    </div>
+                    <Reorder.Group
+                      ref={pinnedListRef}
+                      axis="y"
+                      values={displayPinned}
+                      onReorder={setLocalPinnedOrder}
+                      className="space-y-0.5"
+                      as="div"
+                    >
+                      {displayPinned.map((recipe) => (
+                        <DraggableRecipeItem
+                          key={recipe.id}
+                          recipe={recipe}
+                          isActive={activeRecipeId === recipe.id}
+                          onRecipeClick={handleRecipeClick}
+                          getRecipeIconPath={getRecipeIconPath}
+                          RecipeItemWrapper={RecipeItemWrapper}
+                          dragConstraints={pinnedListRef}
+                          onDragEnd={handleDragEnd}
+                          reduceMotion={reduceMotion}
+                        />
+                      ))}
+                    </Reorder.Group>
+                  </div>
+                )}
+
+                {/* Recipes Section — unpinned, reorderable */}
+                {isLoaded && displayUnpinned.length > 0 && (
                   <div className="py-2">
                     <div className="px-3 py-1.5 flex items-center gap-2">
                       <span className="font-albert text-xs font-medium text-stone-400 uppercase tracking-wider whitespace-nowrap">
                         Recipes
                       </span>
                     </div>
-                    <div className="space-y-0.5">
-                      {allRecipes.map((recipe) => (
-                        <RecipeItemWrapper key={recipe.id} recipe={recipe}>
-                          <button
-                            onClick={() => handleRecipeClick(recipe.id)}
-                            className={cn(
-                              'w-full flex items-center justify-between px-3 py-2 rounded-lg text-left group',
-                              activeRecipeId === recipe.id
-                                ? 'bg-stone-200/70'
-                                : 'hover:bg-stone-100',
-                            )}
-                          >
-                            <span className="flex items-center gap-2 min-w-0 pr-2">
-                              <Image
-                                src={getRecipeIconPath(recipe)}
-                                alt=""
-                                width={28}
-                                height={28}
-                                className="w-7 h-7 flex-shrink-0 object-contain"
-                                unoptimized
-                              />
-                              <span
-                                className={cn(
-                                  'font-albert text-sm truncate',
-                                  activeRecipeId === recipe.id
-                                    ? 'text-stone-900 font-medium'
-                                    : 'text-stone-700',
-                                )}
-                              >
-                                {recipe.title}
-                              </span>
-                              {recipe.pinnedAt && (
-                                <Pin className="w-3 h-3 text-stone-400 flex-shrink-0" />
-                              )}
-                            </span>
-                          </button>
-                        </RecipeItemWrapper>
+                    <Reorder.Group
+                      ref={recipeListRef}
+                      axis="y"
+                      values={displayUnpinned}
+                      onReorder={setLocalUnpinnedOrder}
+                      className="space-y-0.5"
+                      as="div"
+                    >
+                      {displayUnpinned.map((recipe) => (
+                        <DraggableRecipeItem
+                          key={recipe.id}
+                          recipe={recipe}
+                          isActive={activeRecipeId === recipe.id}
+                          onRecipeClick={handleRecipeClick}
+                          getRecipeIconPath={getRecipeIconPath}
+                          RecipeItemWrapper={RecipeItemWrapper}
+                          dragConstraints={recipeListRef}
+                          onDragEnd={handleDragEnd}
+                          reduceMotion={reduceMotion}
+                        />
                       ))}
-                    </div>
+                    </Reorder.Group>
                   </div>
                 )}
               </div>
