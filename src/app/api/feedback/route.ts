@@ -147,8 +147,12 @@ export async function POST(request: NextRequest) {
     if (!process.env.NOTION_API_KEY || !databaseId) {
       console.error('Missing Notion configuration');
       return NextResponse.json(
-        { success: false, error: 'Feedback system not configured' },
-        { status: 500 },
+        {
+          success: false,
+          error: 'Feedback is temporarily unavailable',
+          code: 'FEEDBACK_NOT_CONFIGURED',
+        },
+        { status: 200 },
       );
     }
 

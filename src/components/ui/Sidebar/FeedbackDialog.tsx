@@ -140,11 +140,18 @@ export default function FeedbackDialog({
         body: formData,
       });
 
+      const feedbackData = await feedbackRes
+        .json()
+        .catch(() => ({ success: false, error: 'Failed to submit feedback' }));
+
       if (!feedbackRes.ok) {
-        const errorData = await feedbackRes
-          .json()
-          .catch(() => ({ error: 'Failed to submit feedback' }));
-        toast.error(errorData.error || 'Failed to submit feedback');
+        toast.error(feedbackData.error || 'Failed to submit feedback');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!feedbackData.success) {
+        toast.error(feedbackData.error || 'Failed to submit feedback');
         setIsSubmitting(false);
         return;
       }
