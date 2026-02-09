@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { validateImageFile } from '@/lib/imageUtils';
 import { ArrowLeftIcon, ImageIcon, XIcon, SendIcon } from 'lucide-react';
@@ -25,24 +26,28 @@ const CATEGORIES: {
   icon: React.ComponentType<{ className?: string }>;
   subtitle: string;
   responseHint: string;
+  titlePlaceholder: string;
 }[] = [
   {
     type: 'Bug Report',
     icon: Bug,
     subtitle: "Something isn't working correctly",
     responseHint: "We'll look into this right away",
+    titlePlaceholder: 'Brief summary of the issue, e.g. "Map won\'t load on Safari"',
   },
   {
     type: 'Feature Idea',
     icon: Lightbulb,
     subtitle: 'Suggest a new feature or improvement',
     responseHint: 'We love hearing new ideas',
+    titlePlaceholder: 'Name your idea in a few words, e.g. "Add dark mode toggle"',
   },
   {
     type: 'User Feedback',
     icon: ChatRoundLine,
     subtitle: 'Share your thoughts or experience',
     responseHint: 'Your thoughts help us improve',
+    titlePlaceholder: 'Sum up your feedback, e.g. "Love the new recipe view"',
   },
 ];
 
@@ -57,6 +62,7 @@ export default function FeedbackDialog({
 }: FeedbackDialogProps) {
   const [step, setStep] = useState<1 | 2>(1);
   const [type, setType] = useState<FeedbackType>('Bug Report');
+  const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [screenshots, setScreenshots] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -127,6 +133,7 @@ export default function FeedbackDialog({
       // Submit metadata + screenshots in one request.
       const formData = new FormData();
       formData.append('type', type);
+      formData.append('title', title.trim());
       formData.append('message', message);
       formData.append('deviceOS', navigator.userAgent);
       formData.append(
@@ -173,6 +180,7 @@ export default function FeedbackDialog({
     setTimeout(() => {
       setStep(1);
       setType('Bug Report');
+      setTitle('');
       setMessage('');
       setScreenshots([]);
       setIsSubmitting(false);
@@ -229,7 +237,7 @@ export default function FeedbackDialog({
                     key={t}
                     type="button"
                     onClick={() => handleSelectType(t)}
-                    className="flex items-center gap-3 w-full bg-stone-50 border border-stone-200 rounded-xl p-4 text-left hover:bg-stone-100 active:scale-[0.97] transition-all"
+                    className="flex items-center gap-3 w-full bg-stone-50 border border-stone-200 rounded-xl p-4 text-left hover:bg-stone-100 active:scale-[0.97] transition-[background-color,transform]"
                   >
                     <Icon className="size-5 text-stone-500 flex-shrink-0" />
                     <div className="min-w-0">
@@ -252,14 +260,14 @@ export default function FeedbackDialog({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
-              className="flex flex-col h-[340px]"
+              className="flex flex-col h-[400px]"
             >
               {/* Header */}
               <div className="flex items-center gap-3 px-6 py-4 border-b border-stone-100">
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="p-1.5 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 active:scale-[0.9] transition-all"
+                  className="p-1.5 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 active:scale-[0.9] transition-[color,background-color,transform]"
                   aria-label="Back"
                 >
                   <ArrowLeftIcon className="size-4" />
@@ -277,14 +285,23 @@ export default function FeedbackDialog({
                 </div>
               </div>
 
-              {/* Message Input */}
+              {/* Title + Message Input */}
               <div className="px-6 pt-4 pb-0 flex-1 flex flex-col">
+                <Input
+                  name="title"
+                  aria-label="Feedback title"
+                  autoComplete="off"
+                  placeholder={selectedCategory.titlePlaceholder}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="h-auto rounded-none border-0 border-b border-stone-200 bg-transparent px-0 pb-3 shadow-none font-semibold text-stone-900 placeholder-stone-400 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  autoFocus
+                />
                 <Textarea
                   placeholder="Tell us more..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="flex-1 min-h-0 border-none bg-transparent px-0 pt-1 pb-0 focus:ring-0 resize-none placeholder-stone-400"
-                  autoFocus
+                  className="flex-1 min-h-0 border-none bg-transparent px-0 pt-3 pb-0 focus:ring-0 resize-none placeholder-stone-400"
                 />
               </div>
 
@@ -341,13 +358,13 @@ export default function FeedbackDialog({
 
                 <div className="flex items-center gap-3">
                   <span className="font-albert text-xs text-stone-400 hidden sm:block">
-                    ⌘+Enter to send
+                    ⌘+Return to send
                   </span>
                   <button
                     type="button"
                     onClick={handleSubmit}
                     disabled={isSubmitting || !message.trim()}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-[#0088ff] text-white rounded-lg font-albert text-sm font-medium hover:bg-[#0072ff] active:scale-[0.97] transition-all disabled:opacity-50 disabled:pointer-events-none"
+                    className="flex items-center gap-1.5 px-4 py-2 bg-[#0088ff] text-white rounded-lg font-albert text-sm font-medium hover:bg-[#0072ff] active:scale-[0.97] transition-[background-color,transform,opacity] disabled:opacity-50 disabled:pointer-events-none"
                   >
                     <SendIcon className="size-3.5" />
                     {isSubmitting ? 'Sending...' : 'Send'}

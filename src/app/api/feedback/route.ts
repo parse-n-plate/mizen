@@ -19,6 +19,7 @@ const ALLOWED_TYPES = new Set([
 
 type FeedbackPayload = {
   type: string;
+  title: string;
   message: string;
   deviceOS?: string;
   appVersion?: string;
@@ -118,6 +119,7 @@ async function parsePayload(request: NextRequest): Promise<FeedbackPayload> {
 
     return {
       type: String(formData.get('type') || '').trim(),
+      title: String(formData.get('title') || '').trim(),
       message: String(formData.get('message') || '').trim(),
       deviceOS: String(formData.get('deviceOS') || '').trim() || undefined,
       appVersion: String(formData.get('appVersion') || '').trim() || undefined,
@@ -130,6 +132,7 @@ async function parsePayload(request: NextRequest): Promise<FeedbackPayload> {
   const body = await request.json();
   return {
     type: String(body?.type || '').trim(),
+    title: String(body?.title || '').trim(),
     message: String(body?.message || '').trim(),
     deviceOS: typeof body?.deviceOS === 'string' ? body.deviceOS : undefined,
     appVersion:
@@ -223,11 +226,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Auto-generate title from message
-    const title =
-      payload.message.length > 60
+    // Use user-provided title, fall back to truncated message
+    const title = payload.title
+      || (payload.message.length > 60
         ? payload.message.slice(0, 60) + '…'
-        : payload.message;
+        : payload.message);
 
     // Create page first so file uploads are not orphaned if page creation fails.
     const response = await notion.pages.create({
