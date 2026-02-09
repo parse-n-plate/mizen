@@ -66,6 +66,7 @@ export type ParsedRecipe = {
 
 const RECENT_RECIPES_KEY = 'recentRecipes';
 const BOOKMARKED_RECIPES_KEY = 'bookmarkedRecipes';
+const RECIPE_ORDER_KEY = 'recipeOrder';
 const MAX_RECENT_RECIPES = 10;
 
 /**
@@ -470,4 +471,40 @@ export function isRecipePinned(id: string): boolean {
  */
 export function touchRecipeAccess(id: string): void {
   updateRecipe(id, { lastAccessedAt: new Date().toISOString() });
+}
+
+/**
+ * Get the persisted recipe order (array of recipe IDs).
+ * Returns null if no custom order has been saved yet.
+ */
+export function getRecipeOrder(): string[] | null {
+  try {
+    const stored = localStorage.getItem(RECIPE_ORDER_KEY);
+    if (!stored) return null;
+    return JSON.parse(stored) as string[];
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Save a new recipe order (array of recipe IDs).
+ */
+export function saveRecipeOrder(order: string[]): void {
+  try {
+    localStorage.setItem(RECIPE_ORDER_KEY, JSON.stringify(order));
+  } catch (error) {
+    console.error('[Storage] Error saving recipe order:', error);
+  }
+}
+
+/**
+ * Clear the persisted recipe order.
+ */
+export function clearRecipeOrder(): void {
+  try {
+    localStorage.removeItem(RECIPE_ORDER_KEY);
+  } catch (error) {
+    console.error('[Storage] Error clearing recipe order:', error);
+  }
 }
