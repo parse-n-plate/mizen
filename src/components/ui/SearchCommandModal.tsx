@@ -273,7 +273,7 @@ export default function SearchCommandModal({
                 </div>
               </CommandItem>
             </CommandGroup>
-          ) : (
+          ) : !search ? (
             /* Default: show add via URL and add via image */
             <CommandGroup heading="Add Recipe" className="font-albert pt-2">
               <CommandItem
@@ -307,10 +307,10 @@ export default function SearchCommandModal({
                 </div>
               </CommandItem>
             </CommandGroup>
-          )}
+          ) : null}
 
           {/* Navigation: Quick links to Timers and Cookbook */}
-          {!isUrlInput && (
+          {!search && (
             <CommandGroup heading="Navigation" className="font-albert pt-3">
               <CommandItem
                 value="timers timer navigation"
