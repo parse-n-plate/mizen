@@ -330,6 +330,31 @@ export function removeRecentRecipe(id: string): void {
 }
 
 /**
+ * Restore a previously deleted recipe back into localStorage.
+ * Used for undo-delete functionality.
+ * @param recipe - The full recipe object to restore
+ * @param wasBookmarked - Whether the recipe was bookmarked before deletion
+ */
+export function restoreRecentRecipe(recipe: ParsedRecipe, wasBookmarked: boolean): void {
+  try {
+    const recentRecipes = getRecentRecipes();
+    // Avoid duplicates
+    if (!recentRecipes.some((r) => r.id === recipe.id)) {
+      localStorage.setItem(RECENT_RECIPES_KEY, JSON.stringify([recipe, ...recentRecipes]));
+    }
+
+    if (wasBookmarked) {
+      const bookmarks = getBookmarkedRecipes();
+      if (!bookmarks.some((r) => r.id === recipe.id)) {
+        localStorage.setItem(BOOKMARKED_RECIPES_KEY, JSON.stringify([...bookmarks, recipe]));
+      }
+    }
+  } catch (error) {
+    console.error('Error restoring recipe to localStorage:', error);
+  }
+}
+
+/**
  * Clear all recent recipes from localStorage
  */
 export function clearRecentRecipes(): void {
