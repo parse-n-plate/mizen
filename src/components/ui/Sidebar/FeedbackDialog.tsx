@@ -310,7 +310,7 @@ export default function FeedbackDialog({
                   autoFocus
                 />
                 <Textarea
-                  placeholder="Tell us more\u2026"
+                  placeholder="Tell us more"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   className="flex-1 min-h-0 border-none bg-transparent px-0 pt-3 pb-0 focus:ring-0 resize-none placeholder-stone-400"
@@ -383,7 +383,7 @@ export default function FeedbackDialog({
                     className="flex items-center gap-1.5 px-4 py-2 bg-[#0088ff] text-white rounded-lg font-albert text-sm font-medium hover:bg-[#0072ff] active:scale-[0.97] transition-[background-color,transform,opacity] disabled:opacity-50 disabled:pointer-events-none"
                   >
                     <SendIcon className="size-3.5" aria-hidden="true" />
-                    {isSubmitting ? 'Sending\u2026' : 'Send'}
+                    {isSubmitting ? 'Sending' : 'Send'}
                   </button>
                 </div>
               </div>
