@@ -20,10 +20,30 @@ import Confetti from '@solar-icons/react/csr/ui/Confetti';
 
 type FeedbackType = 'Bug Report' | 'Feature Idea' | 'User Feedback';
 
-const CATEGORIES: { type: FeedbackType; icon: React.ComponentType<{ className?: string }>; subtitle: string; responseHint: string }[] = [
-  { type: 'Bug Report', icon: Bug, subtitle: 'Something isn\'t working correctly', responseHint: 'We\'ll look into this right away' },
-  { type: 'Feature Idea', icon: Lightbulb, subtitle: 'Suggest a new feature or improvement', responseHint: 'We love hearing new ideas' },
-  { type: 'User Feedback', icon: ChatRoundLine, subtitle: 'Share your thoughts or experience', responseHint: 'Your thoughts help us improve' },
+const CATEGORIES: {
+  type: FeedbackType;
+  icon: React.ComponentType<{ className?: string }>;
+  subtitle: string;
+  responseHint: string;
+}[] = [
+  {
+    type: 'Bug Report',
+    icon: Bug,
+    subtitle: "Something isn't working correctly",
+    responseHint: "We'll look into this right away",
+  },
+  {
+    type: 'Feature Idea',
+    icon: Lightbulb,
+    subtitle: 'Suggest a new feature or improvement',
+    responseHint: 'We love hearing new ideas',
+  },
+  {
+    type: 'User Feedback',
+    icon: ChatRoundLine,
+    subtitle: 'Share your thoughts or experience',
+    responseHint: 'Your thoughts help us improve',
+  },
 ];
 
 interface FeedbackDialogProps {
@@ -31,7 +51,10 @@ interface FeedbackDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export default function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
+export default function FeedbackDialog({
+  open,
+  onOpenChange,
+}: FeedbackDialogProps) {
   const [step, setStep] = useState<1 | 2>(1);
   const [type, setType] = useState<FeedbackType>('Bug Report');
   const [message, setMessage] = useState('');
@@ -40,7 +63,7 @@ export default function FeedbackDialog({ open, onOpenChange }: FeedbackDialogPro
   const [isSuccess, setIsSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const selectedCategory = CATEGORIES.find(c => c.type === type)!;
+  const selectedCategory = CATEGORIES.find((c) => c.type === type)!;
 
   // Cmd+Enter to submit
   useEffect(() => {
@@ -82,13 +105,13 @@ export default function FeedbackDialog({ open, onOpenChange }: FeedbackDialogPro
       }
     }
 
-    setScreenshots(prev => [...prev, ...files].slice(0, 3));
+    setScreenshots((prev) => [...prev, ...files].slice(0, 3));
     // Reset input so same file can be re-selected
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const removeScreenshot = (index: number) => {
-    setScreenshots(prev => prev.filter((_, i) => i !== index));
+    setScreenshots((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
@@ -101,42 +124,27 @@ export default function FeedbackDialog({ open, onOpenChange }: FeedbackDialogPro
     setIsSubmitting(true);
 
     try {
-      // Upload screenshots first if any
-      let screenshotUrls: string[] = [];
-      if (screenshots.length > 0) {
-        const formData = new FormData();
-        screenshots.forEach(file => formData.append('screenshots', file));
+      // Submit metadata + screenshots in one request.
+      const formData = new FormData();
+      formData.append('type', type);
+      formData.append('message', message);
+      formData.append('deviceOS', navigator.userAgent);
+      formData.append(
+        'appVersion',
+        process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0',
+      );
+      screenshots.forEach((file) => formData.append('screenshots', file));
 
-        const uploadRes = await fetch('/api/feedback/upload', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!uploadRes.ok) {
-          toast.error('Failed to upload screenshots');
-          setIsSubmitting(false);
-          return;
-        }
-
-        const uploadData = await uploadRes.json();
-        screenshotUrls = uploadData.urls || [];
-      }
-
-      // Submit feedback
       const feedbackRes = await fetch('/api/feedback', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type,
-          message,
-          screenshotUrls,
-          deviceOS: navigator.userAgent,
-          appVersion: process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0',
-        }),
+        body: formData,
       });
 
       if (!feedbackRes.ok) {
-        toast.error('Failed to submit feedback');
+        const errorData = await feedbackRes
+          .json()
+          .catch(() => ({ error: 'Failed to submit feedback' }));
+        toast.error(errorData.error || 'Failed to submit feedback');
         setIsSubmitting(false);
         return;
       }
@@ -167,8 +175,10 @@ export default function FeedbackDialog({ open, onOpenChange }: FeedbackDialogPro
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md p-0 gap-0" showCloseButton={step === 1}>
-
+      <DialogContent
+        className="max-w-md p-0 gap-0"
+        showCloseButton={step === 1}
+      >
         <AnimatePresence mode="wait" initial={false}>
           {/* Success State */}
           {isSuccess ? (
@@ -180,8 +190,12 @@ export default function FeedbackDialog({ open, onOpenChange }: FeedbackDialogPro
               className="flex flex-col items-center justify-center px-6 h-[340px]"
             >
               <Confetti className="size-12 text-[#0088ff] mb-4" />
-              <p className="font-domine text-xl font-semibold text-stone-900 text-balance">Thank you!</p>
-              <p className="font-albert text-sm text-stone-500 mt-1 text-pretty">Your feedback has been submitted.</p>
+              <p className="font-domine text-xl font-semibold text-stone-900 text-balance">
+                Thank you!
+              </p>
+              <p className="font-albert text-sm text-stone-500 mt-1 text-pretty">
+                Your feedback has been submitted.
+              </p>
             </motion.div>
           ) : step === 1 ? (
             /* Step 1: Category Selection */
@@ -194,8 +208,12 @@ export default function FeedbackDialog({ open, onOpenChange }: FeedbackDialogPro
               className="p-6 h-[340px]"
             >
               <DialogHeader className="mb-5">
-                <DialogTitle className="text-balance">Send us a message</DialogTitle>
-                <DialogDescription className="text-pretty">We&apos;ll respond asap!</DialogDescription>
+                <DialogTitle className="text-balance">
+                  Send us a message
+                </DialogTitle>
+                <DialogDescription className="text-pretty">
+                  We&apos;ll respond asap!
+                </DialogDescription>
               </DialogHeader>
 
               <div className="flex flex-col gap-2">
@@ -208,8 +226,12 @@ export default function FeedbackDialog({ open, onOpenChange }: FeedbackDialogPro
                   >
                     <Icon className="size-5 text-stone-500 flex-shrink-0" />
                     <div className="min-w-0">
-                      <p className="font-albert text-sm font-semibold text-stone-900">{t}</p>
-                      <p className="font-albert text-xs text-stone-500 text-pretty">{subtitle}</p>
+                      <p className="font-albert text-sm font-semibold text-stone-900">
+                        {t}
+                      </p>
+                      <p className="font-albert text-xs text-stone-500 text-pretty">
+                        {subtitle}
+                      </p>
                     </div>
                   </button>
                 ))}
@@ -238,9 +260,13 @@ export default function FeedbackDialog({ open, onOpenChange }: FeedbackDialogPro
                 <div>
                   <div className="flex items-center gap-1.5">
                     <selectedCategory.icon className="size-4 text-stone-500" />
-                    <span className="font-albert text-sm font-semibold text-stone-900">{type}</span>
+                    <span className="font-albert text-sm font-semibold text-stone-900">
+                      {type}
+                    </span>
                   </div>
-                  <p className="font-albert text-xs text-stone-400 text-pretty">{selectedCategory.responseHint}</p>
+                  <p className="font-albert text-xs text-stone-400 text-pretty">
+                    {selectedCategory.responseHint}
+                  </p>
                 </div>
               </div>
 
@@ -249,7 +275,7 @@ export default function FeedbackDialog({ open, onOpenChange }: FeedbackDialogPro
                 <Textarea
                   placeholder="Tell us more..."
                   value={message}
-                  onChange={e => setMessage(e.target.value)}
+                  onChange={(e) => setMessage(e.target.value)}
                   className="flex-1 min-h-0 border-none bg-transparent px-0 pt-1 pb-0 focus:ring-0 resize-none placeholder-stone-400"
                   autoFocus
                 />
@@ -287,11 +313,15 @@ export default function FeedbackDialog({ open, onOpenChange }: FeedbackDialogPro
                     className="flex items-center gap-1.5 text-stone-400 hover:text-stone-600 transition-colors"
                   >
                     <ImageIcon className="size-4" />
-                    <span className="font-albert text-xs">Attach screenshot ({screenshots.length}/3)</span>
+                    <span className="font-albert text-xs">
+                      Attach screenshot ({screenshots.length}/3)
+                    </span>
                   </button>
                 )}
                 {screenshots.length >= 3 && (
-                  <span className="font-albert text-xs text-stone-400">3/3 screenshots</span>
+                  <span className="font-albert text-xs text-stone-400">
+                    3/3 screenshots
+                  </span>
                 )}
                 <input
                   ref={fileInputRef}
@@ -303,7 +333,9 @@ export default function FeedbackDialog({ open, onOpenChange }: FeedbackDialogPro
                 />
 
                 <div className="flex items-center gap-3">
-                  <span className="font-albert text-xs text-stone-400 hidden sm:block">⌘+Enter to send</span>
+                  <span className="font-albert text-xs text-stone-400 hidden sm:block">
+                    ⌘+Enter to send
+                  </span>
                   <button
                     type="button"
                     onClick={handleSubmit}
