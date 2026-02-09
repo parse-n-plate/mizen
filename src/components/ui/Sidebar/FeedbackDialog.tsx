@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { validateImageFile } from '@/lib/imageUtils';
 import { ArrowLeftIcon, ImageIcon, XIcon, SendIcon } from 'lucide-react';
@@ -25,24 +26,28 @@ export const CATEGORIES: {
   icon: React.ComponentType<{ className?: string }>;
   subtitle: string;
   responseHint: string;
+  titlePlaceholder: string;
 }[] = [
   {
     type: 'Bug Report',
     icon: Bug,
     subtitle: "Something isn't working correctly",
     responseHint: "We'll look into this right away",
+    titlePlaceholder: 'Brief summary of the issue, e.g. "Map won\'t load on Safari"',
   },
   {
     type: 'Feature Idea',
     icon: Lightbulb,
     subtitle: 'Suggest a new feature or improvement',
     responseHint: 'We love hearing new ideas',
+    titlePlaceholder: 'Name your idea in a few words, e.g. "Add dark mode toggle"',
   },
   {
     type: 'User Feedback',
     icon: ChatRoundLine,
     subtitle: 'Share your thoughts or experience',
     responseHint: 'Your thoughts help us improve',
+    titlePlaceholder: 'Sum up your feedback, e.g. "Love the new recipe view"',
   },
 ];
 
@@ -61,6 +66,7 @@ export default function FeedbackDialog({
 }: FeedbackDialogProps) {
   const [step, setStep] = useState<1 | 2>(initialStep ?? 1);
   const [type, setType] = useState<FeedbackType>(initialType ?? 'Bug Report');
+  const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [screenshots, setScreenshots] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -136,42 +142,35 @@ export default function FeedbackDialog({
     setIsSubmitting(true);
 
     try {
-      // Upload screenshots first if any
-      let screenshotUrls: string[] = [];
-      if (screenshots.length > 0) {
-        const formData = new FormData();
-        screenshots.forEach((file) => formData.append('screenshots', file));
+      // Submit metadata + screenshots in one request.
+      const formData = new FormData();
+      formData.append('type', type);
+      formData.append('title', title.trim());
+      formData.append('message', message);
+      formData.append('deviceOS', navigator.userAgent);
+      formData.append(
+        'appVersion',
+        process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0',
+      );
+      screenshots.forEach((file) => formData.append('screenshots', file));
 
-        const uploadRes = await fetch('/api/feedback/upload', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!uploadRes.ok) {
-          toast.error('Failed to upload screenshots');
-          setIsSubmitting(false);
-          return;
-        }
-
-        const uploadData = await uploadRes.json();
-        screenshotUrls = uploadData.urls || [];
-      }
-
-      // Submit feedback
       const feedbackRes = await fetch('/api/feedback', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type,
-          message,
-          screenshotUrls,
-          deviceOS: navigator.userAgent,
-          appVersion: process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0',
-        }),
+        body: formData,
       });
 
+      const feedbackData = await feedbackRes
+        .json()
+        .catch(() => ({ success: false, error: 'Failed to submit feedback' }));
+
       if (!feedbackRes.ok) {
-        toast.error('Failed to submit feedback');
+        toast.error(feedbackData.error || 'Failed to submit feedback');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!feedbackData.success) {
+        toast.error(feedbackData.error || 'Failed to submit feedback');
         setIsSubmitting(false);
         return;
       }
@@ -193,6 +192,7 @@ export default function FeedbackDialog({
     setTimeout(() => {
       setStep(1);
       setType('Bug Report');
+      setTitle('');
       setMessage('');
       setScreenshots([]);
       setIsSubmitting(false);
@@ -272,7 +272,7 @@ export default function FeedbackDialog({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
-              className="flex flex-col h-[340px]"
+              className="flex flex-col h-[400px]"
             >
               {/* Header */}
               <div className="flex items-center gap-3 px-6 py-4 border-b border-stone-100">
@@ -297,14 +297,23 @@ export default function FeedbackDialog({
                 </div>
               </div>
 
-              {/* Message Input */}
+              {/* Title + Message Input */}
               <div className="px-6 pt-4 pb-0 flex-1 flex flex-col">
+                <Input
+                  name="title"
+                  aria-label="Feedback title"
+                  autoComplete="off"
+                  placeholder={selectedCategory.titlePlaceholder}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="h-auto rounded-none border-0 border-b border-stone-200 bg-transparent px-0 pb-3 shadow-none font-semibold text-stone-900 placeholder-stone-400 focus-visible:ring-0 focus-visible:ring-offset-0"
+                  autoFocus
+                />
                 <Textarea
                   placeholder="Tell us more\u2026"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="flex-1 min-h-0 border-none bg-transparent px-0 pt-1 pb-0 focus:ring-0 resize-none placeholder-stone-400"
-                  autoFocus
+                  className="flex-1 min-h-0 border-none bg-transparent px-0 pt-3 pb-0 focus:ring-0 resize-none placeholder-stone-400"
                 />
               </div>
 
@@ -365,7 +374,7 @@ export default function FeedbackDialog({
 
                 <div className="flex items-center gap-3">
                   <span className="font-albert text-xs text-stone-400 hidden sm:block">
-                    ⌘+Enter to send
+                    ⌘+Return to send
                   </span>
                   <button
                     type="button"

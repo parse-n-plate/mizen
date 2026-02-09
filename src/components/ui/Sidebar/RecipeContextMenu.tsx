@@ -15,18 +15,9 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useToast } from '@/hooks/useToast';
+import { toast } from 'sonner';
 import type { ParsedRecipe } from '@/lib/storage';
 import {
   ExternalLink,
@@ -52,9 +43,8 @@ export default function RecipeContextMenu({
   recipe,
   onRecipeClick,
 }: RecipeContextMenuProps) {
-  const { isBookmarked, toggleBookmark, removeRecipe, isPinned, togglePin } = useParsedRecipes();
+  const { isBookmarked, toggleBookmark, removeRecipe, restoreRecipe, getRecipeById, isPinned, togglePin } = useParsedRecipes();
   const { showSuccess, showInfo } = useToast();
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const bookmarked = isBookmarked(recipe.id);
@@ -114,10 +104,22 @@ export default function RecipeContextMenu({
     }
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDelete = () => {
+    const savedRecipe = getRecipeById(recipe.id);
+    const wasBookmarked = isBookmarked(recipe.id);
     removeRecipe(recipe.id);
-    setDeleteDialogOpen(false);
-    showSuccess('Recipe deleted', `"${recipe.title}" was removed.`);
+    toast('Recipe deleted', {
+      description: `"${recipe.title}" was removed.`,
+      duration: 5000,
+      action: savedRecipe
+        ? {
+            label: 'Undo',
+            onClick: () => {
+              restoreRecipe(savedRecipe, wasBookmarked);
+            },
+          }
+        : undefined,
+    });
   };
 
   return (
@@ -180,7 +182,7 @@ export default function RecipeContextMenu({
 
                 <DropdownMenuItem
                   className="text-red-600 hover:!bg-red-50"
-                  onSelect={() => setDeleteDialogOpen(true)}
+                  onSelect={handleDelete}
                 >
                   <span>Delete</span>
                   <Trash2 className="w-4 h-4 ml-auto" />
@@ -229,7 +231,7 @@ export default function RecipeContextMenu({
 
           <ContextMenuItem
             variant="destructive"
-            onSelect={() => setDeleteDialogOpen(true)}
+            onSelect={handleDelete}
           >
             <span>Delete</span>
             <Trash2 className="w-4 h-4 ml-auto" />
@@ -237,25 +239,6 @@ export default function RecipeContextMenu({
         </ContextMenuContent>
       </ContextMenu>
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete recipe?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete &ldquo;{recipe.title}&rdquo;? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
