@@ -3,6 +3,7 @@ import React, {
   createContext,
   useContext,
   useState,
+  useEffect,
   ReactNode,
 } from 'react';
 import { updateRecipe as updateRecipeInStorage } from '@/lib/storage';
@@ -156,23 +157,25 @@ const normalizeInstructions = (
 };
 
 export function RecipeProvider({ children }: { children: ReactNode }) {
-  const [parsedRecipe, setParsedRecipe] = useState<ParsedRecipe | null>(() => {
-    if (typeof window === 'undefined') return null;
+  const [parsedRecipe, setParsedRecipe] = useState<ParsedRecipe | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load recipe from localStorage after hydration to avoid SSR mismatch
+  useEffect(() => {
     const saved = localStorage.getItem('parsedRecipe');
     if (saved) {
       try {
         const loaded = JSON.parse(saved) as ParsedRecipe;
-        return {
+        setParsedRecipe({
           ...loaded,
           instructions: normalizeInstructions(loaded.instructions),
-        };
+        });
       } catch (error) {
         console.error('Error loading recipe from localStorage:', error);
       }
     }
-    return null;
-  });
-  const [isLoaded] = useState(true);
+    setIsLoaded(true);
+  }, []);
 
   const setParsedRecipeWithStorage = (recipe: ParsedRecipe | null) => {
     if (recipe) {
