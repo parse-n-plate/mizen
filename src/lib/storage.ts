@@ -65,6 +65,8 @@ export type ParsedRecipe = {
   };
 };
 
+const isClient = typeof window !== 'undefined';
+
 const RECENT_RECIPES_KEY = 'recentRecipes';
 const BOOKMARKED_RECIPES_KEY = 'bookmarkedRecipes';
 const RECIPE_ORDER_KEY = 'recipeOrder';
@@ -77,6 +79,7 @@ const MAX_RECENT_RECIPES = 10;
  * Runs once on first access; a no-op when already migrated.
  */
 function migrateBookmarksIfNeeded(): void {
+  if (!isClient) return;
   try {
     const raw = localStorage.getItem(BOOKMARKED_RECIPES_KEY);
     if (!raw) return;
@@ -101,10 +104,6 @@ function migrateBookmarksIfNeeded(): void {
     const bookmarkIdSet = new Set(fullBookmarks.map((r) => r.id));
     const cleanedRecents = recents.filter((r) => !bookmarkIdSet.has(r.id));
     localStorage.setItem(RECENT_RECIPES_KEY, JSON.stringify(cleanedRecents));
-
-    console.log(
-      `[Storage] Migrated ${fullBookmarks.length} bookmarks from ID-only to full-recipe format`,
-    );
   } catch (error) {
     console.error('[Storage] Bookmark migration failed:', error);
   }
@@ -167,19 +166,14 @@ function normalizeInstructions(
  * @returns Array of recent recipes, sorted by most recent first
  */
 export function getRecentRecipes(): ParsedRecipe[] {
+  if (!isClient) return [];
   try {
     const stored = localStorage.getItem(RECENT_RECIPES_KEY);
-    if (!stored) {
-      console.log('[Storage] No recipes found in localStorage');
-      return [];
-    }
+    if (!stored) return [];
 
     const recipes = JSON.parse(stored) as ParsedRecipe[];
-    console.log(
-      `[Storage] 🍽️ Loading ${recipes.length} recipes from localStorage`,
-    );
 
-    const normalized = recipes
+    return recipes
       .map((recipe) => ({
         ...recipe,
         instructions: normalizeInstructions(recipe.instructions),
@@ -189,15 +183,6 @@ export function getRecentRecipes(): ParsedRecipe[] {
           new Date(b.lastAccessedAt || b.parsedAt).getTime() -
           new Date(a.lastAccessedAt || a.parsedAt).getTime(),
       );
-
-    // Log cuisine data for each recipe
-    normalized.forEach((recipe) => {
-      console.log(
-        `[Storage] Recipe "${recipe.title}": cuisine=${recipe.cuisine || 'none'}`,
-      );
-    });
-
-    return normalized;
   } catch (error) {
     console.error('Error reading recent recipes from localStorage:', error);
     return [];
@@ -214,11 +199,6 @@ export function addRecentRecipe(
   try {
     const recentRecipes = getRecentRecipes();
 
-    // Create new recipe with id and parsedAt
-    console.log(
-      '[Storage] Adding recipe to localStorage with cuisine:',
-      recipe.cuisine || 'none',
-    );
     const newRecipe: ParsedRecipe = {
       ...recipe,
       instructions: normalizeInstructions(recipe.instructions),
@@ -236,7 +216,6 @@ export function addRecentRecipe(
     );
 
     localStorage.setItem(RECENT_RECIPES_KEY, JSON.stringify(limitedRecipes));
-    console.log('[Storage] Recipe saved to localStorage successfully');
   } catch (error) {
     console.error('Error adding recent recipe to localStorage:', error);
   }
@@ -281,7 +260,6 @@ export function updateRecipe(id: string, updates: Partial<ParsedRecipe>): void {
         parsedAt: recentRecipes[recentIndex].parsedAt,
       };
       localStorage.setItem(RECENT_RECIPES_KEY, JSON.stringify(recentRecipes));
-      console.log('[Storage] Recipe updated in recents:', id);
       return;
     }
 
@@ -297,11 +275,8 @@ export function updateRecipe(id: string, updates: Partial<ParsedRecipe>): void {
         parsedAt: bookmarks[bookmarkIndex].parsedAt,
       };
       localStorage.setItem(BOOKMARKED_RECIPES_KEY, JSON.stringify(bookmarks));
-      console.log('[Storage] Recipe updated in bookmarks:', id);
       return;
     }
-
-    console.warn('[Storage] Recipe not found for update:', id);
   } catch (error) {
     console.error('Error updating recipe in localStorage:', error);
   }
@@ -381,6 +356,7 @@ function generateId(): string {
  * Handles migration from the legacy ID-only format on first call.
  */
 export function getBookmarkedRecipes(): ParsedRecipe[] {
+  if (!isClient) return [];
   try {
     migrateBookmarksIfNeeded();
 
@@ -435,8 +411,6 @@ export function addBookmark(id: string): void {
       BOOKMARKED_RECIPES_KEY,
       JSON.stringify([...bookmarks, recipe]),
     );
-
-    console.log(`[Storage] Bookmarked recipe: ${id}`);
   } catch (error) {
     console.error('Error adding bookmark to localStorage:', error);
   }
@@ -451,8 +425,6 @@ export function removeBookmark(id: string): void {
     const bookmarks = getBookmarkedRecipes();
     const filtered = bookmarks.filter((r) => r.id !== id);
     localStorage.setItem(BOOKMARKED_RECIPES_KEY, JSON.stringify(filtered));
-
-    console.log(`[Storage] Unbookmarked recipe: ${id}`);
   } catch (error) {
     console.error('Error removing bookmark from localStorage:', error);
   }
@@ -505,6 +477,7 @@ export function touchRecipeAccess(id: string): void {
  * Returns null if no custom order has been saved yet.
  */
 export function getRecipeOrder(): string[] | null {
+  if (!isClient) return null;
   try {
     const stored = localStorage.getItem(RECIPE_ORDER_KEY);
     if (!stored) return null;
