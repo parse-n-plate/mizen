@@ -13,7 +13,7 @@ export function CompactVariation({ recipe }: VariationProps) {
   // Ensure instructions are in the new format
   const steps: RecipeStep[] = isEnhancedInstructions(recipe.instructions) 
     ? recipe.instructions 
-    : migrateInstructionsToSteps(recipe.instructions as string[]);
+    : migrateInstructionsToSteps(recipe.instructions);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
@@ -34,4 +34,3 @@ export function CompactVariation({ recipe }: VariationProps) {
     </div>
   );
 }
-

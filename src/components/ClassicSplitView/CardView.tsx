@@ -1,6 +1,7 @@
 'use client';
 
 import { RecipeStep } from './types';
+import { IngredientInfo } from '@/utils/ingredientMatcher';
 import StepDisplay from './StepDisplay';
 import ContextPanel from './ContextPanel';
 import { motion } from 'framer-motion';
@@ -11,7 +12,7 @@ interface CardViewProps {
   onNext: () => void;
   onPrev: () => void;
   onBackToList: () => void;
-  allIngredients: any[];
+  allIngredients: IngredientInfo[];
 }
 
 export default function CardView({ steps, currentStep, onNext, onPrev, onBackToList, allIngredients }: CardViewProps) {

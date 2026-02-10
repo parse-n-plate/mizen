@@ -130,8 +130,6 @@ export function formatAmount(amount: number): string {
 
   // Check for common fractions
   // Round decimal to 3 places to check against map
-  const roundedDecimal = Math.round(decimal * 1000) / 1000;
-  
   // Try to find exact match first
   // Note: Unicode fractions are concatenated directly with no space for mixed numbers (e.g., "1½" not "1 ½")
   for (const [dec, frac] of Object.entries(DECIMAL_TO_FRACTION)) {

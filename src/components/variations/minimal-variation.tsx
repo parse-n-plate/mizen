@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ParsedRecipe, RecipeStep } from '@/contexts/RecipeContext';
 import { DirectionStepCard } from '@/components/ui/direction-step-card';
 import { isEnhancedInstructions, migrateInstructionsToSteps } from '@/utils/recipe-helpers';
@@ -17,9 +17,17 @@ export function MinimalVariation({ recipe }: VariationProps) {
   // Ensure instructions are in the new format
   const steps: RecipeStep[] = isEnhancedInstructions(recipe.instructions) 
     ? recipe.instructions 
-    : migrateInstructionsToSteps(recipe.instructions as string[]);
+    : migrateInstructionsToSteps(recipe.instructions);
 
   const [activeStepIndex, setActiveStepIndex] = useState(0);
+
+  const handleNext = useCallback(() => {
+    setActiveStepIndex(prev => (prev < steps.length - 1 ? prev + 1 : prev));
+  }, [steps.length]);
+
+  const handlePrev = useCallback(() => {
+    setActiveStepIndex(prev => (prev > 0 ? prev - 1 : prev));
+  }, []);
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -33,19 +41,7 @@ export function MinimalVariation({ recipe }: VariationProps) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeStepIndex, steps.length]);
-
-  const handleNext = () => {
-    if (activeStepIndex < steps.length - 1) {
-      setActiveStepIndex(prev => prev + 1);
-    }
-  };
-
-  const handlePrev = () => {
-    if (activeStepIndex > 0) {
-      setActiveStepIndex(prev => prev - 1);
-    }
-  };
+  }, [handleNext, handlePrev]);
 
   const handlers = useSwipeable({
     onSwipedLeft: handleNext,
@@ -141,4 +137,3 @@ export function MinimalVariation({ recipe }: VariationProps) {
     </div>
   );
 }
-

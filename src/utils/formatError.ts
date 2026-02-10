@@ -191,6 +191,7 @@ export const ERROR_DETAILS: Record<string, EnhancedErrorInfo> = {
       'Try submitting again in a few moments',
       'Make sure all required fields are filled',
     ],
+    hasSourcePage: false,
   },
   [ERROR_CODES.ERR_FEEDBACK_UPLOAD_FAILED]: {
     userMessage: 'Failed to upload screenshots',
@@ -200,6 +201,7 @@ export const ERROR_DETAILS: Record<string, EnhancedErrorInfo> = {
       'Check your internet connection',
       'You can submit without screenshots and add them later',
     ],
+    hasSourcePage: false,
   },
 };
 
@@ -207,7 +209,6 @@ export const ERROR_DETAILS: Record<string, EnhancedErrorInfo> = {
 export function getErrorDetails(code: string): EnhancedErrorInfo {
   return ERROR_DETAILS[code] || ERROR_DETAILS[ERROR_CODES.ERR_UNKNOWN];
 }
-
 
 
 

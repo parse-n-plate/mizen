@@ -86,7 +86,6 @@ export function IngredientsHeader({
     if (servings !== undefined) {
       setServingsInputValue(servings.toString());
     } else if (isMultiplierMode) {
-      // Default to x1 in multiplier mode
       setServingsInputValue('1');
     }
   }, [servings, isMultiplierMode]);
@@ -170,30 +169,27 @@ export function IngredientsHeader({
   };
 
   // Handle slider interaction - converts slider position to servings/multiplier
-  const updateServingsFromPosition = (clientX: number) => {
+  const updateServingsFromPosition = React.useCallback((clientX: number) => {
     if (!sliderRef.current || !onServingsChange) return;
-    
+
     const rect = sliderRef.current.getBoundingClientRect();
     const x = clientX - rect.left;
     const percent = Math.max(0, Math.min(100, (x / rect.width) * 100));
-    
+
     // Convert percentage to value using the calculated slider range
-    const sliderRange = sliderMax - sliderMin;
+    const range = sliderMax - sliderMin;
     let newValue: number;
-    
+
     if (isMultiplierMode) {
-      // In multiplier mode, snap to 0.5 increments (0.5, 1.0, 1.5, 2.0, etc.)
-      newValue = sliderMin + (percent / 100) * sliderRange;
-      newValue = Math.round(newValue * 2) / 2; // Round to nearest 0.5
+      newValue = sliderMin + (percent / 100) * range;
+      newValue = Math.round(newValue * 2) / 2;
     } else {
-      // In servings mode, round to integers
-      newValue = Math.round(sliderMin + (percent / 100) * sliderRange);
+      newValue = Math.round(sliderMin + (percent / 100) * range);
     }
-    
-    // Clamp to valid range
+
     const clampedValue = Math.max(sliderMin, Math.min(sliderMax, newValue));
     onServingsChange(clampedValue);
-  };
+  }, [onServingsChange, sliderMin, sliderMax, isMultiplierMode]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -235,7 +231,7 @@ export function IngredientsHeader({
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleEnd);
     };
-  }, [isDragging]);
+  }, [isDragging, updateServingsFromPosition]);
 
   return (
     <div className="ingredients-header-container">

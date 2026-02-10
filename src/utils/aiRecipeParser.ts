@@ -17,7 +17,7 @@ import { SUPPORTED_CUISINES, isSupportedCuisine } from '@/config/cuisineConfig';
 // Normalize any instruction array (strings or objects) into InstructionStep objects
 // Simplified: Trust AI-generated titles, use generic fallback only for legacy string inputs
 const normalizeInstructionSteps = (
-  instructions: any,
+  instructions: unknown,
 ): InstructionStep[] => {
   if (!Array.isArray(instructions)) return [];
 
@@ -25,7 +25,7 @@ const normalizeInstructionSteps = (
     (text || '').replace(/^[\s.:;,\-–—]+/, '').trim();
 
   return instructions
-    .map((item: any, index: number) => {
+    .map((item: unknown, index: number) => {
       // Handle string inputs (legacy format - AI should not return these)
       if (typeof item === 'string') {
         const detail = cleanLeading(item.trim());
@@ -39,22 +39,23 @@ const normalizeInstructionSteps = (
 
       // Handle object inputs (expected format from AI)
       if (item && typeof item === 'object') {
+        const obj = item as Record<string, unknown>;
         // Extract detail from various possible fields
         const rawDetail =
-          typeof item.detail === 'string'
-            ? item.detail
-            : typeof item.text === 'string'
-            ? item.text
-            : typeof item.name === 'string'
-            ? item.name
+          typeof obj.detail === 'string'
+            ? obj.detail
+            : typeof obj.text === 'string'
+            ? obj.text
+            : typeof obj.name === 'string'
+            ? obj.name
             : '';
 
         if (!rawDetail.trim()) return null;
 
         // Extract title if provided by AI
         const aiTitle =
-          typeof item.title === 'string' && item.title.trim()
-            ? item.title.trim()
+          typeof obj.title === 'string' && obj.title.trim()
+            ? obj.title.trim()
             : null;
 
         // Use AI-provided title, or fallback to generic if missing
@@ -64,9 +65,9 @@ const normalizeInstructionSteps = (
         return {
           title,
           detail,
-          timeMinutes: item.timeMinutes,
-          ingredients: item.ingredients,
-          tips: item.tips,
+          timeMinutes: obj.timeMinutes as number | undefined,
+          ingredients: obj.ingredients as string[] | undefined,
+          tips: obj.tips as string | undefined,
         };
       }
 
@@ -115,6 +116,9 @@ export interface ParsedRecipe {
   sourceUrl?: string;
   summary?: string; // AI-generated recipe summary (1-2 sentences)
   servings?: number; // Number of servings/yield
+  prepTimeMinutes?: number;
+  cookTimeMinutes?: number;
+  totalTimeMinutes?: number;
   ingredients: IngredientGroup[];
   instructions: InstructionStep[];
   cuisine?: string[]; // Cuisine types/tags (e.g., ["Italian", "Mediterranean"])
@@ -137,7 +141,7 @@ export interface ParserResult {
   success: boolean;
   data?: ParsedRecipe;
   error?: string;
-  method?: 'json-ld' | 'ai' | 'none';
+  method?: 'json-ld' | 'ai' | 'json-ld+ai' | 'none';
   retryAfter?: number; // Timestamp (milliseconds) when to retry after rate limit
 }
 
@@ -191,7 +195,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             isRecipeType ||
             (item['@graph'] &&
               Array.isArray(item['@graph']) &&
-              item['@graph'].some((g: any) => {
+              item['@graph'].some((g: Record<string, unknown>) => {
                 const gType = g['@type'];
                 return gType === 'Recipe' || (Array.isArray(gType) && gType.includes('Recipe'));
               }))
@@ -199,7 +203,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             // If it's in @graph, find the Recipe object
             const recipe = isRecipeType
               ? item
-              : item['@graph'].find((g: any) => {
+              : item['@graph'].find((g: Record<string, unknown>) => {
                   const gType = g['@type'];
                   return gType === 'Recipe' || (Array.isArray(gType) && gType.includes('Recipe'));
                 });
@@ -218,7 +222,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
               recipe.recipeIngredient
             )
               ? recipe.recipeIngredient.filter(
-                  (ing: any) => typeof ing === 'string' && ing.trim()
+                  (ing: unknown) => typeof ing === 'string' && ing.trim()
                 )
               : [];
 
@@ -262,7 +266,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             // Handle different instruction formats
             if (Array.isArray(recipe.recipeInstructions)) {
               instructions = recipe.recipeInstructions
-                .map((inst: any) => {
+                .map((inst: string | Record<string, unknown>) => {
                   // Handle string format
                   if (typeof inst === 'string') return normalizeDoubleParens(inst.trim());
 
@@ -293,9 +297,9 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
                   ) {
                     return normalizeDoubleParens(
                       inst.itemListElement
-                        .map((item: any) => {
-                          if (item.text) return item.text.trim();
-                          if (item.name) return item.name.trim();
+                        .map((item: Record<string, unknown>) => {
+                          if (typeof item.text === 'string') return item.text.trim();
+                          if (typeof item.name === 'string') return item.name.trim();
                           return '';
                         })
                         .filter((t: string) => t.length > 0)
@@ -455,7 +459,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             }
           }
         }
-      } catch (e) {
+      } catch {
         // Continue to next script tag if this one fails
         continue;
       }
@@ -1208,11 +1212,11 @@ ABSOLUTE REQUIREMENTS:
 
       // Ensure ingredients have the correct structure
       const validIngredients = parsedData.ingredients.every(
-        (group: any) =>
+        (group: Record<string, unknown>) =>
           group.groupName &&
           Array.isArray(group.ingredients) &&
-          group.ingredients.every(
-            (ing: any) =>
+          (group.ingredients as Record<string, unknown>[]).every(
+            (ing: Record<string, unknown>) =>
               typeof ing.amount === 'string' &&
               typeof ing.units === 'string' &&
               typeof ing.ingredient === 'string'
@@ -1221,7 +1225,7 @@ ABSOLUTE REQUIREMENTS:
 
       // Validate that AI returned objects, not strings
       const hasStringInstructions = parsedData.instructions.some(
-        (inst: any) => typeof inst === 'string'
+        (inst: unknown) => typeof inst === 'string'
       );
       
       if (hasStringInstructions) {
@@ -1236,7 +1240,7 @@ ABSOLUTE REQUIREMENTS:
 
       if (validIngredients && normalizedInstructions.length > 0) {
         console.log(
-          `[AI Parser] Successfully parsed recipe: "${parsedData.title}" with ${parsedData.ingredients.reduce((sum: number, g: any) => sum + g.ingredients.length, 0)} ingredients and ${normalizedInstructions.length} instructions`
+          `[AI Parser] Successfully parsed recipe: "${parsedData.title}" with ${parsedData.ingredients.reduce((sum: number, g: Record<string, unknown>) => sum + (Array.isArray(g.ingredients) ? g.ingredients.length : 0), 0)} ingredients and ${normalizedInstructions.length} instructions`
         );
         // Return recipe with author, servings, and cuisine if available
         const recipe: ParsedRecipe = {
@@ -1270,8 +1274,9 @@ ABSOLUTE REQUIREMENTS:
         
         // Extract storage guidance if provided by AI
         if (parsedData.storageGuide && typeof parsedData.storageGuide === 'string') {
-          recipe.storageGuide = parsedData.storageGuide.trim();
-          console.log('[AI Parser] 📦 Storage guide extracted:', recipe.storageGuide.substring(0, 50) + '...');
+          const storageGuide = parsedData.storageGuide.trim();
+          recipe.storageGuide = storageGuide;
+          console.log('[AI Parser] 📦 Storage guide extracted:', storageGuide.substring(0, 50) + '...');
         }
         
         // Extract shelf life if provided by AI
@@ -1285,8 +1290,9 @@ ABSOLUTE REQUIREMENTS:
         
         // Extract plating notes if provided by AI
         if (parsedData.platingNotes && typeof parsedData.platingNotes === 'string') {
-          recipe.platingNotes = parsedData.platingNotes.trim();
-          console.log('[AI Parser] 🍽️ Plating notes extracted:', recipe.platingNotes.substring(0, 50) + '...');
+          const platingNotes = parsedData.platingNotes.trim();
+          recipe.platingNotes = platingNotes;
+          console.log('[AI Parser] 🍽️ Plating notes extracted:', platingNotes.substring(0, 50) + '...');
         }
         
         // Extract serving vessel if provided by AI
@@ -1326,8 +1332,8 @@ ABSOLUTE REQUIREMENTS:
         if (parsedData.cuisine) {
           if (Array.isArray(parsedData.cuisine)) {
             // Filter out empty strings and ensure all items are strings
-            const detectedCuisines = parsedData.cuisine
-              .filter((c: any) => typeof c === 'string' && c.trim().length > 0)
+            const detectedCuisines: string[] = parsedData.cuisine
+              .filter((c: unknown) => typeof c === 'string' && c.trim().length > 0)
               .map((c: string) => c.trim());
             
             console.log('[AI Parser] Detected cuisines (array):', detectedCuisines);
@@ -1363,7 +1369,7 @@ ABSOLUTE REQUIREMENTS:
                 title: recipe.title,
                 detectedCuisines,
                 validCuisines,
-                unsupportedCuisines: detectedCuisines.filter(c => !normalizeCuisineName(c)),
+                unsupportedCuisines: detectedCuisines.filter((c: string) => !normalizeCuisineName(c)),
                 supportedCuisines: SUPPORTED_CUISINES,
               });
             } else if (detectedCuisines.length > 0) {
@@ -1435,24 +1441,25 @@ ABSOLUTE REQUIREMENTS:
 
     console.error('[AI Parser] Invalid recipe structure from AI:', parsedData);
     return null;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[AI Parser] Error:', error);
-    
+    const err = error as { status?: number; message?: string; headers?: Record<string, string>; response?: { status?: number; headers?: Record<string, string> } };
+
     // Check for rate limit errors
-    if (error?.status === 429 || 
-        error?.message?.includes('rate limit') || 
-        error?.message?.includes('quota') ||
-        error?.response?.status === 429) {
+    if (err?.status === 429 ||
+        err?.message?.includes('rate limit') ||
+        err?.message?.includes('quota') ||
+        err?.response?.status === 429) {
       console.error('[AI Parser] Rate limit detected');
-      
+
       // Extract retry-after header if available
       // Groq SDK may return headers in error.headers or error.response.headers
-      const retryAfterHeader = 
-        error?.headers?.['retry-after'] || 
-        error?.headers?.['Retry-After'] ||
-        error?.response?.headers?.['retry-after'] ||
-        error?.response?.headers?.['Retry-After'];
-      
+      const retryAfterHeader =
+        err?.headers?.['retry-after'] ||
+        err?.headers?.['Retry-After'] ||
+        err?.response?.headers?.['retry-after'] ||
+        err?.response?.headers?.['Retry-After'];
+
       // Calculate retry timestamp (retry-after is typically in seconds)
       let retryAfter: number | undefined;
       if (retryAfterHeader) {
@@ -1462,20 +1469,20 @@ ABSOLUTE REQUIREMENTS:
           retryAfter = Date.now() + (retrySeconds + 5) * 1000;
         }
       }
-      
+
       // Create error with retry-after information
-      const rateLimitError: any = new Error('ERR_RATE_LIMIT');
+      const rateLimitError = new Error('ERR_RATE_LIMIT') as Error & { retryAfter?: number };
       if (retryAfter) {
         rateLimitError.retryAfter = retryAfter;
       }
       throw rateLimitError;
     }
-    
+
     // Check for service unavailable
-    if (error?.status === 503 || 
-        error?.status === 502 ||
-        error?.message?.includes('service unavailable') ||
-        error?.message?.includes('temporarily unavailable')) {
+    if (err?.status === 503 ||
+        err?.status === 502 ||
+        err?.message?.includes('service unavailable') ||
+        err?.message?.includes('temporarily unavailable')) {
       console.error('[AI Parser] Service unavailable');
       throw new Error('ERR_API_UNAVAILABLE');
     }
@@ -1650,18 +1657,19 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
       error: 'Could not extract recipe data using JSON-LD or AI parsing',
       method: 'none',
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error during parsing';
     console.error('[Recipe Parser] Error:', errorMessage);
-    
+    const err = error as { status?: number; message?: string; retryAfter?: number };
+
     // Check for rate limit errors
-    if (errorMessage === 'ERR_RATE_LIMIT' || 
-        error?.status === 429 || 
-        error?.message?.includes('rate limit') || 
-        error?.message?.includes('quota')) {
+    if (errorMessage === 'ERR_RATE_LIMIT' ||
+        err?.status === 429 ||
+        err?.message?.includes('rate limit') ||
+        err?.message?.includes('quota')) {
       // Pass through retry-after timestamp if available
-      const retryAfter = error?.retryAfter;
+      const retryAfter = err?.retryAfter;
       return {
         success: false,
         error: 'ERR_RATE_LIMIT',
@@ -1669,19 +1677,19 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
         retryAfter, // Include retry timestamp if available
       };
     }
-    
+
     // Check for service unavailable
     if (errorMessage === 'ERR_API_UNAVAILABLE' ||
-        error?.status === 503 || 
-        error?.status === 502 ||
-        error?.message?.includes('service unavailable')) {
+        err?.status === 503 ||
+        err?.status === 502 ||
+        err?.message?.includes('service unavailable')) {
       return {
         success: false,
         error: 'ERR_API_UNAVAILABLE',
         method: 'none',
       };
     }
-    
+
     return {
       success: false,
       error: errorMessage,
@@ -1920,11 +1928,11 @@ Start your response with { and end with }`,
     ) {
       // Ensure ingredients have the correct structure
       const validIngredients = parsedData.ingredients.every(
-        (group: any) =>
+        (group: Record<string, unknown>) =>
           group.groupName &&
           Array.isArray(group.ingredients) &&
-          group.ingredients.every(
-            (ing: any) =>
+          (group.ingredients as Record<string, unknown>[]).every(
+            (ing: Record<string, unknown>) =>
               typeof ing.amount === 'string' &&
               typeof ing.units === 'string' &&
               typeof ing.ingredient === 'string'
@@ -1937,7 +1945,7 @@ Start your response with { and end with }`,
 
       if (validIngredients && normalizedInstructions.length > 0) {
         console.log(
-          `[Image Parser] Successfully parsed recipe: "${parsedData.title}" with ${parsedData.ingredients.reduce((sum: number, g: any) => sum + g.ingredients.length, 0)} ingredients and ${normalizedInstructions.length} instructions`
+          `[Image Parser] Successfully parsed recipe: "${parsedData.title}" with ${parsedData.ingredients.reduce((sum: number, g: Record<string, unknown>) => sum + (Array.isArray(g.ingredients) ? g.ingredients.length : 0), 0)} ingredients and ${normalizedInstructions.length} instructions`
         );
         const recipe: ParsedRecipe = {
           ...parsedData,
@@ -1962,29 +1970,30 @@ Start your response with { and end with }`,
       error: 'Could not extract valid recipe structure from image',
       method: 'none',
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error during image parsing';
     console.error('[Image Parser] Error:', errorMessage);
     console.error('[Image Parser] Full error object:', error);
-    
+    const err = error as { status?: number; message?: string; headers?: Record<string, string>; response?: { status?: number; headers?: Record<string, string> }; retryAfter?: number };
+
     // If it's a Groq API error, include more details
     if (error && typeof error === 'object' && 'response' in error) {
-      console.error('[Image Parser] API error response:', JSON.stringify((error as any).response, null, 2));
+      console.error('[Image Parser] API error response:', JSON.stringify(err.response, null, 2));
     }
-    
+
     // Check for rate limit errors
-    if (error?.status === 429 || 
-        error?.message?.includes('rate limit') || 
-        error?.message?.includes('quota') ||
-        error?.response?.status === 429) {
+    if (err?.status === 429 ||
+        err?.message?.includes('rate limit') ||
+        err?.message?.includes('quota') ||
+        err?.response?.status === 429) {
       // Extract retry-after header if available
-      const retryAfterHeader = 
-        error?.headers?.['retry-after'] || 
-        error?.headers?.['Retry-After'] ||
-        error?.response?.headers?.['retry-after'] ||
-        error?.response?.headers?.['Retry-After'];
-      
+      const retryAfterHeader =
+        err?.headers?.['retry-after'] ||
+        err?.headers?.['Retry-After'] ||
+        err?.response?.headers?.['retry-after'] ||
+        err?.response?.headers?.['Retry-After'];
+
       // Calculate retry timestamp (retry-after is typically in seconds)
       let retryAfter: number | undefined;
       if (retryAfterHeader) {
@@ -1994,7 +2003,7 @@ Start your response with { and end with }`,
           retryAfter = Date.now() + (retrySeconds + 5) * 1000;
         }
       }
-      
+
       return {
         success: false,
         error: 'ERR_RATE_LIMIT',
@@ -2002,19 +2011,19 @@ Start your response with { and end with }`,
         retryAfter, // Include retry timestamp if available
       };
     }
-    
+
     // Check for service unavailable
-    if (error?.status === 503 || 
-        error?.status === 502 ||
-        error?.message?.includes('service unavailable') ||
-        error?.message?.includes('temporarily unavailable')) {
+    if (err?.status === 503 ||
+        err?.status === 502 ||
+        err?.message?.includes('service unavailable') ||
+        err?.message?.includes('temporarily unavailable')) {
       return {
         success: false,
         error: 'ERR_API_UNAVAILABLE',
         method: 'none',
       };
     }
-    
+
     return {
       success: false,
       error: errorMessage,
@@ -2022,5 +2031,3 @@ Start your response with { and end with }`,
     };
   }
 }
-
-

@@ -150,7 +150,7 @@ export function isUrl(text: string): boolean {
  * - "https://example.com" → "https://example.com" (unchanged)
  */
 export function normalizeUrl(input: string): string {
-  let url = input.trim();
+  const url = input.trim();
   
   // If already has protocol, return as-is
   if (url.startsWith('http://') || url.startsWith('https://')) {

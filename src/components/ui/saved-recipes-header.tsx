@@ -16,7 +16,6 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
 
 export type SortOption = 'date-newest' | 'date-oldest' | 'name-asc' | 'name-desc' | 'cuisine';
 export type ViewMode = 'grid' | 'list';

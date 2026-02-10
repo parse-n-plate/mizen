@@ -24,11 +24,17 @@ export function StepTimer({
   const [timeLeft, setTimeLeft] = useState(durationMinutes * 60);
   const [isComplete, setIsComplete] = useState(false);
 
-  // Update time left based on active timer
+  // Reset state when timer becomes inactive
   useEffect(() => {
     if (!activeTimer) {
       setTimeLeft(durationMinutes * 60);
       setIsComplete(false);
+    }
+  }, [activeTimer, durationMinutes]);
+
+  // Update time left via interval when timer is active
+  useEffect(() => {
+    if (!activeTimer) {
       return;
     }
 
@@ -169,4 +175,3 @@ export function StepTimer({
     </div>
   );
 }
-

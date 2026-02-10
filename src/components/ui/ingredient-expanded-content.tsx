@@ -21,7 +21,7 @@ interface IngredientExpandedContentProps {
 }
 
 export function IngredientExpandedContent({
-  ingredientName,
+  ingredientName: _ingredientName,
   linkedSteps,
   stepTitlesMap,
   onStepClick,

@@ -37,7 +37,7 @@ export default function RecipeQuickViewModal({
   onClose,
 }: RecipeQuickViewModalProps) {
   const router = useRouter();
-  const { getRecipeById, isBookmarked, toggleBookmark } = useParsedRecipes();
+  const { getRecipeById: _getRecipeById, isBookmarked, toggleBookmark } = useParsedRecipes();
   const { setParsedRecipe } = useRecipe();
   const [copiedRecipe, setCopiedRecipe] = useState(false);
 
@@ -80,8 +80,8 @@ export default function RecipeQuickViewModal({
     setParsedRecipe({
       id: recipe.id,
       title: recipe.title,
-      ingredients: recipe.ingredients,
-      instructions: recipe.instructions,
+      ingredients: recipe.ingredients ?? [],
+      instructions: recipe.instructions ?? [],
       author: recipe.author,
       sourceUrl: recipe.sourceUrl || recipe.url,
       summary: recipe.description || recipe.summary,
@@ -121,11 +121,11 @@ export default function RecipeQuickViewModal({
     
     if (recipe.ingredients && recipe.ingredients.length > 0) {
       text += '\n--- INGREDIENTS ---\n\n';
-      recipe.ingredients.forEach((group: any) => {
+      recipe.ingredients.forEach((group: { groupName?: string; ingredients: { amount?: string; units?: string; ingredient: string }[] }) => {
         if (group.groupName && group.groupName !== 'Main') {
           text += `${group.groupName}:\n`;
         }
-        group.ingredients.forEach((ing: any) => {
+        group.ingredients.forEach((ing) => {
           const parts = [];
           if (ing.amount) parts.push(ing.amount);
           if (ing.units) parts.push(ing.units);
@@ -138,11 +138,11 @@ export default function RecipeQuickViewModal({
     
     if (recipe.instructions && recipe.instructions.length > 0) {
       text += '--- INSTRUCTIONS ---\n\n';
-      recipe.instructions.forEach((instruction: any, index: number) => {
+      recipe.instructions.forEach((instruction: string | Record<string, unknown>, index: number) => {
         if (typeof instruction === 'string') {
           text += `${index + 1}. ${instruction}\n\n`;
         } else if (typeof instruction === 'object' && instruction !== null) {
-          const inst = instruction as any;
+          const inst = instruction as Record<string, unknown>;
           const title = inst.title || `Step ${index + 1}`;
           const detail = inst.detail || inst.text || '';
           text += `${index + 1}. ${title}\n   ${detail}\n\n`;
@@ -283,7 +283,7 @@ export default function RecipeQuickViewModal({
                 Ingredients Preview
               </h3>
               <ul className="space-y-1.5">
-                {previewIngredients.map((ingredient: any, index: number) => (
+                {previewIngredients.map((ingredient: { amount?: string; units?: string; ingredient: string }, index: number) => (
                   <li key={index} className="font-albert text-[14px] text-stone-600 flex items-start gap-2">
                     <span className="text-stone-300 mt-0.5">•</span>
                     <span>

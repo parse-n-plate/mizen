@@ -226,7 +226,7 @@ export default function NavbarSearch() {
       // Step 4: Add to recent recipes
       const recipeSummary = Array.isArray(response.instructions)
         ? response.instructions
-            .map((inst: any) => (typeof inst === 'string' ? inst : inst.detail))
+            .map((inst: string | { detail?: string }) => (typeof inst === 'string' ? inst : inst.detail))
             .join(' ')
             .slice(0, 140)
         : response.instructions.slice(0, 140);

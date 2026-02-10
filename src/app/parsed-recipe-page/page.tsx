@@ -2,10 +2,10 @@
 import { useRecipe } from '@/contexts/RecipeContext';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useMemo, use, useRef } from 'react';
+import { useEffect, useState, useMemo, use } from 'react';
 import RecipeSkeleton from '@/components/ui/recipe-skeleton';
 import * as Tabs from '@radix-ui/react-tabs';
-import { ArrowLeft, Copy, Check, Clock } from 'lucide-react';
+import { ArrowLeft, Copy, Check } from 'lucide-react';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import Settings from '@solar-icons/react/csr/settings/Settings';
 import LinkIcon from '@solar-icons/react/csr/text-formatting/Link';
@@ -70,8 +70,8 @@ const formatMinutesAsHours = (minutes: number): string => {
   return `${hours}h`;
 };
 
-// Helper function to format time display
-const formatTimeDisplay = (
+// Helper function to format time display (currently unused but kept for potential future use)
+const _formatTimeDisplay = (
   prepTime?: number,
   cookTime?: number,
   totalTime?: number,
@@ -124,9 +124,9 @@ const extractStepTitle = (text: string): string => {
   return trimmed;
 };
 
-// Helper function to format ingredient
+// Helper function to format ingredient (currently unused but kept for potential future use)
 // Converts text fractions to Unicode symbols (1/2 → ½)
-const formatIngredient = (
+const _formatIngredient = (
   ingredient: string | { amount?: string; units?: string; ingredient: string } | null | undefined,
 ): string => {
   // Handle null or undefined
@@ -188,12 +188,12 @@ export default function ParsedRecipePage({
 }: {
   params?: Promise<Record<string, string | string[]>>;
   searchParams?: Promise<Record<string, string | string[]>>;
-} = {} as any) {
+} = {} as { params?: Promise<Record<string, string | string[]>>; searchParams?: Promise<Record<string, string | string[]>> }) {
   // For Next.js 15: Unwrap params/searchParams if provided to prevent enumeration warnings
   // This prevents React DevTools/error serialization from enumerating these props
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+   
   if (params) use(params);
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+   
   if (searchParams) use(searchParams);
   
   const { parsedRecipe, setParsedRecipe, isLoaded } = useRecipe();
@@ -201,18 +201,10 @@ export default function ParsedRecipePage({
   const router = useRouter();
   const { showMobileNav } = useSidebar();
   const isMobileViewport = useIsMobile();
-  // #region agent log
-  if (parsedRecipe) {
-    fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'parsed-recipe-page/page.tsx:155',message:'parsedRecipe from context',data:{hasServings:'servings' in parsedRecipe,servings:parsedRecipe.servings,servingsType:typeof parsedRecipe.servings,servingsValue:parsedRecipe.servings,hasAuthor:'author' in parsedRecipe,author:parsedRecipe.author,keys:Object.keys(parsedRecipe)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'C'})}).catch(()=>{});
-  }
-  // #endregion
   // Store original servings from recipe (never changes) - use useMemo to preserve it
   const originalServings = useMemo(() => parsedRecipe?.servings, [parsedRecipe?.servings]);
   
   const [servings, setServings] = useState<number | undefined>(parsedRecipe?.servings);
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'parsed-recipe-page/page.tsx:158',message:'servings state initialized',data:{servings,servingsType:typeof servings,parsedRecipeServings:parsedRecipe?.servings,parsedRecipeServingsType:typeof parsedRecipe?.servings,parsedRecipeExists:!!parsedRecipe},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'D'})}).catch(()=>{});
-  // #endregion
   const [multiplier, setMultiplier] = useState<string>('1x');
   const [activeTab, setActiveTab] = useState<string>('prep');
   const [copied, setCopied] = useState(false);
@@ -240,14 +232,14 @@ export default function ParsedRecipePage({
 
   // Find the recipe ID by matching sourceUrl across recents and bookmarks
   // This is needed because RecipeContext's parsedRecipe doesn't have an ID field
-  const recipeId = useMemo(() => {
+  const recipeId = (() => {
     if (!parsedRecipe?.sourceUrl) return null;
     const allRecipes = [...recentRecipes, ...getBookmarkedRecipes()];
     const matchingRecipe = allRecipes.find(
       (recipe) => recipe.sourceUrl === parsedRecipe.sourceUrl || recipe.url === parsedRecipe.sourceUrl
     );
     return matchingRecipe?.id || null;
-  }, [parsedRecipe?.sourceUrl, recentRecipes, getBookmarkedRecipes]);
+  })();
 
   // Check if current recipe is bookmarked
   const isBookmarkedState = recipeId ? isBookmarked(recipeId) : false;
@@ -401,8 +393,8 @@ export default function ParsedRecipePage({
         const { checked, collapsed } = JSON.parse(saved);
         if (checked) setCheckedIngredients(checked);
         if (collapsed) setCollapsedGroups(collapsed);
-      } catch (e) {
-        console.error('Error loading recipe progress:', e);
+      } catch {
+        console.error('Error loading recipe progress');
       }
     }
   }, [recipeKey]);
@@ -424,8 +416,8 @@ export default function ParsedRecipePage({
         if (savedUnitSystem) setUnitSystem(savedUnitSystem);
         if (savedCustomMultiplier !== undefined) setCustomMultiplier(savedCustomMultiplier);
         if (savedOverrides) setIngredientScaleOverrides(savedOverrides);
-      } catch (e) {
-        console.error('Error loading scale settings:', e);
+      } catch {
+        console.error('Error loading scale settings');
       }
     }
   }, [scaleSettingsKey]);
@@ -498,8 +490,8 @@ export default function ParsedRecipePage({
 
   // Handle navigation to ingredients from the Cook tab
   useEffect(() => {
-    const handleNavigateToIngredient = (event: any) => {
-      const { name } = event.detail;
+    const handleNavigateToIngredient = (event: Event) => {
+      const { name } = (event as CustomEvent<{ name: string }>).detail;
       setActiveTab('prep');
       
       // Wait for tab switch animation to complete
@@ -612,9 +604,8 @@ export default function ParsedRecipePage({
         if (typeof instruction === 'string') {
           text += `${index + 1}. ${convertTextFractionsToSymbols(instruction)}\n\n`;
         } else if (typeof instruction === 'object' && instruction !== null) {
-          const inst = instruction as any;
-          const title = convertTextFractionsToSymbols(inst.title || inst.step || `Step ${index + 1}`);
-          const detail = convertTextFractionsToSymbols(inst.detail || inst.text || '');
+          const title = convertTextFractionsToSymbols(instruction.title || `Step ${index + 1}`);
+          const detail = convertTextFractionsToSymbols(instruction.detail || '');
           text += `${index + 1}. ${title}\n   ${detail}\n\n`;
         }
       });
@@ -671,20 +662,18 @@ export default function ParsedRecipePage({
 
   // Initialize servings from recipe when loaded
   useEffect(() => {
-    // Only set servings if they exist in the parsed recipe
-    // Don't default to 4 - if servings aren't found, leave as undefined
     setServings(parsedRecipe?.servings);
   }, [parsedRecipe]);
 
   // Calculate scaled ingredients
-  const scaledIngredients = useMemo(() => {
+  const scaledIngredients = (() => {
     if (!parsedRecipe || !parsedRecipe.ingredients) return [];
 
     // If servings are unknown, return ingredients unscaled (but still apply unit conversion)
     if (!parsedRecipe.servings || !servings) {
       const unscaled = parsedRecipe.ingredients;
       // Apply unit conversion even if not scaling
-      return convertIngredientGroupUnits(unscaled as any, unitSystem);
+      return convertIngredientGroupUnits(unscaled as Array<{ groupName: string; ingredients: (string | { amount?: string; units?: string; ingredient: string })[] }>, unitSystem);
     }
 
     // Get multiplier value (1x = 1, 2x = 2, 3x = 3)
@@ -696,19 +685,16 @@ export default function ParsedRecipePage({
     // Cast the ingredients to the expected type for the scaler
     // The context type is slightly different but compatible structure-wise
     let scaled = scaleIngredients(
-      parsedRecipe.ingredients as any,
+      parsedRecipe.ingredients as Array<{ groupName: string; ingredients: (string | { amount?: string; units?: string; ingredient: string })[] }>,
       parsedRecipe.servings,
       effectiveServings
     );
 
-    // Apply ingredient-specific overrides (not yet implemented in this iteration)
-    // TODO: Apply ingredientScaleOverrides here if needed
-
     // Apply unit conversion
-    scaled = convertIngredientGroupUnits(scaled as any, unitSystem);
+    scaled = convertIngredientGroupUnits(scaled as Array<{ groupName: string; ingredients: (string | { amount?: string; units?: string; ingredient: string })[] }>, unitSystem);
 
     return scaled;
-  }, [parsedRecipe, servings, multiplier, customMultiplier, unitSystem, ingredientScaleOverrides]);
+  })();
 
   // Filter ingredients based on search query (searches name, amount, and units)
   const filteredIngredients = useMemo(() => {
@@ -755,13 +741,13 @@ export default function ParsedRecipePage({
     setServings(newServings);
   };
 
-  // Multiplier change handler - passed to ServingsControls component
-  const handleMultiplierChange = (newMultiplier: string) => {
+  // Multiplier change handler - passed to ServingsControls component (currently unused but kept for potential future use)
+  const _handleMultiplierChange = (newMultiplier: string) => {
     setMultiplier(newMultiplier);
   };
 
-  // Reset to original servings handler - resets both servings and multiplier
-  const handleResetServings = () => {
+  // Reset to original servings handler - resets both servings and multiplier (currently unused but kept for potential future use)
+  const _handleResetServings = () => {
     if (originalServings !== undefined) {
       setServings(originalServings);
       setMultiplier('1x');
@@ -807,7 +793,7 @@ export default function ParsedRecipePage({
         }
         return null;
       })
-      .filter((s): s is any => s !== null);
+      .filter((s): s is NonNullable<typeof s> => s !== null);
   }, [parsedRecipe]);
 
   // Memoize flattened ingredients for matching

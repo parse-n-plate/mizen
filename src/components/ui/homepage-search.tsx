@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Link, Upload, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
@@ -32,7 +32,6 @@ import LoadingAnimation from '@/components/ui/loading-animation';
 export default function HomepageSearch() {
   const [searchValue, setSearchValue] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
@@ -73,20 +72,18 @@ export default function HomepageSearch() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Create and cleanup image preview URL
-  useEffect(() => {
-    if (selectedImage) {
-      const objectUrl = URL.createObjectURL(selectedImage);
-      setImagePreviewUrl(objectUrl);
-      
-      // Cleanup function to revoke the object URL
-      return () => {
-        URL.revokeObjectURL(objectUrl);
-      };
-    } else {
-      setImagePreviewUrl(null);
-    }
+  // Derive image preview URL from selectedImage
+  const imagePreviewUrl = useMemo(() => {
+    if (!selectedImage) return null;
+    return URL.createObjectURL(selectedImage);
   }, [selectedImage]);
+
+  // Cleanup object URLs when they change or unmount
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
+    };
+  }, [imagePreviewUrl]);
 
   // Handle file selection with validation
   const handleFileSelect = (file: File) => {
@@ -208,7 +205,7 @@ export default function HomepageSearch() {
       // Add to recent recipes
       const recipeSummary = Array.isArray(response.instructions)
         ? response.instructions
-            .map((inst: any) => (typeof inst === 'string' ? inst : inst.detail))
+            .map((inst: string | { detail?: string }) => (typeof inst === 'string' ? inst : inst.detail))
             .join(' ')
             .slice(0, 140)
         : response.instructions.slice(0, 140);
@@ -257,8 +254,7 @@ export default function HomepageSearch() {
   }, [selectedImage, setParsedRecipe, addRecipe, showError, router]);
 
   // Handle URL parsing
-  const handleParse = useCallback(
-    async (url: string) => {
+  const handleParse = async (url: string) => {
       if (!url.trim()) return;
 
       try {
@@ -371,7 +367,7 @@ export default function HomepageSearch() {
         // Add to recent recipes
         const recipeSummary = Array.isArray(response.instructions)
           ? response.instructions
-              .map((inst: any) => (typeof inst === 'string' ? inst : inst.detail))
+              .map((inst: string | { detail?: string }) => (typeof inst === 'string' ? inst : inst.detail))
               .join(' ')
               .slice(0, 140)
           : response.instructions.slice(0, 140);
@@ -420,9 +416,7 @@ export default function HomepageSearch() {
         setLoadingProgress(0);
         setLoadingPhase(undefined);
       }
-    },
-    [setParsedRecipe, addRecipe, showError, showInfo, router],
-  );
+  };
 
   // Handle query params from SearchCommandModal (e.g. ?action=upload-image or ?url=...)
   useEffect(() => {
@@ -436,8 +430,8 @@ export default function HomepageSearch() {
       }, 200);
     } else if (urlParam) {
       router.replace('/', { scroll: false });
-      setSearchValue(urlParam);
       setTimeout(() => {
+        setSearchValue(urlParam);
         handleParse(urlParam);
       }, 200);
     }

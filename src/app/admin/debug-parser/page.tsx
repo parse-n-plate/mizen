@@ -217,12 +217,12 @@ export default function DebugParserPage({
 }: {
   params?: Promise<Record<string, string | string[]>>;
   searchParams?: Promise<Record<string, string | string[]>>;
-} = {} as any) {
+} = {} as { params?: Promise<Record<string, string | string[]>>; searchParams?: Promise<Record<string, string | string[]>> }) {
   // For Next.js 15: Unwrap params/searchParams if provided to prevent enumeration warnings
   // This prevents React DevTools/error serialization from enumerating these props
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+   
   if (params) use(params);
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+   
   if (searchParams) use(searchParams);
   
   const [url, setUrl] = useState('');
@@ -963,7 +963,7 @@ export default function DebugParserPage({
                             </h4>
                             {Array.isArray(data.instructions) && data.instructions.length > 0 ? (
                               <ol className="list-decimal ml-6 text-xs space-y-3">
-                                {data.instructions.map((inst: any, idx: number) => {
+                                {data.instructions.map((inst: string | { title?: string; detail?: string; text?: string; timeMinutes?: number; ingredients?: string[]; tips?: string }, idx: number) => {
                                   // Handle both string and object instruction formats
                                   if (typeof inst === 'string') {
                                     // String format (from URL parsing - legacy)
@@ -1076,4 +1076,3 @@ export default function DebugParserPage({
     </div>
   );
 }
-

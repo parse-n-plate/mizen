@@ -1,6 +1,6 @@
 'use client';
 
-import { User } from 'lucide-react';
+// User icon import removed - not currently used in this component
 import Image from 'next/image';
 import MobileBackButton from '@/components/ui/MobileBackButton';
 

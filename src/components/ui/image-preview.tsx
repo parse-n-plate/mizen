@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Download, X, Maximize2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
 
 interface ImagePreviewProps {
   imageData: string; // Base64 data URL
@@ -39,7 +38,7 @@ export default function ImagePreview({ imageData, filename = 'recipe-image', cla
   };
 
   // Extract file extension from filename or default to jpg
-  const getFileExtension = () => {
+  const _getFileExtension = () => {
     if (filename) {
       const match = filename.match(/\.(\w+)$/);
       if (match) return match[1];

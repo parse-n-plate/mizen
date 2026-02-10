@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { RecipeStep } from './types';
+import { IngredientInfo } from '@/utils/ingredientMatcher';
 import { motion, AnimatePresence } from 'framer-motion';
 import { highlightQuantitiesAndIngredients } from '@/lib/utils';
 import { useUISettings } from '@/contexts/UISettingsContext';
@@ -15,10 +16,10 @@ interface StepDisplayProps {
   onNext: () => void;
   onPrev: () => void;
   onBackToList: () => void;
-  allIngredients: any[];
+  allIngredients: IngredientInfo[];
 }
 
-export default function StepDisplay({ step, currentStep, totalSteps, onNext, onPrev, onBackToList, allIngredients }: StepDisplayProps) {
+export default function StepDisplay({ step, currentStep, totalSteps, onNext, onPrev, onBackToList: _onBackToList, allIngredients }: StepDisplayProps) {
   const { settings } = useUISettings();
   const { stepSizing } = settings;
 

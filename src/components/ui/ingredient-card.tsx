@@ -1,6 +1,5 @@
 'use client';
 
-import { ChefHat } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { findStepsForIngredient } from '@/utils/ingredientMatcher';
@@ -70,18 +69,18 @@ interface IngredientCardProps {
   onNotesChange?: (notes: string) => void;
 }
 
-export default function IngredientCard({ 
-  ingredient, 
-  description, 
-  isLast = false, 
+export default function IngredientCard({
+  ingredient,
+  description,
+  isLast = false,
   recipeSteps = [],
-  groupName = 'Main',
-  recipeUrl,
+  groupName: _groupName = 'Main',
+  recipeUrl: _recipeUrl,
   checked,
   onCheckedChange,
   isExpanded: controlledIsExpanded,
   onExpandChange,
-  onNotesChange
+  onNotesChange: _onNotesChange
 }: IngredientCardProps) {
   const [internalChecked, setInternalChecked] = useState(false);
   const isChecked = checked !== undefined ? checked : internalChecked;
@@ -222,28 +221,6 @@ export default function IngredientCard({
     // Convert fractions to symbols in the computed amount
     const computed = `${ingredient.amount || ''} ${ingredient.units || ''}`.trim();
     return convertTextFractionsToSymbols(computed);
-  }, [ingredient]);
-
-  // Extract units separately for note storage
-  const ingredientUnits = useMemo(() => {
-    if (typeof ingredient === 'string') {
-      // Try to parse units from string
-      const parsed = parseIngredientString(ingredient);
-      return parsed.unit || '';
-    }
-    
-    // Return units from object, or try to parse if not available
-    if (ingredient.units) {
-      return ingredient.units;
-    }
-    
-    // If no units but we have an ingredient string, try parsing
-    if (ingredient.ingredient && !ingredient.amount) {
-      const parsed = parseIngredientString(ingredient.ingredient);
-      return parsed.unit || '';
-    }
-    
-    return '';
   }, [ingredient]);
 
   // Extract AI-generated description and substitutions from the ingredient object

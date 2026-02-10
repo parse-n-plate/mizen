@@ -1,6 +1,6 @@
 'use client';
 
-import { getRecipesByCategory, MockRecipe } from '@/lib/mockRecipeData';
+import { getRecipesByCategory } from '@/lib/mockRecipeData';
 import RecipeCard from './recipe-card';
 import PotIcon from './pot-icon';
 

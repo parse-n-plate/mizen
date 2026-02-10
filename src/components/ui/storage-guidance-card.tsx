@@ -7,8 +7,8 @@ import { cn } from '@/lib/utils';
 interface StorageGuidanceCardProps {
   storageGuide?: string;
   shelfLife?: {
-    fridge?: number;
-    freezer?: number;
+    fridge?: number | null;
+    freezer?: number | null;
   };
   storedAt?: string;
   onMarkAsStored?: () => void;
@@ -32,7 +32,6 @@ export default function StorageGuidanceCard({
 
   // Update storage text when storageGuide prop changes (e.g., when AI generates new guidance)
   useEffect(() => {
-    // Always update when storageGuide changes, including when it becomes available
     setStorageText(storageGuide || "Storage guidance not available. Refrigerate leftovers promptly.");
   }, [storageGuide]);
 

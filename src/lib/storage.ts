@@ -26,6 +26,7 @@ export type ParsedRecipe = {
   author?: string; // Recipe author if available
   sourceUrl?: string; // Source URL if available
   cuisine?: string[]; // Cuisine types/tags (e.g., ["Italian", "Mediterranean"])
+  servings?: number;
   prepTimeMinutes?: number;
   cookTimeMinutes?: number;
   totalTimeMinutes?: number;
@@ -133,13 +134,14 @@ function normalizeInstructions(
 
       // Handle object inputs (expected format)
       if (item && typeof item === 'object') {
+        const obj = item as Record<string, unknown>;
         const title =
-          typeof (item as any).title === 'string'
-            ? cleanLeading((item as any).title.trim())
+          typeof obj.title === 'string'
+            ? cleanLeading(obj.title.trim())
             : `Step ${index + 1}`;
         const detail =
-          typeof (item as any).detail === 'string'
-            ? cleanLeading((item as any).detail.trim())
+          typeof obj.detail === 'string'
+            ? cleanLeading(obj.detail.trim())
             : '';
 
         // If there is no usable detail, drop the step
@@ -148,9 +150,9 @@ function normalizeInstructions(
         return {
           title,
           detail,
-          timeMinutes: (item as any).timeMinutes,
-          ingredients: (item as any).ingredients,
-          tips: (item as any).tips,
+          timeMinutes: obj.timeMinutes as number | undefined,
+          ingredients: obj.ingredients as string[] | undefined,
+          tips: obj.tips as string | undefined,
         } satisfies InstructionStep;
       }
 

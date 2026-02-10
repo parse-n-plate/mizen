@@ -34,7 +34,6 @@ export default function SearchCommandModal({
 }: SearchCommandModalProps) {
   const {
     recentRecipes,
-    bookmarkedRecipeIds,
     getRecipeById,
     getBookmarkedRecipes,
     touchRecipe,
@@ -58,7 +57,7 @@ export default function SearchCommandModal({
     }
 
     return mergedRecipes;
-  }, [recentRecipes, bookmarkedRecipeIds, getBookmarkedRecipes]);
+  }, [recentRecipes, getBookmarkedRecipes]);
 
   const displayedRecipes = search ? allRecipes : allRecipes.slice(0, 3);
 

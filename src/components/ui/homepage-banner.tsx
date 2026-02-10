@@ -6,16 +6,16 @@ import { X } from 'lucide-react';
 
 /**
  * HomepageBanner Component
- * 
+ *
  * Displays a sticky banner directly under the navigation bar, flush against it.
  * Features a filled heart chef hat icon from Solar icons and spans only
  * the width of the content (matching navbar max-w-6xl).
- * 
+ *
  * Progressive Disclosure Enhancement:
  * - Banner can be dismissed by clicking the X button
  * - Dismissal state persists in localStorage (per session)
  * - Once dismissed, banner stays hidden until localStorage is cleared
- * 
+ *
  * Design specifications from Figma:
  * - Flush against the nav bar (no gap)
  * - Spans only the width of the content (matching navbar max-w-6xl)
@@ -25,13 +25,11 @@ import { X } from 'lucide-react';
  * - Sticky positioning: remains visible at top of viewport when scrolling
  */
 export default function HomepageBanner() {
-  // Check localStorage on mount to see if banner was previously dismissed
   const [isDismissed, setIsDismissed] = useState<boolean>(false);
 
+  // Read localStorage after mount to avoid hydration mismatch
   useEffect(() => {
-    // Check if banner was dismissed in a previous session
-    const dismissed = localStorage.getItem('homepage-banner-dismissed');
-    if (dismissed === 'true') {
+    if (localStorage.getItem('homepage-banner-dismissed') === 'true') {
       setIsDismissed(true);
     }
   }, []);

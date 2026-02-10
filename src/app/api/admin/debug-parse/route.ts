@@ -10,10 +10,46 @@ import * as cheerio from 'cheerio';
 import Groq from 'groq-sdk';
 import { cleanRecipeHTML } from '@/utils/htmlCleaner';
 
+interface JsonLdGraphItem {
+  '@type'?: string;
+  '@graph'?: JsonLdGraphItem[];
+  name?: string;
+  text?: string;
+  recipeIngredient?: string[];
+  recipeInstructions?: (string | JsonLdInstruction)[];
+  author?: { name?: string } | string;
+  publisher?: { name?: string };
+  [key: string]: unknown;
+}
+
+interface JsonLdInstruction {
+  '@type'?: string;
+  text?: string;
+  name?: string;
+}
+
+interface IngredientGroup {
+  groupName: string;
+  ingredients: { amount: string; units: string; ingredient: string }[];
+}
+
+interface ValidationResult {
+  hasTitle: boolean;
+  hasIngredients: boolean;
+  hasInstructions: boolean;
+  details: {
+    title: string;
+    titleLength: number;
+    ingredientGroups: number;
+    totalIngredients: number;
+    instructionCount: number;
+  };
+}
+
 interface DebugStep {
   step: string;
   title: string;
-  data: any;
+  data: unknown;
   success: boolean;
   timestamp: number;
 }
@@ -53,12 +89,12 @@ export async function GET(req: NextRequest): Promise<Response> {
 
     // CHECKPOINT 1: URL Validator - Check if page contains recipe indicators
     console.log('[Debug API] CHECKPOINT 1: URL Validation...');
-    let urlValidationResult = {
+    const urlValidationResult = {
       hasIngredients: false,
       hasInstructions: false,
       hasSchema: false,
       isRecipe: false,
-      details: {} as any,
+      details: { title: '', titleLength: 0, ingredientGroups: 0, totalIngredients: 0, instructionCount: 0 },
     };
 
     // Step 1: Fetch raw HTML
@@ -134,12 +170,12 @@ export async function GET(req: NextRequest): Promise<Response> {
             item['@type'] === 'Recipe' ||
             (item['@graph'] &&
               Array.isArray(item['@graph']) &&
-              item['@graph'].some((g: any) => g['@type'] === 'Recipe'))
+              item['@graph'].some((g: JsonLdGraphItem) => g['@type'] === 'Recipe'))
           ) {
             const recipe =
               item['@type'] === 'Recipe'
                 ? item
-                : item['@graph'].find((g: any) => g['@type'] === 'Recipe');
+                : item['@graph'].find((g: JsonLdGraphItem) => g['@type'] === 'Recipe');
 
             if (recipe && recipe.name && recipe.recipeIngredient && recipe.recipeInstructions) {
               jsonLdResult = recipe;
@@ -182,11 +218,12 @@ export async function GET(req: NextRequest): Promise<Response> {
       let instructions: string[] = [];
       if (Array.isArray(jsonLdResult.recipeInstructions)) {
         instructions = jsonLdResult.recipeInstructions
-          .map((inst: any) => {
+          .map((inst: string | JsonLdInstruction) => {
             if (typeof inst === 'string') return inst.trim();
-            if (inst.text) return inst.text.trim();
-            if (inst['@type'] === 'HowToStep' && inst.text) return inst.text.trim();
-            if (inst['@type'] === 'HowToStep' && inst.name) return inst.name.trim();
+            if (typeof inst === 'object' && inst !== null) {
+              if (inst.text) return inst.text.trim();
+              if (inst['@type'] === 'HowToStep' && inst.name) return inst.name.trim();
+            }
             return '';
           })
           .filter((text: string) => text.length > 10);
@@ -196,42 +233,36 @@ export async function GET(req: NextRequest): Promise<Response> {
       const author = jsonLdResult.author?.name || jsonLdResult.author || jsonLdResult.publisher?.name || undefined;
 
       // CHECKPOINT 3: Data Validation
-      const validationResult = {
+      const validationResult: ValidationResult = {
         hasTitle: false,
         hasIngredients: false,
         hasInstructions: false,
-        details: {} as any,
+        details: { title: '', titleLength: 0, ingredientGroups: 0, totalIngredients: 0, instructionCount: 0 },
       };
 
       validationResult.hasTitle =
-        title &&
+        !!title &&
         typeof title === 'string' &&
         title.trim().length > 0 &&
         title !== 'No recipe found';
 
       validationResult.hasIngredients =
-        ingredients &&
-        Array.isArray(ingredients) &&
         ingredients.length > 0 &&
         ingredients.some(
-          (group: any) =>
-            group &&
+          (group: IngredientGroup) =>
             group.ingredients &&
             Array.isArray(group.ingredients) &&
             group.ingredients.length > 0
         );
 
-      validationResult.hasInstructions =
-        instructions &&
-        Array.isArray(instructions) &&
-        instructions.length > 0;
+      validationResult.hasInstructions = instructions.length > 0;
 
       validationResult.details = {
         title: title || 'missing',
         titleLength: title?.length || 0,
-        ingredientGroups: ingredients?.length || 0,
-        totalIngredients: ingredients?.reduce((sum: number, g: any) => sum + (g.ingredients?.length || 0), 0) || 0,
-        instructionCount: instructions?.length || 0,
+        ingredientGroups: ingredients.length,
+        totalIngredients: ingredients.reduce((sum: number, g: IngredientGroup) => sum + (g.ingredients?.length || 0), 0),
+        instructionCount: instructions.length,
       };
 
       const validationPassed =
@@ -516,11 +547,11 @@ ABSOLUTE REQUIREMENTS:
         temperature: 0.1,
         max_tokens: 4000,
       });
-    } catch (apiError: any) {
+    } catch (apiError: unknown) {
       console.error('[Debug API] Groq API Error:', apiError);
       return NextResponse.json({
         success: false,
-        error: `Groq API Error: ${apiError?.message || 'Unknown error'}. Model may not be available.`,
+        error: `Groq API Error: ${apiError instanceof Error ? apiError.message : 'Unknown error'}. Model may not be available.`,
         steps,
       });
     }
@@ -586,39 +617,33 @@ ABSOLUTE REQUIREMENTS:
       hasTitle: false,
       hasIngredients: false,
       hasInstructions: false,
-      details: {} as any,
+      details: { title: '', titleLength: 0, ingredientGroups: 0, totalIngredients: 0, instructionCount: 0 },
     };
 
     validationResult.hasTitle =
-      normalizedData.title &&
+      !!normalizedData.title &&
       typeof normalizedData.title === 'string' &&
       normalizedData.title.trim().length > 0 &&
       normalizedData.title !== 'No recipe found' &&
       normalizedData.title !== 'No title found';
 
     validationResult.hasIngredients =
-      normalizedData.ingredients &&
-      Array.isArray(normalizedData.ingredients) &&
       normalizedData.ingredients.length > 0 &&
       normalizedData.ingredients.some(
-        (group: any) =>
-          group &&
+        (group: IngredientGroup) =>
           group.ingredients &&
           Array.isArray(group.ingredients) &&
           group.ingredients.length > 0
       );
 
-    validationResult.hasInstructions =
-      normalizedData.instructions &&
-      Array.isArray(normalizedData.instructions) &&
-      normalizedData.instructions.length > 0;
+    validationResult.hasInstructions = normalizedData.instructions.length > 0;
 
     validationResult.details = {
       title: normalizedData.title || 'missing',
       titleLength: normalizedData.title?.length || 0,
-      ingredientGroups: normalizedData.ingredients?.length || 0,
-      totalIngredients: normalizedData.ingredients?.reduce((sum: number, g: any) => sum + (g.ingredients?.length || 0), 0) || 0,
-      instructionCount: normalizedData.instructions?.length || 0,
+      ingredientGroups: normalizedData.ingredients.length,
+      totalIngredients: normalizedData.ingredients.reduce((sum: number, g: IngredientGroup) => sum + (g.ingredients?.length || 0), 0),
+      instructionCount: normalizedData.instructions.length,
     };
 
     const validationPassed =
@@ -779,12 +804,12 @@ export async function POST(req: NextRequest): Promise<Response> {
             item['@type'] === 'Recipe' ||
             (item['@graph'] &&
               Array.isArray(item['@graph']) &&
-              item['@graph'].some((g: any) => g['@type'] === 'Recipe'))
+              item['@graph'].some((g: JsonLdGraphItem) => g['@type'] === 'Recipe'))
           ) {
             const recipe =
               item['@type'] === 'Recipe'
                 ? item
-                : item['@graph'].find((g: any) => g['@type'] === 'Recipe');
+                : item['@graph'].find((g: JsonLdGraphItem) => g['@type'] === 'Recipe');
 
             if (recipe && recipe.name && recipe.recipeIngredient && recipe.recipeInstructions) {
               jsonLdResult = recipe;
@@ -827,11 +852,12 @@ export async function POST(req: NextRequest): Promise<Response> {
       let instructions: string[] = [];
       if (Array.isArray(jsonLdResult.recipeInstructions)) {
         instructions = jsonLdResult.recipeInstructions
-          .map((inst: any) => {
+          .map((inst: string | JsonLdInstruction) => {
             if (typeof inst === 'string') return inst.trim();
-            if (inst.text) return inst.text.trim();
-            if (inst['@type'] === 'HowToStep' && inst.text) return inst.text.trim();
-            if (inst['@type'] === 'HowToStep' && inst.name) return inst.name.trim();
+            if (typeof inst === 'object' && inst !== null) {
+              if (inst.text) return inst.text.trim();
+              if (inst['@type'] === 'HowToStep' && inst.name) return inst.name.trim();
+            }
             return '';
           })
           .filter((text: string) => text.length > 10);
@@ -1094,11 +1120,11 @@ ABSOLUTE REQUIREMENTS:
         temperature: 0.1,
         max_tokens: 4000,
       });
-    } catch (apiError: any) {
+    } catch (apiError: unknown) {
       console.error('[Debug API] Groq API Error:', apiError);
       return NextResponse.json({
         success: false,
-        error: `Groq API Error: ${apiError?.message || 'Unknown error'}. Model may not be available.`,
+        error: `Groq API Error: ${apiError instanceof Error ? apiError.message : 'Unknown error'}. Model may not be available.`,
         steps,
       });
     }

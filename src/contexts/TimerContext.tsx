@@ -21,21 +21,19 @@ interface TimerContextType {
 const TimerContext = createContext<TimerContextType | undefined>(undefined);
 
 export function TimerProvider({ children }: { children: ReactNode }) {
-  const [activeTimers, setActiveTimers] = useState<ActiveTimer[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  // Load timers from localStorage on mount
-  useEffect(() => {
+  const [activeTimers, setActiveTimers] = useState<ActiveTimer[]>(() => {
+    if (typeof window === 'undefined') return [];
     const saved = localStorage.getItem('activeTimers');
     if (saved) {
       try {
-        setActiveTimers(JSON.parse(saved));
+        return JSON.parse(saved) as ActiveTimer[];
       } catch (error) {
         console.error('Error loading timers:', error);
       }
     }
-    setIsLoaded(true);
-  }, []);
+    return [];
+  });
+  const [isLoaded] = useState(true);
 
   // Save timers to localStorage whenever they change
   useEffect(() => {

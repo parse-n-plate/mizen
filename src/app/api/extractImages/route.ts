@@ -78,7 +78,7 @@ export async function POST(req: NextRequest): Promise<Response> {
               } else if (item.image.url) {
                 images.push(item.image.url);
               } else if (Array.isArray(item.image)) {
-                item.image.forEach((img: any) => {
+                item.image.forEach((img: string | { url?: string }) => {
                   if (typeof img === 'string') {
                     images.push(img);
                   } else if (img.url) {
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest): Promise<Response> {
             }
           }
         }
-      } catch (e) {
+      } catch {
         // Skip invalid JSON
       }
     });

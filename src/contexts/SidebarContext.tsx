@@ -20,33 +20,22 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
 
   const isMobile = useIsMobile();
   const pathname = usePathname();
-  const initializedRef = useRef(false);
   const prevPathnameRef = useRef(pathname);
 
   const showMobileNav = useCallback(() => setIsMobileNavVisible(true), []);
   const hideMobileNav = useCallback(() => setIsMobileNavVisible(false), []);
 
-  // Handle deep links: on initial mount only, if mobile and on a non-home route,
-  // hide the sidebar so the page content shows.
+  // Auto-hide sidebar on mobile when the route changes.
+  // Uses ref comparison to detect actual route changes and avoids
+  // calling setState synchronously in the effect body.
   useEffect(() => {
-    if (!isMobile || initializedRef.current) return;
-    initializedRef.current = true;
+    if (!isMobile) return;
+    const prevPathname = prevPathnameRef.current;
     prevPathnameRef.current = pathname;
 
-    if (pathname !== '/') {
-      setIsMobileNavVisible(false);
-    }
-  }, [isMobile, pathname]);
-
-  // Auto-hide sidebar when the route changes on mobile.
-  // This ensures the sidebar hides only AFTER the new page has rendered,
-  // preventing a flash of the previous page content.
-  useEffect(() => {
-    if (!isMobile || !initializedRef.current) return;
-
-    if (pathname !== prevPathnameRef.current) {
-      prevPathnameRef.current = pathname;
-      setIsMobileNavVisible(false);
+    if (pathname !== prevPathname && pathname !== '/') {
+      // Use microtask to avoid synchronous setState in effect
+      queueMicrotask(() => setIsMobileNavVisible(false));
     }
   }, [isMobile, pathname]);
 
