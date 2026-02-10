@@ -63,7 +63,6 @@ function FishBody({ blinkEnabled, blinkSpeed, easingType }: AnimatedFishProps) {
       {/* Eye group wrapped with motion.g for animation */}
       <motion.g
         id="Eye"
-        transformBox="fill-box"
         style={{
           transformOrigin: '50% 50%',
         }}
@@ -142,4 +141,3 @@ export default function AnimatedFish({
     </div>
   );
 }
-

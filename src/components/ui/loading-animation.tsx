@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
@@ -28,7 +28,7 @@ interface LoadingStep {
 }
 
 export default function LoadingAnimation({ isVisible, cuisine, progress: externalProgress, phase, onCancel }: LoadingAnimationProps) {
-  const [currentStepIdx, setCurrentStepIdx] = useState(0);
+  const [_currentStepIdx, setCurrentStepIdx] = useState(0);
   const [progress, setProgress] = useState(0);
   const [hasCuisine, setHasCuisine] = useState(false);
 
@@ -41,11 +41,7 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
   // Accessibility: respect user's reduced motion preference
   const shouldReduceMotion = useReducedMotion();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const animateProgressTo = (target: number, durationMs = 600) => {
+  const animateProgressTo = useCallback((target: number, durationMs = 600) => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
 
     // Use ref to get current progress value (avoids stale closure issues)
@@ -64,7 +60,7 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
     };
 
     rafRef.current = requestAnimationFrame(tick);
-  };
+  }, []);
 
 
   // Define the 3 steps
@@ -91,13 +87,29 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
 
   const [steps, setSteps] = useState<LoadingStep[]>(initialSteps);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Sync progressRef and cleanup timers/animations via effects
+  useEffect(() => {
+    progressRef.current = progress;
+  }, [progress]);
+
+  useEffect(() => {
+    if (!isVisible) {
+      progressRef.current = 0;
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    }
+  }, [isVisible]);
+
   // Manage step transitions and progress bar
   useEffect(() => {
     if (!isVisible) {
-      // Reset when not visible
       setCurrentStepIdx(0);
       setProgress(0);
-      progressRef.current = 0; // Reset ref too
+      progressRef.current = 0;
       setSteps(initialSteps);
       setHasCuisine(false);
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -105,16 +117,13 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
       return;
     }
 
-    // If the parent passes real progress or a phase, reflect that instead of faking it.
     const hasExternal = typeof externalProgress === 'number' || typeof phase === 'string';
-
     if (hasExternal) {
-      // Progress
-      const nextProgress = typeof externalProgress === 'number' ? externalProgress : progressRef.current;
-      progressRef.current = nextProgress; // Sync ref
+      const nextProgress =
+        typeof externalProgress === 'number' ? externalProgress : progressRef.current;
+      progressRef.current = nextProgress;
       animateProgressTo(nextProgress, 450);
 
-      // Phase → step status
       const phaseToIdx = (p?: LoadingAnimationProps['phase']) => {
         if (p === 'gathering') return 0;
         if (p === 'reading') return 1;
@@ -125,18 +134,23 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
 
       const idx = phaseToIdx(phase);
       setCurrentStepIdx(idx);
-      setSteps(prev => prev.map((s, i) => {
-        if (i < idx) return { ...s, status: 'completed' };
-        if (i === idx) return { ...s, status: phase === 'done' ? 'completed' : 'in_progress' };
-        return { ...s, status: 'pending' };
-      }));
-
+      setSteps((prev) =>
+        prev.map((s, i) => {
+          if (i < idx) return { ...s, status: 'completed' };
+          if (i === idx) {
+            return {
+              ...s,
+              status: phase === 'done' ? 'completed' : 'in_progress',
+            };
+          }
+          return { ...s, status: 'pending' };
+        }),
+      );
       return;
     }
 
-    // Simulated fallback (only when the parent does not provide real progress/phase)
+    progressRef.current = 15;
     setProgress(15);
-    progressRef.current = 15; // Update ref too
 
     timerRef.current = setTimeout(() => {
       setCurrentStepIdx(1);
@@ -151,7 +165,7 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [isVisible, externalProgress, phase]);
+  }, [isVisible, externalProgress, phase, animateProgressTo]);
 
   // Reactive logic for when cuisine is detected (Parsing Complete)
   useEffect(() => {
@@ -159,20 +173,21 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
       setHasCuisine(true);
       if (timerRef.current) clearTimeout(timerRef.current);
 
-      // Fast forward to Step 3 with reveal
       setCurrentStepIdx(2);
-      progressRef.current = progress; // Sync ref before animating
+      progressRef.current = progress;
       animateProgressTo(100, 700);
-      setSteps(prev => prev.map((s, i) => {
-        if (i === 0 || i === 1) return { ...s, status: 'completed' };
-        if (i === 2) {
-          const cuisineIcon = CUISINE_ICON_MAP[cuisine[0]] || s.icon;
-          return { ...s, icon: cuisineIcon, status: 'completed' };
-        }
-        return s;
-      }));
+      setSteps((prev) =>
+        prev.map((s, i) => {
+          if (i === 0 || i === 1) return { ...s, status: 'completed' };
+          if (i === 2) {
+            const cuisineIcon = CUISINE_ICON_MAP[cuisine[0]] || s.icon;
+            return { ...s, icon: cuisineIcon, status: 'completed' };
+          }
+          return s;
+        }),
+      );
     }
-  }, [cuisine, isVisible, hasCuisine]);
+  }, [cuisine, isVisible, hasCuisine, progress, animateProgressTo]);
 
   useEffect(() => {
     return () => {

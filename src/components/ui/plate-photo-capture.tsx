@@ -1,9 +1,9 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Camera, Upload, X, Share2, Plus } from 'lucide-react';
+import { Camera, X, Share2, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { compressImage, validateImageFile, formatFileSize } from '@/lib/imageUtils';
+import { compressImage, validateImageFile } from '@/lib/imageUtils';
 import PhotoRatingModal from './photo-rating-modal';
 import ShareSheetModal from './share-sheet-modal';
 
@@ -38,7 +38,7 @@ export default function PlatePhotoCapture({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [shareStatus, setShareStatus] = useState<string | null>(null);
+  const [shareStatus] = useState<string | null>(null);
 
   // Flow orchestration state
   const [showRatingPrompt, setShowRatingPrompt] = useState(false);

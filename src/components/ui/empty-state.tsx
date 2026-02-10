@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, SearchX, ChefHat, Link as LinkIcon } from 'lucide-react';
+import { SearchX, ChefHat, Link as LinkIcon } from 'lucide-react';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
 
@@ -13,7 +13,15 @@ interface EmptyStateProps {
   onAction?: () => void;
 }
 
-const emptyStateConfig = {
+type EmptyStateConfig = {
+  icon: typeof SearchX;
+  heading: string;
+  description: string;
+  showAction: boolean;
+  actionLabel?: string;
+};
+
+const emptyStateConfig: Record<EmptyStateVariant, EmptyStateConfig> = {
   'no-input': {
     icon: LinkIcon,
     heading: "Enter a recipe URL to get started",
@@ -102,7 +110,6 @@ export default function EmptyState({
     </div>
   );
 }
-
 
 
 

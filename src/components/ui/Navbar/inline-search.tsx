@@ -196,7 +196,7 @@ export default function InlineSearch() {
         // Add to recent recipes
         const recipeSummary = Array.isArray(response.instructions)
           ? response.instructions
-              .map((inst: any) =>
+              .map((inst: string | { detail?: string }) =>
                 typeof inst === 'string' ? inst : inst.detail,
               )
               .join(' ')
@@ -256,7 +256,7 @@ export default function InlineSearch() {
         // setLoading(false) handled in success/error paths
       }
     },
-    [setParsedRecipe, addRecipe, showError, showInfo, router],
+    [setParsedRecipe, addRecipe, showError, showSuccess, showInfo, router],
   );
 
   // Handle recipe selection
@@ -473,7 +473,7 @@ export default function InlineSearch() {
             <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-stone-200 rounded-md shadow-lg z-50">
               <div className="p-4 text-center">
                 <p className="font-albert text-sm text-stone-500">
-                  No recipes found matching "{query}"
+                  No recipes found matching &quot;{query}&quot;
                 </p>
                 <p className="font-albert text-xs text-stone-400 mt-1">
                   Try a different search term or enter a recipe URL

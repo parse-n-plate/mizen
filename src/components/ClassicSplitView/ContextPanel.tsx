@@ -1,6 +1,7 @@
 'use client';
 
 import { RecipeStep } from './types';
+import { IngredientInfo } from '@/utils/ingredientMatcher';
 import TimerCard from './TimerCard';
 import TipsCard from './TipsCard';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,7 +27,7 @@ function toTitleCase(text: string): string {
 
 interface ContextPanelProps {
   step: RecipeStep;
-  allIngredients: any[];
+  allIngredients: IngredientInfo[];
 }
 
 export default function ContextPanel({ step, allIngredients }: ContextPanelProps) {
@@ -78,7 +79,10 @@ export default function ContextPanel({ step, allIngredients }: ContextPanelProps
                     </p>
                     {(ing.amount || ing.units) && (
                       <p className="font-albert text-[14px] text-stone-400">
-                        {[ing.amount, ing.units].filter(Boolean).map(toTitleCase).join(' ')}
+                        {[ing.amount, ing.units]
+                          .filter((text): text is string => typeof text === 'string' && text.length > 0)
+                          .map(toTitleCase)
+                          .join(' ')}
                       </p>
                     )}
                   </motion.div>

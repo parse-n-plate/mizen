@@ -29,13 +29,13 @@ export async function POST(request: NextRequest) {
 Recipe: ${recipeTitle || 'Untitled'}
 ${cuisine && cuisine.length > 0 ? `Cuisine: ${cuisine.join(', ')}` : ''}
 
-${ingredients ? `Ingredients:\n${ingredients.map((g: any) =>
-  `${g.groupName !== 'Main' ? `${g.groupName}:\n` : ''}${g.ingredients.map((i: any) =>
+${ingredients ? `Ingredients:\n${ingredients.map((g: { groupName: string; ingredients: { amount?: string; units?: string; ingredient: string }[] }) =>
+  `${g.groupName !== 'Main' ? `${g.groupName}:\n` : ''}${g.ingredients.map((i) =>
     `- ${i.amount} ${i.units} ${i.ingredient}`
   ).join('\n')}`
 ).join('\n\n')}` : ''}
 
-${instructions ? `Instructions:\n${instructions.map((step: any, i: number) =>
+${instructions ? `Instructions:\n${instructions.map((step: string | { detail: string }, i: number) =>
   `${i + 1}. ${typeof step === 'string' ? step : step.detail}`
 ).join('\n')}` : ''}
     `.trim();
@@ -88,12 +88,12 @@ Only respond with the JSON object, no other text.`,
       success: true,
       data,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error generating substitutions:', error);
     return NextResponse.json(
       {
         error: 'Failed to generate substitutions',
-        details: error.message,
+        details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     );

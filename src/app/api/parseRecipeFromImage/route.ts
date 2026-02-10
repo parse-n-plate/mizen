@@ -108,7 +108,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       console.error('[API /parseRecipeFromImage] Parsing failed:', result.error);
       
       // Determine appropriate error code
-      let errorCode = ERROR_CODES.ERR_NO_RECIPE_FOUND;
+      let errorCode: string = ERROR_CODES.ERR_NO_RECIPE_FOUND;
       let errorMessage = 'Could not extract recipe from image';
 
       if (result.error) {
@@ -228,4 +228,3 @@ export async function GET() {
     maxFileSize: '10MB',
   });
 }
-

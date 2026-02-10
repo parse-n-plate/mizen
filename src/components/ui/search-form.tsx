@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useRecipe } from '@/contexts/RecipeContext';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { errorLogger } from '@/utils/errorLogger';
-import { Search, X, Upload, Image as ImageIcon, Link as LinkIcon, ChevronDown } from 'lucide-react';
+import { X, Image as ImageIcon, Link as LinkIcon, ChevronDown } from 'lucide-react';
 import LoadingAnimation from './loading-animation';
 import { ParsedRecipe } from '@/lib/storage';
 import { useToast } from '@/hooks/useToast';
@@ -120,7 +120,6 @@ export default function SearchForm({
     // Validate file size - max 10MB
     const maxSize = 10 * 1024 * 1024; // 10MB in bytes
     if (file.size > maxSize) {
-      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
       showError({
         code: 'ERR_FILE_TOO_LARGE',
         message: 'Image size must be less than 10MB',
@@ -277,6 +276,7 @@ export default function SearchForm({
     showError,
     showSuccess,
     router,
+    imagePreview,
   ]);
 
   const handleParse = useCallback(async () => {
@@ -429,7 +429,7 @@ export default function SearchForm({
       // Step 4: Add to recent recipes for quick access
       const recipeSummary = Array.isArray(response.instructions)
         ? response.instructions
-            .map((inst: any) => (typeof inst === 'string' ? inst : inst.detail))
+            .map((inst: string | { detail?: string }) => (typeof inst === 'string' ? inst : inst.detail))
             .join(' ')
             .slice(0, 140)
         : response.instructions.slice(0, 140);

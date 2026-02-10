@@ -1,4 +1,10 @@
 //import svgPaths from "./svg-xx3y04bbqs";
+const svgPaths: Record<string, string> = new Proxy(
+  {},
+  {
+    get: () => '',
+  },
+);
 const imgImage49 = "http://localhost:3845/assets/9aa29549346b4779cb3d24f55980b96fff749de5.png";
 const imgImage47 = "http://localhost:3845/assets/6b53d9897bd434f7b14c643b8461c055dadb39f1.png";
 const imgRectangle121 = "http://localhost:3845/assets/52eb81526ed03a76a3674e2f4127f504b98dbe16.png";

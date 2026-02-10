@@ -563,46 +563,37 @@ export const MOCK_PARSED_RECIPE: ParsedRecipe = {
   ],
   instructions: [
     {
-      stepNumber: 1,
-      instruction: "In a pot, combine dashi stock, 2 tbsp soy sauce, 2 tbsp mirin, 1 tsp sugar, and a pinch of salt. Bring to a gentle boil, then reduce heat to low to keep warm.",
-      ingredientsNeeded: ["dashi stock", "soy sauce", "mirin", "sugar", "salt"],
-      toolsNeeded: ["pot", "spoon"],
-      timerMinutes: 5,
-      timerLabel: "Simmer Broth"
+      title: "Simmer Broth",
+      detail: "In a pot, combine dashi stock, 2 tbsp soy sauce, 2 tbsp mirin, 1 tsp sugar, and a pinch of salt. Bring to a gentle boil, then reduce heat to low to keep warm.",
+      ingredients: ["dashi stock", "soy sauce", "mirin", "sugar", "salt"],
+      timeMinutes: 5,
+      tips: "Keep the broth at a gentle simmer."
     },
     {
-      stepNumber: 2,
-      instruction: "Heat a frying pan over medium-high heat. Add the sliced beef and cook until browned.",
-      ingredientsNeeded: ["thinly sliced beef chuck"],
-      toolsNeeded: ["frying pan", "tongs"]
+      title: "Brown Beef",
+      detail: "Heat a frying pan over medium-high heat. Add the sliced beef and cook until browned.",
+      ingredients: ["thinly sliced beef chuck"]
     },
     {
-      stepNumber: 3,
-      instruction: "Add 1 tbsp sugar, 1 tbsp soy sauce, and 1 tbsp sake to the beef. Cook for another 2-3 minutes until the sauce glazes the meat.",
-      ingredientsNeeded: ["sugar", "soy sauce", "sake"],
-      toolsNeeded: ["frying pan"],
-      timerMinutes: 3,
-      timerLabel: "Glaze Beef"
+      title: "Glaze Beef",
+      detail: "Add 1 tbsp sugar, 1 tbsp soy sauce, and 1 tbsp sake to the beef. Cook for another 2-3 minutes until the sauce glazes the meat.",
+      ingredients: ["sugar", "soy sauce", "sake"],
+      timeMinutes: 3
     },
     {
-      stepNumber: 4,
-      instruction: "In a separate large pot of boiling water, cook the udon noodles according to package instructions (usually 1-2 minutes for frozen/fresh udon). Drain well.",
-      ingredientsNeeded: ["udon noodles"],
-      toolsNeeded: ["large pot", "colander"],
-      timerMinutes: 2,
-      timerLabel: "Boil Noodles"
+      title: "Boil Noodles",
+      detail: "In a separate large pot of boiling water, cook the udon noodles according to package instructions (usually 1-2 minutes for frozen/fresh udon). Drain well.",
+      ingredients: ["udon noodles"],
+      timeMinutes: 2
     },
     {
-      stepNumber: 5,
-      instruction: "Divide the drained noodles into serving bowls. Pour the hot soup broth over the noodles.",
-      ingredientsNeeded: [],
-      toolsNeeded: ["ladle", "serving bowls"]
+      title: "Assemble Bowls",
+      detail: "Divide the drained noodles into serving bowls. Pour the hot soup broth over the noodles."
     },
     {
-      stepNumber: 6,
-      instruction: "Top with the seasoned beef, sliced green onions, and narutomaki. Sprinkle with shichimi togarashi if desired. Serve immediately.",
-      ingredientsNeeded: ["green onions", "narutomaki (fish cake)", "shichimi togarashi"],
-      toolsNeeded: ["chopsticks"]
+      title: "Finish and Serve",
+      detail: "Top with the seasoned beef, sliced green onions, and narutomaki. Sprinkle with shichimi togarashi if desired. Serve immediately.",
+      ingredients: ["green onions", "narutomaki (fish cake)", "shichimi togarashi"]
     }
   ]
 };
@@ -730,4 +721,3 @@ export function getRecipesByCategory(category: string): MockRecipe[] {
 export function getRecipeById(id: string): MockRecipe | undefined {
   return MOCK_RECIPES.find((recipe) => recipe.id === id);
 }
-

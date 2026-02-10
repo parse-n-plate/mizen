@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { RecipeStep } from './types';
+import { IngredientInfo } from '@/utils/ingredientMatcher';
 import ListView from './ListView';
 import CardView from './CardView';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
@@ -20,25 +21,23 @@ import {
 interface ClassicSplitViewProps {
   steps: RecipeStep[];
   title?: string;
-  allIngredients?: any[]; // To handle flattened ingredients
+  allIngredients?: IngredientInfo[];
 }
 
-export default function ClassicSplitView({ steps, title = 'Recipe Steps', allIngredients = [] }: ClassicSplitViewProps) {
+export default function ClassicSplitView({ steps, title: _title = 'Recipe Steps', allIngredients = [] }: ClassicSplitViewProps) {
   const [view, setView] = useState<'list' | 'card'>('list');
   const [currentStep, setCurrentStep] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedRecipe, setCopiedRecipe] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const settingsRef = useRef<HTMLDivElement>(null);
-  const shouldReduceMotion = useReducedMotion();
+  const _shouldReduceMotion = useReducedMotion();
   const { settings, setStepSizing, setFontFamily } = useUISettings();
   const { parsedRecipe } = useRecipe();
 
   // Handler functions - must be defined before useEffects that reference them
-  const handleCopyLink = async () => {
+  const handleCopyLink = useCallback(async () => {
     if (typeof window !== 'undefined') {
       const url = window.location.href;
       try {
@@ -49,7 +48,7 @@ export default function ClassicSplitView({ steps, title = 'Recipe Steps', allIng
         console.error('Failed to copy link:', err);
       }
     }
-  };
+  }, []);
 
   const handleCopyRecipe = async () => {
     if (!parsedRecipe) return;
@@ -101,9 +100,8 @@ export default function ClassicSplitView({ steps, title = 'Recipe Steps', allIng
         if (typeof instruction === 'string') {
           text += `${index + 1}. ${instruction}\n\n`;
         } else if (typeof instruction === 'object' && instruction !== null) {
-          const inst = instruction as any;
-          const title = inst.title || `Step ${index + 1}`;
-          const detail = inst.detail || inst.text || '';
+          const title = instruction.title || `Step ${index + 1}`;
+          const detail = instruction.detail || '';
           text += `${index + 1}. ${title}\n   ${detail}\n\n`;
         }
       });
@@ -135,17 +133,6 @@ export default function ClassicSplitView({ steps, title = 'Recipe Steps', allIng
         break;
     }
   };
-
-  // Close settings menu when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
-        setIsSettingsOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -209,8 +196,9 @@ export default function ClassicSplitView({ steps, title = 'Recipe Steps', allIng
 
   // Listen for navigation events from outside (e.g., from the Prep tab)
   useEffect(() => {
-    const handleSetStep = (event: any) => {
-      const { stepNumber } = event.detail;
+    const handleSetStep = (event: Event) => {
+      const customEvent = event as CustomEvent<{ stepNumber: number }>;
+      const { stepNumber } = customEvent.detail;
       if (stepNumber >= 1 && stepNumber <= steps.length) {
         setCurrentStep(stepNumber - 1);
         setView('card');
@@ -464,7 +452,7 @@ export default function ClassicSplitView({ steps, title = 'Recipe Steps', allIng
                 {searchQuery && !showFontSection && !showStepSizingSection && !showMenuActions && (
                   <div className="px-3 py-6 text-center">
                     <p className="menu-action-label text-[13px] text-stone-400">
-                      No results found for "{searchQuery}"
+                      No results found for &quot;{searchQuery}&quot;
                     </p>
                   </div>
                 )}
@@ -515,4 +503,3 @@ export default function ClassicSplitView({ steps, title = 'Recipe Steps', allIng
     </TooltipProvider>
   );
 }
-

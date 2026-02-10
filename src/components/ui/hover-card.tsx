@@ -24,7 +24,9 @@ function HoverCardGroup({ children }: { children: React.ReactNode }) {
   const activeIdRef = React.useRef<string | null>(null)
 
   // Keep ref in sync so callbacks always see the latest value.
-  activeIdRef.current = activeId
+  React.useEffect(() => {
+    activeIdRef.current = activeId
+  }, [activeId])
 
   const requestOpen = React.useCallback((id: string) => {
     const prev = activeIdRef.current

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { findIngredientsInText, IngredientInfo, IngredientMatch } from '@/utils/ingredientMatcher';
@@ -33,7 +33,7 @@ export function getScrollbarWidth(): number {
   const outer = document.createElement('div');
   outer.style.visibility = 'hidden';
   outer.style.overflow = 'scroll';
-  outer.style.msOverflowStyle = 'scrollbar';
+  outer.style.setProperty('-ms-overflow-style', 'scrollbar');
   outer.style.width = '100px';
   outer.style.position = 'absolute';
   outer.style.top = '-9999px';
@@ -208,17 +208,15 @@ export function highlightQuantities(text: string): React.ReactElement {
 }
 
 // Component for ingredient tooltip that works with tap on mobile
-const IngredientTooltipWrapper = React.memo(({ 
-  text, 
-  tooltipContent, 
+function IngredientTooltipWrapper({
+  text,
+  tooltipContent,
   highlightClassName,
-  tooltipKey 
-}: { 
-  text: string; 
-  tooltipContent: string; 
+}: {
+  text: string;
+  tooltipContent: string;
   highlightClassName: string;
-  tooltipKey: string;
-}) => {
+}) {
   const [open, setOpen] = useState(false);
   
   return (
@@ -245,10 +243,10 @@ const IngredientTooltipWrapper = React.memo(({
           {text}
         </span>
       </TooltipTrigger>
-          <TooltipContent 
-            side="top" 
+          <TooltipContent
+            side="top"
             className="max-w-xs"
-            onPointerDownOutside={(e) => {
+            onPointerDownOutside={() => {
               // Close tooltip when tapping outside
               setOpen(false)
             }}
@@ -257,9 +255,7 @@ const IngredientTooltipWrapper = React.memo(({
       </TooltipContent>
     </Tooltip>
   );
-});
-
-IngredientTooltipWrapper.displayName = 'IngredientTooltipWrapper';
+}
 
 /**
  * Highlights quantities, measurements, ingredient names, and times in recipe text
@@ -484,7 +480,6 @@ export function highlightQuantitiesAndIngredients(
           text={match.text}
           tooltipContent={tooltipContent}
           highlightClassName={highlightClassName}
-          tooltipKey={`tooltip-${keyCounter}`}
         />
       );
     } else {

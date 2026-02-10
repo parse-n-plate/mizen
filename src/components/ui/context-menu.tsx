@@ -113,9 +113,9 @@ function ContextMenuContent({
         asChild
       >
         <motion.div
-          initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
+          initial={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 10 }}
+          exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.95, y: 10 }}
           transition={{
             duration: shouldReduceMotion ? 0 : 0.12,
             ease: [0.23, 1, 0.32, 1]

@@ -13,7 +13,7 @@ export function SpaciousVariation({ recipe }: VariationProps) {
   // Ensure instructions are in the new format
   const steps: RecipeStep[] = isEnhancedInstructions(recipe.instructions) 
     ? recipe.instructions 
-    : migrateInstructionsToSteps(recipe.instructions as string[]);
+    : migrateInstructionsToSteps(recipe.instructions);
 
   return (
     <div className="space-y-6">
@@ -28,4 +28,3 @@ export function SpaciousVariation({ recipe }: VariationProps) {
     </div>
   );
 }
-

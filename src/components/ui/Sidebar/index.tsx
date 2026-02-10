@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
@@ -46,6 +46,27 @@ import FeedbackDialog from './FeedbackDialog';
 
 // Shared easing for all sidebar transitions — ease-in-out-cubic
 const SIDEBAR_EASING = 'cubic-bezier(0.645,0.045,0.355,1)';
+
+// Helper: wrap children in a tooltip only when collapsed (desktop)
+function NavTooltip({
+  label,
+  children,
+  isCollapsed,
+  isMobile,
+}: {
+  label: string;
+  children: React.ReactNode;
+  isCollapsed: boolean;
+  isMobile: boolean;
+}) {
+  if (!isCollapsed || isMobile) return <>{children}</>;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{children}</TooltipTrigger>
+      <TooltipContent side="right">{label}</TooltipContent>
+    </Tooltip>
+  );
+}
 
 /** Draggable recipe item for the sidebar list */
 const DraggableRecipeItem = memo(function DraggableRecipeItem({
@@ -156,7 +177,7 @@ export default function Sidebar() {
     getBookmarkedRecipes,
     isLoaded,
     getRecipeById,
-    isPinned,
+    isPinned: _isPinned,
     recipeOrder,
     reorderRecipes,
   } = useParsedRecipes();
@@ -274,7 +295,7 @@ export default function Sidebar() {
     return `${hours}h ${remainingMinutes}m`;
   };
 
-  const getDisplayTime = (recipe: ParsedRecipe): string => {
+  const _getDisplayTime = (recipe: ParsedRecipe): string => {
     if (recipe.totalTimeMinutes) return formatTime(recipe.totalTimeMinutes);
     if (recipe.prepTimeMinutes && recipe.cookTimeMinutes) {
       return formatTime(recipe.prepTimeMinutes + recipe.cookTimeMinutes);
@@ -383,22 +404,6 @@ export default function Sidebar() {
     return Wrapper;
   }, [isMobile, handleRecipeClick]);
 
-  // Helper: wrap children in a tooltip only when collapsed (desktop)
-  const NavTooltip = ({
-    label,
-    children,
-  }: {
-    label: string;
-    children: React.ReactNode;
-  }) => {
-    if (!isCollapsed || isMobile) return <>{children}</>;
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>{children}</TooltipTrigger>
-        <TooltipContent side="right">{label}</TooltipContent>
-      </Tooltip>
-    );
-  };
 
   // Whether we're showing the desktop collapsed rail
   const isRail = !isMobile && isCollapsed;
@@ -493,7 +498,7 @@ export default function Sidebar() {
 
           {/* New Recipe Button — icon stays put, text fades */}
           <div className="px-2 mb-2">
-            <NavTooltip label="New Recipe">
+            <NavTooltip isCollapsed={isCollapsed} isMobile={isMobile} label="New Recipe">
               <button
                 onClick={() => {
                   if (pathname === '/') {
@@ -523,7 +528,7 @@ export default function Sidebar() {
           {/* Navigation — icons stay at fixed left position, text fades */}
           <nav className="px-2 py-2">
             {/* Search — opens command modal */}
-            <NavTooltip label="Search  ⌘K">
+            <NavTooltip isCollapsed={isCollapsed} isMobile={isMobile} label="Search  ⌘K">
               <button
                 onClick={() => {
                   openSearch();
@@ -558,7 +563,7 @@ export default function Sidebar() {
 
               if (item.disabled) {
                 return (
-                  <NavTooltip key={item.label} label={item.label}>
+                  <NavTooltip key={item.label} isCollapsed={isCollapsed} isMobile={isMobile} label={item.label}>
                     <span
                       className="group w-full flex items-center px-3 py-2 rounded-lg font-albert text-sm text-stone-300 cursor-not-allowed"
                       aria-label={item.label}
@@ -584,7 +589,7 @@ export default function Sidebar() {
               }
 
               return (
-                <NavTooltip key={item.label} label={item.label}>
+                <NavTooltip key={item.label} isCollapsed={isCollapsed} isMobile={isMobile} label={item.label}>
                   <Link
                     href={item.href}
                     className={cn(
@@ -614,7 +619,7 @@ export default function Sidebar() {
             {/* Prototype Lab — dev + preview only */}
             {(process.env.NODE_ENV === 'development' ||
               process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview') && (
-              <NavTooltip label="Prototype Lab">
+              <NavTooltip isCollapsed={isCollapsed} isMobile={isMobile} label="Prototype Lab">
                 <button
                   onClick={openLab}
                   className={cn(
@@ -728,7 +733,7 @@ export default function Sidebar() {
                 : 'px-4 justify-end gap-1',
             )}
           >
-            <NavTooltip label="Help">
+            <NavTooltip isCollapsed={isCollapsed} isMobile={isMobile} label="Help">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
@@ -757,14 +762,14 @@ export default function Sidebar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </NavTooltip>
-            <NavTooltip label="Settings">
-              <span
+            <NavTooltip isCollapsed={isCollapsed} isMobile={isMobile} label="Settings">
+              <button
+                disabled
                 className="p-2 rounded-lg cursor-not-allowed"
                 aria-label="Settings"
-                aria-disabled="true"
               >
                 <SettingsIcon className="w-5 h-5 text-stone-300" />
-              </span>
+              </button>
             </NavTooltip>
           </div>
         </div>

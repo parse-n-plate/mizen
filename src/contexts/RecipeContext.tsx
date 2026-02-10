@@ -4,7 +4,6 @@ import React, {
   useContext,
   useState,
   ReactNode,
-  useEffect,
 } from 'react';
 import { updateRecipe as updateRecipeInStorage } from '@/lib/storage';
 
@@ -128,24 +127,26 @@ const normalizeInstructions = (
       // Handle object inputs (expected format)
       if (item && typeof item === 'object') {
         const title =
-          typeof (item as any).title === 'string'
-            ? cleanLeading((item as any).title.trim())
+          typeof item.title === 'string'
+            ? cleanLeading(item.title.trim())
             : `Step ${index + 1}`;
-        const detail =
-          typeof (item as any).detail === 'string'
-            ? cleanLeading((item as any).detail.trim())
-            : typeof (item as any).text === 'string'
-            ? cleanLeading((item as any).text.trim())
+        const legacyText =
+          'text' in item && typeof item.text === 'string'
+            ? cleanLeading(item.text.trim())
             : '';
-        
+        const detail =
+          typeof item.detail === 'string'
+            ? cleanLeading(item.detail.trim())
+            : legacyText;
+
         if (!detail) return null;
 
         return {
           title,
           detail,
-          timeMinutes: (item as any).timeMinutes,
-          ingredients: (item as any).ingredients,
-          tips: (item as any).tips,
+          timeMinutes: item.timeMinutes,
+          ingredients: item.ingredients,
+          tips: item.tips,
         } satisfies InstructionStep;
       }
 
@@ -155,26 +156,23 @@ const normalizeInstructions = (
 };
 
 export function RecipeProvider({ children }: { children: ReactNode }) {
-  const [parsedRecipe, setParsedRecipe] = useState<ParsedRecipe | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  // Load from localStorage on mount
-  useEffect(() => {
+  const [parsedRecipe, setParsedRecipe] = useState<ParsedRecipe | null>(() => {
+    if (typeof window === 'undefined') return null;
     const saved = localStorage.getItem('parsedRecipe');
     if (saved) {
       try {
         const loaded = JSON.parse(saved) as ParsedRecipe;
-        const normalized = {
+        return {
           ...loaded,
           instructions: normalizeInstructions(loaded.instructions),
         };
-        setParsedRecipe(normalized);
       } catch (error) {
         console.error('Error loading recipe from localStorage:', error);
       }
     }
-    setIsLoaded(true);
-  }, []);
+    return null;
+  });
+  const [isLoaded] = useState(true);
 
   const setParsedRecipeWithStorage = (recipe: ParsedRecipe | null) => {
     if (recipe) {
@@ -193,7 +191,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
           hasPhotoData: !!normalizedRecipe.plate?.photoData,
           photoDataLength: normalizedRecipe.plate?.photoData?.length || 0,
         });
-        updateRecipeInStorage(normalizedRecipe.id, normalizedRecipe as any);
+        updateRecipeInStorage(normalizedRecipe.id, normalizedRecipe as Partial<ParsedRecipe>);
       } else {
         console.warn('[RecipeContext] ⚠️ Recipe has no ID, cannot sync to recentRecipes');
       }

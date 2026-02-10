@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { formatError, ERROR_CODES } from '@/utils/formatError';
-import { parseRecipeFromUrl } from '@/utils/aiRecipeParser';
+import { parseRecipeFromImage, parseRecipeFromUrl } from '@/utils/aiRecipeParser';
 
 /**
  * API endpoint for recipe scraping - now uses unified AI-based parser
@@ -72,16 +72,25 @@ export async function POST(req: NextRequest): Promise<Response> {
     console.log(`[API /recipeScraperPython] Starting recipe parse${url ? ` for URL: ${url}` : ''}${imageFile ? ' with image' : ''}`);
 
     // Use the new unified parser with optional URL and image
-    const result = url 
-      ? await parseRecipeFromUrl(url, imageFile)
-      : await parseRecipeFromImage(imageFile!); // imageFile is guaranteed to exist if no URL
+    let result;
+    if (url) {
+      result = await parseRecipeFromUrl(url);
+    } else {
+      // imageFile is guaranteed to exist if no URL
+      const arrayBuffer = await imageFile!.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const base64Image = buffer.toString('base64');
+      const mimeType = imageFile!.type || 'image/jpeg';
+      const base64DataUrl = `data:${mimeType};base64,${base64Image}`;
+      result = await parseRecipeFromImage(base64DataUrl);
+    }
 
     // Check if parsing failed
     if (!result.success || !result.data) {
       console.error('[API /recipeScraperPython] Parsing failed:', result.error);
       
       // Determine appropriate error code
-      let errorCode = ERROR_CODES.ERR_NO_RECIPE_FOUND;
+      let errorCode: string = ERROR_CODES.ERR_NO_RECIPE_FOUND;
       let errorMessage = 'Could not extract recipe from this page';
 
       if (result.error) {
@@ -120,9 +129,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       result.data.ingredients.length > 0 &&
       // Ensure at least one group has ingredients
       result.data.ingredients.some(
-        (group: any) =>
-          group &&
-          group.ingredients &&
+        (group) =>
           Array.isArray(group.ingredients) &&
           group.ingredients.length > 0
       );
@@ -141,7 +148,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         ingredientsStructure: result.data.ingredients
           ? {
               length: result.data.ingredients.length,
-              groups: result.data.ingredients.map((g: any) => ({
+              groups: result.data.ingredients.map((g: { groupName?: string; ingredients?: unknown[] }) => ({
                 groupName: g?.groupName,
                 ingredientCount: g?.ingredients?.length || 0,
               })),
@@ -161,7 +168,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     // Return successful response with recipe data
     // Maintaining backward compatibility with original API contract
     console.log(
-      `[API /recipeScraperPython] Successfully parsed recipe using ${result.method}: "${result.data.title}" with ${result.data.ingredients.reduce((sum, g) => sum + g.ingredients.length, 0)} total ingredients and ${result.data.instructions.length} instructions`,
+      `[API /recipeScraperPython] Successfully parsed recipe using ${result.method}: "${result.data.title}" with ${result.data.ingredients.reduce((sum: number, g: { ingredients: unknown[] }) => sum + g.ingredients.length, 0)} total ingredients and ${result.data.instructions.length} instructions`,
     );
     console.log('[API /recipeScraperPython] 🍽️ Cuisine data in response:', {
       cuisine: result.data.cuisine,

@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -72,6 +73,7 @@ export default function FeedbackDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
 
   const selectedCategory = CATEGORIES.find((c) => c.type === type)!;
 
@@ -83,56 +85,20 @@ export default function FeedbackDialog({
     }
   }, [open, initialType, initialStep]);
 
-  // Cmd+Enter to submit
-  useEffect(() => {
-    if (!open || step !== 2) return;
+  const handleClose = useCallback(() => {
+    onOpenChange(false);
+    setTimeout(() => {
+      setStep(1);
+      setType('Bug Report');
+      setTitle('');
+      setMessage('');
+      setScreenshots([]);
+      setIsSubmitting(false);
+      setIsSuccess(false);
+    }, 200);
+  }, [onOpenChange]);
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-        e.preventDefault();
-        handleSubmit();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [open, step, message, screenshots, isSubmitting]);
-
-  const handleSelectType = (feedbackType: FeedbackType) => {
-    setType(feedbackType);
-    setStep(2);
-  };
-
-  const handleBack = () => {
-    setStep(1);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-
-    if (screenshots.length + files.length > 3) {
-      toast.error('Maximum 3 screenshots allowed');
-      return;
-    }
-
-    for (const file of files) {
-      const validation = validateImageFile(file);
-      if (!validation.valid) {
-        toast.error(validation.error || 'Invalid file');
-        return;
-      }
-    }
-
-    setScreenshots((prev) => [...prev, ...files].slice(0, 3));
-    // Reset input so same file can be re-selected
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const removeScreenshot = (index: number) => {
-    setScreenshots((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!message.trim()) {
       toast.error('Please enter a message');
       return;
@@ -185,19 +151,55 @@ export default function FeedbackDialog({
       toast.error('An error occurred while submitting feedback');
       setIsSubmitting(false);
     }
+  }, [message, isSubmitting, type, title, screenshots, handleClose]);
+
+  // Cmd+Enter to submit
+  useEffect(() => {
+    if (!open || step !== 2) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleSubmit();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open, step, handleSubmit]);
+
+  const handleSelectType = (feedbackType: FeedbackType) => {
+    setType(feedbackType);
+    setStep(2);
   };
 
-  const handleClose = () => {
-    onOpenChange(false);
-    setTimeout(() => {
-      setStep(1);
-      setType('Bug Report');
-      setTitle('');
-      setMessage('');
-      setScreenshots([]);
-      setIsSubmitting(false);
-      setIsSuccess(false);
-    }, 200);
+  const handleBack = () => {
+    setStep(1);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+
+    if (screenshots.length + files.length > 3) {
+      toast.error('Maximum 3 screenshots allowed');
+      return;
+    }
+
+    for (const file of files) {
+      const validation = validateImageFile(file);
+      if (!validation.valid) {
+        toast.error(validation.error || 'Invalid file');
+        return;
+      }
+    }
+
+    setScreenshots((prev) => [...prev, ...files].slice(0, 3));
+    // Reset input so same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeScreenshot = (index: number) => {
+    setScreenshots((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -307,7 +309,7 @@ export default function FeedbackDialog({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="h-auto rounded-none border-0 border-b border-stone-200 bg-transparent px-0 pb-3 shadow-none font-semibold text-stone-900 placeholder-stone-400 focus-visible:ring-0 focus-visible:ring-offset-0"
-                  autoFocus
+                  autoFocus={!isMobile}
                 />
                 <Textarea
                   placeholder="Tell us more"

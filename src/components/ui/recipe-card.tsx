@@ -47,7 +47,7 @@ export default function RecipeCard({
   onEdit,
   onCopy,
   showDelete = false,
-  showImage = false, // Default to false as per new design (using cuisine icons instead)
+  showImage: _showImage = false, // Default to false as per new design (using cuisine icons instead)
   showCuisineIcon = true, // Default to true - show cuisine icon unless explicitly hidden
 }: RecipeCardProps) {
   const [copiedRecipe, setCopiedRecipe] = useState(false);
@@ -147,7 +147,7 @@ export default function RecipeCard({
         if (typeof instruction === 'string') {
           text += `${index + 1}. ${instruction}\n\n`;
         } else if (typeof instruction === 'object' && instruction !== null) {
-          const inst = instruction as any;
+          const inst = instruction as Record<string, unknown>;
           const title = inst.title || `Step ${index + 1}`;
           const detail = inst.detail || inst.text || '';
           text += `${index + 1}. ${title}\n   ${detail}\n\n`;

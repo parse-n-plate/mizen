@@ -37,9 +37,6 @@ export function ServingsControls({
   originalServings,
   onResetServings,
 }: ServingsControlsProps) {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'servings-controls.tsx:30',message:'ServingsControls received props',data:{servings,servingsType:typeof servings,servingsUndefined:servings===undefined},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-  // #endregion
   // Handle incrementing servings (max 10)
   const handleIncrementServings = () => {
     if (servings === undefined) {

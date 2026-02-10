@@ -113,13 +113,8 @@ export default function ShareSheetModal({
 
     try {
       // Dynamically import html2canvas for capturing the card
-      // Try html2canvas-pro first, fallback to html2canvas
       let html2canvas;
-      try {
-        html2canvas = (await import('html2canvas-pro')).default;
-      } catch {
-        html2canvas = (await import('html2canvas')).default;
-      }
+      html2canvas = (await import('html2canvas-pro')).default;
       
       // Create a full-resolution clone for export
       // The displayed card is scaled to fit viewport, but we want full resolution for export
@@ -186,7 +181,7 @@ export default function ShareSheetModal({
       document.body.removeChild(clone);
 
       // Convert canvas to blob and download
-      canvas.toBlob((blob) => {
+      canvas.toBlob((blob: Blob | null) => {
         if (!blob) {
           alert('Could not create image. Please try again.');
           return;
@@ -208,7 +203,7 @@ export default function ShareSheetModal({
   };
 
   // Handle native share - share the most recent photo
-  const handleMoreShare = async () => {
+  const _handleMoreShare = async () => {
     if (!photos || photos.length === 0) {
       alert('No photos to share!');
       return;
@@ -232,8 +227,8 @@ export default function ShareSheetModal({
       } else {
         alert('Sharing not available on this device');
       }
-    } catch (error: any) {
-      if (error.name !== 'AbortError') {
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name !== 'AbortError') {
         console.error('Share failed:', error);
       }
     }

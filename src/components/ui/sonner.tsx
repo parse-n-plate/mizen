@@ -8,7 +8,6 @@ const Toaster = ({ ...props }: ToasterProps) => {
       theme="light"
       position="bottom-center"
       richColors
-      unstyled
       className="toaster group"
       icons={{
         success: null,
