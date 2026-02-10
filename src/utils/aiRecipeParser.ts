@@ -1,11 +1,32 @@
 /**
  * AI-Based Universal Recipe Parser
- * 
- * This parser uses a two-layer approach:
- * 1. Layer 1 (Fast Path): Extract from JSON-LD structured data
- * 2. Layer 2 (AI Fallback): Use AI to parse cleaned HTML when structured data isn't available
- * 
- * This approach works with any recipe website without requiring site-specific selectors.
+ *
+ * Architecture:
+ *   Layer 1 (JSON-LD) — Fast, free, reliable when available.
+ *     Extracts structured data from <script type="application/ld+json"> tags.
+ *     Returns raw ingredient strings in a single "Main" group (no amount/unit split).
+ *
+ *   Layer 2 (AI / Groq) — Slower, costs tokens, handles any page.
+ *     Sends cleaned HTML (max 15k chars) to llama-3.3-70b-versatile.
+ *     Returns structured ingredients (amount/unit/name), grouped logically,
+ *     plus AI-generated metadata: descriptions, substitutions, cuisine,
+ *     storage guidance, plating notes.
+ *
+ *   Hybrid (JSON-LD + AI) — Most common path.
+ *     Uses JSON-LD for title/author/servings/times (ground truth),
+ *     then calls AI to enrich with groupings, cuisine, and metadata.
+ *
+ * Entry points:
+ *   parseRecipe(rawHtml)       — Parse from raw HTML string
+ *   parseRecipeFromUrl(url)    — Fetch URL then parse
+ *   parseRecipeFromImage(b64)  — Vision model extraction from image
+ *
+ * Known accuracy issues (see .context/notes.md for full list):
+ *   - Author-name heuristic can false-positive on short instructions
+ *   - AI sometimes returns instructions as strings instead of {title, detail} objects
+ *   - 15k char HTML truncation can cut off recipes on blog-heavy pages
+ *   - 4k token output limit can truncate complex recipes mid-JSON
+ *   - No deduplication if recipe appears twice in HTML (jump-to-recipe + inline)
  */
 
 import * as cheerio from 'cheerio';
@@ -13,9 +34,20 @@ import Groq from 'groq-sdk';
 import { cleanRecipeHTML } from './htmlCleaner';
 import { SUPPORTED_CUISINES, isSupportedCuisine } from '@/config/cuisineConfig';
 
-// Derive a concise, human-friendly title from an instruction detail
-// Normalize any instruction array (strings or objects) into InstructionStep objects
-// Simplified: Trust AI-generated titles, use generic fallback only for legacy string inputs
+// ---------------------------------------------------------------------------
+// Instruction Normalization
+// ---------------------------------------------------------------------------
+
+/**
+ * Normalize any instruction array into InstructionStep objects.
+ *
+ * The AI prompt asks for {title, detail} objects, but sometimes returns plain
+ * strings (see warning at line ~1232). This function handles both formats:
+ *   - string  → { title: "Step N", detail: <string> }   (lossy — no semantic title)
+ *   - object  → extracts title + detail from various key names (detail/text/name)
+ *
+ * TODO: Track how often the AI returns strings vs objects to measure prompt compliance.
+ */
 const normalizeInstructionSteps = (
   instructions: unknown,
 ): InstructionStep[] => {
@@ -76,8 +108,16 @@ const normalizeInstructionSteps = (
     .filter((step): step is InstructionStep => Boolean(step));
 };
 
+// ---------------------------------------------------------------------------
+// Type Definitions
+// ---------------------------------------------------------------------------
+
 /**
- * Interface for ingredient with amount, units, and name
+ * A single ingredient with structured amount/unit/name.
+ *
+ * When extracted via JSON-LD (Layer 1), amount and units are empty strings
+ * because JSON-LD only provides the full ingredient as a single string.
+ * The AI layer (Layer 2) splits them properly.
  */
 export interface Ingredient {
   amount: string;
@@ -145,9 +185,15 @@ export interface ParserResult {
   retryAfter?: number; // Timestamp (milliseconds) when to retry after rate limit
 }
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
 /**
- * Parse ISO 8601 duration string (e.g., "PT30M", "PT1H30M") to minutes
- * Returns undefined if parsing fails or duration is invalid
+ * Parse ISO 8601 duration string (e.g., "PT30M", "PT1H30M") to minutes.
+ *
+ * NOTE: Only handles hours+minutes. Durations with days/seconds (P1DT2H, PT30S)
+ * will not match and return undefined.
  */
 function parseISODuration(duration: string): number | undefined {
   if (!duration || typeof duration !== 'string') return undefined;
@@ -166,8 +212,57 @@ function parseISODuration(duration: string): number | undefined {
 }
 
 /**
- * Extract recipe data from JSON-LD structured data (Layer 1 - Fast Path)
- * This is the most reliable method when available and doesn't use AI tokens
+ * Normalize a single cuisine name against the supported list.
+ * Returns the canonical name if matched (case-insensitive), or null.
+ */
+function matchSupportedCuisine(name: string): string | null {
+  if (isSupportedCuisine(name)) return name;
+  const lower = name.toLowerCase();
+  return SUPPORTED_CUISINES.find((s) => s.toLowerCase() === lower) ?? null;
+}
+
+/**
+ * Normalize the raw cuisine field from AI output into a validated string[].
+ *
+ * Handles: string, string[], or undefined/null.
+ * Filters to only supported cuisine names (case-insensitive).
+ */
+function normalizeCuisineField(raw: unknown): string[] | undefined {
+  if (!raw) return undefined;
+
+  // Collect raw values into an array
+  let candidates: string[] = [];
+  if (Array.isArray(raw)) {
+    candidates = raw.filter((c): c is string => typeof c === 'string' && c.trim().length > 0)
+      .map((c) => c.trim());
+  } else if (typeof raw === 'string' && raw.trim().length > 0) {
+    candidates = [raw.trim()];
+  }
+
+  if (candidates.length === 0) return undefined;
+
+  const validated = candidates
+    .map(matchSupportedCuisine)
+    .filter((c): c is string => c !== null);
+
+  return validated.length > 0 ? validated : undefined;
+}
+
+// ---------------------------------------------------------------------------
+// Layer 1: JSON-LD Extraction (Fast Path — no AI tokens)
+// ---------------------------------------------------------------------------
+
+/**
+ * Extract recipe data from JSON-LD structured data.
+ *
+ * Searches all <script type="application/ld+json"> tags for a Recipe object,
+ * handling both top-level and @graph-nested schemas.
+ *
+ * Limitations:
+ *   - Ingredients are stored as raw strings (amount/units not split)
+ *   - All ingredients go into a single "Main" group
+ *   - No cuisine, storage, or plating metadata
+ *   - Author filtering heuristic can be overly aggressive (see isAuthorName)
  */
 function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
   try {
@@ -240,7 +335,18 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
 
             let instructions: string[] = [];
 
-            // Helper function to check if text looks like an author name
+            /**
+             * Heuristic: detect whether a string is an author name rather than
+             * a real instruction step. Used to filter JSON-LD instructions.
+             *
+             * FIXME: Known accuracy issues:
+             *   - False positives: short legitimate steps like "Season well" or
+             *     "Plate immediately" (≤3 words, no cooking-term match) get filtered.
+             *   - False negatives: author names containing food words
+             *     (e.g., "Pat Baker", "Rosemary Gill") pass through.
+             *   - Empty/whitespace-only strings return true (treated as author),
+             *     but these should arguably be filtered separately.
+             */
             const isAuthorName = (text: string): boolean => {
               if (!text || text.length === 0) return true;
 
@@ -290,7 +396,10 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
                   )
                     return normalizeDoubleParens(inst.name.trim());
 
-                  // Handle itemListElement format
+                  // Handle itemListElement format (HowToSection with nested steps).
+                  // NOTE: This joins all sub-steps into a single string with spaces,
+                  // which flattens multi-step sections into one long instruction.
+                  // TODO: Consider preserving individual sub-steps as separate instructions.
                   if (
                     inst.itemListElement &&
                     Array.isArray(inst.itemListElement)
@@ -309,6 +418,8 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
 
                   return '';
                 })
+                // FIXME: The 10-char minimum silently drops short but valid steps
+                // (e.g., "Serve hot.", "Rest 5 min."). Consider lowering or removing.
                 .filter((text: string) => text.length > 10 && !isAuthorName(text));
             } else if (
               typeof recipe.recipeInstructions === 'string' &&
@@ -318,6 +429,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
               instructions = recipe.recipeInstructions
                 .split(/\n+/)
                 .map((s: string) => normalizeDoubleParens(s.trim()))
+                // Same 10-char filter as above — see FIXME.
                 .filter((s: string) => s.length > 10 && !isAuthorName(s));
             }
 
@@ -401,11 +513,11 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
                 }
               }
               
-            // Validate servings is a positive number
-            if (servings && (isNaN(servings) || servings <= 0)) {
-              servings = undefined;
-            }
-            }
+              // Validate servings is a positive number
+              if (servings && (isNaN(servings) || servings <= 0)) {
+                servings = undefined;
+              }
+            } // end if (recipe.yield || recipe.recipeYield)
 
             // Extract prep time, cook time, and total time from JSON-LD
             // These are typically in ISO 8601 duration format (e.g., "PT30M", "PT1H30M")
@@ -471,9 +583,16 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
   return null;
 }
 
+// ---------------------------------------------------------------------------
+// Summary Generation (separate AI call, ~80 tokens)
+// ---------------------------------------------------------------------------
+
 /**
  * Generate a one-sentence recipe summary.
- * Describes the dish, its flavor profile, and main cooking methods.
+ *
+ * Uses only the first 12 ingredients and 4 steps to stay well within
+ * the 80-token max_tokens limit. Returns null silently on any failure
+ * (summary is considered non-critical).
  */
 async function generateRecipeSummary(recipe: ParsedRecipe): Promise<string | null> {
   if (!process.env.GROQ_API_KEY) return null;
@@ -551,13 +670,28 @@ Steps: ${steps.join(' ')}`,
   }
 }
 
+// ---------------------------------------------------------------------------
+// Layer 2: AI Parsing (Groq / llama-3.3-70b-versatile)
+// ---------------------------------------------------------------------------
+
 /**
- * Parse recipe using AI (Layer 2 - AI Fallback)
- * This uses the Groq API to extract recipe data from cleaned HTML
+ * Parse recipe from cleaned HTML using the Groq AI API.
+ *
+ * The prompt (~600 lines) instructs the model to return a single JSON object
+ * with structured ingredients, instructions-as-objects, cuisine tags,
+ * storage guidance, and plating notes.
+ *
+ * Constraints:
+ *   - Input is truncated to 15,000 chars to avoid token overflow.
+ *     FIXME: On blog-heavy pages the recipe content may be past the cutoff.
+ *   - Output is capped at 4,000 tokens.
+ *     FIXME: Complex recipes (20+ ingredients, 15+ steps) can exceed this,
+ *     producing truncated JSON that fails to parse.
+ *   - Temperature is 0.1 for consistency, but the model still occasionally
+ *     returns instructions as strings instead of {title, detail} objects.
  */
 async function parseWithAI(cleanedHtml: string): Promise<ParsedRecipe | null> {
   try {
-    // Check if Groq API key is configured
     if (!process.env.GROQ_API_KEY) {
       console.error('[AI Parser] GROQ_API_KEY is not configured');
       return null;
@@ -567,7 +701,8 @@ async function parseWithAI(cleanedHtml: string): Promise<ParsedRecipe | null> {
       apiKey: process.env.GROQ_API_KEY,
     });
 
-    // Limit HTML to prevent token overflow (keep first 15k characters)
+    // FIXME: 15k char limit can cut off the recipe on blog-heavy pages.
+    // The HTML cleaner should prioritize recipe content, but doesn't always.
     const limitedHtml = cleanedHtml.slice(0, 15000);
 
     console.log('[AI Parser] Sending HTML to AI for parsing...');
@@ -577,6 +712,21 @@ async function parseWithAI(cleanedHtml: string): Promise<ParsedRecipe | null> {
       messages: [
         {
           role: 'system',
+          // ---------------------------------------------------------------
+          // AI PROMPT — ~590 lines of extraction rules.
+          // Sections: Output Format, Extraction Workflow, Title Rules,
+          //   Ingredient Rules, Instruction Rules, Cuisine Detection,
+          //   Storage Guidance, Plating Guidance, Final Reminder.
+          //
+          // TODO: Consider extracting this prompt to a separate file
+          // (e.g., prompts/recipeExtractionPrompt.ts) for readability
+          // and easier A/B testing of prompt variations.
+          //
+          // FIXME: The cuisine examples contain errors that teach the model
+          // wrong associations — e.g., "Pad Thai" is mapped to ["Chinese"]
+          // when it should be ["Thai"]. Thai isn't even in SUPPORTED_CUISINES,
+          // so the prompt forces an incorrect fallback.
+          // ---------------------------------------------------------------
           content: `========================================
 CRITICAL OUTPUT FORMAT
 ========================================
@@ -1272,169 +1422,43 @@ ABSOLUTE REQUIREMENTS:
           }
         }
         
-        // Extract storage guidance if provided by AI
-        if (parsedData.storageGuide && typeof parsedData.storageGuide === 'string') {
-          const storageGuide = parsedData.storageGuide.trim();
-          recipe.storageGuide = storageGuide;
-          console.log('[AI Parser] 📦 Storage guide extracted:', storageGuide.substring(0, 50) + '...');
+        // -- Extract optional AI-generated metadata ----------------------------
+        // These fields are entirely AI-generated (not from the source HTML).
+        // NOTE: No validation against ground truth — values are best-effort.
+
+        if (typeof parsedData.storageGuide === 'string') {
+          recipe.storageGuide = parsedData.storageGuide.trim();
         }
-        
-        // Extract shelf life if provided by AI
         if (parsedData.shelfLife && typeof parsedData.shelfLife === 'object') {
           recipe.shelfLife = {
             fridge: typeof parsedData.shelfLife.fridge === 'number' ? parsedData.shelfLife.fridge : null,
             freezer: typeof parsedData.shelfLife.freezer === 'number' ? parsedData.shelfLife.freezer : null,
           };
-          console.log('[AI Parser] 📦 Shelf life extracted:', recipe.shelfLife);
         }
-        
-        // Extract plating notes if provided by AI
-        if (parsedData.platingNotes && typeof parsedData.platingNotes === 'string') {
-          const platingNotes = parsedData.platingNotes.trim();
-          recipe.platingNotes = platingNotes;
-          console.log('[AI Parser] 🍽️ Plating notes extracted:', platingNotes.substring(0, 50) + '...');
+        if (typeof parsedData.platingNotes === 'string') {
+          recipe.platingNotes = parsedData.platingNotes.trim();
         }
-        
-        // Extract serving vessel if provided by AI
-        if (parsedData.servingVessel && typeof parsedData.servingVessel === 'string') {
+        if (typeof parsedData.servingVessel === 'string') {
           recipe.servingVessel = parsedData.servingVessel.trim();
-          console.log('[AI Parser] 🍽️ Serving vessel extracted:', recipe.servingVessel);
         }
-        
-        // Extract serving temperature if provided by AI
-        if (parsedData.servingTemp && typeof parsedData.servingTemp === 'string') {
+        if (typeof parsedData.servingTemp === 'string') {
           recipe.servingTemp = parsedData.servingTemp.trim();
-          console.log('[AI Parser] 🌡️ Serving temp extracted:', recipe.servingTemp);
         }
-        
-        // Log important recipe output information: title, author, servings, storage, and plating
-        console.log('[AI Parser] 📋 Recipe output summary:', {
-          title: recipe.title || 'N/A',
-          author: recipe.author || 'N/A',
-          servings: recipe.servings || 'N/A',
-          hasAuthor: !!recipe.author,
-          hasServings: !!recipe.servings,
-          hasStorageGuide: !!recipe.storageGuide,
-          hasShelfLife: !!recipe.shelfLife,
-          hasPlatingNotes: !!recipe.platingNotes,
-          servingVessel: recipe.servingVessel || 'N/A',
-          servingTemp: recipe.servingTemp || 'N/A',
+
+        console.log('[AI Parser] Recipe:', {
+          title: recipe.title,
+          author: recipe.author ?? '(none)',
+          servings: recipe.servings ?? '(none)',
+          cuisine: recipe.cuisine?.join(', ') ?? '(none)',
+          hasStorage: !!recipe.storageGuide,
+          hasPlating: !!recipe.platingNotes,
         });
         
-        // Handle cuisine - normalize to array format and filter to supported cuisines only
-        console.log('[AI Parser] 🍽️ Starting cuisine detection for recipe:', parsedData.title);
-        console.log('[AI Parser] Raw cuisine data from AI:', {
-          cuisine: parsedData.cuisine,
-          type: typeof parsedData.cuisine,
-          isArray: Array.isArray(parsedData.cuisine),
-        });
-        
-        if (parsedData.cuisine) {
-          if (Array.isArray(parsedData.cuisine)) {
-            // Filter out empty strings and ensure all items are strings
-            const detectedCuisines: string[] = parsedData.cuisine
-              .filter((c: unknown) => typeof c === 'string' && c.trim().length > 0)
-              .map((c: string) => c.trim());
-            
-            console.log('[AI Parser] Detected cuisines (array):', detectedCuisines);
-            
-            // Normalize cuisine names: try exact match first, then case-insensitive match
-            const normalizeCuisineName = (name: string): string | null => {
-              // Try exact match first
-              if (isSupportedCuisine(name)) {
-                console.log(`[AI Parser] ✅ Exact match found: "${name}"`);
-                return name;
-              }
-              // Try case-insensitive match
-              const lowerName = name.toLowerCase();
-              const matched = SUPPORTED_CUISINES.find(
-                (supported) => supported.toLowerCase() === lowerName
-              );
-              if (matched) {
-                console.log(`[AI Parser] ✅ Case-insensitive match: "${name}" → "${matched}"`);
-                return matched;
-              }
-              console.log(`[AI Parser] ❌ No match for: "${name}"`);
-              return null;
-            };
-            
-            // Filter to only include supported cuisines (with normalization)
-            const validCuisines = detectedCuisines
-              .map(normalizeCuisineName)
-              .filter((c): c is string => c !== null);
-            
-            if (validCuisines.length > 0) {
-              recipe.cuisine = validCuisines;
-              console.log('[AI Parser] ✅ Cuisine detection SUCCESS:', {
-                title: recipe.title,
-                detectedCuisines,
-                validCuisines,
-                unsupportedCuisines: detectedCuisines.filter((c: string) => !normalizeCuisineName(c)),
-                supportedCuisines: SUPPORTED_CUISINES,
-              });
-            } else if (detectedCuisines.length > 0) {
-              console.warn('[AI Parser] ⚠️ Cuisine detected but not supported:', {
-                title: recipe.title,
-                detectedCuisines,
-                supportedCuisines: SUPPORTED_CUISINES,
-                reason: 'None of the detected cuisines match supported list (even with case-insensitive matching)',
-              });
-            } else {
-              console.log('[AI Parser] ⚠️ Cuisine array was empty or invalid');
-            }
-          } else if (typeof parsedData.cuisine === 'string' && parsedData.cuisine.trim().length > 0) {
-            // Handle single string cuisine
-            const cuisineStr = parsedData.cuisine.trim();
-            console.log('[AI Parser] Detected single cuisine string:', cuisineStr);
-            
-            // Try exact match first, then case-insensitive
-            let normalizedCuisine: string | null = null;
-            if (isSupportedCuisine(cuisineStr)) {
-              normalizedCuisine = cuisineStr;
-              console.log(`[AI Parser] ✅ Exact match found: "${cuisineStr}"`);
-            } else {
-              const lowerName = cuisineStr.toLowerCase();
-              const matched = SUPPORTED_CUISINES.find(
-                (supported) => supported.toLowerCase() === lowerName
-              );
-              normalizedCuisine = matched || null;
-              if (matched) {
-                console.log(`[AI Parser] ✅ Case-insensitive match: "${cuisineStr}" → "${matched}"`);
-              } else {
-                console.log(`[AI Parser] ❌ No match for: "${cuisineStr}"`);
-              }
-            }
-            
-            if (normalizedCuisine) {
-              recipe.cuisine = [normalizedCuisine];
-              console.log('[AI Parser] ✅ Single cuisine string added:', {
-                title: recipe.title,
-                detectedCuisine: cuisineStr,
-                normalizedCuisine,
-              });
-            } else {
-              console.warn('[AI Parser] ⚠️ Single cuisine string not supported:', {
-                title: recipe.title,
-                detectedCuisine: cuisineStr,
-                supportedCuisines: SUPPORTED_CUISINES,
-              });
-            }
-          } else {
-            console.log('[AI Parser] ⚠️ Cuisine field exists but is invalid type:', {
-              type: typeof parsedData.cuisine,
-              value: parsedData.cuisine,
-            });
-          }
-        } else {
-          console.warn('[AI Parser] ⚠️ No cuisine detected by AI:', {
-            title: parsedData.title,
-            hasCuisineField: 'cuisine' in parsedData,
-            cuisineValue: parsedData.cuisine,
-            note: 'AI may have skipped this optional field - check AI prompt',
-          });
-        }
-        
-        console.log('[AI Parser] Final recipe cuisine:', recipe.cuisine || 'none');
+        // -- Cuisine normalization -----------------------------------------------
+        // The AI returns cuisine as string | string[] | undefined.
+        // We normalize to a string[] of SUPPORTED_CUISINES values (case-insensitive match).
+        recipe.cuisine = normalizeCuisineField(parsedData.cuisine);
+        console.log('[AI Parser] Cuisine:', recipe.cuisine?.length ? recipe.cuisine.join(', ') : 'none');
         return recipe;
       }
     }
@@ -1491,9 +1515,24 @@ ABSOLUTE REQUIREMENTS:
   }
 }
 
+// ---------------------------------------------------------------------------
+// Orchestrator: parseRecipe (main entry point for HTML)
+// ---------------------------------------------------------------------------
+
 /**
- * Main parsing function - tries JSON-LD first, then AI fallback
- * 
+ * Main parsing function — tries JSON-LD first, then AI fallback.
+ *
+ * Flow:
+ *   1. Clean HTML (remove ads, nav, scripts — see htmlCleaner.ts)
+ *   2. Try JSON-LD extraction
+ *      a. If JSON-LD has only a "Main" group → call AI for better groupings → merge
+ *      b. If JSON-LD has good groups → still call AI for cuisine/metadata → merge
+ *   3. If no JSON-LD → full AI parse
+ *   4. Generate summary (separate AI call)
+ *
+ * NOTE: Even when JSON-LD succeeds, we always call the AI (step 2a/2b),
+ * so every successful parse costs at least one AI call.
+ *
  * @param rawHtml - Raw HTML from recipe page
  * @returns ParserResult with success status, data, error, and method used
  */
@@ -1518,135 +1557,86 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
     console.log('[Recipe Parser] Attempting JSON-LD extraction...');
     const jsonLdResult = extractFromJsonLd($);
     if (jsonLdResult) {
-      // Check if JSON-LD only has "Main" group - if so, try AI parsing for better groupings
-      const hasOnlyMainGroup = jsonLdResult.ingredients.length === 1 && 
+      // -- JSON-LD succeeded: always call AI for cuisine + enrichment ------
+      //
+      // Two sub-cases:
+      //   a) JSON-LD has only a "Main" ingredient group → use AI groupings
+      //   b) JSON-LD has good groups → keep them, use AI only for cuisine/metadata
+      //
+      // TODO: Both sub-cases duplicate the merge logic below. Consider
+      // extracting a mergeJsonLdWithAi() helper to reduce duplication.
+
+      const hasOnlyMainGroup = jsonLdResult.ingredients.length === 1 &&
                                 jsonLdResult.ingredients[0].groupName === 'Main';
-      
-      if (hasOnlyMainGroup) {
-        console.log('[Recipe Parser] JSON-LD has only "Main" group, trying AI parsing for better groupings...');
-        const aiResult = await parseWithAI(cleaned.html);
-        
-        if (aiResult && aiResult.ingredients.length > 0) {
-          // Use AI-detected groupings if they exist and are better than "Main"
-          const hasBetterGroupings = aiResult.ingredients.length > 1 || 
-                                    (aiResult.ingredients.length === 1 && aiResult.ingredients[0].groupName !== 'Main');
-          
-          if (hasBetterGroupings) {
-            // Merge JSON-LD data (title, author, servings, times, etc.) with AI-detected groupings and cuisine
-            const mergedRecipe: ParsedRecipe = {
-              ...jsonLdResult,
-              ingredients: aiResult.ingredients, // Use AI-detected groupings
-              cuisine: aiResult.cuisine, // Include AI-detected cuisine tags
-              // Preserve servings from JSON-LD if available, otherwise use AI-detected servings
-              ...(jsonLdResult.servings ? { servings: jsonLdResult.servings } : (aiResult.servings ? { servings: aiResult.servings } : {})),
-              // Preserve times from JSON-LD if available, otherwise use AI-detected times
-              ...(jsonLdResult.prepTimeMinutes ? { prepTimeMinutes: jsonLdResult.prepTimeMinutes } : (aiResult.prepTimeMinutes ? { prepTimeMinutes: aiResult.prepTimeMinutes } : {})),
-              ...(jsonLdResult.cookTimeMinutes ? { cookTimeMinutes: jsonLdResult.cookTimeMinutes } : (aiResult.cookTimeMinutes ? { cookTimeMinutes: aiResult.cookTimeMinutes } : {})),
-              ...(jsonLdResult.totalTimeMinutes ? { totalTimeMinutes: jsonLdResult.totalTimeMinutes } : (aiResult.totalTimeMinutes ? { totalTimeMinutes: aiResult.totalTimeMinutes } : {})),
-            };
-            
-            const summary = await generateRecipeSummary(mergedRecipe);
-            const recipeWithSummary = {
-              ...mergedRecipe,
-              ...(summary && { summary }),
-            };
-            
-            return {
-              success: true,
-              data: recipeWithSummary,
-              method: 'json-ld+ai', // Indicate hybrid approach
-            };
-          }
-        }
-      }
-      
-      // Always try AI parsing for cuisine detection, even if JSON-LD has good groupings
-      // This ensures we get cuisine tags even when JSON-LD parsing succeeds
-      console.log('[Recipe Parser] JSON-LD succeeded, calling AI parsing for cuisine detection...');
+
+      // Always call AI — needed for cuisine, storage, plating, descriptions
+      console.log(`[Recipe Parser] JSON-LD found. Calling AI for enrichment (mainGroupOnly=${hasOnlyMainGroup})...`);
       let aiResult: ParsedRecipe | null = null;
       try {
         aiResult = await parseWithAI(cleaned.html);
       } catch (error) {
-        console.error('[Recipe Parser] AI parsing for cuisine failed:', error);
-        // Continue without cuisine if AI fails
+        console.error('[Recipe Parser] AI enrichment failed:', error);
+        // Continue with JSON-LD data only
       }
-      
-      // Merge JSON-LD data with AI-detected cuisine and servings (and summary if available)
-      console.log('[Recipe Parser] 🔄 Merging JSON-LD + AI results for cuisine detection');
-      console.log('[Recipe Parser] JSON-LD result cuisine:', jsonLdResult.cuisine || 'none');
-      console.log('[Recipe Parser] AI result cuisine:', aiResult?.cuisine || 'none');
-      console.log('[Recipe Parser] JSON-LD result servings:', jsonLdResult.servings || 'none');
-      console.log('[Recipe Parser] AI result servings:', aiResult?.servings || 'none');
-      
+
+      // Merge: JSON-LD fields take priority for ground-truth data (title, author,
+      // servings, times). AI provides enrichment (cuisine, storage, plating).
+      // If JSON-LD had only "Main" group and AI has better groupings, use AI's.
+      const useBetterAiGroupings = hasOnlyMainGroup && aiResult &&
+        aiResult.ingredients.length > 0 &&
+        (aiResult.ingredients.length > 1 ||
+         aiResult.ingredients[0].groupName !== 'Main');
+
       const mergedRecipe: ParsedRecipe = {
         ...jsonLdResult,
-        ...(aiResult?.cuisine && aiResult.cuisine.length > 0 && { cuisine: aiResult.cuisine }), // Add cuisine from AI if detected
-        // Preserve servings from JSON-LD if available, otherwise use AI-detected servings
+        // Use AI ingredient groupings when JSON-LD only had "Main"
+        ...(useBetterAiGroupings && { ingredients: aiResult!.ingredients }),
+        // AI-only fields
+        ...(aiResult?.cuisine && aiResult.cuisine.length > 0 && { cuisine: aiResult.cuisine }),
+        ...(aiResult?.storageGuide && { storageGuide: aiResult.storageGuide }),
+        ...(aiResult?.shelfLife && { shelfLife: aiResult.shelfLife }),
+        ...(aiResult?.platingNotes && { platingNotes: aiResult.platingNotes }),
+        ...(aiResult?.servingVessel && { servingVessel: aiResult.servingVessel }),
+        ...(aiResult?.servingTemp && { servingTemp: aiResult.servingTemp }),
+        // JSON-LD takes priority for these; fall back to AI if missing
         ...(jsonLdResult.servings ? { servings: jsonLdResult.servings } : (aiResult?.servings ? { servings: aiResult.servings } : {})),
-        // Preserve times from JSON-LD if available, otherwise use AI-detected times
         ...(jsonLdResult.prepTimeMinutes ? { prepTimeMinutes: jsonLdResult.prepTimeMinutes } : (aiResult?.prepTimeMinutes ? { prepTimeMinutes: aiResult.prepTimeMinutes } : {})),
         ...(jsonLdResult.cookTimeMinutes ? { cookTimeMinutes: jsonLdResult.cookTimeMinutes } : (aiResult?.cookTimeMinutes ? { cookTimeMinutes: aiResult.cookTimeMinutes } : {})),
         ...(jsonLdResult.totalTimeMinutes ? { totalTimeMinutes: jsonLdResult.totalTimeMinutes } : (aiResult?.totalTimeMinutes ? { totalTimeMinutes: aiResult.totalTimeMinutes } : {})),
       };
-      
-      console.log('[Recipe Parser] ✅ Final merged recipe cuisine:', mergedRecipe.cuisine || 'none');
-      
-      // Log important recipe output information: title, author, and servings
-      console.log('[Recipe Parser] 📋 Merged recipe output summary:', {
-        title: mergedRecipe.title || 'N/A',
-        author: mergedRecipe.author || 'N/A',
-        servings: mergedRecipe.servings || 'N/A',
-        hasAuthor: !!mergedRecipe.author,
-        hasServings: !!mergedRecipe.servings,
+
+      console.log('[Recipe Parser] Merged (json-ld+ai):', {
+        title: mergedRecipe.title,
+        author: mergedRecipe.author ?? '(none)',
+        servings: mergedRecipe.servings ?? '(none)',
+        cuisine: mergedRecipe.cuisine?.join(', ') ?? '(none)',
+        usedAiGroupings: !!useBetterAiGroupings,
       });
-      
+
       const summary = await generateRecipeSummary(mergedRecipe);
-      const recipeWithSummary = {
-        ...mergedRecipe,
-        ...(summary && { summary }),
-      };
       return {
         success: true,
-        data: recipeWithSummary,
-        method: 'json-ld+ai', // Indicate hybrid approach (JSON-LD for data, AI for cuisine)
+        data: { ...mergedRecipe, ...(summary && { summary }) },
+        method: 'json-ld+ai',
       };
     }
 
-    console.log('[Recipe Parser] JSON-LD not available, falling back to AI parsing...');
+    // -- Layer 2: Full AI parse (no JSON-LD available) ---------------------
+    console.log('[Recipe Parser] No JSON-LD found, falling back to AI parsing...');
 
-    // Layer 2: AI parsing fallback
     const aiResult = await parseWithAI(cleaned.html);
     if (aiResult) {
-      // Log when AI parsing succeeds, including whether we captured author metadata
-      console.log(
-        `[Recipe Parser] AI parsing succeeded${aiResult.author ? ` with author "${aiResult.author}"` : ' (no author found)'}`
-      );
-      // #region agent log
-      console.log('[DEBUG] AI-only parsing - cuisine check:', {
+      console.log('[Recipe Parser] AI-only parse succeeded:', {
         title: aiResult.title,
-        hasCuisine: !!aiResult.cuisine,
-        cuisine: aiResult.cuisine,
+        author: aiResult.author ?? '(none)',
+        servings: aiResult.servings ?? '(none)',
+        cuisine: aiResult.cuisine?.join(', ') ?? '(none)',
       });
-      // #endregion
-      
-      // Log important recipe output information: title, author, and servings
-      console.log('[Recipe Parser] 📋 AI-only recipe output summary:', {
-        title: aiResult.title || 'N/A',
-        author: aiResult.author || 'N/A',
-        servings: aiResult.servings || 'N/A',
-        hasAuthor: !!aiResult.author,
-        hasServings: !!aiResult.servings,
-      });
-      
-      // Generate summary for AI parsed recipe
+
       const summary = await generateRecipeSummary(aiResult);
-      const recipeWithSummary = {
-        ...aiResult,
-        ...(summary && { summary }),
-      };
       return {
         success: true,
-        data: recipeWithSummary,
+        data: { ...aiResult, ...(summary && { summary }) },
         method: 'ai',
       };
     }
@@ -1698,11 +1688,15 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// URL Entry Point
+// ---------------------------------------------------------------------------
+
 /**
- * Parse recipe from URL (fetches HTML first)
- * 
- * @param url - Recipe URL to fetch and parse
- * @returns ParserResult with success status, data, error, and method used
+ * Fetch HTML from a URL, then parse it.
+ *
+ * Uses a Chrome-like User-Agent to avoid bot detection. 10-second timeout.
+ * Sets sourceUrl on the result so the UI can link back to the original page.
  */
 export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
   try {
@@ -1780,14 +1774,22 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Image Entry Point (Vision Model)
+// ---------------------------------------------------------------------------
+
 /**
- * Parse recipe from image using AI vision model
- * 
- * This function uses Groq's vision-capable model to extract recipe data
- * directly from an image (photo of recipe card, cookbook page, etc.)
- * 
+ * Parse recipe from an image using Groq's vision-capable model.
+ *
+ * Uses meta-llama/llama-4-scout-17b-16e-instruct (vision model).
+ *
+ * NOTE: The prompt here is much simpler than parseWithAI — it doesn't request
+ * cuisine, storage, plating, descriptions, or substitutions. These fields
+ * will be missing from image-parsed recipes.
+ *
+ * TODO: Align the image prompt with the HTML prompt to produce consistent output.
+ *
  * @param imageBase64 - Base64-encoded image data (with data URL prefix)
- * @returns ParserResult with success status, data, error, and method used
  */
 export async function parseRecipeFromImage(imageBase64: string): Promise<ParserResult> {
   try {
