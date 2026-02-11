@@ -8,11 +8,10 @@ import { IngredientInfo } from '@/utils/ingredientMatcher';
 
 interface ListViewProps {
   steps: RecipeStep[];
-  onSelectStep: (index: number) => void;
   allIngredients?: IngredientInfo[];
 }
 
-export default function ListView({ steps, onSelectStep, allIngredients = [] }: ListViewProps) {
+export default function ListView({ steps, allIngredients = [] }: ListViewProps) {
   const { settings } = useUISettings();
   const { stepSizing } = settings;
 
@@ -47,11 +46,10 @@ export default function ListView({ steps, onSelectStep, allIngredients = [] }: L
     <div className="h-full overflow-y-auto bg-white">
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-4 space-y-0 pb-12">
         {steps.map((step, index) => (
-          <button
+          <div
             key={index}
             id={`step-${index}`}
-            onClick={() => onSelectStep(index)}
-            className={`w-full text-left group relative transition-all duration-200 ease-out rounded-xl hover:bg-stone-50 active:bg-stone-100 ${paddingMap[stepSizing]}`}
+            className={`w-full text-left relative rounded-xl ${paddingMap[stepSizing]}`}
           >
             {/* Content container */}
             <div className="flex items-start gap-6 relative z-10">
@@ -59,7 +57,7 @@ export default function ListView({ steps, onSelectStep, allIngredients = [] }: L
               <div className="flex-1 min-w-0">
                 {/* Step header - shows step number at a glance */}
                 <div className="mb-2.5">
-                  <span className="font-albert text-[12px] font-bold uppercase tracking-[0.1em] text-stone-400 group-hover:text-stone-500 transition-colors duration-200">
+                  <span className="font-albert text-[12px] font-bold uppercase tracking-[0.1em] text-stone-400">
                     Step {index + 1}
                   </span>
                 </div>
@@ -78,7 +76,7 @@ export default function ListView({ steps, onSelectStep, allIngredients = [] }: L
                       alt={`Step ${index + 1}: ${step.step}`}
                       width={150}
                       height={150}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                      className="w-full h-full object-cover"
                       unoptimized={step.imageUrl.startsWith('http://localhost')}
                       draggable={false}
                     />
@@ -87,7 +85,7 @@ export default function ListView({ steps, onSelectStep, allIngredients = [] }: L
                     <img
                       src={step.imageUrl}
                       alt={`Step ${index + 1}: ${step.step}`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                      className="w-full h-full object-cover"
                       draggable="false"
                     />
                   )}
@@ -97,9 +95,9 @@ export default function ListView({ steps, onSelectStep, allIngredients = [] }: L
             
             {/* Subtle separator line - disappears on hover of itself or neighbors */}
             {index < steps.length - 1 && (
-              <div className="absolute bottom-0 left-4 right-4 h-px bg-stone-200/50 group-hover:opacity-0 transition-opacity duration-200" />
+              <div className="absolute bottom-0 left-4 right-4 h-px bg-stone-200/50" />
             )}
-          </button>
+          </div>
         ))}
       </div>
     </div>
