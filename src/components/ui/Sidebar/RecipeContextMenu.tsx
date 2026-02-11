@@ -16,6 +16,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
+import { useRecipe } from '@/contexts/RecipeContext';
 import { useToast } from '@/hooks/useToast';
 import { toast } from 'sonner';
 import type { ParsedRecipe } from '@/lib/storage';
@@ -30,22 +31,35 @@ import {
   Ellipsis,
 } from 'lucide-react';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 interface RecipeContextMenuProps {
   children: React.ReactNode;
   recipe: ParsedRecipe;
   onRecipeClick: (id: string) => void;
+  onDialogOpenChange?: (open: boolean) => void;
 }
 
 export default function RecipeContextMenu({
   children,
   recipe,
   onRecipeClick,
+  onDialogOpenChange,
 }: RecipeContextMenuProps) {
-  const { isBookmarked, toggleBookmark, removeRecipe, restoreRecipe, getRecipeById, isPinned, togglePin } = useParsedRecipes();
+  const { isBookmarked, toggleBookmark, removeRecipe, restoreRecipe, getRecipeById, isPinned, togglePin, updateRecipe } = useParsedRecipes();
+  const { parsedRecipe, setParsedRecipe } = useRecipe();
   const { showSuccess, showInfo } = useToast();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameValue, setRenameValue] = useState('');
 
   const bookmarked = isBookmarked(recipe.id);
   const pinned = isPinned(recipe.id);
@@ -80,7 +94,31 @@ export default function RecipeContextMenu({
   };
 
   const handleRename = () => {
-    showInfo('Coming soon', 'Renaming recipes will be available in a future update.');
+    setRenameValue(recipe.title);
+    setRenameOpen(true);
+    onDialogOpenChange?.(true);
+  };
+
+  const closeRenameDialog = () => {
+    setRenameOpen(false);
+    onDialogOpenChange?.(false);
+  };
+
+  const handleRenameSubmit = () => {
+    const trimmed = renameValue.trim();
+    if (!trimmed) return;
+    updateRecipe(recipe.id, { title: trimmed });
+    const activeRecipeMatches =
+      parsedRecipe &&
+      (parsedRecipe.id === recipe.id ||
+        (parsedRecipe.sourceUrl &&
+          (parsedRecipe.sourceUrl === recipe.sourceUrl ||
+            parsedRecipe.sourceUrl === recipe.url)));
+    if (activeRecipeMatches) {
+      setParsedRecipe({ ...parsedRecipe, title: trimmed });
+    }
+    showSuccess('Renamed', `Recipe renamed to "${trimmed}".`);
+    closeRenameDialog();
   };
 
   const handleReport = () => {
@@ -239,6 +277,55 @@ export default function RecipeContextMenu({
         </ContextMenuContent>
       </ContextMenu>
 
+      <Dialog
+        open={renameOpen}
+        onOpenChange={(open) => {
+          setRenameOpen(open);
+          onDialogOpenChange?.(open);
+        }}
+      >
+        <DialogContent className="max-w-sm p-0 gap-0 overflow-hidden" showCloseButton={false}>
+          <div className="px-6 pt-6 pb-4">
+            <DialogHeader className="mb-4">
+              <DialogTitle>Rename Recipe</DialogTitle>
+            </DialogHeader>
+            <label htmlFor="rename-sidebar-input" className="block font-albert text-[13px] font-medium text-stone-500 mb-1.5">
+              Recipe title
+            </label>
+            <Input
+              id="rename-sidebar-input"
+              name="title"
+              autoComplete="off"
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleRenameSubmit();
+                }
+              }}
+              autoFocus
+            />
+          </div>
+          <DialogFooter className="border-t border-stone-100 px-6 py-4 bg-stone-50/50">
+            <button
+              type="button"
+              onClick={closeRenameDialog}
+              className="px-4 py-2 font-albert text-[14px] font-medium text-stone-600 hover:text-stone-800 rounded-lg hover:bg-stone-200/60 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleRenameSubmit}
+              disabled={!renameValue.trim()}
+              className="px-4 py-2 font-albert text-[14px] font-medium text-white bg-stone-900 rounded-lg hover:bg-stone-800 active:scale-[0.97] transition-[background-color,transform] disabled:opacity-40 disabled:pointer-events-none"
+            >
+              Save
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

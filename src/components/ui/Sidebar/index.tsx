@@ -385,16 +385,17 @@ export default function Sidebar() {
       recipe: ParsedRecipe;
       children: React.ReactNode;
     }) => {
+      const [dialogOpen, setDialogOpen] = useState(false);
       if (isMobile) {
         return (
-          <RecipeContextMenu recipe={recipe} onRecipeClick={handleRecipeClick}>
+          <RecipeContextMenu recipe={recipe} onRecipeClick={handleRecipeClick} onDialogOpenChange={setDialogOpen}>
             {children}
           </RecipeContextMenu>
         );
       }
       return (
-        <RecipeHoverCard recipe={recipe}>
-          <RecipeContextMenu recipe={recipe} onRecipeClick={handleRecipeClick}>
+        <RecipeHoverCard recipe={recipe} forceClose={dialogOpen}>
+          <RecipeContextMenu recipe={recipe} onRecipeClick={handleRecipeClick} onDialogOpenChange={setDialogOpen}>
             {children}
           </RecipeContextMenu>
         </RecipeHoverCard>
