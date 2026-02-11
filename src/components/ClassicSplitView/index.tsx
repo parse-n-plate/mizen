@@ -224,19 +224,6 @@ export default function ClassicSplitView({ steps, title: _title = 'Recipe Steps'
     );
   }
 
-  const handleSelectStep = (index: number) => {
-    if (index >= 0 && index < steps.length) {
-      setCurrentStep(index);
-      setView('card');
-
-      // Scroll to top of the cook section
-      const element = document.querySelector('.classic-split-view-container');
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
-  };
-
   const handleNextStep = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
@@ -473,9 +460,8 @@ export default function ClassicSplitView({ steps, title: _title = 'Recipe Steps'
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="flex-1 overflow-hidden relative"
           >
-            <ListView 
-              steps={steps} 
-              onSelectStep={handleSelectStep}
+            <ListView
+              steps={steps}
               allIngredients={allIngredients}
             />
           </motion.div>
