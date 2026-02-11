@@ -76,14 +76,14 @@ export function AdaptiveModal({
                   )}
                 </div>
                 <Drawer.Close
-                  className="mt-2 p-3 bg-stone-50 hover:bg-stone-100 rounded-full text-stone-400 hover:text-stone-900 transition-[background-color,color,transform] active:scale-90 focus-visible:ring-2 focus-visible:ring-stone-400 focus-visible:outline-none"
+                  className="mt-2 p-3 bg-stone-100 hover:bg-stone-200 rounded-full text-stone-500 hover:text-stone-900 transition-[background-color,color,transform] active:scale-90 focus-visible:ring-2 focus-visible:ring-stone-400 focus-visible:outline-none"
                   aria-label="Close"
                 >
-                  <X className="size-5" />
+                  <X className="size-5" aria-hidden="true" />
                 </Drawer.Close>
               </div>
               {description && (
-                <p className="text-stone-600 text-[15px] leading-relaxed font-albert mt-3">
+                <p className="text-stone-500 text-[15px] leading-relaxed font-albert mt-3">
                   {description}
                 </p>
               )}
@@ -121,7 +121,7 @@ export function AdaptiveModal({
               transition={{ duration: noMotion ? 0 : 0.2, ease: 'easeOut' }}
               className={cn(
                 'fixed top-0 right-0 h-dvh w-full max-w-md',
-                'bg-white shadow-2xl z-[201]',
+                'bg-white shadow-[0_0_40px_rgba(0,0,0,0.08)] border-l border-stone-100 z-[201]',
                 'flex flex-col overflow-hidden',
               )}
             >
@@ -133,7 +133,7 @@ export function AdaptiveModal({
                 onModeChange={setMode}
                 onClose={onClose}
               />
-              <div className="flex-1 min-h-0 overflow-y-auto p-6 overscroll-contain flex items-end justify-center">
+              <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-2 pb-8 overscroll-contain">
                 <div className="w-full max-w-full">
                   {children}
                 </div>
@@ -152,7 +152,7 @@ export function AdaptiveModal({
               className={cn(
                 'fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
                 'w-full max-w-md max-h-[85vh]',
-                'bg-white rounded-2xl shadow-2xl z-[201]',
+                'bg-white rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.12)] border border-stone-100 z-[201]',
                 'flex flex-col overflow-hidden',
               )}
             >
@@ -164,7 +164,7 @@ export function AdaptiveModal({
                 onModeChange={setMode}
                 onClose={onClose}
               />
-              <div className="flex-1 min-h-0 overflow-y-auto p-6 overscroll-contain">
+              <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-2 pb-8 overscroll-contain">
                 {children}
               </div>
             </motion.div>
@@ -195,10 +195,10 @@ function DesktopHeader({
   onClose,
 }: DesktopHeaderProps) {
   return (
-    <div className="p-6 border-b border-stone-100 flex-shrink-0">
+    <div className="px-6 pt-5 pb-6 border-b border-stone-100/80 flex-shrink-0">
       <div className="flex items-start justify-between">
         <div className="min-w-0 flex-1">
-          <h2 className="font-domine font-bold text-xl text-stone-900 capitalize text-balance">
+          <h2 className="font-domine font-bold text-2xl text-stone-900 capitalize text-balance">
             {title}
           </h2>
           {subtitle && (
@@ -211,15 +211,15 @@ function DesktopHeader({
           <ModalViewSwitcher mode={mode} onModeChange={onModeChange} />
           <button
             onClick={onClose}
-            className="p-2 hover:bg-stone-50 rounded-full text-stone-400 hover:text-stone-900 transition-colors focus-visible:ring-2 focus-visible:ring-stone-400 focus-visible:outline-none"
+            className="p-2 bg-stone-100 hover:bg-stone-200 rounded-full text-stone-500 hover:text-stone-900 transition-[background-color,color] focus-visible:ring-2 focus-visible:ring-stone-400 focus-visible:outline-none"
             aria-label="Close"
           >
-            <X className="size-5" />
+            <X className="size-5" aria-hidden="true" />
           </button>
         </div>
       </div>
       {description && (
-        <p className="text-stone-600 text-[15px] leading-relaxed font-albert mt-3">
+        <p className="text-stone-500 text-[15px] leading-relaxed font-albert mt-3">
           {description}
         </p>
       )}
