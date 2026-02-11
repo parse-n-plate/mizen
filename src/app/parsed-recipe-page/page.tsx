@@ -36,7 +36,6 @@ import PlatePhotoCapture from '@/components/ui/plate-photo-capture';
 import PlatingGuidanceCard from '@/components/ui/plating-guidance-card';
 import StorageGuidanceCard from '@/components/ui/storage-guidance-card';
 import IngredientsOverlay from '@/components/ui/ingredients-overlay';
-import { useSidebar } from '@/contexts/SidebarContext';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 // Helper function to extract domain from URL for display
@@ -199,7 +198,6 @@ export default function ParsedRecipePage({
   const { parsedRecipe, setParsedRecipe, isLoaded } = useRecipe();
   const { recentRecipes, isBookmarked, toggleBookmark, removeRecipe, getBookmarkedRecipes } = useParsedRecipes();
   const router = useRouter();
-  const { showMobileNav } = useSidebar();
   const isMobileViewport = useIsMobile();
   // Store original servings from recipe (never changes) - use useMemo to preserve it
   const originalServings = useMemo(() => parsedRecipe?.servings, [parsedRecipe?.servings]);
@@ -836,26 +834,18 @@ export default function ParsedRecipePage({
                 {/* Top Navigation Bar - Back arrow on left, Bookmark/Settings on right */}
                 <div className="w-full mb-6 md:mb-8">
                   <div className="flex items-center justify-between">
-                    {/* Back Button - Visible on all screen sizes */}
+                    {/* Back Button - Hidden on mobile (hamburger menu handles nav) */}
                     <button
-                      onClick={() => {
-                        if (isMobileViewport) {
-                          showMobileNav();
-                        } else {
-                          router.push('/');
-                        }
-                      }}
-                      className="flex items-center gap-2 text-stone-600 hover:text-stone-800 transition-colors cursor-pointer group"
+                      onClick={() => router.push('/')}
+                      className="hidden md:flex items-center gap-2 text-stone-600 hover:text-stone-800 transition-colors cursor-pointer group"
                       aria-label="Back to Home"
                     >
                       <ArrowLeft className="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1" />
-                      {/* Desktop: Show "Back to Home" text, Mobile: Show "Menu" */}
-                      <span className="hidden md:inline font-albert text-[15px] font-medium">Back to Home</span>
-                      <span className="md:hidden font-albert text-[15px] font-medium">Menu</span>
+                      <span className="font-albert text-[15px] font-medium">Back</span>
                     </button>
                     
                     {/* Bookmark and Settings Buttons */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
                       {/* Bookmark Button */}
                       {recipeId && (
                         <motion.button
