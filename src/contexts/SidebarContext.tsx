@@ -15,7 +15,7 @@ type SidebarContextType = {
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
-  const [isMobileNavVisible, setIsMobileNavVisible] = useState(true);
+  const [isMobileNavVisible, setIsMobileNavVisible] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const isMobile = useIsMobile();
@@ -33,7 +33,7 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     const prevPathname = prevPathnameRef.current;
     prevPathnameRef.current = pathname;
 
-    if (pathname !== prevPathname && pathname !== '/') {
+    if (pathname !== prevPathname) {
       // Use microtask to avoid synchronous setState in effect
       queueMicrotask(() => setIsMobileNavVisible(false));
     }
