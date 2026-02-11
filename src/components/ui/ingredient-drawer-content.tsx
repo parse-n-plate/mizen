@@ -141,9 +141,9 @@ export function IngredientDrawerContent({
           <div>
             <button
               onClick={handleGetAiSubstitutions}
-              className="flex items-center gap-1.5 text-[13px] font-albert font-semibold text-[#0072ff] hover:text-[#0072ff]/80 transition-[color] cursor-pointer"
+              className="flex items-center gap-1.5 text-[13px] font-albert font-semibold text-primary hover:text-primary/80 transition-[color] cursor-pointer"
             >
-              <RefreshCw className="h-3 w-3" />
+              <RefreshCw className="h-3 w-3" aria-hidden="true" />
               Try again
             </button>
           </div>
@@ -173,9 +173,9 @@ export function IngredientDrawerContent({
               <div>
                 <button
                   onClick={handleGetAiSubstitutions}
-                  className="flex items-center gap-1.5 text-[13px] font-albert font-semibold text-[#0072ff] hover:text-[#0072ff]/80 transition-[color] cursor-pointer"
+                  className="flex items-center gap-1.5 text-[13px] font-albert font-semibold text-primary hover:text-primary/80 transition-[color] cursor-pointer"
                 >
-                  <Sparkles className="h-3.5 w-3.5" />
+                  <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
                   Suggest Substitutes
                 </button>
               </div>
