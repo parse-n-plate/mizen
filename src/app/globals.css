@@ -2118,58 +2118,6 @@ html {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   MOBILE FULL-WIDTH SEARCH — Slide in from sidebar (left edge)
-   On mobile the search replaces the content entirely as a full-width page.
-   No dark overlay. Slides in/out from the left to suggest sidebar origin.
-   Enter: 250ms ease-out-quint — snappy, responsive jump from left edge.
-   Exit:  200ms ease-out-quad  — quick, non-blocking dismiss.
-═══════════════════════════════════════════════════════════════════════════ */
-
-@keyframes search-cmd-mobile-enter {
-  from { transform: translateX(-100%); }
-  to   { transform: translateX(0); }
-}
-
-@keyframes search-cmd-mobile-exit {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-100%); }
-}
-
-@media (max-width: 767px) {
-  /* Hide the dark overlay — search replaces content, not a modal layer */
-  .search-command-overlay {
-    display: none;
-  }
-
-  /* Remove centering translate — mobile uses inset:0 positioning */
-  [data-slot="dialog-content"].search-command-modal {
-    translate: none;
-  }
-
-  [data-slot="dialog-content"].search-command-modal[data-state="open"] {
-    animation: search-cmd-mobile-enter 250ms var(--ease-out-quint) forwards;
-  }
-
-  [data-slot="dialog-content"].search-command-modal[data-state="closed"] {
-    animation: search-cmd-mobile-exit 200ms var(--ease-out-quad) forwards;
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   MOBILE SLIDE NAVIGATION — iOS-style push/pop transitions
-   Sidebar and content panels slide horizontally using GPU-accelerated
-   translateX transforms. Both panels move simultaneously.
-   Duration: 350ms with ease-out-quint for a responsive, physical feel.
-   Only active on mobile (<768px) — desktop uses standard flex layout.
-═══════════════════════════════════════════════════════════════════════════ */
-
-@media (max-width: 767px) {
-  .mobile-slide-panel {
-    transition: translate 350ms var(--ease-out-quint);
-    will-change: translate;
-  }
-}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    REDUCED MOTION - Accessibility support for users who prefer reduced motion
