@@ -5,6 +5,18 @@ import { IngredientInfo } from '@/utils/ingredientMatcher';
 import StepDisplay from './StepDisplay';
 import ContextPanel from './ContextPanel';
 import { motion } from 'framer-motion';
+import { IngredientDisplayMode } from '@/hooks/use-ingredient-display-mode';
+
+interface IngredientGroup {
+  groupName: string;
+  ingredients: {
+    amount: string;
+    units: string;
+    ingredient: string;
+    description?: string;
+    substitutions?: string[];
+  }[];
+}
 
 interface CardViewProps {
   steps: RecipeStep[];
@@ -13,9 +25,11 @@ interface CardViewProps {
   onPrev: () => void;
   onBackToList: () => void;
   allIngredients: IngredientInfo[];
+  ingredientDisplayMode?: IngredientDisplayMode;
+  ingredientGroups?: IngredientGroup[];
 }
 
-export default function CardView({ steps, currentStep, onNext, onPrev, onBackToList, allIngredients }: CardViewProps) {
+export default function CardView({ steps, currentStep, onNext, onPrev, onBackToList, allIngredients, ingredientDisplayMode = 'inline', ingredientGroups = [] }: CardViewProps) {
   // Safety check: ensure we have valid steps and currentStep is in bounds
   if (!steps || steps.length === 0) {
     return (
@@ -51,6 +65,8 @@ export default function CardView({ steps, currentStep, onNext, onPrev, onBackToL
         onPrev={onPrev}
         onBackToList={onBackToList}
         allIngredients={allIngredients}
+        ingredientDisplayMode={ingredientDisplayMode}
+        ingredientGroups={ingredientGroups}
       />
 
       {/* Bottom Half: Context Panel */}

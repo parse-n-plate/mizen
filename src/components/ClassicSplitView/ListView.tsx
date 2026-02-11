@@ -5,13 +5,28 @@ import { highlightQuantitiesAndIngredients } from '@/lib/utils';
 import Image from 'next/image';
 import { useUISettings } from '@/contexts/UISettingsContext';
 import { IngredientInfo } from '@/utils/ingredientMatcher';
+import { IngredientDisplayMode } from '@/hooks/use-ingredient-display-mode';
+import InlineIngredients from './InlineIngredients';
+
+interface IngredientGroup {
+  groupName: string;
+  ingredients: {
+    amount: string;
+    units: string;
+    ingredient: string;
+    description?: string;
+    substitutions?: string[];
+  }[];
+}
 
 interface ListViewProps {
   steps: RecipeStep[];
   allIngredients?: IngredientInfo[];
+  ingredientDisplayMode?: IngredientDisplayMode;
+  ingredientGroups?: IngredientGroup[];
 }
 
-export default function ListView({ steps, allIngredients = [] }: ListViewProps) {
+export default function ListView({ steps, allIngredients = [], ingredientDisplayMode = 'inline', ingredientGroups = [] }: ListViewProps) {
   const { settings } = useUISettings();
   const { stepSizing } = settings;
 
@@ -64,6 +79,9 @@ export default function ListView({ steps, allIngredients = [] }: ListViewProps) 
                 <p className={`${settings.fontFamily === 'serif' ? 'font-domine' : 'font-albert'} text-stone-900 leading-[1.6] antialiased ${fontSizeMap[stepSizing]}`}>
                   {highlightQuantitiesAndIngredients(step.detail, allIngredients)}
                 </p>
+                {ingredientDisplayMode === 'inline' && (
+                  <InlineIngredients stepDetail={step.detail} allIngredients={allIngredients} ingredientGroups={ingredientGroups} />
+                )}
               </div>
               
               {/* Right side: Square image */}

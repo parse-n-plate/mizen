@@ -1326,6 +1326,7 @@ export default function ParsedRecipePage({
                           title={parsedRecipe.title}
                           allIngredients={flattenedIngredients}
                           steps={normalizedSteps}
+                          ingredientGroups={scaledIngredients}
                         />
                       </div>
                     </motion.div>

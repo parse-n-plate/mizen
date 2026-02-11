@@ -17,24 +17,42 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useIngredientDisplayMode } from '@/hooks/use-ingredient-display-mode';
+import IngredientModeSelector from './IngredientModeSelector';
+import IngredientModalPanel from './IngredientModalPanel';
+import StickyIngredientDrawer from './StickyIngredientDrawer';
+
+interface IngredientGroup {
+  groupName: string;
+  ingredients: {
+    amount: string;
+    units: string;
+    ingredient: string;
+    description?: string;
+    substitutions?: string[];
+  }[];
+}
 
 interface ClassicSplitViewProps {
   steps: RecipeStep[];
   title?: string;
   allIngredients?: IngredientInfo[];
+  ingredientGroups?: IngredientGroup[];
 }
 
-export default function ClassicSplitView({ steps, title: _title = 'Recipe Steps', allIngredients = [] }: ClassicSplitViewProps) {
+export default function ClassicSplitView({ steps, title: _title = 'Recipe Steps', allIngredients = [], ingredientGroups = [] }: ClassicSplitViewProps) {
   const [view, setView] = useState<'list' | 'card'>('list');
   const [currentStep, setCurrentStep] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedRecipe, setCopiedRecipe] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isIngredientModalOpen, setIsIngredientModalOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const _shouldReduceMotion = useReducedMotion();
   const { settings, setStepSizing, setFontFamily } = useUISettings();
   const { parsedRecipe } = useRecipe();
+  const [ingredientDisplayMode] = useIngredientDisplayMode();
 
   // Handler functions - must be defined before useEffects that reference them
   const handleCopyLink = useCallback(async () => {
@@ -291,8 +309,9 @@ export default function ClassicSplitView({ steps, title: _title = 'Recipe Steps'
             </div>
           </div>
 
-          {/* Settings Menu - Right aligned */}
+          {/* Ingredient Mode + Settings - Right aligned */}
           <div className="flex items-center gap-3">
+            <IngredientModeSelector />
             {/* Settings Menu - Using DropdownMenu for consistent behavior */}
             <DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <DropdownMenuTrigger asChild>
@@ -463,6 +482,8 @@ export default function ClassicSplitView({ steps, title: _title = 'Recipe Steps'
             <ListView
               steps={steps}
               allIngredients={allIngredients}
+              ingredientDisplayMode={ingredientDisplayMode}
+              ingredientGroups={ingredientGroups}
             />
           </motion.div>
         ) : (
@@ -474,17 +495,57 @@ export default function ClassicSplitView({ steps, title: _title = 'Recipe Steps'
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="flex-1 overflow-hidden relative"
           >
-            <CardView 
+            <CardView
               steps={steps}
               currentStep={currentStep}
               onNext={handleNextStep}
               onPrev={handlePrevStep}
               onBackToList={handleBackToList}
               allIngredients={allIngredients}
+              ingredientDisplayMode={ingredientDisplayMode}
+              ingredientGroups={ingredientGroups}
             />
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Sticky Ingredient Drawer (Approach 3) */}
+      {ingredientDisplayMode === 'drawer' && (
+        <StickyIngredientDrawer
+          steps={steps}
+          currentStep={currentStep}
+          allIngredients={allIngredients}
+          ingredientGroups={ingredientGroups}
+          viewMode={view}
+        />
+      )}
+
+      {/* Ingredient Modal Panel - floating button only in modal mode, modal available for both inline and modal */}
+      {ingredientDisplayMode === 'modal' && (
+        <motion.button
+          onClick={() => setIsIngredientModalOpen(true)}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="fixed bottom-6 right-6 z-30 w-12 h-12 bg-stone-900 text-white rounded-full shadow-lg flex items-center justify-center hover:bg-stone-800 transition-colors"
+          aria-label="Open ingredients panel"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 5H2v7l6.29 6.29c.94.94 2.48.94 3.42 0l3.58-3.58c.94-.94.94-2.48 0-3.42L9 5Z" />
+            <path d="M6 9.01V9" />
+            <path d="m15 5 6.3 6.3a2.4 2.4 0 0 1 0 3.4L17 19" />
+          </svg>
+        </motion.button>
+      )}
+      {ingredientDisplayMode === 'modal' && (
+        <IngredientModalPanel
+          isOpen={isIngredientModalOpen}
+          onClose={() => setIsIngredientModalOpen(false)}
+          allIngredients={allIngredients}
+          steps={steps}
+          currentStep={currentStep}
+          ingredientGroups={ingredientGroups}
+        />
+      )}
     </div>
     </TooltipProvider>
   );
