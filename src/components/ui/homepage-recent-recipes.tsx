@@ -6,7 +6,7 @@ import { useRecipe } from '@/contexts/RecipeContext';
 import { useRouter } from 'next/navigation';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import History from '@solar-icons/react/csr/time/History';
-import { Ellipsis, ExternalLink, Link, Trash2 } from 'lucide-react';
+import { Ellipsis, ExternalLink, Link, PenLine, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -15,6 +15,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/useToast';
 import { toast } from 'sonner';
 
@@ -34,12 +42,16 @@ export default function HomepageRecentRecipes() {
     restoreRecipe,
     isBookmarked,
     toggleBookmark,
+    updateRecipe,
   } = useParsedRecipes();
-  const { setParsedRecipe } = useRecipe();
+  const { parsedRecipe, setParsedRecipe } = useRecipe();
   const router = useRouter();
   const [showAll, setShowAll] = useState(false);
   const { showSuccess, showInfo } = useToast();
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameValue, setRenameValue] = useState('');
+  const [renameRecipeId, setRenameRecipeId] = useState<string | null>(null);
 
   // Filter out bookmarked recipes — they live in Cookbook, not Recent
   const bookmarkedIdSet = useMemo(
@@ -170,6 +182,33 @@ export default function HomepageRecentRecipes() {
     }
   };
 
+  // Handle rename
+  const handleRename = (recipe: typeof recentRecipes[0]) => {
+    setRenameRecipeId(recipe.id);
+    setRenameValue(recipe.title);
+    setRenameOpen(true);
+  };
+
+  const handleRenameSubmit = () => {
+    const trimmed = renameValue.trim();
+    if (!trimmed || !renameRecipeId) return;
+    updateRecipe(renameRecipeId, { title: trimmed });
+    const renamedRecipe = getRecipeById(renameRecipeId);
+    const activeRecipeMatches =
+      parsedRecipe &&
+      renamedRecipe &&
+      (parsedRecipe.id === renameRecipeId ||
+        (parsedRecipe.sourceUrl &&
+          (parsedRecipe.sourceUrl === renamedRecipe.sourceUrl ||
+            parsedRecipe.sourceUrl === renamedRecipe.url)));
+    if (activeRecipeMatches) {
+      setParsedRecipe({ ...parsedRecipe, title: trimmed });
+    }
+    showSuccess('Renamed', `Recipe renamed to "${trimmed}".`);
+    setRenameOpen(false);
+    setRenameRecipeId(null);
+  };
+
   // Handle delete with undo toast
   const handleDelete = (recipeId: string) => {
     const savedRecipe = getRecipeById(recipeId);
@@ -287,6 +326,10 @@ export default function HomepageRecentRecipes() {
                         <Link className="w-4 h-4 ml-auto" />
                       </DropdownMenuItem>
                     )}
+                    <DropdownMenuItem onSelect={() => handleRename(recipe)}>
+                      <span>Rename</span>
+                      <PenLine className="w-4 h-4 ml-auto" />
+                    </DropdownMenuItem>
 
                     <DropdownMenuSeparator />
 
@@ -319,6 +362,49 @@ export default function HomepageRecentRecipes() {
         )}
       </div>
 
+      <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
+        <DialogContent className="max-w-sm p-0 gap-0 overflow-hidden" showCloseButton={false}>
+          <div className="px-6 pt-6 pb-4">
+            <DialogHeader className="mb-4">
+              <DialogTitle>Rename Recipe</DialogTitle>
+            </DialogHeader>
+            <label htmlFor="rename-recent-input" className="block font-albert text-[13px] font-medium text-stone-500 mb-1.5">
+              Recipe title
+            </label>
+            <Input
+              id="rename-recent-input"
+              name="title"
+              autoComplete="off"
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleRenameSubmit();
+                }
+              }}
+              autoFocus
+            />
+          </div>
+          <DialogFooter className="border-t border-stone-100 px-6 py-4 bg-stone-50/50">
+            <button
+              type="button"
+              onClick={() => setRenameOpen(false)}
+              className="px-4 py-2 font-albert text-[14px] font-medium text-stone-600 hover:text-stone-800 rounded-lg hover:bg-stone-200/60 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleRenameSubmit}
+              disabled={!renameValue.trim()}
+              className="px-4 py-2 font-albert text-[14px] font-medium text-white bg-stone-900 rounded-lg hover:bg-stone-800 active:scale-[0.97] transition-[background-color,transform] disabled:opacity-40 disabled:pointer-events-none"
+            >
+              Save
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
