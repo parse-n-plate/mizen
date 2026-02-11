@@ -420,7 +420,7 @@ export default function Sidebar() {
               `transition-[width] duration-200 ease-[${SIDEBAR_EASING}]`,
           ],
           // Mobile styles
-          isMobile && 'w-full border-r-0',
+          isMobile && 'w-full',
         )}
         style={!isMobile ? { width: sidebarWidth } : undefined}
       >
