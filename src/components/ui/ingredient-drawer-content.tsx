@@ -207,41 +207,36 @@ export function IngredientDrawerContent({
       </div>
 
       {/* Used In */}
-      <div className="space-y-3">
-        <p className="text-[11px] font-albert font-bold uppercase tracking-widest text-stone-400">
-          Used in
-        </p>
-        <div className="bg-stone-50/50 rounded-xl border border-stone-100 p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
-          <p className="text-stone-600 text-[15px] leading-relaxed font-albert">
-            {usedInDescription}
+      {linkedSteps.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-[11px] font-albert font-bold uppercase tracking-widest text-stone-400">
+            Used in
           </p>
-          {linkedSteps.length > 0 && (
-            <div className="flex flex-wrap gap-2 pt-3">
-              {linkedSteps.map((stepNum) => {
-                const stepTitle = stepTitlesMap?.[stepNum];
-                const hasMeaningfulTitle = stepTitle &&
-                  stepTitle.trim() !== `Step ${stepNum}` &&
-                  stepTitle.trim() !== `step ${stepNum}`;
-                const buttonText = hasMeaningfulTitle
-                  ? `Step ${stepNum}: ${stepTitle}`
-                  : `Step ${stepNum}`;
+          <div className="flex flex-wrap gap-2">
+            {linkedSteps.map((stepNum) => {
+              const stepTitle = stepTitlesMap?.[stepNum];
+              const hasMeaningfulTitle = stepTitle &&
+                stepTitle.trim() !== `Step ${stepNum}` &&
+                stepTitle.trim() !== `step ${stepNum}`;
+              const buttonText = hasMeaningfulTitle
+                ? `Step ${stepNum}: ${stepTitle}`
+                : `Step ${stepNum}`;
 
-                return (
-                  <Button
-                    key={stepNum}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onStepClick(stepNum)}
-                    className="h-9 px-4 bg-white hover:bg-stone-50 border border-stone-100 text-stone-700 text-[13px] font-albert font-medium rounded-xl shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-[background-color,color] motion-safe:active:scale-95"
-                  >
-                    {buttonText}
-                  </Button>
-                );
-              })}
-            </div>
-          )}
+              return (
+                <Button
+                  key={stepNum}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onStepClick(stepNum)}
+                  className="h-9 px-4 bg-stone-100 hover:bg-stone-200 border border-stone-200 text-stone-700 text-[13px] font-albert font-medium rounded-xl transition-[background-color,color] motion-safe:active:scale-95"
+                >
+                  {buttonText}
+                </Button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Notes */}
       <div className="space-y-3">

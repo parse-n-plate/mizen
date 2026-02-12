@@ -2,7 +2,8 @@
 import { useRecipe } from '@/contexts/RecipeContext';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useMemo, use } from 'react';
+import dynamic from 'next/dynamic';
+import { useEffect, useState, useMemo, use, useRef, useCallback } from 'react';
 import RecipeSkeleton from '@/components/ui/recipe-skeleton';
 import * as Tabs from '@radix-ui/react-tabs';
 import { ArrowLeft, Copy, Check } from 'lucide-react';
@@ -36,8 +37,14 @@ import PlatePhotoCapture from '@/components/ui/plate-photo-capture';
 import PlatingGuidanceCard from '@/components/ui/plating-guidance-card';
 import StorageGuidanceCard from '@/components/ui/storage-guidance-card';
 import IngredientsOverlay from '@/components/ui/ingredients-overlay';
+import { findStepsForIngredient } from '@/utils/ingredientMatcher';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useIsMobile } from '@/hooks/useIsMobile';
+
+const IngredientExpandedDrawer = dynamic(
+  () => import('@/components/ui/ingredient-expanded-drawer').then(m => m.IngredientExpandedDrawer),
+  { ssr: false }
+);
 
 // Helper function to extract domain from URL for display
 const getDomainFromUrl = (url: string): string => {
@@ -182,6 +189,46 @@ const _formatIngredient = (
   }
 };
 
+const parseIngredientString = (ingredientStr: string): { amount: string; unit: string; name: string } => {
+  const match = ingredientStr.match(/^([\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+(?:\s*[–-]\s*[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)?)\s+([a-zA-Z]+)\s+(.+)$/);
+  if (match) {
+    return {
+      amount: match[1].trim(),
+      unit: match[2].trim(),
+      name: match[3].trim(),
+    };
+  }
+
+  const simpleMatch = ingredientStr.match(/^(\d+(?:\s*[–-]\s*\d+)?)\s+([a-zA-Z]+)\s+(.+)$/);
+  if (simpleMatch) {
+    return {
+      amount: simpleMatch[1].trim(),
+      unit: simpleMatch[2].trim(),
+      name: simpleMatch[3].trim(),
+    };
+  }
+
+  const noUnitMatch = ingredientStr.match(/^([\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+(?:\s*[–-]\s*[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)?)\s+(.+)$/);
+  if (noUnitMatch) {
+    return {
+      amount: noUnitMatch[1].trim(),
+      unit: '',
+      name: noUnitMatch[2].trim(),
+    };
+  }
+
+  const simpleNoUnitMatch = ingredientStr.match(/^(\d+(?:\s*[–-]\s*\d+)?)\s+(.+)$/);
+  if (simpleNoUnitMatch) {
+    return {
+      amount: simpleNoUnitMatch[1].trim(),
+      unit: '',
+      name: simpleNoUnitMatch[2].trim(),
+    };
+  }
+
+  return { amount: '', unit: '', name: ingredientStr };
+};
+
 export default function ParsedRecipePage({
   params,
   searchParams,
@@ -207,7 +254,16 @@ export default function ParsedRecipePage({
   const [servings, setServings] = useState<number | undefined>(parsedRecipe?.servings);
   const [multiplier, setMultiplier] = useState<string>('1x');
   const [activeTab, setActiveTab] = useState<string>('prep');
+  // Track which ingredient is currently expanded (accordion behavior - only one at a time)
+  // Format: "groupName:ingredientName" or null if none expanded
+  const [expandedIngredient, setExpandedIngredient] = useState<string | null>(null);
+  const [cookStepRequest, setCookStepRequest] = useState<{
+    stepNumber: number;
+    requestId: number;
+  } | null>(null);
   const [copied, setCopied] = useState(false);
+  const activeTabRef = useRef(activeTab);
+  const cookStepRequestIdRef = useRef(0);
 
   // Unit system and scale modal state
   const [unitSystem, setUnitSystem] = useState<UnitSystem>('original');
@@ -274,6 +330,17 @@ export default function ParsedRecipePage({
     }
   };
 
+  useEffect(() => {
+    activeTabRef.current = activeTab;
+  }, [activeTab]);
+
+  const handleTabChange = useCallback((newTab: string) => {
+    if (newTab !== activeTabRef.current) {
+      setExpandedIngredient(null);
+    }
+    setActiveTab(newTab);
+  }, []);
+
   // Keyboard shortcuts for tab navigation
   // Command+1: Prep, Command+2: Cook, Command+3: Plate
   useEffect(() => {
@@ -286,17 +353,17 @@ export default function ParsedRecipePage({
         // Command+1: Switch to Prep tab
         if (event.key === '1') {
           event.preventDefault();
-          setActiveTab('prep');
+          handleTabChange('prep');
         }
         // Command+2: Switch to Cook tab
         else if (event.key === '2') {
           event.preventDefault();
-          setActiveTab('cook');
+          handleTabChange('cook');
         }
         // Command+3: Switch to Plate tab
         else if (event.key === '3') {
           event.preventDefault();
-          setActiveTab('plate');
+          handleTabChange('plate');
         }
       }
     };
@@ -308,7 +375,7 @@ export default function ParsedRecipePage({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []); // Empty dependency array means this runs once on mount
+  }, [handleTabChange]);
 
   // Mobile detection for swipe gestures
   useEffect(() => {
@@ -336,9 +403,9 @@ export default function ParsedRecipePage({
   const handleSwipeLeft = () => {
     // Swipe left: navigate to next tab (prep → cook → plate)
     if (activeTab === 'prep') {
-      setActiveTab('cook');
+      handleTabChange('cook');
     } else if (activeTab === 'cook') {
-      setActiveTab('plate');
+      handleTabChange('plate');
     }
     // If already on plate, do nothing (stop at edge)
   };
@@ -346,9 +413,9 @@ export default function ParsedRecipePage({
   const handleSwipeRight = () => {
     // Swipe right: navigate to previous tab (plate → cook → prep)
     if (activeTab === 'plate') {
-      setActiveTab('cook');
+      handleTabChange('cook');
     } else if (activeTab === 'cook') {
-      setActiveTab('prep');
+      handleTabChange('prep');
     }
     // If already on prep, do nothing (stop at edge)
   };
@@ -378,9 +445,6 @@ export default function ParsedRecipePage({
   const [checkedIngredients, setCheckedIngredients] = useState<Record<string, string[]>>({});
   // Map of groupName -> isCollapsed (true = collapsed)
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
-  // Track which ingredient is currently expanded (accordion behavior - only one at a time)
-  // Format: "groupName:ingredientName" or null if none expanded
-  const [expandedIngredient, setExpandedIngredient] = useState<string | null>(null);
   // Search query for filtering ingredients
   const [ingredientSearchQuery, setIngredientSearchQuery] = useState<string>('');
 
@@ -492,7 +556,7 @@ export default function ParsedRecipePage({
   useEffect(() => {
     const handleNavigateToIngredient = (event: Event) => {
       const { name } = (event as CustomEvent<{ name: string }>).detail;
-      setActiveTab('prep');
+      handleTabChange('prep');
       
       // Wait for tab switch animation to complete
       setTimeout(() => {
@@ -512,8 +576,19 @@ export default function ParsedRecipePage({
 
     window.addEventListener('navigate-to-ingredient', handleNavigateToIngredient);
     
-    const handleNavigateToStep = () => {
-      setActiveTab('cook');
+    const handleNavigateToStep = (event: Event) => {
+      const customEvent = event as CustomEvent<{ stepNumber?: number }>;
+      const stepNumber = customEvent.detail?.stepNumber;
+
+      handleTabChange('cook');
+
+      if (typeof stepNumber === 'number' && Number.isFinite(stepNumber) && stepNumber >= 1) {
+        cookStepRequestIdRef.current += 1;
+        setCookStepRequest({
+          stepNumber,
+          requestId: cookStepRequestIdRef.current,
+        });
+      }
     };
 
     window.addEventListener('navigate-to-step', handleNavigateToStep);
@@ -522,7 +597,7 @@ export default function ParsedRecipePage({
       window.removeEventListener('navigate-to-ingredient', handleNavigateToIngredient);
       window.removeEventListener('navigate-to-step', handleNavigateToStep);
     };
-  }, []);
+  }, [handleTabChange]);
 
   // Helper function to handle copying the URL
   const handleCopy = async (text: string) => {
@@ -796,6 +871,96 @@ export default function ParsedRecipePage({
       .filter((s): s is NonNullable<typeof s> => s !== null);
   }, [parsedRecipe]);
 
+  const expandedIngredientData = useMemo(() => {
+    if (!expandedIngredient) return null;
+
+    const separatorIndex = expandedIngredient.indexOf(':');
+    if (separatorIndex === -1) return null;
+
+    const groupName = expandedIngredient.slice(0, separatorIndex);
+    const ingredientNameKey = expandedIngredient.slice(separatorIndex + 1);
+
+    let matchedIngredient:
+      | string
+      | {
+          amount?: string;
+          units?: string;
+          ingredient: string;
+          description?: string;
+          substitutions?: string[];
+        }
+      | null = null;
+
+    for (const groups of [filteredIngredients, scaledIngredients]) {
+      const matchedGroup = groups.find((group) => (group.groupName || 'Main') === groupName);
+      if (!matchedGroup) continue;
+
+      const foundIngredient = matchedGroup.ingredients.find((ingredient) => {
+        const candidateName = typeof ingredient === 'string' ? ingredient : ingredient.ingredient;
+        return candidateName === ingredientNameKey;
+      });
+
+      if (foundIngredient) {
+        matchedIngredient = foundIngredient;
+        break;
+      }
+    }
+
+    if (!matchedIngredient) return null;
+
+    let ingredientName = ingredientNameKey;
+    let ingredientAmount = '';
+    let description: string | undefined;
+    let substitutions: string[] | undefined;
+
+    if (typeof matchedIngredient === 'string') {
+      const parsed = parseIngredientString(matchedIngredient);
+      ingredientName = parsed.amount ? parsed.name : matchedIngredient;
+      if (parsed.amount) {
+        const amountWithSymbols = convertTextFractionsToSymbols(parsed.amount);
+        ingredientAmount = parsed.unit ? `${amountWithSymbols} ${parsed.unit}` : amountWithSymbols;
+      }
+    } else {
+      if (!matchedIngredient.amount && !matchedIngredient.units && matchedIngredient.ingredient) {
+        const parsed = parseIngredientString(matchedIngredient.ingredient);
+        ingredientName = parsed.amount ? parsed.name : matchedIngredient.ingredient;
+        if (parsed.amount) {
+          const amountWithSymbols = convertTextFractionsToSymbols(parsed.amount);
+          ingredientAmount = parsed.unit ? `${amountWithSymbols} ${parsed.unit}` : amountWithSymbols;
+        }
+      } else {
+        ingredientName = matchedIngredient.ingredient;
+        ingredientAmount = convertTextFractionsToSymbols(`${matchedIngredient.amount || ''} ${matchedIngredient.units || ''}`.trim());
+      }
+
+      description = matchedIngredient.description;
+      substitutions = matchedIngredient.substitutions;
+    }
+
+    const linkedSteps = findStepsForIngredient(
+      ingredientName,
+      normalizedSteps.map((step) => ({ instruction: step.detail }))
+    );
+
+    const stepTitlesMap = normalizedSteps.reduce<Record<number, string>>((map, step, index) => {
+      map[index + 1] = step.step || '';
+      return map;
+    }, {});
+
+    return {
+      ingredientName,
+      ingredientAmount,
+      description,
+      substitutions,
+      linkedSteps,
+      stepTitlesMap,
+    };
+  }, [expandedIngredient, filteredIngredients, scaledIngredients, normalizedSteps]);
+
+  const handleDrawerStepClick = useCallback((stepNumber: number) => {
+    window.dispatchEvent(new CustomEvent('navigate-to-step', { detail: { stepNumber } }));
+  }, []);
+
   // Memoize flattened ingredients for matching
   const flattenedIngredients = useMemo(() => {
     return scaledIngredients.flatMap(g => g.ingredients.map(i => {
@@ -826,7 +991,7 @@ export default function ParsedRecipePage({
             {/* Tabs Root - wraps both navigation and content */}
             <Tabs.Root 
               value={activeTab} 
-              onValueChange={setActiveTab} 
+              onValueChange={handleTabChange}
               className="w-full"
             >
             {/* Header Section with #FAFAF9 Background */}
@@ -1284,7 +1449,6 @@ export default function ParsedRecipePage({
                                                   ingredient={ingredient}
                                                   description={typeof ingredient === 'string' ? undefined : ingredient.description}
                                                   isLast={isLast}
-                                                  recipeSteps={normalizedSteps.map(s => ({ instruction: s.detail, title: s.step }))}
                                                   groupName={groupName}
                                                   recipeUrl={parsedRecipe?.sourceUrl}
                                                   checked={isChecked}
@@ -1326,6 +1490,7 @@ export default function ParsedRecipePage({
                           title={parsedRecipe.title}
                           allIngredients={flattenedIngredients}
                           steps={normalizedSteps}
+                          stepNavigationRequest={cookStepRequest}
                         />
                       </div>
                     </motion.div>
@@ -1546,6 +1711,18 @@ export default function ParsedRecipePage({
             </div>
           </Tabs.Root>
         </div>
+
+        <IngredientExpandedDrawer
+          ingredientName={expandedIngredientData?.ingredientName || ''}
+          ingredientAmount={expandedIngredientData?.ingredientAmount}
+          description={expandedIngredientData?.description}
+          substitutions={expandedIngredientData?.substitutions}
+          linkedSteps={expandedIngredientData?.linkedSteps || []}
+          stepTitlesMap={expandedIngredientData?.stepTitlesMap}
+          onStepClick={handleDrawerStepClick}
+          isOpen={expandedIngredient !== null && expandedIngredientData !== null}
+          onClose={() => setExpandedIngredient(null)}
+        />
 
         {/* Ingredients Overlay - Modal (desktop) / Drawer (mobile) */}
         <IngredientsOverlay
