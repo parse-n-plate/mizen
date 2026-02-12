@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import Gallery from '@solar-icons/react/csr/video/Gallery';
 
 export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -91,7 +92,7 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
               </div>
               <div className="relative flex justify-center text-xs">
                 <span className="bg-white px-3 text-stone-400 font-albert uppercase">
-                  Or continue with email
+                  Or
                 </span>
               </div>
             </div>
@@ -139,7 +140,7 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-primary-blue hover:bg-primary-blue/90 focus-visible:ring-primary-blue/50"
+                className="w-full bg-[#0072ff] text-white hover:bg-[#0060dd] focus-visible:ring-[#0072ff]/50"
                 size="lg"
               >
                 {loading ? 'Processing...' : isSignUp ? 'Sign up' : 'Sign in'}
@@ -158,23 +159,9 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
             </p>
           </div>
 
-          {/* Right panel — placeholder image */}
-          <div className="hidden sm:flex relative bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 items-center justify-center overflow-hidden">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(0,114,255,0.15),transparent_60%)]" />
-            <div className="relative flex flex-col items-center gap-4 p-10">
-              <div className="w-64 h-44 rounded-xl bg-white/60 shadow-lg backdrop-blur-sm border border-white/80 flex items-center justify-center">
-                <div className="text-center px-6">
-                  <div className="w-10 h-10 rounded-lg bg-primary-blue/10 mx-auto mb-3 flex items-center justify-center">
-                    <svg className="w-5 h-5 text-primary-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
-                    </svg>
-                  </div>
-                  <p className="font-domine text-sm font-semibold text-stone-800">Parse & Plate</p>
-                  <p className="font-albert text-xs text-stone-500 mt-1">Your recipes, organized</p>
-                </div>
-              </div>
-              <div className="w-48 h-28 rounded-lg bg-white/40 shadow-md backdrop-blur-sm border border-white/60 -mt-6 ml-20" />
-            </div>
+          {/* Right panel — image placeholder */}
+          <div className="hidden sm:flex bg-stone-100 items-center justify-center">
+            <Gallery className="w-16 h-16 text-stone-300" />
           </div>
         </div>
       </DialogContent>
