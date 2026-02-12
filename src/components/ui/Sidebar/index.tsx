@@ -24,7 +24,6 @@ import SquareDoubleAltArrowRight from '@solar-icons/react/csr/arrows/SquareDoubl
 import Magnifer from '@solar-icons/react/csr/search/Magnifer';
 import ClockCircle from '@solar-icons/react/csr/time/ClockCircle';
 import BookBookmarkIcon from '@solar-icons/react/csr/school/BookBookmark';
-import SettingsIcon from '@solar-icons/react/csr/settings/Settings';
 import QuestionCircle from '@solar-icons/react/csr/ui/QuestionCircle';
 import ChatRoundLine from '@solar-icons/react/csr/messages/ChatRoundLine';
 import InfoCircle from '@solar-icons/react/csr/ui/InfoCircle';
@@ -43,6 +42,10 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import FeedbackDialog from './FeedbackDialog';
+import { createClient } from '@/utils/supabase/client';
+import { User } from '@supabase/supabase-js';
+import AuthModal from '@/components/auth/AuthModal';
+import UserCircle from '@solar-icons/react/csr/users/UserCircle';
 
 // Shared easing for all sidebar transitions — ease-in-out-cubic
 const SIDEBAR_EASING = 'cubic-bezier(0.645,0.045,0.355,1)';
@@ -193,6 +196,31 @@ export default function Sidebar() {
   } = useSidebar();
   const { openSearch } = useCommandK();
   const { openLab } = usePrototypeLab();
+
+  // Auth state
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    getUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    router.refresh();
+  };
 
   const {
     width: sidebarWidth,
@@ -763,14 +791,55 @@ export default function Sidebar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             </NavTooltip>
-            <NavTooltip isCollapsed={isCollapsed} isMobile={isMobile} label="Settings">
-              <button
-                disabled
-                className="p-2 rounded-lg cursor-not-allowed"
-                aria-label="Settings"
-              >
-                <SettingsIcon className="w-5 h-5 text-stone-300" />
-              </button>
+            <NavTooltip isCollapsed={isCollapsed} isMobile={isMobile} label={user ? user.user_metadata?.full_name?.split(' ')[0] || 'Profile' : 'Login'}>
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="p-1 rounded-full hover:ring-2 hover:ring-stone-200 transition-all"
+                      aria-label="Profile"
+                    >
+                      <div className="w-7 h-7 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0">
+                        {user.user_metadata?.avatar_url ? (
+                          <img
+                            src={user.user_metadata.avatar_url}
+                            alt="Profile"
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <span className="font-albert text-xs font-bold text-stone-600">
+                            {user.user_metadata?.full_name?.split(' ')[0]?.[0] || user.email?.[0]?.toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    side={isRail ? 'right' : 'top'}
+                    align={isRail ? 'start' : 'end'}
+                  >
+                    <div className="px-2 py-1.5 text-sm font-albert">
+                      <div className="font-medium text-stone-900">{user.user_metadata?.full_name || 'User'}</div>
+                      <div className="text-xs text-stone-400">{user.email}</div>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                      Log out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <button
+                  onClick={() => setIsAuthModalOpen(true)}
+                  className="p-1 rounded-full hover:ring-2 hover:ring-stone-200 transition-all"
+                  aria-label="Login"
+                >
+                  <div className="w-7 h-7 rounded-full bg-stone-200 flex items-center justify-center flex-shrink-0">
+                    <UserCircle className="w-5 h-5 text-stone-400" />
+                  </div>
+                </button>
+              )}
             </NavTooltip>
           </div>
         </div>
@@ -792,6 +861,10 @@ export default function Sidebar() {
         )}
       </aside>
       <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
     </TooltipProvider>
   );
 }
