@@ -113,7 +113,7 @@ export default function HomepageRecentRecipes() {
       const fullRecipe = getRecipeById(recipeId);
       if (fullRecipe && fullRecipe.ingredients && fullRecipe.instructions) {
         setParsedRecipe({
-          id: fullRecipe.id, // Include recipe ID for syncing
+          id: fullRecipe.id,
           title: fullRecipe.title,
           ingredients: fullRecipe.ingredients,
           instructions: fullRecipe.instructions,
@@ -121,13 +121,18 @@ export default function HomepageRecentRecipes() {
           sourceUrl: fullRecipe.sourceUrl || fullRecipe.url,
           summary: fullRecipe.description || fullRecipe.summary,
           cuisine: fullRecipe.cuisine,
-          imageData: fullRecipe.imageData, // Include image data if available (for uploaded images)
-          imageFilename: fullRecipe.imageFilename, // Include image filename if available
-          prepTimeMinutes: fullRecipe.prepTimeMinutes, // Include prep time if available
-          cookTimeMinutes: fullRecipe.cookTimeMinutes, // Include cook time if available
-          totalTimeMinutes: fullRecipe.totalTimeMinutes, // Include total time if available
-          servings: fullRecipe.servings, // Include servings if available
-          plate: fullRecipe.plate, // Include plate data if available
+          imageData: fullRecipe.imageData,
+          imageFilename: fullRecipe.imageFilename,
+          prepTimeMinutes: fullRecipe.prepTimeMinutes,
+          cookTimeMinutes: fullRecipe.cookTimeMinutes,
+          totalTimeMinutes: fullRecipe.totalTimeMinutes,
+          servings: fullRecipe.servings,
+          storageGuide: fullRecipe.storageGuide,
+          shelfLife: fullRecipe.shelfLife,
+          platingNotes: fullRecipe.platingNotes,
+          servingVessel: fullRecipe.servingVessel,
+          servingTemp: fullRecipe.servingTemp,
+          plate: fullRecipe.plate,
         });
         router.push('/parsed-recipe-page');
       }

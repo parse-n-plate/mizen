@@ -26,7 +26,7 @@ export default function NavbarSearch() {
   const [detectedCuisine, setDetectedCuisine] = useState<string[] | undefined>(undefined);
   const { recentRecipes, addRecipe } = useParsedRecipes();
   const { parsedRecipe, setParsedRecipe } = useRecipe();
-  const { showError, showSuccess, showInfo } = useToast();
+  const { showError, showSuccess, showInfo, showWarning } = useToast();
   const router = useRouter();
   const pathname = usePathname();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -106,18 +106,26 @@ export default function NavbarSearch() {
   // Handle recipe selection from dropdown
   const handleRecipeSelect = (recipe: ParsedRecipe) => {
     setParsedRecipe({
+      id: recipe.id,
       title: recipe.title,
       ingredients: recipe.ingredients || [],
       instructions: recipe.instructions || [],
-      author: recipe.author, // Include author if available
-      sourceUrl: recipe.sourceUrl, // Include source URL if available
-      summary: recipe.description || recipe.summary, // Use AI summary if available, fallback to card summary
-      imageData: recipe.imageData, // Include image data if available (for uploaded images)
-      imageFilename: recipe.imageFilename, // Include image filename if available
-      prepTimeMinutes: recipe.prepTimeMinutes, // Include prep time if available
-      cookTimeMinutes: recipe.cookTimeMinutes, // Include cook time if available
-      totalTimeMinutes: recipe.totalTimeMinutes, // Include total time if available
-      servings: recipe.servings, // Include servings if available
+      author: recipe.author,
+      sourceUrl: recipe.sourceUrl,
+      summary: recipe.description || recipe.summary,
+      imageData: recipe.imageData,
+      imageFilename: recipe.imageFilename,
+      cuisine: recipe.cuisine,
+      prepTimeMinutes: recipe.prepTimeMinutes,
+      cookTimeMinutes: recipe.cookTimeMinutes,
+      totalTimeMinutes: recipe.totalTimeMinutes,
+      servings: recipe.servings,
+      storageGuide: recipe.storageGuide,
+      shelfLife: recipe.shelfLife,
+      platingNotes: recipe.platingNotes,
+      servingVessel: recipe.servingVessel,
+      servingTemp: recipe.servingTemp,
+      plate: recipe.plate,
     });
     setQuery('');
 
@@ -197,6 +205,13 @@ export default function NavbarSearch() {
       }
 
       console.log('[Navbar] Successfully parsed recipe:', response.title);
+      console.log(`[Navbar] Parser used: ${response.method === 'ai' ? 'AI parser only' : response.method === 'json-ld+ai' ? 'JSON-LD + AI enrichment' : response.method || 'unknown'}`);
+
+      if (response.warnings?.includes('AI_NOT_CONFIGURED')) {
+        showWarning('AI enrichment unavailable', 'GROQ_API_KEY is not configured. Plating, storage, and summary data will be missing.');
+      } else if (response.warnings?.includes('AI_ENRICHMENT_FAILED')) {
+        showWarning('Partial recipe data', 'AI enrichment failed for this recipe. Plating, storage, and summary data may be missing.');
+      }
 
       // Store detected cuisine for reveal
       if (response.cuisine) {
@@ -216,8 +231,13 @@ export default function NavbarSearch() {
         ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
         ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
         ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
+        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
+        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
+        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
+        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
+        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
       };
-      
+
       setParsedRecipe(recipeToStore);
       
       // Ensure localStorage write completes before navigation
@@ -245,6 +265,11 @@ export default function NavbarSearch() {
         ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
         ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
         ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
+        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
+        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
+        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
+        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
+        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
       });
 
       // Show success toast
@@ -280,6 +305,7 @@ export default function NavbarSearch() {
     showError,
     showSuccess,
     showInfo,
+    showWarning,
     router,
   ]);
 

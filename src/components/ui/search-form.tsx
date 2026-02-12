@@ -39,7 +39,7 @@ export default function SearchForm({
   
   const { setParsedRecipe } = useRecipe();
   const { addRecipe, recentRecipes } = useParsedRecipes();
-  const { showError, showSuccess, showInfo } = useToast();
+  const { showError, showSuccess, showInfo, showWarning } = useToast();
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -86,15 +86,24 @@ export default function SearchForm({
   // Handle recipe selection from dropdown
   const handleRecipeSelect = (recipe: ParsedRecipe) => {
     setParsedRecipe({
+      id: recipe.id,
       title: recipe.title,
       ingredients: recipe.ingredients || [],
       instructions: recipe.instructions || [],
-      author: recipe.author, // Include author if available
-      sourceUrl: recipe.sourceUrl, // Include source URL if available
-      prepTimeMinutes: recipe.prepTimeMinutes, // Include prep time if available
-      cookTimeMinutes: recipe.cookTimeMinutes, // Include cook time if available
-      totalTimeMinutes: recipe.totalTimeMinutes, // Include total time if available
-      servings: recipe.servings, // Include servings if available
+      author: recipe.author,
+      sourceUrl: recipe.sourceUrl,
+      summary: recipe.description || recipe.summary,
+      cuisine: recipe.cuisine,
+      prepTimeMinutes: recipe.prepTimeMinutes,
+      cookTimeMinutes: recipe.cookTimeMinutes,
+      totalTimeMinutes: recipe.totalTimeMinutes,
+      servings: recipe.servings,
+      storageGuide: recipe.storageGuide,
+      shelfLife: recipe.shelfLife,
+      platingNotes: recipe.platingNotes,
+      servingVessel: recipe.servingVessel,
+      servingTemp: recipe.servingTemp,
+      plate: recipe.plate,
     });
     setQuery('');
     setShowDropdown(false);
@@ -214,6 +223,11 @@ export default function SearchForm({
         ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
         ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings if available
+        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
+        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
+        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
+        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
+        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
       });
 
       // Add to recent recipes
@@ -233,6 +247,11 @@ export default function SearchForm({
         ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
         ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
         ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
+        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
+        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
+        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
+        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
+        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
         imageData: imagePreview || undefined, // Store base64 image data for preview
         imageFilename: selectedImage.name, // Store original filename
       });
@@ -380,7 +399,14 @@ export default function SearchForm({
       }
 
       console.log('[Client] Successfully parsed recipe:', response.title);
-      
+      console.log(`[Client] Parser used: ${response.method === 'ai' ? 'AI parser only' : response.method === 'json-ld+ai' ? 'JSON-LD + AI enrichment' : response.method || 'unknown'}`);
+
+      if (response.warnings?.includes('AI_NOT_CONFIGURED')) {
+        showWarning('AI enrichment unavailable', 'GROQ_API_KEY is not configured. Plating, storage, and summary data will be missing.');
+      } else if (response.warnings?.includes('AI_ENRICHMENT_FAILED')) {
+        showWarning('Partial recipe data', 'AI enrichment failed for this recipe. Plating, storage, and summary data may be missing.');
+      }
+
       // Update progress: Start Plating phase (90-100%)
       setLoadingProgress(90);
       setLoadingPhase('plating');
@@ -390,10 +416,6 @@ export default function SearchForm({
         setDetectedCuisine(response.cuisine);
       }
       
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'search-form.tsx:298',message:'API response received',data:{hasServings:'servings' in response,servings:response.servings,servingsType:typeof response.servings,servingsValue:response.servings,hasAuthor:'author' in response,author:response.author,responseKeys:Object.keys(response)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-
       // Step 3: Store parsed recipe in context
       // The new parser already returns data in the correct grouped format
       const recipeToStore = {
@@ -414,10 +436,7 @@ export default function SearchForm({
         ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }), // Include serving vessel recommendation if available
         ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }), // Include serving temperature if available
       };
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'search-form.tsx:310',message:'recipeToStore created',data:{hasServings:'servings' in recipeToStore,servings:recipeToStore.servings,servingsType:typeof recipeToStore.servings,servingsValue:recipeToStore.servings,keys:Object.keys(recipeToStore)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'A'})}).catch(()=>{});
-      // #endregion
-      
+
       // Store recipe first (this writes to localStorage synchronously)
       setParsedRecipe(recipeToStore);
       
@@ -448,6 +467,11 @@ export default function SearchForm({
         ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
         ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
         ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
+        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
+        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
+        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
+        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
+        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
       });
 
       // Show success toast
@@ -483,6 +507,7 @@ export default function SearchForm({
     showError,
     showSuccess,
     showInfo,
+    showWarning,
     router,
   ]);
 
