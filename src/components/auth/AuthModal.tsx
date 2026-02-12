@@ -13,6 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Gallery from '@solar-icons/react/csr/video/Gallery';
+import { X } from 'lucide-react';
 
 export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -63,10 +64,19 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
       <DialogContent className="sm:max-w-5xl p-0 gap-0 overflow-hidden" showCloseButton={false}>
+        {/* Close button */}
+        <button
+          onClick={handleClose}
+          className="absolute top-4 right-4 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-white/80 hover:bg-stone-200 text-stone-500 hover:text-stone-700 transition-colors"
+          aria-label="Close"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
         <div className="grid grid-cols-1 sm:grid-cols-2">
           {/* Left panel — form */}
-          <div className="p-8 sm:p-10">
-            <DialogHeader className="text-left mb-8">
+          <div className="p-8 sm:p-10 pr-8 sm:pr-10">
+            <DialogHeader className="text-left mb-8 pr-6">
               <DialogTitle className="text-2xl">
                 {isSignUp ? 'Create your account' : 'Log in to your account'}
               </DialogTitle>
