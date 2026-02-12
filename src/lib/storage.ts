@@ -36,6 +36,9 @@ export type ParsedRecipe = {
     fridge?: number | null; // Days in fridge (null if not fridge-safe)
     freezer?: number | null; // Days in freezer (null if not freezer-friendly)
   };
+  platingNotes?: string; // AI-generated plating suggestions
+  servingVessel?: string; // e.g., "shallow bowl", "plate"
+  servingTemp?: string; // e.g., "hot", "warm", "chilled"
   pinnedAt?: string | null; // ISO timestamp when pinned, null/undefined if not pinned
   lastAccessedAt?: string | null; // ISO timestamp of last access/view
   plate?: {

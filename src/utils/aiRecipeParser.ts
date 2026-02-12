@@ -183,6 +183,7 @@ export interface ParserResult {
   error?: string;
   method?: 'json-ld' | 'ai' | 'json-ld+ai' | 'none';
   retryAfter?: number; // Timestamp (milliseconds) when to retry after rate limit
+  warnings?: string[]; // Non-fatal issues (e.g., missing API key)
 }
 
 // ---------------------------------------------------------------------------
@@ -1571,12 +1572,21 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
 
       // Always call AI — needed for cuisine, storage, plating, descriptions
       console.log(`[Recipe Parser] JSON-LD found. Calling AI for enrichment (mainGroupOnly=${hasOnlyMainGroup})...`);
+      const warnings: string[] = [];
       let aiResult: ParsedRecipe | null = null;
-      try {
-        aiResult = await parseWithAI(cleaned.html);
-      } catch (error) {
-        console.error('[Recipe Parser] AI enrichment failed:', error);
-        // Continue with JSON-LD data only
+      if (!process.env.GROQ_API_KEY) {
+        warnings.push('AI_NOT_CONFIGURED');
+      } else {
+        try {
+          aiResult = await parseWithAI(cleaned.html);
+          if (!aiResult) {
+            warnings.push('AI_ENRICHMENT_FAILED');
+          }
+        } catch (error) {
+          console.error('[Recipe Parser] AI enrichment failed:', error);
+          warnings.push('AI_ENRICHMENT_FAILED');
+          // Continue with JSON-LD data only
+        }
       }
 
       // Merge: JSON-LD fields take priority for ground-truth data (title, author,
@@ -1617,7 +1627,8 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
       return {
         success: true,
         data: { ...mergedRecipe, ...(summary && { summary }) },
-        method: 'json-ld+ai',
+        method: aiResult ? 'json-ld+ai' : 'json-ld',
+        ...(warnings.length > 0 && { warnings }),
       };
     }
 
