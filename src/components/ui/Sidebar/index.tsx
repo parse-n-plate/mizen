@@ -24,9 +24,6 @@ import SquareDoubleAltArrowRight from '@solar-icons/react/csr/arrows/SquareDoubl
 import Magnifer from '@solar-icons/react/csr/search/Magnifer';
 import ClockCircle from '@solar-icons/react/csr/time/ClockCircle';
 import BookBookmarkIcon from '@solar-icons/react/csr/school/BookBookmark';
-import QuestionCircle from '@solar-icons/react/csr/ui/QuestionCircle';
-import ChatRoundLine from '@solar-icons/react/csr/messages/ChatRoundLine';
-import InfoCircle from '@solar-icons/react/csr/ui/InfoCircle';
 import { MousePointer2 } from 'lucide-react';
 import { usePrototypeLab } from '@/contexts/PrototypeLabContext';
 import type { ParsedRecipe } from '@/lib/storage';
@@ -34,14 +31,6 @@ import { getCuisineIcon } from '@/config/cuisineConfig';
 import RecipeContextMenu from './RecipeContextMenu';
 import RecipeHoverCard from './RecipeHoverCard';
 import { HoverCardGroup } from '@/components/ui/hover-card';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import FeedbackDialog from './FeedbackDialog';
 import { createClient } from '@/utils/supabase/client';
 import { User } from '@supabase/supabase-js';
 import AuthModal from '@/components/auth/AuthModal';
@@ -171,7 +160,6 @@ const DraggableRecipeItem = memo(function DraggableRecipeItem({
  * On desktop, collapses to a 64px icon rail instead of fully hiding.
  */
 export default function Sidebar() {
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const pinnedListRef = useRef<HTMLDivElement>(null);
   const recipeListRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion() ?? false;
@@ -753,53 +741,19 @@ export default function Sidebar() {
             <div className="flex-1" />
           )}
 
-          {/* Footer - Settings & Help */}
-          <div
-            className={cn(
-              'py-3 border-t border-stone-200 flex items-center',
-              isRail
-                ? 'px-2 flex-col gap-2 justify-center'
-                : 'px-4 justify-end gap-1',
-            )}
-          >
-            <NavTooltip isCollapsed={isCollapsed} isMobile={isMobile} label="Help">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className="p-2 rounded-lg hover:bg-stone-100 transition-colors"
-                    aria-label="Help"
-                  >
-                    <QuestionCircle className="w-5 h-5 text-stone-400" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  side={isRail ? 'right' : 'top'}
-                  align={isRail ? 'start' : 'end'}
-                >
-                  <DropdownMenuItem onClick={() => setFeedbackOpen(true)}>
-                    <ChatRoundLine className="w-4 h-4 text-stone-400" />
-                    Leave Feedback
-                  </DropdownMenuItem>
-                  <DropdownMenuItem disabled>
-                    <InfoCircle className="w-4 h-4 text-stone-300" />
-                    About Mizen
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <div className="px-2 py-1.5 text-[11px] text-stone-400 font-albert leading-relaxed">
-                    <div>Mizen v0.1.0</div>
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </NavTooltip>
-            <NavTooltip isCollapsed={isCollapsed} isMobile={isMobile} label={user ? user.user_metadata?.full_name?.split(' ')[0] || 'Profile' : 'Login'}>
-              {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      className="p-1 rounded-full hover:ring-2 hover:ring-stone-200 transition-all"
-                      aria-label="Profile"
-                    >
-                      <div className="w-7 h-7 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0">
+          {/* Footer - Profile & Help */}
+          <div className="border-t border-stone-200">
+            {user ? (
+              <div
+                className={cn(
+                  'flex items-center',
+                  isRail ? 'px-2 py-3 justify-center' : 'px-4 py-3 gap-3',
+                )}
+              >
+                {isRail ? (
+                  <NavTooltip isCollapsed={isCollapsed} isMobile={isMobile} label={user.user_metadata?.full_name || 'Profile'}>
+                    <Link href="/profile" className="block">
+                      <div className="w-8 h-8 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0">
                         {user.user_metadata?.avatar_url ? (
                           <img
                             src={user.user_metadata.avatar_url}
@@ -813,34 +767,77 @@ export default function Sidebar() {
                           </span>
                         )}
                       </div>
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    side={isRail ? 'right' : 'top'}
-                    align={isRail ? 'start' : 'end'}
-                  >
-                    <div className="px-2 py-1.5 text-sm font-albert">
-                      <div className="font-medium text-stone-900">{user.user_metadata?.full_name || 'User'}</div>
-                      <div className="text-xs text-stone-400">{user.email}</div>
+                    </Link>
+                  </NavTooltip>
+                ) : (
+                  <>
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0">
+                      {user.user_metadata?.avatar_url ? (
+                        <img
+                          src={user.user_metadata.avatar_url}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <span className="font-albert text-sm font-bold text-stone-600">
+                          {user.user_metadata?.full_name?.split(' ')[0]?.[0] || user.email?.[0]?.toUpperCase()}
+                        </span>
+                      )}
                     </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
-                      Log out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <button
-                  onClick={() => setIsAuthModalOpen(true)}
-                  className="p-1 rounded-full hover:ring-2 hover:ring-stone-200 transition-all"
-                  aria-label="Login"
-                >
-                  <div className="w-7 h-7 rounded-full bg-stone-200 flex items-center justify-center flex-shrink-0">
-                    <UserCircle className="w-5 h-5 text-stone-400" />
-                  </div>
-                </button>
-              )}
-            </NavTooltip>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-albert text-sm font-medium text-stone-900 truncate">
+                        {user.user_metadata?.full_name || 'User'}
+                      </div>
+                      <Link
+                        href="/profile"
+                        className="font-albert text-xs text-blue-500 hover:text-blue-600 transition-colors"
+                      >
+                        View Profile
+                      </Link>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div
+                className={cn(
+                  'flex items-center',
+                  isRail ? 'px-2 py-3 justify-center' : 'px-4 py-3 gap-3',
+                )}
+              >
+                {isRail ? (
+                  <NavTooltip isCollapsed={isCollapsed} isMobile={isMobile} label="Login">
+                    <button
+                      onClick={() => setIsAuthModalOpen(true)}
+                      className="p-1 rounded-full hover:bg-stone-100 transition-colors"
+                      aria-label="Login"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center flex-shrink-0">
+                        <UserCircle className="w-5 h-5 text-stone-400" />
+                      </div>
+                    </button>
+                  </NavTooltip>
+                ) : (
+                  <>
+                    <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center flex-shrink-0">
+                      <UserCircle className="w-6 h-6 text-stone-400" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-albert text-sm font-medium text-stone-900">
+                        Guest
+                      </div>
+                      <button
+                        onClick={() => setIsAuthModalOpen(true)}
+                        className="font-albert text-xs text-blue-500 hover:text-blue-600 transition-colors"
+                      >
+                        Sign in
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -860,7 +857,6 @@ export default function Sidebar() {
           </div>
         )}
       </aside>
-      <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
