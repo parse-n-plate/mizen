@@ -356,6 +356,11 @@ export default function Sidebar() {
             cookTimeMinutes: fullRecipe.cookTimeMinutes,
             totalTimeMinutes: fullRecipe.totalTimeMinutes,
             servings: fullRecipe.servings,
+            storageGuide: fullRecipe.storageGuide,
+            shelfLife: fullRecipe.shelfLife,
+            platingNotes: fullRecipe.platingNotes,
+            servingVessel: fullRecipe.servingVessel,
+            servingTemp: fullRecipe.servingTemp,
             plate: fullRecipe.plate,
           });
           router.push('/parsed-recipe-page');
@@ -419,16 +424,17 @@ export default function Sidebar() {
       recipe: ParsedRecipe;
       children: React.ReactNode;
     }) => {
+      const [dialogOpen, setDialogOpen] = useState(false);
       if (isMobile) {
         return (
-          <RecipeContextMenu recipe={recipe} onRecipeClick={handleRecipeClick}>
+          <RecipeContextMenu recipe={recipe} onRecipeClick={handleRecipeClick} onDialogOpenChange={setDialogOpen}>
             {children}
           </RecipeContextMenu>
         );
       }
       return (
-        <RecipeHoverCard recipe={recipe}>
-          <RecipeContextMenu recipe={recipe} onRecipeClick={handleRecipeClick}>
+        <RecipeHoverCard recipe={recipe} forceClose={dialogOpen}>
+          <RecipeContextMenu recipe={recipe} onRecipeClick={handleRecipeClick} onDialogOpenChange={setDialogOpen}>
             {children}
           </RecipeContextMenu>
         </RecipeHoverCard>

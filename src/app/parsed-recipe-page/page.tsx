@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo, use } from 'react';
 import RecipeSkeleton from '@/components/ui/recipe-skeleton';
 import * as Tabs from '@radix-ui/react-tabs';
-import { ArrowLeft, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Copy, Check, PenLine } from 'lucide-react';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
 import Settings from '@solar-icons/react/csr/settings/Settings';
 import LinkIcon from '@solar-icons/react/csr/text-formatting/Link';
@@ -36,6 +36,15 @@ import PlatePhotoCapture from '@/components/ui/plate-photo-capture';
 import PlatingGuidanceCard from '@/components/ui/plating-guidance-card';
 import StorageGuidanceCard from '@/components/ui/storage-guidance-card';
 import IngredientsOverlay from '@/components/ui/ingredients-overlay';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { useSidebar } from '@/contexts/SidebarContext';
 import { useIsMobile } from '@/hooks/useIsMobile';
 
 // Helper function to extract domain from URL for display
@@ -196,7 +205,7 @@ export default function ParsedRecipePage({
   if (searchParams) use(searchParams);
   
   const { parsedRecipe, setParsedRecipe, isLoaded } = useRecipe();
-  const { recentRecipes, isBookmarked, toggleBookmark, removeRecipe, getBookmarkedRecipes } = useParsedRecipes();
+  const { recentRecipes, isBookmarked, toggleBookmark, removeRecipe, getBookmarkedRecipes, updateRecipe } = useParsedRecipes();
   const router = useRouter();
   const isMobileViewport = useIsMobile();
   // Store original servings from recipe (never changes) - use useMemo to preserve it
@@ -227,6 +236,10 @@ export default function ParsedRecipePage({
 
   // Ingredients overlay state
   const [isIngredientsOverlayOpen, setIsIngredientsOverlayOpen] = useState(false);
+
+  // Rename dialog state
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [renameValue, setRenameValue] = useState('');
 
   // Find the recipe ID by matching sourceUrl across recents and bookmarks
   // This is needed because RecipeContext's parsedRecipe doesn't have an ID field
@@ -618,6 +631,23 @@ export default function ParsedRecipePage({
     }
   };
 
+  // Handle rename recipe
+  const handleRename = () => {
+    if (!parsedRecipe?.title) return;
+    setRenameValue(parsedRecipe.title);
+    setRenameOpen(true);
+  };
+
+  const handleRenameSubmit = () => {
+    const trimmed = renameValue.trim();
+    if (!trimmed || !parsedRecipe) return;
+    setParsedRecipe({ ...parsedRecipe, title: trimmed });
+    if (recipeId) {
+      updateRecipe(recipeId, { title: trimmed });
+    }
+    setRenameOpen(false);
+  };
+
   // Handle delete recipe - shows confirmation dialog before deleting
   const handleDeleteRecipe = () => {
     if (!recipeId) {
@@ -910,6 +940,12 @@ export default function ParsedRecipePage({
                             </span>
                             {copiedPlainText && <Check className="w-4 h-4 text-green-600 ml-auto" />}
                           </DropdownMenuItem>
+                          {recipeId && (
+                            <DropdownMenuItem onSelect={handleRename}>
+                              <span>Rename</span>
+                              <PenLine className="w-4 h-4 ml-auto" />
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem disabled>
                             <span className="text-stone-400">Download Recipe as JPG</span>
                           </DropdownMenuItem>
@@ -1543,6 +1579,51 @@ export default function ParsedRecipePage({
           onClose={() => setIsIngredientsOverlayOpen(false)}
           ingredients={scaledIngredients}
         />
+
+        {/* Rename Dialog */}
+        <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
+          <DialogContent className="max-w-sm p-0 gap-0 overflow-hidden" showCloseButton={false}>
+            <div className="px-6 pt-6 pb-4">
+              <DialogHeader className="mb-4">
+                <DialogTitle>Rename Recipe</DialogTitle>
+              </DialogHeader>
+              <label htmlFor="rename-recipe-input" className="block font-albert text-[13px] font-medium text-stone-500 mb-1.5">
+                Recipe title
+              </label>
+              <Input
+                id="rename-recipe-input"
+                name="title"
+                autoComplete="off"
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleRenameSubmit();
+                  }
+                }}
+                autoFocus
+              />
+            </div>
+            <DialogFooter className="border-t border-stone-100 px-6 py-4 bg-stone-50/50">
+              <button
+                type="button"
+                onClick={() => setRenameOpen(false)}
+                className="px-4 py-2 font-albert text-[14px] font-medium text-stone-600 hover:text-stone-800 rounded-lg hover:bg-stone-200/60 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleRenameSubmit}
+                disabled={!renameValue.trim()}
+                className="px-4 py-2 font-albert text-[14px] font-medium text-white bg-stone-900 rounded-lg hover:bg-stone-800 active:scale-[0.97] transition-[background-color,transform] disabled:opacity-40 disabled:pointer-events-none"
+              >
+                Save
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
       </TooltipProvider>
     </UISettingsProvider>

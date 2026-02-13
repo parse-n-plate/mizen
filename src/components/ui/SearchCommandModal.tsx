@@ -132,6 +132,12 @@ export default function SearchCommandModal({
           prepTimeMinutes: fullRecipe.prepTimeMinutes,
           cookTimeMinutes: fullRecipe.cookTimeMinutes,
           totalTimeMinutes: fullRecipe.totalTimeMinutes,
+          servings: fullRecipe.servings,
+          storageGuide: fullRecipe.storageGuide,
+          shelfLife: fullRecipe.shelfLife,
+          platingNotes: fullRecipe.platingNotes,
+          servingVessel: fullRecipe.servingVessel,
+          servingTemp: fullRecipe.servingTemp,
           plate: fullRecipe.plate,
         });
         handleOpenChange(false);

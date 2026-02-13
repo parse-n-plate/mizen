@@ -195,6 +195,8 @@ export async function POST(req: NextRequest): Promise<Response> {
       platingNotes: result.data.platingNotes, // Include plating suggestions if available
       servingVessel: result.data.servingVessel, // Include serving vessel recommendation if available
       servingTemp: result.data.servingTemp, // Include serving temperature if available
+      method: result.method, // Include which parsing method was used (json-ld+ai or ai)
+      ...(result.warnings && result.warnings.length > 0 && { warnings: result.warnings }),
     });
   } catch (error) {
     console.error('[API /recipeScraperPython] Unexpected error:', error);

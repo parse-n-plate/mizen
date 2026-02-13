@@ -16,11 +16,13 @@ import Pin from '@solar-icons/react/csr/ui/Pin';
 interface RecipeHoverCardProps {
   children: React.ReactNode;
   recipe: ParsedRecipe;
+  forceClose?: boolean;
 }
 
 export default function RecipeHoverCard({
   children,
   recipe,
+  forceClose,
 }: RecipeHoverCardProps) {
   const { isBookmarked, toggleBookmark, isPinned, togglePin } =
     useParsedRecipes();
@@ -69,9 +71,10 @@ export default function RecipeHoverCard({
   };
 
   const hostname = sourceUrl ? getDomainFromUrl(sourceUrl) : null;
+  const hoverCardProps = forceClose ? { open: false } : {};
 
   return (
-    <HoverCard>
+    <HoverCard {...hoverCardProps}>
       <HoverCardTrigger asChild>
         <div>{children}</div>
       </HoverCardTrigger>
