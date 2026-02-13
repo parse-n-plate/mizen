@@ -390,54 +390,46 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             };
 
             // Handle different instruction formats
+            const normalizeInstructionText = (text: string): string =>
+              normalizeDoubleParens(decodeHtmlEntities(text).replace(/\s+/g, ' ').trim());
+
+            const extractInstructionTexts = (node: unknown): string[] => {
+              // String format
+              if (typeof node === 'string') {
+                const normalized = normalizeInstructionText(node);
+                return normalized ? [normalized] : [];
+              }
+
+              // Object format
+              if (node && typeof node === 'object') {
+                const obj = node as Record<string, unknown>;
+
+                // HowToSection or nested list: preserve each sub-step as its own instruction.
+                if (Array.isArray(obj.itemListElement)) {
+                  return obj.itemListElement.flatMap((item: unknown) =>
+                    extractInstructionTexts(item)
+                  );
+                }
+
+                if (typeof obj.text === 'string') {
+                  const normalized = normalizeInstructionText(obj.text);
+                  return normalized ? [normalized] : [];
+                }
+
+                if (typeof obj.name === 'string') {
+                  const normalized = normalizeInstructionText(obj.name);
+                  return normalized ? [normalized] : [];
+                }
+              }
+
+              return [];
+            };
+
             if (Array.isArray(recipe.recipeInstructions)) {
               instructions = recipe.recipeInstructions
-                .map((inst: string | Record<string, unknown>) => {
-                  // Handle string format
-                  if (typeof inst === 'string') return normalizeDoubleParens(inst.trim());
-
-                  // Handle object with text property
-                  if (inst.text && typeof inst.text === 'string')
-                    return normalizeDoubleParens(inst.text.trim());
-
-                  // Handle HowToStep format
-                  if (
-                    inst['@type'] === 'HowToStep' &&
-                    inst.text &&
-                    typeof inst.text === 'string'
-                  )
-                    return normalizeDoubleParens(inst.text.trim());
-
-                  // Handle HowToStep with name property
-                  if (
-                    inst['@type'] === 'HowToStep' &&
-                    inst.name &&
-                    typeof inst.name === 'string'
-                  )
-                    return normalizeDoubleParens(inst.name.trim());
-
-                  // Handle itemListElement format (HowToSection with nested steps).
-                  // NOTE: This joins all sub-steps into a single string with spaces,
-                  // which flattens multi-step sections into one long instruction.
-                  // TODO: Consider preserving individual sub-steps as separate instructions.
-                  if (
-                    inst.itemListElement &&
-                    Array.isArray(inst.itemListElement)
-                  ) {
-                    return normalizeDoubleParens(
-                      inst.itemListElement
-                        .map((item: Record<string, unknown>) => {
-                          if (typeof item.text === 'string') return item.text.trim();
-                          if (typeof item.name === 'string') return item.name.trim();
-                          return '';
-                        })
-                        .filter((t: string) => t.length > 0)
-                        .join(' ')
-                    );
-                  }
-
-                  return '';
-                })
+                .flatMap((inst: string | Record<string, unknown>) =>
+                  extractInstructionTexts(inst)
+                )
                 // FIXME: The 10-char minimum silently drops short but valid steps
                 // (e.g., "Serve hot.", "Rest 5 min."). Consider lowering or removing.
                 .filter((text: string) => text.length > 10 && !isAuthorName(text));
@@ -448,7 +440,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
               // Split string instructions by newlines
               instructions = recipe.recipeInstructions
                 .split(/\n+/)
-                .map((s: string) => normalizeDoubleParens(s.trim()))
+                .map((s: string) => normalizeInstructionText(s))
                 // Same 10-char filter as above — see FIXME.
                 .filter((s: string) => s.length > 10 && !isAuthorName(s));
             }
