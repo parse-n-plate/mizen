@@ -13,7 +13,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Gallery from '@solar-icons/react/csr/video/Gallery';
-import { X } from 'lucide-react';
+import { LogIn, UserPlus, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -79,15 +80,25 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
         <div className="grid grid-cols-1 sm:grid-cols-2">
           {/* Left panel — form */}
           <div className="p-8 sm:p-10 pr-8 sm:pr-10">
-            <DialogHeader className="text-left mb-8 pr-6">
-              <DialogTitle className="text-2xl">
-                {isSignUp ? 'Create your account' : 'Log in to your account'}
-              </DialogTitle>
-              <DialogDescription>
-                {isSignUp
-                  ? 'Get started with Parse & Plate'
-                  : 'Welcome back to Parse & Plate'}
-              </DialogDescription>
+            <DialogHeader className="text-left mb-8 pr-6 overflow-hidden">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={isSignUp ? 'signup-header' : 'login-header'}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+                >
+                  <DialogTitle className="text-2xl">
+                    {isSignUp ? 'Create your account' : 'Log in to your account'}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {isSignUp
+                      ? 'Get started with Mizen'
+                      : 'Welcome back to Mizen'}
+                  </DialogDescription>
+                </motion.div>
+              </AnimatePresence>
             </DialogHeader>
 
             {/* Social login */}
@@ -131,14 +142,20 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
                   <label htmlFor="auth-password" className="text-sm font-medium text-stone-700 font-albert">
                     Password
                   </label>
-                  {!isSignUp && (
-                    <button
-                      type="button"
-                      className="text-xs text-stone-400 hover:text-stone-600 font-albert transition-colors"
-                    >
-                      Forgot password?
-                    </button>
-                  )}
+                  <AnimatePresence initial={false}>
+                    {!isSignUp && (
+                      <motion.button
+                        type="button"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="text-xs text-stone-400 hover:text-stone-600 font-albert transition-colors"
+                      >
+                        Forgot password?
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
                 </div>
                 <Input
                   id="auth-password"
@@ -153,22 +170,49 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#0072ff] text-white hover:bg-[#0060dd] focus-visible:ring-[#0072ff]/50"
+                className="w-full bg-[#0072ff] text-white hover:bg-[#0060dd] focus-visible:ring-[#0072ff]/50 relative overflow-hidden"
                 size="lg"
               >
-                {loading ? 'Processing...' : isSignUp ? 'Sign up' : 'Sign in'}
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span
+                    key={loading ? 'loading' : isSignUp ? 'signup-btn' : 'login-btn'}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+                    className="flex items-center justify-center gap-2"
+                  >
+                    {loading ? (
+                      'Processing...'
+                    ) : isSignUp ? (
+                      <><UserPlus className="w-4 h-4" /> Sign up</>
+                    ) : (
+                      <><LogIn className="w-4 h-4" /> Sign in</>
+                    )}
+                  </motion.span>
+                </AnimatePresence>
               </Button>
             </form>
 
             <p className="mt-6 text-center text-sm text-stone-500 font-albert">
-              {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
-              <button
-                type="button"
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="font-semibold text-stone-900 hover:underline underline-offset-2"
-              >
-                {isSignUp ? 'Log in' : 'Sign up'}
-              </button>
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.span
+                  key={isSignUp ? 'signup-toggle' : 'login-toggle'}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.12 }}
+                >
+                  {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+                  <button
+                    type="button"
+                    onClick={() => setIsSignUp(!isSignUp)}
+                    className="font-semibold text-stone-900 hover:underline underline-offset-2"
+                  >
+                    {isSignUp ? 'Log in' : 'Sign up'}
+                  </button>
+                </motion.span>
+              </AnimatePresence>
             </p>
           </div>
 
