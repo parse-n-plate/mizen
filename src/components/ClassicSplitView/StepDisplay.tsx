@@ -8,6 +8,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { highlightQuantitiesAndIngredients } from '@/lib/utils';
 import { useUISettings } from '@/contexts/UISettingsContext';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { IngredientDisplayMode } from '@/hooks/use-ingredient-display-mode';
+import InlineIngredients from './InlineIngredients';
+
+interface IngredientGroup {
+  groupName: string;
+  ingredients: {
+    amount: string;
+    units: string;
+    ingredient: string;
+    description?: string;
+    substitutions?: string[];
+  }[];
+}
 
 interface StepDisplayProps {
   step: RecipeStep;
@@ -17,9 +30,11 @@ interface StepDisplayProps {
   onPrev: () => void;
   onBackToList: () => void;
   allIngredients: IngredientInfo[];
+  ingredientDisplayMode?: IngredientDisplayMode;
+  ingredientGroups?: IngredientGroup[];
 }
 
-export default function StepDisplay({ step, currentStep, totalSteps, onNext, onPrev, onBackToList: _onBackToList, allIngredients }: StepDisplayProps) {
+export default function StepDisplay({ step, currentStep, totalSteps, onNext, onPrev, onBackToList: _onBackToList, allIngredients, ingredientDisplayMode = 'inline', ingredientGroups = [] }: StepDisplayProps) {
   const { settings } = useUISettings();
   const { stepSizing } = settings;
 
@@ -108,6 +123,9 @@ export default function StepDisplay({ step, currentStep, totalSteps, onNext, onP
               <p className={`${settings.fontFamily === 'serif' ? 'font-domine' : 'font-albert'} text-[#0C0A09]/80 leading-relaxed max-w-2xl transition-all duration-300 ${detailSizeMap[stepSizing]}`}>
                 {highlightQuantitiesAndIngredients(step.detail, allIngredients)}
               </p>
+              {ingredientDisplayMode === 'inline' && (
+                <InlineIngredients stepDetail={step.detail} allIngredients={allIngredients} ingredientGroups={ingredientGroups} />
+              )}
             </div>
           </motion.div>
         </AnimatePresence>
