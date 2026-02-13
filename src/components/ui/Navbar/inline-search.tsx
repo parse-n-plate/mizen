@@ -31,7 +31,7 @@ export default function InlineSearch() {
   const { recentRecipes: contextRecipes } = useParsedRecipes();
   const { setParsedRecipe } = useRecipe();
   const { addRecipe } = useParsedRecipes();
-  const { showError, showSuccess, showInfo } = useToast();
+  const { showError, showSuccess, showInfo, showWarning } = useToast();
   const router = useRouter();
 
   // Derive recent and filtered recipes from context (no effect needed)
@@ -161,6 +161,12 @@ export default function InlineSearch() {
           return;
         }
 
+        if (response.warnings?.includes('AI_NOT_CONFIGURED')) {
+          showWarning('AI enrichment unavailable', 'GROQ_API_KEY is not configured. Plating, storage, and summary data will be missing.');
+        } else if (response.warnings?.includes('AI_ENRICHMENT_FAILED')) {
+          showWarning('Partial recipe data', 'AI enrichment failed for this recipe. Plating, storage, and summary data may be missing.');
+        }
+
         // Store detected cuisine for reveal
         if (response.cuisine) {
           setDetectedCuisine(response.cuisine);
@@ -187,6 +193,11 @@ export default function InlineSearch() {
           ...(response.totalTimeMinutes !== undefined && {
             totalTimeMinutes: response.totalTimeMinutes,
           }), // Include total time if available
+          ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
+          ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
+          ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
+          ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
+          ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
         };
 
         setParsedRecipe(recipeToStore);
@@ -225,6 +236,11 @@ export default function InlineSearch() {
           ...(response.totalTimeMinutes !== undefined && {
             totalTimeMinutes: response.totalTimeMinutes,
           }), // Include total time if available
+          ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
+          ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
+          ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
+          ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
+          ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
         });
 
         // Add to search history
@@ -256,25 +272,32 @@ export default function InlineSearch() {
         // setLoading(false) handled in success/error paths
       }
     },
-    [setParsedRecipe, addRecipe, showError, showSuccess, showInfo, router],
+    [setParsedRecipe, addRecipe, showError, showSuccess, showInfo, showWarning, router],
   );
 
   // Handle recipe selection
   const handleRecipeSelect = (recipe: ParsedRecipe) => {
     setParsedRecipe({
+      id: recipe.id,
       title: recipe.title,
       ingredients: recipe.ingredients || [],
       instructions: recipe.instructions || [],
       author: recipe.author,
       sourceUrl: recipe.sourceUrl,
       summary: recipe.description || recipe.summary,
-      imageData: recipe.imageData, // Include image data if available (for uploaded images)
-      imageFilename: recipe.imageFilename, // Include image filename if available
+      imageData: recipe.imageData,
+      imageFilename: recipe.imageFilename,
       cuisine: recipe.cuisine,
-      prepTimeMinutes: recipe.prepTimeMinutes, // Include prep time if available
-      cookTimeMinutes: recipe.cookTimeMinutes, // Include cook time if available
-      totalTimeMinutes: recipe.totalTimeMinutes, // Include total time if available
-      servings: recipe.servings, // Include servings if available
+      prepTimeMinutes: recipe.prepTimeMinutes,
+      cookTimeMinutes: recipe.cookTimeMinutes,
+      totalTimeMinutes: recipe.totalTimeMinutes,
+      servings: recipe.servings,
+      storageGuide: recipe.storageGuide,
+      shelfLife: recipe.shelfLife,
+      platingNotes: recipe.platingNotes,
+      servingVessel: recipe.servingVessel,
+      servingTemp: recipe.servingTemp,
+      plate: recipe.plate,
     });
     router.push('/parsed-recipe-page');
     setQuery('');

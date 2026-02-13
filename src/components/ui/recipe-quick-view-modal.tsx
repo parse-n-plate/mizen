@@ -92,6 +92,11 @@ export default function RecipeQuickViewModal({
       cookTimeMinutes: recipe.cookTimeMinutes,
       totalTimeMinutes: recipe.totalTimeMinutes,
       servings: recipe.servings,
+      storageGuide: recipe.storageGuide,
+      shelfLife: recipe.shelfLife,
+      platingNotes: recipe.platingNotes,
+      servingVessel: recipe.servingVessel,
+      servingTemp: recipe.servingTemp,
       plate: recipe.plate,
     });
     onClose();
