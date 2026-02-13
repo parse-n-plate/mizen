@@ -2,12 +2,10 @@
 
 // User icon import removed - not currently used in this component
 import Image from 'next/image';
-import MobileBackButton from '@/components/ui/MobileBackButton';
 
 export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-white">
-      <MobileBackButton />
       <div className="max-w-4xl mx-auto px-4 md:px-8 pt-12 md:pt-16">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-16 h-16 rounded-full overflow-hidden">
