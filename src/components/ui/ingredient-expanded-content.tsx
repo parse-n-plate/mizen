@@ -14,8 +14,6 @@ interface IngredientExpandedContentProps {
   stepTitlesMap?: Record<number, string>; // Map of step numbers to step titles (e.g., { 1: "Cook Beans", 2: "Prepare Sauce" })
   onStepClick: (stepNumber: number) => void;
   variant?: 'accordion' | 'modal' | 'sidepanel' | 'things3';
-  recipeUrl?: string; // Optional recipe URL for note persistence
-  onNotesChange?: (notes: string) => void; // Optional callback when notes change
   /** Callback when substitution is requested - foundation for future substitution feature */
   onSubstitute?: (ingredientName: string) => void;
 }
@@ -69,4 +67,3 @@ export function IngredientExpandedContent({
     </div>
   );
 }
-

@@ -14,8 +14,6 @@ interface IngredientExpandedThings3Props {
   stepTitlesMap?: Record<number, string>; // Map of step numbers to step titles
   onStepClick: (stepNumber: number) => void;
   isOpen: boolean;
-  recipeUrl?: string;
-  onNotesChange?: (notes: string) => void;
 }
 
 export function IngredientExpandedThings3({
@@ -27,9 +25,7 @@ export function IngredientExpandedThings3({
   linkedSteps,
   stepTitlesMap,
   onStepClick,
-  isOpen,
-  recipeUrl,
-  onNotesChange
+  isOpen
 }: IngredientExpandedThings3Props) {
   return (
     <motion.div
@@ -54,11 +50,8 @@ export function IngredientExpandedThings3({
           stepTitlesMap={stepTitlesMap}
           onStepClick={onStepClick}
           variant="things3"
-          recipeUrl={recipeUrl}
-          onNotesChange={onNotesChange}
         />
       </div>
     </motion.div>
   );
 }
-

@@ -45,7 +45,6 @@ export default function PlatePhotoCapture({
   const [isShareSheetOpen, setIsShareSheetOpen] = useState(false);
   const [pendingPhoto, setPendingPhoto] = useState<{ data: string; filename: string } | null>(null);
   const [currentRating, setCurrentRating] = useState(3);
-  const [currentNotes, setCurrentNotes] = useState('');
 
   const MAX_PHOTOS = 5;
   const hasReachedLimit = photos.length >= MAX_PHOTOS;
@@ -101,9 +100,8 @@ export default function PlatePhotoCapture({
   };
 
   // Handle rating confirmation - show share sheet
-  const handleRatingConfirm = (rating: number, notes: string) => {
+  const handleRatingConfirm = (rating: number) => {
     setCurrentRating(rating);
-    setCurrentNotes(notes);
     setShowRatingPrompt(false);
     setIsShareSheetOpen(true);
   };
@@ -111,7 +109,6 @@ export default function PlatePhotoCapture({
   // Handle rating modal close
   const handleRatingModalClose = () => {
     setShowRatingPrompt(false);
-    setCurrentNotes('');
     setCurrentRating(3);
   };
 
@@ -130,7 +127,6 @@ export default function PlatePhotoCapture({
     
     setPendingPhoto(null);
     setCurrentRating(3); // Reset for next time
-    setCurrentNotes(''); // Reset notes for next time
   };
 
   const handleUploadClick = () => {
@@ -160,7 +156,6 @@ export default function PlatePhotoCapture({
     
     // Use existing rating if available, otherwise default to 3
     setCurrentRating(photoToShare.rating || 3);
-    setCurrentNotes(''); // Reset notes when opening modal
     
     // Show rating modal first
     setShowRatingPrompt(true);
@@ -388,7 +383,6 @@ export default function PlatePhotoCapture({
             recipeTitle={recipeTitle}
             recipeAuthor={recipeAuthor}
             cuisine={cuisine}
-            notes={currentNotes}
             onClose={handleShareSheetClose}
           />
         )}

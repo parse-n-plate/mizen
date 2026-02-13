@@ -1485,7 +1485,6 @@ export default function ParsedRecipePage({
                                                   description={typeof ingredient === 'string' ? undefined : ingredient.description}
                                                   isLast={isLast}
                                                   groupName={groupName}
-                                                  recipeUrl={parsedRecipe?.sourceUrl}
                                                   checked={isChecked}
                                                   onCheckedChange={(checked) => 
                                                     handleIngredientCheck(groupName, ingredientName, checked)
@@ -1548,16 +1547,6 @@ export default function ParsedRecipePage({
                           platingNotes={parsedRecipe.platingNotes || parsedRecipe.plate?.platingNotes}
                           servingVessel={parsedRecipe.servingVessel || parsedRecipe.plate?.servingVessel}
                           servingTemp={parsedRecipe.servingTemp || parsedRecipe.plate?.servingTemp}
-                          onNotesChange={(notes) => {
-                            setParsedRecipe({
-                              ...parsedRecipe,
-                              id: parsedRecipe.id || recipeId || undefined,
-                              plate: {
-                                ...parsedRecipe.plate,
-                                platingNotes: notes,
-                              },
-                            });
-                          }}
                         />
 
                         {/* Storage Guidance - use top-level storage from initial parse, fallback to plate for backward compat */}

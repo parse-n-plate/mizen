@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Sparkles, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRecipe } from '@/contexts/RecipeContext';
@@ -27,22 +27,12 @@ export function IngredientDrawerContent({
   stepTitlesMap,
   onStepClick
 }: IngredientDrawerContentProps) {
-  const [notes, setNotes] = useState('');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { parsedRecipe } = useRecipe();
 
   // AI substitution state
   const [aiSubstitutions, setAiSubstitutions] = useState<AiSubstitution[] | null>(null);
   const [isLoadingAi, setIsLoadingAi] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
-
-  // Auto-resize textarea to fit content
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [notes]);
 
   const handleGetAiSubstitutions = async () => {
     if (!parsedRecipe) return;
@@ -77,12 +67,6 @@ export function IngredientDrawerContent({
       setIsLoadingAi(false);
     }
   };
-
-  // Build the "used in" description
-  const capitalizedName = ingredientName.charAt(0).toUpperCase() + ingredientName.slice(1);
-  const usedInDescription = linkedSteps.length > 0
-    ? `${capitalizedName} is essential in this dish, enhancing the depth and bringing out the vibrant flavors.${ingredientAmount ? ` You'll need ${ingredientAmount} for this recipe.` : ''}`
-    : 'Unable to identify the steps where this ingredient is used.';
 
   const hasStaticSubstitutes = substitutions && substitutions.length > 0;
   const hasAiSubstitutes = aiSubstitutions && aiSubstitutions.length > 0;
@@ -238,23 +222,6 @@ export function IngredientDrawerContent({
         </div>
       )}
 
-      {/* Notes */}
-      <div className="space-y-3">
-        <p className="text-[11px] font-albert font-bold uppercase tracking-widest text-stone-400">
-          Notes
-        </p>
-        <div className="flex items-start gap-3 p-4 bg-stone-50 rounded-xl border border-stone-100 shadow-[0_1px_2px_rgba(0,0,0,0.03)] transition-[background-color,border-color,box-shadow] duration-200 focus-within:bg-white focus-within:border-stone-200 focus-within:shadow-[0_2px_4px_rgba(0,0,0,0.04)]">
-          <textarea
-            ref={textareaRef}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Add a note…"
-            rows={2}
-            className="flex-1 bg-transparent border-none outline-none resize-none font-albert text-[15px] font-normal text-stone-800 placeholder:text-stone-400 placeholder:font-normal p-0 m-0"
-            aria-label={`Notes for ${ingredientName}`}
-          />
-        </div>
-      </div>
     </div>
   );
 }

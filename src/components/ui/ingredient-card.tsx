@@ -46,8 +46,6 @@ interface IngredientCardProps {
   isLast?: boolean; // Hide divider if this is the last item
   /** Ingredient group name (e.g., "Main", "Sauce") */
   groupName?: string;
-  /** Recipe URL for note persistence */
-  recipeUrl?: string;
   /** Controlled checked state */
   checked?: boolean;
   /** Callback when checked state changes */
@@ -56,8 +54,6 @@ interface IngredientCardProps {
   isExpanded?: boolean;
   /** Callback when expansion state changes */
   onExpandChange?: (expanding: boolean) => void;
-  /** Callback when notes change */
-  onNotesChange?: (notes: string) => void;
 }
 
 export default function IngredientCard({
@@ -65,12 +61,10 @@ export default function IngredientCard({
   description,
   isLast = false,
   groupName: _groupName = 'Main',
-  recipeUrl: _recipeUrl,
   checked,
   onCheckedChange,
   isExpanded: controlledIsExpanded,
   onExpandChange,
-  onNotesChange: _onNotesChange
 }: IngredientCardProps) {
   const [internalChecked, setInternalChecked] = useState(false);
   const isChecked = checked !== undefined ? checked : internalChecked;
