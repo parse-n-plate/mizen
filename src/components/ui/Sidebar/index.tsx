@@ -4,7 +4,7 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from '
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Reorder, useReducedMotion } from 'framer-motion';
+import { Reorder, useDragControls, useReducedMotion } from 'framer-motion';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRecipe } from '@/contexts/RecipeContext';
 import { useSidebar } from '@/contexts/SidebarContext';
@@ -18,7 +18,7 @@ import {
   TooltipProvider,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { Pin, Plus } from 'lucide-react';
+import { GripVertical, Pin, Plus } from 'lucide-react';
 import SquareDoubleAltArrowLeft from '@solar-icons/react/csr/arrows/SquareDoubleAltArrowLeft';
 import SquareDoubleAltArrowRight from '@solar-icons/react/csr/arrows/SquareDoubleAltArrowRight';
 import Magnifer from '@solar-icons/react/csr/search/Magnifer';
@@ -86,6 +86,7 @@ const DraggableRecipeItem = memo(function DraggableRecipeItem({
   onDragStart,
   getRecipeIconPath,
   RecipeItemWrapper,
+  dragConstraints,
   onDragEnd,
   reduceMotion,
 }: {
@@ -99,12 +100,18 @@ const DraggableRecipeItem = memo(function DraggableRecipeItem({
     recipe: ParsedRecipe;
     children: React.ReactNode;
   }>;
+  dragConstraints: React.RefObject<HTMLDivElement | null>;
   onDragEnd?: () => void;
   reduceMotion?: boolean;
 }) {
+  const dragControls = useDragControls();
+
   return (
     <Reorder.Item
       value={recipe}
+      dragListener={false}
+      dragControls={dragControls}
+      dragConstraints={dragConstraints}
       dragElastic={0.08}
       dragMomentum={false}
       onDragStart={() => onDragStart?.(recipe.id)}
@@ -124,7 +131,7 @@ const DraggableRecipeItem = memo(function DraggableRecipeItem({
           : { type: 'spring', duration: 0.25, bounce: 0 },
       }}
       className={cn(
-        'rounded-lg bg-[#FAFAF9] cursor-grab active:cursor-grabbing transition-shadow duration-200 ease-out',
+        'rounded-lg bg-[#FAFAF9] transition-shadow duration-200 ease-out',
         isDragged
           ? 'shadow-[0_14px_30px_rgba(0,0,0,0.14)] ring-1 ring-black/5'
           : 'shadow-none ring-0',
@@ -132,14 +139,29 @@ const DraggableRecipeItem = memo(function DraggableRecipeItem({
       style={{ position: 'relative' }}
     >
       <RecipeItemWrapper recipe={recipe}>
-        <button
-          onClick={() => onRecipeClick(recipe.id)}
+        <div
           className={cn(
             'w-full flex items-center justify-between px-3 py-2 rounded-lg text-left group',
             isActive ? 'bg-stone-200/70' : 'hover:bg-stone-100',
           )}
         >
-          <span className="flex items-center gap-2 min-w-0 pr-2 flex-1">
+          <button
+            type="button"
+            className="flex-shrink-0 cursor-grab active:cursor-grabbing touch-none opacity-30 mr-0.5"
+            onPointerDown={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              dragControls.start(event);
+            }}
+            aria-label={`Reorder ${recipe.title}`}
+          >
+            <GripVertical className="w-3.5 h-3.5 text-stone-500" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onRecipeClick(recipe.id)}
+            className="flex items-center gap-2 min-w-0 pr-2 flex-1 text-left"
+          >
             <Image
               src={getRecipeIconPath(recipe)}
               alt=""
@@ -157,8 +179,8 @@ const DraggableRecipeItem = memo(function DraggableRecipeItem({
             >
               {recipe.title}
             </span>
-          </span>
-        </button>
+          </button>
+        </div>
       </RecipeItemWrapper>
     </Reorder.Item>
   );
@@ -269,7 +291,10 @@ export default function Sidebar() {
   const [draggedRecipeId, setDraggedRecipeId] = useState<string | null>(null);
   const displayPinned = localPinnedOrder ?? pinnedRecipes;
   const displayUnpinned = localUnpinnedOrder ?? unpinnedRecipes;
-  const allRecipes = [...displayPinned, ...displayUnpinned];
+  const allRecipes = useMemo(
+    () => [...displayPinned, ...displayUnpinned],
+    [displayPinned, displayUnpinned],
+  );
 
   // Sync local state when the canonical order changes (e.g. recipe added/removed)
   useEffect(() => {
@@ -719,6 +744,7 @@ export default function Sidebar() {
                           onDragStart={setDraggedRecipeId}
                           getRecipeIconPath={getRecipeIconPath}
                           RecipeItemWrapper={RecipeItemWrapper}
+                          dragConstraints={pinnedListRef}
                           onDragEnd={handleDragEnd}
                           reduceMotion={reduceMotion}
                         />
@@ -754,6 +780,7 @@ export default function Sidebar() {
                           onDragStart={setDraggedRecipeId}
                           getRecipeIconPath={getRecipeIconPath}
                           RecipeItemWrapper={RecipeItemWrapper}
+                          dragConstraints={recipeListRef}
                           onDragEnd={handleDragEnd}
                           reduceMotion={reduceMotion}
                         />

@@ -44,8 +44,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { useSidebar } from '@/contexts/SidebarContext';
-import { useIsMobile } from '@/hooks/useIsMobile';
 
 // Helper function to extract domain from URL for display
 const getDomainFromUrl = (url: string): string => {
@@ -207,7 +205,6 @@ export default function ParsedRecipePage({
   const { parsedRecipe, setParsedRecipe, isLoaded } = useRecipe();
   const { recentRecipes, isBookmarked, toggleBookmark, removeRecipe, getBookmarkedRecipes, updateRecipe } = useParsedRecipes();
   const router = useRouter();
-  const isMobileViewport = useIsMobile();
   // Store original servings from recipe (never changes) - use useMemo to preserve it
   const originalServings = useMemo(() => parsedRecipe?.servings, [parsedRecipe?.servings]);
   

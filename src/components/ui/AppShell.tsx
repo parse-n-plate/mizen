@@ -14,6 +14,15 @@ const SWIPE_THRESHOLD_PX = 100;
 const SWIPE_VELOCITY = 500;
 const EASE_OUT_CUBIC: [number, number, number, number] = [0.215, 0.61, 0.355, 1];
 
+function isInteractiveTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return Boolean(
+    target.closest(
+      'a,button,input,select,textarea,label,summary,[role="button"],[role="link"],[contenteditable="true"]',
+    ),
+  );
+}
+
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   const { isMobileNavVisible, showMobileNav, hideMobileNav } = useSidebar();
@@ -90,6 +99,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={{ left: 0.15, right: 0.15 }}
         onDragEnd={handleDragEnd}
+        onPointerDownCapture={(event) => {
+          if (isMobileNavVisible) return;
+          if (event.clientX > EDGE_SWIPE_WIDTH_PX) return;
+          if (isInteractiveTarget(event.target)) return;
+          dragControls.start(event);
+        }}
         style={{
           boxShadow: isMobileNavVisible
             ? '-4px 0 24px rgba(0, 0, 0, 0.12)'
@@ -100,16 +115,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <main className="h-full overflow-y-auto">
           {children}
         </main>
-
-        {/* Edge-only gesture to open nav so page-level swipe interactions still work */}
-        {!isMobileNavVisible && (
-          <div
-            className="absolute inset-y-0 left-0 z-20 touch-pan-y"
-            style={{ width: EDGE_SWIPE_WIDTH_PX }}
-            onPointerDown={(event) => dragControls.start(event)}
-            aria-hidden="true"
-          />
-        )}
 
         {/* Tap overlay to dismiss when nav is open */}
         {isMobileNavVisible && (
