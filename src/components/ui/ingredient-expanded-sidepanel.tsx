@@ -16,8 +16,6 @@ interface IngredientExpandedSidePanelProps {
   onStepClick: (stepNumber: number) => void;
   isOpen: boolean;
   onClose: () => void;
-  recipeUrl?: string;
-  onNotesChange?: (notes: string) => void;
 }
 
 export function IngredientExpandedSidePanel({
@@ -30,9 +28,7 @@ export function IngredientExpandedSidePanel({
   stepTitlesMap,
   onStepClick,
   isOpen,
-  onClose,
-  recipeUrl,
-  onNotesChange
+  onClose
 }: IngredientExpandedSidePanelProps) {
   return (
     <AnimatePresence>
@@ -80,8 +76,6 @@ export function IngredientExpandedSidePanel({
                 stepTitlesMap={stepTitlesMap}
                 onStepClick={onStepClick}
                 variant="sidepanel"
-                recipeUrl={recipeUrl}
-                onNotesChange={onNotesChange}
               />
             </div>
           </motion.div>
@@ -90,4 +84,3 @@ export function IngredientExpandedSidePanel({
     </AnimatePresence>
   );
 }
-

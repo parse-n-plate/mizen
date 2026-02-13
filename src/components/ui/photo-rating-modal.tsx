@@ -4,12 +4,11 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import StarIcon from './star-icon';
-import { Textarea } from './textarea';
 
 interface PhotoRatingModalProps {
   photos: Array<{ data: string; filename: string }>;
   recipeTitle?: string;
-  onConfirm: (rating: number, notes: string) => void;
+  onConfirm: (rating: number) => void;
   onClose: () => void;
 }
 
@@ -24,7 +23,6 @@ interface PhotoRatingModalProps {
  * - Close button (X) - top-right on desktop, top-left on mobile
  * - Single photo preview with slight rotation
  * - 5-star rating interface (interactive) with rating labels
- * - Notes textarea for user thoughts
  * - "Continue" button to proceed
  * - Viewport locked (prevents scrolling when modal is open)
  * 
@@ -32,7 +30,7 @@ interface PhotoRatingModalProps {
  * 
  * @param photos - Array of photo objects with data URLs
  * @param recipeTitle - Optional recipe title to display in title
- * @param onConfirm - Callback function called with rating (1-5) and notes when user confirms
+ * @param onConfirm - Callback function called with rating (1-5) when user confirms
  * @param onClose - Callback function called when user clicks close button
  */
 export default function PhotoRatingModal({ 
@@ -43,8 +41,6 @@ export default function PhotoRatingModal({
 }: PhotoRatingModalProps) {
   // Default rating starts at 3 stars (middle rating)
   const [rating, setRating] = useState(3);
-  // Notes state for user input
-  const [notes, setNotes] = useState('');
 
   // Rating labels based on star count
   const getRatingLabel = (stars: number): string => {
@@ -88,7 +84,7 @@ export default function PhotoRatingModal({
   }, []);
 
   const handleConfirm = () => {
-    onConfirm(rating, notes);
+    onConfirm(rating);
   };
 
   return (
@@ -156,24 +152,6 @@ export default function PhotoRatingModal({
         <p className="font-albert text-stone-600 text-center mb-5 md:mb-6 text-sm md:text-base">
           {getRatingLabel(rating)}
         </p>
-
-        {/* Notes Textarea - Using reusable Textarea component */}
-        <div className="mb-6 md:mb-8">
-          <Textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            onKeyDown={(e) => {
-              // When user presses Enter (without Shift), submit the form
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault(); // Prevent default newline behavior
-                handleConfirm(); // Call the confirm handler to continue
-              }
-              // Shift+Enter will still create a new line (default behavior)
-            }}
-            placeholder="Write down your thoughts or any tweaks you made to the dish!"
-            rows={4}
-          />
-        </div>
 
         {/* Continue Button - Black background with white text matching Figma */}
         <button
