@@ -35,9 +35,12 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
   }, [onClose]);
 
   const handleGoogleLogin = async () => {
+    const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(returnTo || '/')}`,
+      },
     });
   };
 
