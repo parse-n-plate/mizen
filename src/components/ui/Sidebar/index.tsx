@@ -4,7 +4,7 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from '
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { Reorder, useDragControls, useReducedMotion } from 'framer-motion';
+import { Reorder, useReducedMotion } from 'framer-motion';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRecipe } from '@/contexts/RecipeContext';
 import { useSidebar } from '@/contexts/SidebarContext';
@@ -18,7 +18,7 @@ import {
   TooltipProvider,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { GripVertical, Pin, Plus } from 'lucide-react';
+import { Pin, Plus } from 'lucide-react';
 import SquareDoubleAltArrowLeft from '@solar-icons/react/csr/arrows/SquareDoubleAltArrowLeft';
 import SquareDoubleAltArrowRight from '@solar-icons/react/csr/arrows/SquareDoubleAltArrowRight';
 import Magnifer from '@solar-icons/react/csr/search/Magnifer';
@@ -47,6 +47,15 @@ import FeedbackDialog from './FeedbackDialog';
 // Shared easing for all sidebar transitions — ease-in-out-cubic
 const SIDEBAR_EASING = 'cubic-bezier(0.645,0.045,0.355,1)';
 
+function isSameOrder(current: ParsedRecipe[] | null, next: ParsedRecipe[]): boolean {
+  if (!current) return false;
+  if (current.length !== next.length) return false;
+  for (let i = 0; i < current.length; i += 1) {
+    if (current[i]?.id !== next[i]?.id) return false;
+  }
+  return true;
+}
+
 // Helper: wrap children in a tooltip only when collapsed (desktop)
 function NavTooltip({
   label,
@@ -72,18 +81,20 @@ function NavTooltip({
 const DraggableRecipeItem = memo(function DraggableRecipeItem({
   recipe,
   isActive,
+  isDragged,
   onRecipeClick,
+  onDragStart,
   getRecipeIconPath,
   RecipeItemWrapper,
-  dragConstraints,
   onDragEnd,
   reduceMotion,
 }: {
   recipe: ParsedRecipe;
   isActive: boolean;
+  isDragged: boolean;
   onRecipeClick: (id: string) => void;
+  onDragStart?: (id: string) => void;
   getRecipeIconPath: (recipe: ParsedRecipe) => string;
-  dragConstraints: React.RefObject<HTMLDivElement | null>;
   RecipeItemWrapper: React.ComponentType<{
     recipe: ParsedRecipe;
     children: React.ReactNode;
@@ -91,14 +102,12 @@ const DraggableRecipeItem = memo(function DraggableRecipeItem({
   onDragEnd?: () => void;
   reduceMotion?: boolean;
 }) {
-  const dragControls = useDragControls();
-
   return (
     <Reorder.Item
       value={recipe}
-      dragListener={false}
-      dragControls={dragControls}
-      dragConstraints={dragConstraints}
+      dragElastic={0.08}
+      dragMomentum={false}
+      onDragStart={() => onDragStart?.(recipe.id)}
       onDragEnd={onDragEnd}
       as="div"
       whileDrag={
@@ -106,8 +115,7 @@ const DraggableRecipeItem = memo(function DraggableRecipeItem({
           ? { zIndex: 50 }
           : {
               zIndex: 50,
-              scale: 1.03,
-              boxShadow: '0 4px 14px rgba(0,0,0,0.08)',
+              scale: 1.02,
             }
       }
       transition={{
@@ -115,7 +123,12 @@ const DraggableRecipeItem = memo(function DraggableRecipeItem({
           ? { duration: 0 }
           : { type: 'spring', duration: 0.25, bounce: 0 },
       }}
-      className="rounded-lg bg-[#FAFAF9]"
+      className={cn(
+        'rounded-lg bg-[#FAFAF9] cursor-grab active:cursor-grabbing transition-shadow duration-200 ease-out',
+        isDragged
+          ? 'shadow-[0_14px_30px_rgba(0,0,0,0.14)] ring-1 ring-black/5'
+          : 'shadow-none ring-0',
+      )}
       style={{ position: 'relative' }}
     >
       <RecipeItemWrapper recipe={recipe}>
@@ -127,15 +140,6 @@ const DraggableRecipeItem = memo(function DraggableRecipeItem({
           )}
         >
           <span className="flex items-center gap-2 min-w-0 pr-2 flex-1">
-            <span
-              className="flex-shrink-0 cursor-grab active:cursor-grabbing touch-none opacity-30 mr-0.5"
-              onPointerDown={(e) => {
-                e.preventDefault();
-                dragControls.start(e);
-              }}
-            >
-              <GripVertical className="w-3.5 h-3.5 text-stone-500" />
-            </span>
             <Image
               src={getRecipeIconPath(recipe)}
               alt=""
@@ -262,6 +266,7 @@ export default function Sidebar() {
   // Local drag state — drives Reorder.Group visuals without touching context
   const [localPinnedOrder, setLocalPinnedOrder] = useState<ParsedRecipe[] | null>(null);
   const [localUnpinnedOrder, setLocalUnpinnedOrder] = useState<ParsedRecipe[] | null>(null);
+  const [draggedRecipeId, setDraggedRecipeId] = useState<string | null>(null);
   const displayPinned = localPinnedOrder ?? pinnedRecipes;
   const displayUnpinned = localUnpinnedOrder ?? unpinnedRecipes;
   const allRecipes = [...displayPinned, ...displayUnpinned];
@@ -271,6 +276,24 @@ export default function Sidebar() {
     setLocalPinnedOrder(null);
     setLocalUnpinnedOrder(null);
   }, [sortedRecipes]);
+
+  // Safety cleanup: if a drag is interrupted, immediately clear lifted styles.
+  useEffect(() => {
+    if (!draggedRecipeId) return;
+
+    const clearDragState = () => setDraggedRecipeId(null);
+    window.addEventListener('pointerup', clearDragState);
+    window.addEventListener('pointercancel', clearDragState);
+    window.addEventListener('mouseup', clearDragState);
+    window.addEventListener('touchend', clearDragState);
+
+    return () => {
+      window.removeEventListener('pointerup', clearDragState);
+      window.removeEventListener('pointercancel', clearDragState);
+      window.removeEventListener('mouseup', clearDragState);
+      window.removeEventListener('touchend', clearDragState);
+    };
+  }, [draggedRecipeId]);
 
   // Determine which recipe is currently being viewed
   const activeRecipeId = useMemo(() => {
@@ -357,6 +380,7 @@ export default function Sidebar() {
   unpinnedRef.current = unpinnedRecipes;
 
   const handleDragEnd = useCallback(() => {
+    setDraggedRecipeId(null);
     const currentPinned = localPinnedRef.current ?? pinnedRef.current;
     const currentUnpinned = localUnpinnedRef.current ?? unpinnedRef.current;
     const merged = [...currentPinned, ...currentUnpinned];
@@ -364,6 +388,16 @@ export default function Sidebar() {
     setLocalPinnedOrder(null);
     setLocalUnpinnedOrder(null);
   }, [reorderRecipes]);
+
+  const handlePinnedReorder = useCallback((nextOrder: ParsedRecipe[]) => {
+    setLocalPinnedOrder((current) => (isSameOrder(current, nextOrder) ? current : nextOrder));
+  }, []);
+
+  const handleUnpinnedReorder = useCallback((nextOrder: ParsedRecipe[]) => {
+    setLocalUnpinnedOrder((current) =>
+      isSameOrder(current, nextOrder) ? current : nextOrder,
+    );
+  }, []);
 
   const navItems = [
     { icon: ClockCircle, label: 'Timers', href: '/timers', disabled: true },
@@ -664,7 +698,8 @@ export default function Sidebar() {
                       ref={pinnedListRef}
                       axis="y"
                       values={displayPinned}
-                      onReorder={setLocalPinnedOrder}
+                      onReorder={handlePinnedReorder}
+                      layoutScroll
                       className="space-y-0.5"
                       as="div"
                     >
@@ -673,10 +708,11 @@ export default function Sidebar() {
                           key={recipe.id}
                           recipe={recipe}
                           isActive={activeRecipeId === recipe.id}
+                          isDragged={draggedRecipeId === recipe.id}
                           onRecipeClick={handleRecipeClick}
+                          onDragStart={setDraggedRecipeId}
                           getRecipeIconPath={getRecipeIconPath}
                           RecipeItemWrapper={RecipeItemWrapper}
-                          dragConstraints={pinnedListRef}
                           onDragEnd={handleDragEnd}
                           reduceMotion={reduceMotion}
                         />
@@ -697,7 +733,8 @@ export default function Sidebar() {
                       ref={recipeListRef}
                       axis="y"
                       values={displayUnpinned}
-                      onReorder={setLocalUnpinnedOrder}
+                      onReorder={handleUnpinnedReorder}
+                      layoutScroll
                       className="space-y-0.5"
                       as="div"
                     >
@@ -706,10 +743,11 @@ export default function Sidebar() {
                           key={recipe.id}
                           recipe={recipe}
                           isActive={activeRecipeId === recipe.id}
+                          isDragged={draggedRecipeId === recipe.id}
                           onRecipeClick={handleRecipeClick}
+                          onDragStart={setDraggedRecipeId}
                           getRecipeIconPath={getRecipeIconPath}
                           RecipeItemWrapper={RecipeItemWrapper}
-                          dragConstraints={recipeListRef}
                           onDragEnd={handleDragEnd}
                           reduceMotion={reduceMotion}
                         />

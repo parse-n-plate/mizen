@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useCallback } from 'react';
-import { motion, useReducedMotion, type PanInfo } from 'framer-motion';
+import React, { useCallback, useEffect } from 'react';
+import { motion, useDragControls, useReducedMotion, type PanInfo } from 'framer-motion';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import Sidebar from '@/components/ui/Sidebar';
 import MobileMenuToggle from '@/components/ui/MobileMenuToggle';
 
+const NAV_ID = 'mobile-sidebar-nav';
 const NAV_WIDTH = '85vw';
+const EDGE_SWIPE_WIDTH_PX = 24;
 const SWIPE_THRESHOLD_PX = 100;
 const SWIPE_VELOCITY = 500;
 const EASE_OUT_CUBIC: [number, number, number, number] = [0.215, 0.61, 0.355, 1];
@@ -16,6 +18,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   const { isMobileNavVisible, showMobileNav, hideMobileNav } = useSidebar();
   const reduceMotion = useReducedMotion() ?? false;
+  const dragControls = useDragControls();
 
   const handleDragEnd = useCallback(
     (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
@@ -34,6 +37,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     [isMobileNavVisible, showMobileNav, hideMobileNav],
   );
 
+  useEffect(() => {
+    if (!isMobile || !isMobileNavVisible) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        hideMobileNav();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMobile, isMobileNavVisible, hideMobileNav]);
+
   // Desktop layout — unchanged
   if (!isMobile) {
     return (
@@ -50,7 +66,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="relative h-screen overflow-hidden">
       {/* Nav layer: always rendered behind content */}
-      <aside className="absolute inset-y-0 left-0 z-0" style={{ width: NAV_WIDTH }}>
+      <aside
+        id={NAV_ID}
+        aria-label="Primary navigation"
+        className="absolute inset-y-0 left-0 z-0"
+        style={{ width: NAV_WIDTH }}
+      >
         <Sidebar />
       </aside>
 
@@ -64,6 +85,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             : { duration: 0.35, ease: EASE_OUT_CUBIC }
         }
         drag="x"
+        dragListener={isMobileNavVisible}
+        dragControls={dragControls}
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={{ left: 0.15, right: 0.15 }}
         onDragEnd={handleDragEnd}
@@ -73,10 +96,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             : 'none',
         }}
       >
-        <MobileMenuToggle />
+        <MobileMenuToggle controlsId={NAV_ID} />
         <main className="h-full overflow-y-auto">
           {children}
         </main>
+
+        {/* Edge-only gesture to open nav so page-level swipe interactions still work */}
+        {!isMobileNavVisible && (
+          <div
+            className="absolute inset-y-0 left-0 z-20 touch-pan-y"
+            style={{ width: EDGE_SWIPE_WIDTH_PX }}
+            onPointerDown={(event) => dragControls.start(event)}
+            aria-hidden="true"
+          />
+        )}
 
         {/* Tap overlay to dismiss when nav is open */}
         {isMobileNavVisible && (
