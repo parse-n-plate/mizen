@@ -86,7 +86,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Content layer: slides right to reveal nav */}
       <motion.div
-        className="absolute inset-0 z-10 bg-white"
+        className="absolute inset-0 z-10 bg-white dark:bg-stone-900"
         animate={{ x: isMobileNavVisible ? NAV_WIDTH : '0' }}
         transition={
           reduceMotion

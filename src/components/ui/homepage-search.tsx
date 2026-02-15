@@ -494,15 +494,15 @@ export default function HomepageSearch() {
       <div className="w-full max-w-2xl mx-auto">
         <form onSubmit={handleSubmit} className="w-full">
           <div 
-            className={`bg-[#fafaf9] content-stretch flex min-h-[77px] items-center px-[24px] py-[12px] relative rounded-[24px] shrink-0 w-full transition-all group ${
-              isSearchFocused ? 'bg-white shadow-[0_0_0_3px_rgba(0,114,251,0.15)]' : ''
+            className={`bg-[#fafaf9] dark:bg-stone-800 content-stretch flex min-h-[77px] items-center px-[24px] py-[12px] relative rounded-[24px] shrink-0 w-full transition-all group ${
+              isSearchFocused ? 'bg-white dark:bg-stone-900 shadow-[0_0_0_3px_rgba(0,114,251,0.15)] dark:shadow-[0_0_0_3px_rgba(59,139,255,0.25)]' : ''
             }`}
           >
             {/* Border overlay - changes color on focus */}
             <div 
               aria-hidden="true" 
               className={`absolute border-2 border-solid inset-0 pointer-events-none rounded-[24px] transition-all ${
-                isSearchFocused ? 'border-[#0072fb]' : 'border-[#e7e5e4]'
+                isSearchFocused ? 'border-[#0072fb] dark:border-[#3B8BFF]' : 'border-[#e7e5e4] dark:border-stone-700'
               }`} 
             />
             
@@ -511,7 +511,7 @@ export default function HomepageSearch() {
               {/* URL Icon Indicator - Hide when image is selected */}
               {!selectedImage && (
                 <div className="shrink-0">
-                  <Link className={`size-[24px] transition-colors ${isSearchFocused ? 'text-[#0072fb]' : 'text-[#78716c]'}`} />
+                  <Link className={`size-[24px] transition-colors ${isSearchFocused ? 'text-[#0072fb] dark:text-[#3B8BFF]' : 'text-[#78716c] dark:text-stone-500'}`} />
                 </div>
               )}
 
@@ -519,7 +519,7 @@ export default function HomepageSearch() {
               <div className="flex-1 flex items-center gap-2">
                 {/* Image Chip - Shows inside search bar when image is selected */}
                 {selectedImage && (
-                  <div className="flex items-center gap-1.5 bg-[#ebf3ff] rounded-full pl-2 pr-3 py-1.5 border border-[#0072fb]/20 animate-in fade-in slide-in-from-left-2 duration-200">
+                  <div className="flex items-center gap-1.5 bg-[#ebf3ff] dark:bg-[#1E3A5F] rounded-full pl-2 pr-3 py-1.5 border border-[#0072fb]/20 dark:border-blue-400/20 animate-in fade-in slide-in-from-left-2 duration-200">
                     {imagePreviewUrl && (
                       <img 
                         src={imagePreviewUrl} 
@@ -528,15 +528,15 @@ export default function HomepageSearch() {
                         draggable="false"
                       />
                     )}
-                    <span className="font-albert font-medium text-[#0c0a09] text-[13px]">{selectedImage.name}</span>
-                    <span className="font-albert font-normal text-[#78716c] text-[12px]">({(selectedImage.size / 1024).toFixed(1)} KB)</span>
+                    <span className="font-albert font-medium text-[#0c0a09] dark:text-stone-200 text-[13px]">{selectedImage.name}</span>
+                    <span className="font-albert font-normal text-[#78716c] dark:text-stone-500 text-[12px]">({(selectedImage.size / 1024).toFixed(1)} KB)</span>
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedImage(null);
                       }}
-                      className="hover:bg-[#0072fb]/10 rounded-full p-0.5 transition-colors flex-shrink-0"
+                      className="hover:bg-[#0072fb]/10 dark:hover:bg-blue-400/10 rounded-full p-0.5 transition-colors flex-shrink-0"
                       title="Remove image"
                     >
                       <svg className="size-[12px]" fill="none" viewBox="0 0 24 24">
@@ -557,7 +557,7 @@ export default function HomepageSearch() {
                     onFocus={() => setIsSearchFocused(true)}
                     onBlur={() => setIsSearchFocused(false)}
                     placeholder="Enter a recipe URL"
-                    className="font-albert font-normal leading-[1.3] w-full bg-transparent border-none outline-none text-[#0c0a09] text-[16px] placeholder:text-[#78716c]"
+                    className="font-albert font-normal leading-[1.3] w-full bg-transparent border-none outline-none text-[#0c0a09] dark:text-stone-100 text-[16px] placeholder:text-[#78716c] dark:placeholder:text-stone-500"
                   />
                 )}
               </div>
@@ -583,7 +583,7 @@ export default function HomepageSearch() {
                       title="Clear text"
                       aria-label="Clear search"
                     >
-                      <X className="size-[16px] text-[#57534e]" />
+                      <X className="size-[16px] text-[#57534e] dark:text-stone-400" />
                     </button>
                   )}
 
@@ -598,7 +598,7 @@ export default function HomepageSearch() {
                     title="Upload image"
                     disabled={loading}
                   >
-                    <Upload className="size-[20px] text-[#78716c] hover:text-[#0072fb] transition-colors" />
+                    <Upload className="size-[20px] text-[#78716c] dark:text-stone-500 hover:text-[#0072fb] dark:hover:text-[#3B8BFF] transition-colors" />
                   </button>
 
                   {/* Submit Button - Only visible when there's valid input */}

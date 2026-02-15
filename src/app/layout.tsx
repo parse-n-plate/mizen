@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import { Domine, Albert_Sans } from 'next/font/google';
+import { ThemeProvider } from 'next-themes';
 import AppShell from '@/components/ui/AppShell';
 import { AdminSettingsProvider } from '@/contexts/AdminSettingsContext';
 import { RecipeProvider } from '@/contexts/RecipeContext';
@@ -54,31 +55,38 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${domine.variable} ${albertSans.variable} antialiased`}
         suppressHydrationWarning={true}
       >
-        <AdminSettingsProvider>
-          <RecipeProvider>
-            <ParsedRecipesProvider>
-              <TimerProvider>
-                <CommandKProvider>
-                  <SidebarProvider>
-                    <PrototypeLabProvider>
-                      <ImageProtection />
-                      <AppShell>{children}</AppShell>
-                      <Toaster />
-                      <SpeedInsights />
-                      {process.env.NODE_ENV === 'development' && <Agentation />}
-                      {(process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview') && <AdminPrototypingPanel />}
-                    </PrototypeLabProvider>
-                  </SidebarProvider>
-                </CommandKProvider>
-              </TimerProvider>
-            </ParsedRecipesProvider>
-          </RecipeProvider>
-        </AdminSettingsProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AdminSettingsProvider>
+            <RecipeProvider>
+              <ParsedRecipesProvider>
+                <TimerProvider>
+                  <CommandKProvider>
+                    <SidebarProvider>
+                      <PrototypeLabProvider>
+                        <ImageProtection />
+                        <AppShell>{children}</AppShell>
+                        <Toaster />
+                        <SpeedInsights />
+                        {process.env.NODE_ENV === 'development' && <Agentation />}
+                        {(process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview') && <AdminPrototypingPanel />}
+                      </PrototypeLabProvider>
+                    </SidebarProvider>
+                  </CommandKProvider>
+                </TimerProvider>
+              </ParsedRecipesProvider>
+            </RecipeProvider>
+          </AdminSettingsProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

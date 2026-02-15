@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* Class-based dark mode for next-themes (Tailwind v4) */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Register custom theme values with Tailwind v4 */
 @theme {
   /* Hero sizes (responsive) */
@@ -109,15 +112,28 @@ html {
   --ease-in-out-circ: cubic-bezier(0.785, 0.135, 0.15, 0.86);
 }
 
+/* Dark mode CSS variable overrides */
+.dark {
+  --color-background-cream: #292524;
+  --color-white: #1C1917;
+  --color-text-heading: #F5F5F4;
+  --color-text-body: #D6D3D1;
+}
+
 /* Base Typography Styles */
 @layer base {
   html {
     font-family: var(--font-family-sans);
     line-height: var(--line-height-body);
     color: var(--color-text-body);
-    background-color: white; /* White background for landing page */
+    background-color: white;
     overflow-x: hidden;
     scrollbar-gutter: stable;
+  }
+
+  html.dark {
+    background-color: #1C1917;
+    color: #D6D3D1;
   }
 
   h1,
@@ -137,6 +153,10 @@ html {
     padding: 0;
     overflow-x: hidden;
     background-color: #FFFFFF;
+  }
+
+  .dark body {
+    background-color: #1C1917;
   }
 
   * {
@@ -179,11 +199,19 @@ html {
     overflow: hidden;
   }
 
+  .dark .loading-progress-container {
+    background: #44403C;
+  }
+
   .loading-progress-bar {
     height: 100%;
     background: #000000;
     border-radius: 100px;
     transition: width 0.5s ease-out;
+  }
+
+  .dark .loading-progress-bar {
+    background: #F5F5F4;
   }
 
   .step-row {
@@ -1657,6 +1685,11 @@ html {
     gap: 0.5rem !important;
   }
 
+  .dark .sonner-toast {
+    background: #292524 !important;
+    border-color: #44403C !important;
+  }
+
   /* Hide Sonner's invisible icon placeholder */
   .sonner-toast [data-icon] {
     display: none !important;
@@ -1674,6 +1707,10 @@ html {
     margin: 0 !important;
   }
 
+  .dark .sonner-toast-title {
+    color: #F5F5F4 !important;
+  }
+
   /* Toast description */
   .sonner-toast-description {
     font-family: var(--font-albert) !important;
@@ -1686,6 +1723,10 @@ html {
     max-width: 100% !important;
     overflow: visible !important;
     line-height: 1.5 !important;
+  }
+
+  .dark .sonner-toast-description {
+    color: #A8A29E !important;
   }
 
   /* Toast action button */

@@ -244,8 +244,8 @@ export default function HomepageRecentRecipes() {
       <div className="flex items-center mb-4 pl-4">
         <div className="flex items-center gap-2">
           {/* History Icon - Visual indicator for recent recipes */}
-          <History className="w-5 h-5 text-stone-500" />
-          <h2 className="font-albert text-base text-stone-500 text-left font-medium">
+          <History className="w-5 h-5 text-stone-500 dark:text-stone-400" />
+          <h2 className="font-albert text-base text-stone-500 dark:text-stone-400 text-left font-medium">
             Recent Recipes
           </h2>
         </div>
@@ -263,7 +263,7 @@ export default function HomepageRecentRecipes() {
               className="
                 w-full flex items-center justify-between
                 py-2 pr-2
-                hover:bg-stone-50 rounded-lg
+                hover:bg-stone-50 dark:hover:bg-stone-800 rounded-lg
                 group
               "
             >
@@ -275,16 +275,16 @@ export default function HomepageRecentRecipes() {
                   className="
                     flex items-center gap-3 flex-1 min-w-0
                     text-left
-                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-2 rounded-lg
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 dark:focus-visible:ring-stone-600 focus-visible:ring-offset-2 rounded-lg
                   "
                 >
-                  <span className="font-albert text-xl text-stone-800 text-left truncate" style={{ fontSize: '16px' }}>
+                  <span className="font-albert text-xl text-stone-800 dark:text-stone-200 text-left truncate" style={{ fontSize: '16px' }}>
                     {recipe.title}
                   </span>
                   {displayTime && (
                     <span className="
-                      font-albert text-sm text-stone-600
-                      bg-stone-100 px-2.5 py-1 rounded-full
+                      font-albert text-sm text-stone-600 dark:text-stone-400
+                      bg-stone-100 dark:bg-stone-700 px-2.5 py-1 rounded-full
                       flex-shrink-0
                     ">
                       {displayTime}
@@ -302,8 +302,8 @@ export default function HomepageRecentRecipes() {
                       className="
                         flex-shrink-0 p-1
                         rounded-full
-                        text-stone-400 hover:text-stone-600
-                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-1
+                        text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300
+                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 dark:focus-visible:ring-stone-600 focus-visible:ring-offset-1
                       "
                       aria-label="More options"
                     >
@@ -340,7 +340,7 @@ export default function HomepageRecentRecipes() {
 
                     <DropdownMenuItem
                       onSelect={() => handleDelete(recipe.id)}
-                      className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                      className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:text-red-400 dark:focus:text-red-400 dark:focus:bg-red-950"
                     >
                       <span>Delete</span>
                       <Trash2 className="w-4 h-4 ml-auto" />
@@ -359,7 +359,7 @@ export default function HomepageRecentRecipes() {
               variant="ghost"
               size="sm"
               onClick={() => setShowAll(true)}
-              className="font-albert text-xs text-stone-500 hover:text-stone-700"
+              className="font-albert text-xs text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200"
             >
               See more
             </Button>
@@ -373,7 +373,7 @@ export default function HomepageRecentRecipes() {
             <DialogHeader className="mb-4">
               <DialogTitle>Rename Recipe</DialogTitle>
             </DialogHeader>
-            <label htmlFor="rename-recent-input" className="block font-albert text-[13px] font-medium text-stone-500 mb-1.5">
+            <label htmlFor="rename-recent-input" className="block font-albert text-[13px] font-medium text-stone-500 dark:text-stone-400 mb-1.5">
               Recipe title
             </label>
             <Input
@@ -391,11 +391,11 @@ export default function HomepageRecentRecipes() {
               autoFocus
             />
           </div>
-          <DialogFooter className="border-t border-stone-100 px-6 py-4 bg-stone-50/50">
+          <DialogFooter className="border-t border-stone-100 dark:border-stone-700 px-6 py-4 bg-stone-50/50 dark:bg-stone-800">
             <button
               type="button"
               onClick={() => setRenameOpen(false)}
-              className="px-4 py-2 font-albert text-[14px] font-medium text-stone-600 hover:text-stone-800 rounded-lg hover:bg-stone-200/60 transition-colors"
+              className="px-4 py-2 font-albert text-[14px] font-medium text-stone-600 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200 rounded-lg hover:bg-stone-200/60 dark:hover:bg-stone-700/60 transition-colors"
             >
               Cancel
             </button>
@@ -403,7 +403,7 @@ export default function HomepageRecentRecipes() {
               type="button"
               onClick={handleRenameSubmit}
               disabled={!renameValue.trim()}
-              className="px-4 py-2 font-albert text-[14px] font-medium text-white bg-stone-900 rounded-lg hover:bg-stone-800 active:scale-[0.97] transition-[background-color,transform] disabled:opacity-40 disabled:pointer-events-none"
+              className="px-4 py-2 font-albert text-[14px] font-medium text-white bg-stone-900 dark:bg-stone-100 dark:text-stone-900 rounded-lg hover:bg-stone-800 dark:hover:bg-stone-200 active:scale-[0.97] transition-[background-color,transform] disabled:opacity-40 disabled:pointer-events-none"
             >
               Save
             </button>

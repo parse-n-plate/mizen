@@ -123,9 +123,9 @@ const DraggableRecipeItem = memo(function DraggableRecipeItem({
           : { type: 'spring', duration: 0.25, bounce: 0 },
       }}
       className={cn(
-        'rounded-lg bg-[#FAFAF9] transition-shadow duration-200 ease-out',
+        'rounded-lg bg-[#FAFAF9] dark:bg-stone-800 transition-shadow duration-200 ease-out',
         isDragged
-          ? 'shadow-[0_14px_30px_rgba(0,0,0,0.14)] ring-1 ring-black/5'
+          ? 'shadow-[0_14px_30px_rgba(0,0,0,0.14)] dark:shadow-[0_14px_30px_rgba(0,0,0,0.4)] ring-1 ring-black/5 dark:ring-white/10'
           : 'shadow-none ring-0',
       )}
       style={{ position: 'relative' }}
@@ -134,7 +134,7 @@ const DraggableRecipeItem = memo(function DraggableRecipeItem({
         <div
           className={cn(
             'w-full flex items-center justify-between px-3 py-2 rounded-lg text-left group',
-            isActive ? 'bg-stone-200/70' : 'hover:bg-stone-100',
+            isActive ? 'bg-stone-200/70 dark:bg-stone-700/70' : 'hover:bg-stone-100 dark:hover:bg-stone-700',
           )}
         >
           <button
@@ -147,7 +147,7 @@ const DraggableRecipeItem = memo(function DraggableRecipeItem({
             }}
             aria-label={`Reorder ${recipe.title}`}
           >
-            <GripVertical className="w-3.5 h-3.5 text-stone-500" />
+            <GripVertical className="w-3.5 h-3.5 text-stone-500 dark:text-stone-400" />
           </button>
           <button
             type="button"
@@ -166,7 +166,7 @@ const DraggableRecipeItem = memo(function DraggableRecipeItem({
             <span
               className={cn(
                 'font-albert text-sm truncate',
-                isActive ? 'text-stone-900 font-medium' : 'text-stone-700',
+                isActive ? 'text-stone-900 dark:text-stone-100 font-medium' : 'text-stone-700 dark:text-stone-300',
               )}
             >
               {recipe.title}
@@ -493,10 +493,10 @@ export default function Sidebar() {
     <TooltipProvider delayDuration={300} skipDelayDuration={100}>
       <aside
         className={cn(
-          'h-screen bg-[#FAFAF9] flex flex-col flex-shrink-0 sticky top-0 overflow-hidden relative',
+          'h-screen bg-[#FAFAF9] dark:bg-stone-900 flex flex-col flex-shrink-0 sticky top-0 overflow-hidden relative',
           // Desktop styles
           !isMobile && [
-            'border-r border-stone-200',
+            'border-r border-stone-200 dark:border-stone-700',
             !isDragging &&
               `transition-[width] duration-200 ease-[${SIDEBAR_EASING}]`,
           ],
@@ -525,7 +525,7 @@ export default function Sidebar() {
             <Link
               href="/"
               className={cn(
-                'font-domine text-xl font-semibold text-stone-900 transition-opacity duration-200 whitespace-nowrap',
+                'font-domine text-xl font-semibold text-stone-900 dark:text-stone-100 transition-opacity duration-200 whitespace-nowrap',
                 isRail ? 'opacity-0 pointer-events-none' : 'opacity-100',
               )}
               tabIndex={isRail ? -1 : undefined}
@@ -538,7 +538,7 @@ export default function Sidebar() {
               <button
                 onClick={() => setIsCollapsed(true)}
                 className={cn(
-                  'p-1 rounded-lg hover:bg-stone-100 transition-opacity duration-200',
+                  'p-1 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-700 transition-opacity duration-200',
                   isRail ? 'opacity-0 pointer-events-none' : 'opacity-100',
                 )}
                 aria-label="Collapse sidebar"
@@ -546,7 +546,7 @@ export default function Sidebar() {
               >
                 <SquareDoubleAltArrowLeft
                   weight="Outline"
-                  className="w-4 h-4 text-stone-300"
+                  className="w-4 h-4 text-stone-300 dark:text-stone-500"
                 />
               </button>
             )}
@@ -558,7 +558,7 @@ export default function Sidebar() {
                   <button
                     onClick={() => setIsCollapsed(false)}
                     className={cn(
-                      'absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-stone-100 transition-opacity duration-200',
+                      'absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-700 transition-opacity duration-200',
                       isRail ? 'opacity-100' : 'opacity-0 pointer-events-none',
                     )}
                     aria-label="Expand sidebar"
@@ -566,7 +566,7 @@ export default function Sidebar() {
                   >
                     <SquareDoubleAltArrowRight
                       weight="Outline"
-                      className="w-5 h-5 text-stone-400"
+                      className="w-5 h-5 text-stone-400 dark:text-stone-500"
                     />
                   </button>
                 </TooltipTrigger>
@@ -616,7 +616,7 @@ export default function Sidebar() {
                   if (isMobile) hideMobileNav();
                 }}
                 className={cn(
-                  "group w-full flex items-center px-3 py-2 rounded-lg transition-colors font-albert text-sm text-stone-600 hover:bg-stone-100 hover:text-stone-900",
+                  "group w-full flex items-center px-3 py-2 rounded-lg transition-colors font-albert text-sm text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700 hover:text-stone-900 dark:hover:text-stone-100",
                   isRail && "justify-center"
                 )}
                 aria-label="Search recipes"
@@ -631,7 +631,7 @@ export default function Sidebar() {
                   )}
                 >
                   <span>Search</span>
-                  <kbd className="ml-auto hidden md:inline-flex opacity-0 group-hover:opacity-100 font-albert text-[11px] text-stone-400 bg-stone-100 border border-stone-200 rounded px-1.5 py-0.5 transition-opacity duration-200">
+                  <kbd className="ml-auto hidden md:inline-flex opacity-0 group-hover:opacity-100 font-albert text-[11px] text-stone-400 bg-stone-100 dark:bg-stone-700 border border-stone-200 dark:border-stone-600 rounded px-1.5 py-0.5 transition-opacity duration-200">
                     ⌘K
                   </kbd>
                 </div>
@@ -646,7 +646,7 @@ export default function Sidebar() {
                 return (
                   <NavTooltip key={item.label} isCollapsed={isCollapsed} isMobile={isMobile} label={item.label}>
                     <span
-                      className="group w-full flex items-center px-3 py-2 rounded-lg font-albert text-sm text-stone-300 cursor-not-allowed"
+                      className="group w-full flex items-center px-3 py-2 rounded-lg font-albert text-sm text-stone-300 dark:text-stone-600 cursor-not-allowed"
                       aria-label={item.label}
                       aria-disabled="true"
                     >
@@ -660,7 +660,7 @@ export default function Sidebar() {
                         )}
                       >
                         <span>{item.label}</span>
-                        <span className="ml-auto hidden md:inline-flex opacity-0 group-hover:opacity-100 font-albert text-[11px] text-stone-400 bg-stone-100 border border-stone-200 rounded px-1.5 py-0.5 transition-opacity duration-200">
+                        <span className="ml-auto hidden md:inline-flex opacity-0 group-hover:opacity-100 font-albert text-[11px] text-stone-400 bg-stone-100 dark:bg-stone-700 border border-stone-200 dark:border-stone-600 rounded px-1.5 py-0.5 transition-opacity duration-200">
                           Coming soon
                         </span>
                       </div>
@@ -676,8 +676,8 @@ export default function Sidebar() {
                     className={cn(
                       'w-full flex items-center px-3 py-2 rounded-lg transition-colors font-albert text-sm',
                       isActive
-                        ? 'bg-stone-100 text-stone-900 font-medium'
-                        : 'text-stone-600 hover:bg-stone-100 hover:text-stone-900',
+                        ? 'bg-stone-100 dark:bg-stone-700 text-stone-900 dark:text-stone-100 font-medium'
+                        : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700 hover:text-stone-900 dark:hover:text-stone-100',
                     )}
                     aria-label={item.label}
                   >
@@ -704,7 +704,7 @@ export default function Sidebar() {
                 <button
                   onClick={openLab}
                   className={cn(
-                    "w-full flex items-center px-3 py-2 rounded-lg transition-colors font-albert text-sm text-stone-600 hover:bg-stone-100 hover:text-stone-900",
+                    "w-full flex items-center px-3 py-2 rounded-lg transition-colors font-albert text-sm text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700 hover:text-stone-900 dark:hover:text-stone-100",
                     isRail && "justify-center"
                   )}
                   aria-label="Open Prototype Lab"
@@ -726,7 +726,7 @@ export default function Sidebar() {
           </nav>
 
           {/* Divider */}
-          <div className="mx-4 my-2 border-t border-stone-200" />
+          <div className="mx-4 my-2 border-t border-stone-200 dark:border-stone-700" />
 
           {/* Scrollable recipes section — hidden when collapsed */}
           {!isRail ? (
@@ -736,8 +736,8 @@ export default function Sidebar() {
                 {isLoaded && displayPinned.length > 0 && (
                   <div className="py-2">
                     <div className="px-3 py-1.5 flex items-center gap-2">
-                      <Pin className="w-3.5 h-3.5 text-stone-400" />
-                      <span className="font-albert text-xs font-medium text-stone-400 uppercase tracking-wider whitespace-nowrap">
+                      <Pin className="w-3.5 h-3.5 text-stone-400 dark:text-stone-500" />
+                      <span className="font-albert text-xs font-medium text-stone-400 dark:text-stone-500 uppercase tracking-wider whitespace-nowrap">
                         Pinned
                       </span>
                     </div>
@@ -773,7 +773,7 @@ export default function Sidebar() {
                 {isLoaded && displayUnpinned.length > 0 && (
                   <div className="py-2">
                     <div className="px-3 py-1.5 flex items-center gap-2">
-                      <span className="font-albert text-xs font-medium text-stone-400 uppercase tracking-wider whitespace-nowrap">
+                      <span className="font-albert text-xs font-medium text-stone-400 dark:text-stone-500 uppercase tracking-wider whitespace-nowrap">
                         Recipes
                       </span>
                     </div>
@@ -812,7 +812,7 @@ export default function Sidebar() {
           )}
 
           {/* Footer - Profile & Help */}
-          <div className="border-t border-stone-200">
+          <div className="border-t border-stone-200 dark:border-stone-700">
             {user ? (
               <div
                 className={cn(
@@ -823,7 +823,7 @@ export default function Sidebar() {
                 {isRail ? (
                   <NavTooltip isCollapsed={isCollapsed} isMobile={isMobile} label={user.user_metadata?.full_name || 'Profile'}>
                     <Link href="/profile" className="block">
-                      <div className="w-8 h-8 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full overflow-hidden bg-stone-200 dark:bg-stone-700 flex items-center justify-center flex-shrink-0">
                         {user.user_metadata?.avatar_url ? (
                           <img
                             src={user.user_metadata.avatar_url}
@@ -832,7 +832,7 @@ export default function Sidebar() {
                             referrerPolicy="no-referrer"
                           />
                         ) : (
-                          <span className="font-albert text-xs font-bold text-stone-600">
+                          <span className="font-albert text-xs font-bold text-stone-600 dark:text-stone-300">
                             {user.user_metadata?.full_name?.split(' ')[0]?.[0] || user.email?.[0]?.toUpperCase()}
                           </span>
                         )}
@@ -841,7 +841,7 @@ export default function Sidebar() {
                   </NavTooltip>
                 ) : (
                   <>
-                    <div className="w-10 h-10 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-stone-200 dark:bg-stone-700 flex items-center justify-center flex-shrink-0">
                       {user.user_metadata?.avatar_url ? (
                         <img
                           src={user.user_metadata.avatar_url}
@@ -850,13 +850,13 @@ export default function Sidebar() {
                           referrerPolicy="no-referrer"
                         />
                       ) : (
-                        <span className="font-albert text-sm font-bold text-stone-600">
+                        <span className="font-albert text-sm font-bold text-stone-600 dark:text-stone-300">
                           {user.user_metadata?.full_name?.split(' ')[0]?.[0] || user.email?.[0]?.toUpperCase()}
                         </span>
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="font-albert text-sm font-medium text-stone-900 truncate">
+                      <div className="font-albert text-sm font-medium text-stone-900 dark:text-stone-100 truncate">
                         {user.user_metadata?.full_name || 'User'}
                       </div>
                       <Link
@@ -880,21 +880,21 @@ export default function Sidebar() {
                   <NavTooltip isCollapsed={isCollapsed} isMobile={isMobile} label="Login">
                     <button
                       onClick={() => setIsAuthModalOpen(true)}
-                      className="p-1 rounded-full hover:bg-stone-100 transition-colors"
+                      className="p-1 rounded-full hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors"
                       aria-label="Login"
                     >
-                      <div className="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-stone-200 dark:bg-stone-700 flex items-center justify-center flex-shrink-0">
                         <UserCircle className="w-5 h-5 text-stone-400" />
                       </div>
                     </button>
                   </NavTooltip>
                 ) : (
                   <>
-                    <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-stone-200 dark:bg-stone-700 flex items-center justify-center flex-shrink-0">
                       <UserCircle className="w-6 h-6 text-stone-400" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="font-albert text-sm font-medium text-stone-900">
+                      <div className="font-albert text-sm font-medium text-stone-900 dark:text-stone-100">
                         Guest
                       </div>
                       <button

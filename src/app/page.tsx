@@ -4,6 +4,7 @@ import HomepageSkeleton from '@/components/ui/homepage-skeleton';
 import HomepageSearch from '@/components/ui/homepage-search';
 import HomepageRecentRecipes from '@/components/ui/homepage-recent-recipes';
 import HomepageBanner from '@/components/ui/homepage-banner';
+import ThemeToggle from '@/components/ui/theme-toggle';
 import { useState, useEffect, Suspense, use } from 'react';
 import { motion } from 'framer-motion';
 
@@ -20,7 +21,12 @@ function HomeContent() {
   }, []);
 
   return (
-    <div className="bg-white relative">
+    <div className="bg-white dark:bg-stone-900 relative">
+      {/* Theme Toggle - Top right */}
+      <div className="fixed top-4 right-4 z-30">
+        <ThemeToggle />
+      </div>
+
       {/* Homepage Banner - Only on landing page */}
       <HomepageBanner />
 
@@ -30,7 +36,7 @@ function HomeContent() {
           {/* Hero Section */}
           <div className={`text-center space-y-5 md:space-y-6 ${isPageLoaded ? 'page-fade-in-up' : 'opacity-0'}`}>
               {/* Desktop headline */}
-              <h1 className="hidden md:flex font-domine text-[64px] font-bold text-black leading-[1.1] flex-col items-center justify-center gap-2">
+              <h1 className="hidden md:flex font-domine text-[64px] font-bold text-black dark:text-stone-100 leading-[1.1] flex-col items-center justify-center gap-2">
                 <span className="flex items-center gap-2">
                   Clean recipes,
                   <motion.img
@@ -57,10 +63,10 @@ function HomeContent() {
                 </span>
               </h1>
               {/* Tablet & mobile headline */}
-              <h1 className="md:hidden font-domine text-[36px] sm:text-[42px] font-bold text-black leading-[1.1]">
+              <h1 className="md:hidden font-domine text-[36px] sm:text-[42px] font-bold text-black dark:text-stone-100 leading-[1.1]">
                 Clean recipes,<br />calm cooking.
               </h1>
-              <p className="font-albert text-base sm:text-[17px] md:text-[19px] text-stone-600 leading-[1.6] max-w-lg mx-auto">
+              <p className="font-albert text-base sm:text-[17px] md:text-[19px] text-stone-600 dark:text-stone-400 leading-[1.6] max-w-lg mx-auto">
                 No distractions. No clutter. Just clear, elegant recipes<span className="responsive-break"></span> designed for people who love to cook.
               </p>
               
