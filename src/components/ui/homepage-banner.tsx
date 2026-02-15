@@ -53,27 +53,27 @@ export default function HomepageBanner() {
         {/* Banner with rounded bottom corners only - flush against navbar, no top margin/padding */}
         {/* Using rounded-b-lg for bottom corners only */}
         {/* Sticky positioning: stays at top of viewport when scrolling */}
-        <div className="flex items-center justify-center gap-3 py-3 md:py-4 bg-blue-100 rounded-b-lg relative">
+        <div className="flex items-center justify-center gap-3 py-3 md:py-4 bg-blue-100 dark:bg-[#1E3A5F] rounded-b-lg relative">
           {/* Chef Hat Icon with Heart - using filled Solar icon */}
           {/* Icon size responsive: smaller on mobile, larger on desktop */}
           <ChefHatHeartBold 
             weight="Bold"
-            className="w-5 h-5 md:w-6 md:h-6 text-blue-600 flex-shrink-0" 
+            className="w-5 h-5 md:w-6 md:h-6 text-blue-600 dark:text-blue-300 flex-shrink-0"
             aria-hidden="true"
           />
           
           {/* Banner Text - responsive font sizes */}
-          <p className="font-albert text-[14px] md:text-[15px] text-blue-600 font-medium">
+          <p className="font-albert text-[14px] md:text-[15px] text-blue-600 dark:text-blue-300 font-medium">
             This website is still being cooked up
           </p>
 
           {/* Dismiss Button - positioned absolutely on the right */}
           <button
             onClick={handleDismiss}
-            className="absolute right-4 p-1 rounded-full hover:bg-blue-200/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
+            className="absolute right-4 p-1 rounded-full hover:bg-blue-200/50 dark:hover:bg-blue-800/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 dark:focus-visible:ring-blue-500 focus-visible:ring-offset-2"
             aria-label="Dismiss banner"
           >
-            <X className="w-4 h-4 text-blue-600" />
+            <X className="w-4 h-4 text-blue-600 dark:text-blue-300" />
           </button>
         </div>
       </div>

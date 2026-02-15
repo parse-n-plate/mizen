@@ -171,7 +171,7 @@ export default function RecipeContextMenu({
                 <button
                   className={cn(
                     "absolute right-1 top-1/2 -translate-y-1/2 z-10 p-1 rounded-full transition-opacity",
-                    "text-stone-400 hover:text-stone-600",
+                    "text-stone-400 hover:text-stone-600 dark:text-stone-500 dark:hover:text-stone-300",
                     dropdownOpen ? "opacity-100" : "opacity-0 group-hover/item:opacity-100",
                   )}
                   aria-label="Recipe actions"
@@ -219,7 +219,7 @@ export default function RecipeContextMenu({
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem
-                  className="text-red-600 hover:!bg-red-50"
+                  className="text-red-600 hover:!bg-red-50 dark:text-red-400 dark:hover:!bg-red-950"
                   onSelect={handleDelete}
                 >
                   <span>Delete</span>
@@ -289,7 +289,7 @@ export default function RecipeContextMenu({
             <DialogHeader className="mb-4">
               <DialogTitle>Rename Recipe</DialogTitle>
             </DialogHeader>
-            <label htmlFor="rename-sidebar-input" className="block font-albert text-[13px] font-medium text-stone-500 mb-1.5">
+            <label htmlFor="rename-sidebar-input" className="block font-albert text-[13px] font-medium text-stone-500 dark:text-stone-400 mb-1.5">
               Recipe title
             </label>
             <Input
@@ -307,11 +307,11 @@ export default function RecipeContextMenu({
               autoFocus
             />
           </div>
-          <DialogFooter className="border-t border-stone-100 px-6 py-4 bg-stone-50/50">
+          <DialogFooter className="border-t border-stone-100 dark:border-stone-700 px-6 py-4 bg-stone-50/50 dark:bg-stone-800">
             <button
               type="button"
               onClick={closeRenameDialog}
-              className="px-4 py-2 font-albert text-[14px] font-medium text-stone-600 hover:text-stone-800 rounded-lg hover:bg-stone-200/60 transition-colors"
+              className="px-4 py-2 font-albert text-[14px] font-medium text-stone-600 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200 rounded-lg hover:bg-stone-200/60 dark:hover:bg-stone-700/60 transition-colors"
             >
               Cancel
             </button>
@@ -319,7 +319,7 @@ export default function RecipeContextMenu({
               type="button"
               onClick={handleRenameSubmit}
               disabled={!renameValue.trim()}
-              className="px-4 py-2 font-albert text-[14px] font-medium text-white bg-stone-900 rounded-lg hover:bg-stone-800 active:scale-[0.97] transition-[background-color,transform] disabled:opacity-40 disabled:pointer-events-none"
+              className="px-4 py-2 font-albert text-[14px] font-medium text-white bg-stone-900 dark:bg-stone-100 dark:text-stone-900 rounded-lg hover:bg-stone-800 dark:hover:bg-stone-200 active:scale-[0.97] transition-[background-color,transform] disabled:opacity-40 disabled:pointer-events-none"
             >
               Save
             </button>

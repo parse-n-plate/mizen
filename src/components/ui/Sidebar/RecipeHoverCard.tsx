@@ -85,7 +85,7 @@ export default function RecipeHoverCard({
       >
         {/* Recipe Image */}
         {recipeImage && (
-          <div className="relative w-full h-32 bg-stone-100">
+          <div className="relative w-full h-32 bg-stone-100 dark:bg-stone-700">
             <Image
               src={recipeImage}
               alt={recipe.title}
@@ -99,12 +99,12 @@ export default function RecipeHoverCard({
         {/* Content */}
         <div className="p-3.5 space-y-2.5">
           {/* Title */}
-          <h4 className="font-albert text-base font-medium text-stone-900 line-clamp-2 leading-snug">
+          <h4 className="font-albert text-base font-medium text-stone-900 dark:text-stone-100 line-clamp-2 leading-snug">
             {recipe.title}
           </h4>
 
           {/* Meta row: source + time */}
-          <div className="flex items-center gap-3 text-sm text-stone-500 font-albert">
+          <div className="flex items-center gap-3 text-sm text-stone-500 dark:text-stone-400 font-albert">
             {hostname && <span className="truncate">{hostname}</span>}
             {displayTime && (
               <span className="flex items-center gap-1.5">
@@ -115,11 +115,11 @@ export default function RecipeHoverCard({
           </div>
 
           {/* Quick Actions */}
-          <div className="flex items-center gap-1.5 pt-2 border-t border-stone-100">
+          <div className="flex items-center gap-1.5 pt-2 border-t border-stone-100 dark:border-stone-700">
             {/* Pin button - replaces the "Open source URL" button */}
             <button
               onClick={handleTogglePin}
-              className="p-2 rounded-md hover:bg-stone-100 transition-colors duration-150"
+              className="p-2 rounded-md hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors duration-150"
               aria-label={pinned ? 'Unpin recipe' : 'Pin recipe'}
             >
               <Pin
@@ -133,7 +133,7 @@ export default function RecipeHoverCard({
             </button>
             <button
               onClick={handleToggleBookmark}
-              className="p-2 rounded-md hover:bg-stone-100 transition-colors duration-150"
+              className="p-2 rounded-md hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors duration-150"
               aria-label={
                 bookmarked ? 'Remove from Cookbook' : 'Add to Cookbook'
               }
@@ -150,7 +150,7 @@ export default function RecipeHoverCard({
             {sourceUrl && (
               <button
                 onClick={handleCopyLink}
-                className="p-2 rounded-md text-stone-400 hover:bg-stone-100 hover:text-stone-700 transition-colors duration-150"
+                className="p-2 rounded-md text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700 hover:text-stone-700 dark:hover:text-stone-200 transition-colors duration-150"
                 aria-label="Copy link"
               >
                 <Link className="w-4 h-4" />
