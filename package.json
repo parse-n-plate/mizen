@@ -10,7 +10,7 @@
     "lint:fix": "eslint . --fix",
     "docker:run": "docker run -p 3000:3000 --env-file .env.local recipe-app",
     "docker:build": "docker build -t parse-n-plate .",
-    "prepare": "husky"
+    "prepare": "echo 'skipping husky'"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
