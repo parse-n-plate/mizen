@@ -436,7 +436,7 @@ export default function SearchCommandModal({
 
               <Command className="flex flex-col flex-1 min-h-0 [&_[cmdk-group-heading]]:text-stone-400 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group]]:px-2 [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-14 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
                 <CommandInput
-                  placeholder="Search or paste a URL\u2026"
+                  placeholder="Search or paste a URL"
                   value={search}
                   onValueChange={setSearch}
                   className="font-albert text-base text-stone-800 placeholder:text-stone-400"
@@ -464,7 +464,7 @@ export default function SearchCommandModal({
           className="sm:max-w-[44rem] search-command-modal [&_[data-slot=command-input-wrapper]]:border-stone-200 [&_[data-slot=command-input-wrapper]_svg]:text-stone-400 [&_[data-slot=command-input-wrapper]_svg]:opacity-100 [&_[cmdk-group-heading]]:text-stone-400"
         >
           <CommandInput
-            placeholder="Search or paste a URL\u2026"
+            placeholder="Search or paste a URL"
             value={search}
             onValueChange={setSearch}
             className="font-albert text-base text-stone-800 placeholder:text-stone-400"

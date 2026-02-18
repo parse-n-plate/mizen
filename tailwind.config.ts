@@ -13,7 +13,6 @@ const config: Config = {
         primary: {
           blue: '#0072FF',
           orange: '#FF6F00',
-          yellow: '#FFCC00',
           'tomato-red': '#FF3B3B',
           'fresh-green': '#00B96D',
         },

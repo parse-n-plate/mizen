@@ -89,7 +89,7 @@ export default function PlatingGuidanceCard({
                       color: 'rgba(87, 83, 78, 1)',
                       backgroundColor: 'var(--color-white)',
                     }}
-                    placeholder="Add your plating notes here..."
+                    placeholder="Add your plating notes here"
                   />
                   <div className="flex gap-2">
                     <button

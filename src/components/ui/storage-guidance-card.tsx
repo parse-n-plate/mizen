@@ -137,7 +137,7 @@ export default function StorageGuidanceCard({
             defaultValue={storageText}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
-            placeholder="Add storage instructions..."
+            placeholder="Add storage instructions"
             className={cn(
               "w-full min-h-[60px] p-3 bg-white rounded-lg border border-stone-300",
               "font-albert text-[16px] text-[#57534e] leading-[1.6]",

@@ -311,7 +311,7 @@ export default function ClassicSplitView({ steps, title: _title = 'Recipe Steps'
                     <input
                       ref={searchInputRef}
                       type="text"
-                      placeholder="Search actions..."
+                      placeholder="Search actions"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="menu-search-input w-full pl-9 pr-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-[#0C0A09]/20 focus:border-[#0C0A09]/30 transition-all"
