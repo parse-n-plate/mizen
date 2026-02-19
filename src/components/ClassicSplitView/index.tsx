@@ -26,6 +26,7 @@ interface ClassicSplitViewProps {
     stepNumber: number;
     requestId: number;
   } | null;
+  onStepNavigationHandled?: (requestId: number) => void;
 }
 
 export default function ClassicSplitView({
@@ -33,6 +34,7 @@ export default function ClassicSplitView({
   title: _title = 'Recipe Steps',
   allIngredients = [],
   stepNavigationRequest,
+  onStepNavigationHandled,
 }: ClassicSplitViewProps) {
   const [view, setView] = useState<'list' | 'card'>('list');
   const [currentStep, setCurrentStep] = useState(0);
@@ -231,12 +233,15 @@ export default function ClassicSplitView({
   // Handle navigation requests when the component mounts after a tab switch.
   useEffect(() => {
     if (!stepNavigationRequest) return;
+    const { stepNumber, requestId } = stepNavigationRequest;
+
     const timeoutId = window.setTimeout(() => {
-      navigateToStep(stepNavigationRequest.stepNumber);
+      navigateToStep(stepNumber);
+      onStepNavigationHandled?.(requestId);
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, [navigateToStep, stepNavigationRequest]);
+  }, [navigateToStep, onStepNavigationHandled, stepNavigationRequest]);
 
   // Safety check: ensure steps is valid
   if (!steps || !Array.isArray(steps) || steps.length === 0) {

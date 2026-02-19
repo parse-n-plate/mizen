@@ -35,6 +35,7 @@ export function IngredientExpandedDrawer({
       description={description || 'A staple in this dish, providing that signature flavor and texture you love.'}
     >
       <IngredientDrawerContent
+        key={`${ingredientName}:${ingredientAmount || ''}`}
         ingredientName={ingredientName}
         ingredientAmount={ingredientAmount}
         substitutions={substitutions}

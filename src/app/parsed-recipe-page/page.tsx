@@ -353,6 +353,15 @@ export default function ParsedRecipePage({
     setActiveTab(newTab);
   }, []);
 
+  const handleCookStepNavigationHandled = useCallback((requestId: number) => {
+    setCookStepRequest((currentRequest) => {
+      if (!currentRequest || currentRequest.requestId !== requestId) {
+        return currentRequest;
+      }
+      return null;
+    });
+  }, []);
+
   // Keyboard shortcuts for tab navigation
   // Command+1: Prep, Command+2: Cook, Command+3: Plate
   useEffect(() => {
@@ -591,10 +600,16 @@ export default function ParsedRecipePage({
     const handleNavigateToStep = (event: Event) => {
       const customEvent = event as CustomEvent<{ stepNumber?: number }>;
       const stepNumber = customEvent.detail?.stepNumber;
+      const shouldQueueNavigation = activeTabRef.current !== 'cook';
 
       handleTabChange('cook');
 
-      if (typeof stepNumber === 'number' && Number.isFinite(stepNumber) && stepNumber >= 1) {
+      if (
+        shouldQueueNavigation &&
+        typeof stepNumber === 'number' &&
+        Number.isFinite(stepNumber) &&
+        stepNumber >= 1
+      ) {
         cookStepRequestIdRef.current += 1;
         setCookStepRequest({
           stepNumber,
@@ -1525,6 +1540,7 @@ export default function ParsedRecipePage({
                           allIngredients={flattenedIngredients}
                           steps={normalizedSteps}
                           stepNavigationRequest={cookStepRequest}
+                          onStepNavigationHandled={handleCookStepNavigationHandled}
                         />
                       </div>
                     </motion.div>

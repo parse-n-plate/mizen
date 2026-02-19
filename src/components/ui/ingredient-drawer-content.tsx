@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Sparkles, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRecipe } from '@/contexts/RecipeContext';
@@ -28,22 +28,48 @@ export function IngredientDrawerContent({
   onStepClick
 }: IngredientDrawerContentProps) {
   const { parsedRecipe } = useRecipe();
+  const activeRequestIdRef = useRef(0);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // AI substitution state
   const [aiSubstitutions, setAiSubstitutions] = useState<AiSubstitution[] | null>(null);
   const [isLoadingAi, setIsLoadingAi] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
+  useEffect(() => {
+    // Reset per-ingredient state and cancel pending requests when switching ingredients.
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    activeRequestIdRef.current += 1;
+    setAiSubstitutions(null);
+    setIsLoadingAi(false);
+    setAiError(null);
+  }, [ingredientAmount, ingredientName]);
+
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
+
   const handleGetAiSubstitutions = async () => {
     if (!parsedRecipe) return;
 
+    abortControllerRef.current?.abort();
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+    activeRequestIdRef.current += 1;
+    const requestId = activeRequestIdRef.current;
+
     setIsLoadingAi(true);
     setAiError(null);
+    setAiSubstitutions(null);
 
     try {
       const response = await fetch('/api/generateSubstitutions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: abortController.signal,
         body: JSON.stringify({
           ingredientName,
           ingredientAmount: ingredientAmount || '',
@@ -59,12 +85,24 @@ export function IngredientDrawerContent({
       }
 
       const { data } = await response.json();
+      if (abortController.signal.aborted || activeRequestIdRef.current !== requestId) {
+        return;
+      }
       setAiSubstitutions(data.substitutions);
     } catch (error) {
+      if (abortController.signal.aborted || activeRequestIdRef.current !== requestId) {
+        return;
+      }
       console.error('Failed to generate AI substitutions:', error);
+      setAiSubstitutions(null);
       setAiError('Could not generate suggestions.');
     } finally {
-      setIsLoadingAi(false);
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null;
+      }
+      if (!abortController.signal.aborted && activeRequestIdRef.current === requestId) {
+        setIsLoadingAi(false);
+      }
     }
   };
 
