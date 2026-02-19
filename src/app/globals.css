@@ -1,0 +1,455 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Register custom theme values with Tailwind v4 */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "Albert Sans", "Helvetica", "system-ui", sans-serif;
+  --font-serif: "Domine", "Georgia", "Times New Roman", serif;
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+
+  /* Typography scale */
+  --text-hero: 63px;
+  --text-hero-tablet: 74px;
+  --text-hero-desktop: 85px;
+  --text-h1-sm: 35px;
+  --text-h1-md: 46px;
+  --text-h2: 26px;
+  --text-h3: 22px;
+  --text-body-lg-sm: 18px;
+  --text-body-lg-md: 19px;
+  --text-body-md-sm: 17px;
+  --text-body-md: 18px;
+  --text-body-sm: 15px;
+  --text-label-lg-sm: 13px;
+  --text-label-lg-md: 14px;
+  --text-label-sm: 13px;
+  --text-nav-sm: 17px;
+  --text-nav-md: 18px;
+}
+
+/* Prevent layout shift when modals toggle body overflow: hidden */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* Custom CSS Variables — Parse & Plate Design System */
+:root {
+  /* Override Tailwind's default font stack with our fonts */
+  --font-sans: "Albert Sans", "Helvetica", "system-ui", sans-serif;
+  --font-serif: "Domine", "Georgia", "Times New Roman", serif;
+
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+
+  /* Brand colors */
+  --color-primary-blue: #0072ff;
+  --color-blue: #0072ff;
+  --color-blue-light: #ebf3ff;
+  --color-background-cream: #fafaf9;
+  --color-cream: #fafaf9;
+  --color-white: #ffffff;
+  --color-text-heading: #0C0A09;
+  --color-text-body: #333333;
+  --color-text-muted: #78716c;
+  --color-border-light: #e7e5e4;
+
+  /* Typography */
+  --font-family-serif: "Domine", "Georgia", "Times New Roman", serif;
+  --font-family-sans: "Albert Sans", "Helvetica", "system-ui", sans-serif;
+  --line-height-heading: 1.3;
+  --line-height-body: 1.6;
+
+  /* Spacing */
+  --spacing-base: 1rem;
+  --spacing-lg: 1.5rem;
+
+  /* Custom Easing Curves — Based on Emil Kowalski's animation guidelines */
+  --ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-out-cubic: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --ease-out-quart: cubic-bezier(0.165, 0.84, 0.44, 1);
+  --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-out-circ: cubic-bezier(0.075, 0.82, 0.165, 1);
+  --ease-in-out-quad: cubic-bezier(0.455, 0.03, 0.515, 0.955);
+  --ease-in-out-cubic: cubic-bezier(0.645, 0.045, 0.355, 1);
+  --ease-in-out-quart: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-in-out-quint: cubic-bezier(0.86, 0, 0.07, 1);
+}
+
+/* Base Typography — Outside @layer for higher specificity over Tailwind preflight */
+/* Note: font vars (--font-albert, --font-domine) are set on <body> by Next.js font loader,
+   so font-family must be applied on body (not html) to resolve the CSS variables. */
+html {
+  line-height: var(--line-height-body);
+  color: var(--color-text-body);
+  background-color: white;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: var(--font-family-sans);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background-color: #ffffff;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family-serif);
+  line-height: var(--line-height-heading);
+  color: var(--color-text-heading);
+  font-weight: 600;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    box-sizing: border-box;
+  }
+
+  a[href],
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [tabindex]:not([tabindex="-1"]) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
+  /* Disable dragging on all images */
+  img,
+  [role="img"],
+  picture img {
+    -webkit-user-drag: none;
+    user-drag: none;
+    -webkit-user-select: none;
+    user-select: none;
+    pointer-events: auto;
+  }
+}
+
+/* Utility Classes */
+@layer utilities {
+  .font-serif {
+    font-family: var(--font-family-serif);
+  }
+
+  .font-sans {
+    font-family: var(--font-family-sans);
+  }
+
+  .font-domine {
+    font-family: "Domine", "Georgia", "Times New Roman", serif;
+  }
+
+  .font-albert {
+    font-family: "Albert Sans", "Helvetica", "system-ui", sans-serif;
+  }
+
+  .leading-heading {
+    line-height: var(--line-height-heading);
+  }
+
+  .leading-body {
+    line-height: var(--line-height-body);
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .text-heading {
+    color: var(--color-text-heading);
+  }
+
+  .text-body {
+    color: var(--color-text-body);
+  }
+
+  .bg-cream {
+    background-color: var(--color-background-cream);
+  }
+}
+
+/* Component Styles */
+@layer components {
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     FOLDER TABS — Modern tab navigation that looks like file folders
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  .folder-tab-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 8px;
+    border-radius: 16px 16px 0 0;
+    transition: none;
+    background-color: transparent;
+    color: #78716C;
+    border: none;
+    position: relative;
+    cursor: pointer;
+    outline: none;
+    margin-bottom: -1px;
+    z-index: 1;
+  }
+
+  .folder-tab-trigger:hover:not([data-state="active"]) {
+    background-color: rgba(231, 229, 228, 0.4);
+    color: #0C0A09;
+  }
+
+  .folder-tab-trigger[data-state="active"] {
+    background-color: white;
+    color: #0C0A09;
+    border-color: transparent;
+    z-index: 3;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.03);
+  }
+
+  @media (max-width: 640px) {
+    .folder-tab-trigger {
+      padding: 0 4px;
+      gap: 4px;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     LANDING PAGE ONLOAD ANIMATION
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  @keyframes page-fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .page-fade-in-up {
+    opacity: 0;
+    animation: page-fade-in-up 200ms var(--ease-out-cubic) forwards;
+  }
+
+  .page-fade-delay-1 { animation-delay: 50ms; }
+  .page-fade-delay-2 { animation-delay: 100ms; }
+  .page-fade-delay-3 { animation-delay: 150ms; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .page-fade-in-up {
+      opacity: 1;
+      animation: none;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     INGREDIENT LIST — Linear list style with checkboxes
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  .ingredient-list-item {
+    position: relative;
+    width: 100%;
+    cursor: pointer;
+  }
+
+  .ingredient-list-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 8px;
+    border-radius: 8px;
+    transition: background-color 0ms;
+  }
+
+  .ingredient-list-item:hover .ingredient-list-content {
+    background-color: var(--color-background-cream);
+  }
+
+  .ingredient-list-divider {
+    position: absolute;
+    bottom: 0;
+    left: 8px;
+    right: 8px;
+    height: 1px;
+    background-color: #f5f5f4;
+  }
+
+  .ingredient-list-name {
+    font-family: "Albert Sans", "Helvetica", "system-ui", sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    margin: 0;
+  }
+
+  .ingredient-list-description {
+    font-family: "Albert Sans", "Helvetica", "system-ui", sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    color: #78716b;
+    margin: 0;
+  }
+
+  /* Checked state */
+  .ingredient-list-item.is-checked .ingredient-list-name,
+  .ingredient-list-item.is-checked .ingredient-list-name span,
+  .ingredient-list-item.is-checked .ingredient-list-description {
+    text-decoration: line-through;
+    color: #a8a29e;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     LOADING ANIMATION — Vertical step state
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  .loading-progress-container {
+    width: 100%;
+    height: 6px;
+    background: #e7e5e4;
+    border-radius: 100px;
+    overflow: hidden;
+  }
+
+  .loading-progress-bar {
+    height: 100%;
+    background: #000000;
+    border-radius: 100px;
+    transition: width 0.5s ease-out;
+  }
+
+  .step-title {
+    font-family: "Albert Sans", "Helvetica", "system-ui", sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.2;
+  }
+
+  .step-subtitle {
+    font-family: "Albert Sans", "Helvetica", "system-ui", sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.4;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     RECIPE STEP LIST
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  .recipe-step-list-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid #e7e5e4;
+    transition: background-color 0.2s ease;
+  }
+
+  .recipe-step-list-item:last-child {
+    border-bottom: none;
+  }
+
+  .recipe-step-list-item:hover {
+    background-color: rgba(250, 250, 249, 0.5);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     QUANTITY HIGHLIGHT
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  .quantity-highlight {
+    color: #a8a29e;
+    font-weight: 500;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     TOOLTIP ANIMATION
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  .tooltip {
+    transition:
+      transform 0.125s ease-out,
+      opacity 0.125s ease-out;
+    transform-origin: var(--radix-tooltip-content-transform-origin);
+  }
+
+  .tooltip[data-starting-style],
+  .tooltip[data-ending-style] {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+
+  .tooltip[data-instant] {
+    transition-duration: 0ms;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   REDUCED MOTION — Accessibility support
+═══════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

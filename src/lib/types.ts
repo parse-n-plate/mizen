@@ -1,0 +1,47 @@
+export interface Ingredient {
+  amount: string;
+  units: string;
+  ingredient: string;
+}
+
+export interface IngredientGroup {
+  groupName: string;
+  ingredients: Ingredient[];
+}
+
+export interface InstructionStep {
+  title: string;
+  detail: string;
+  timeMinutes?: number;
+  ingredients?: string[];
+  tips?: string;
+}
+
+export interface ParsedRecipe {
+  title: string;
+  summary?: string;
+  author?: string;
+  servings?: number;
+  prepTimeMinutes?: number;
+  cookTimeMinutes?: number;
+  totalTimeMinutes?: number;
+  ingredients: IngredientGroup[];
+  instructions: InstructionStep[];
+  sourceUrl?: string;
+}
+
+export interface ParserResult {
+  success: boolean;
+  data?: ParsedRecipe;
+  error?: string;
+  method: "json-ld" | "json-ld+ai" | "ai" | "image" | "none";
+}
+
+export interface SavedRecipe {
+  id: string;
+  slug: string;
+  recipe: ParsedRecipe;
+  source_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
