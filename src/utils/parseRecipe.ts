@@ -78,11 +78,85 @@ function normalizeInstructionSteps(instructions: unknown): InstructionStep[] {
           timeMinutes: obj.timeMinutes as number | undefined,
           ingredients: obj.ingredients as string[] | undefined,
           tips: obj.tips as string | undefined,
+          imageUrl: obj.imageUrl as string | undefined,
         };
       }
       return null;
     })
     .filter((step): step is InstructionStep => Boolean(step));
+}
+
+/**
+ * Merge step images into instructions that don't already have one.
+ * Applies positionally — only fills in gaps.
+ */
+function mergeStepImages(
+  instructions: InstructionStep[],
+  htmlImages: string[]
+): void {
+  if (htmlImages.length === 0) return;
+  const hasAnyImages = instructions.some((s) => s.imageUrl);
+  if (hasAnyImages) return;
+
+  const limit = Math.min(instructions.length, htmlImages.length);
+  for (let i = 0; i < limit; i++) {
+    if (htmlImages[i]) {
+      instructions[i].imageUrl = htmlImages[i];
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Step Image Extraction (HTML fallback)
+// ---------------------------------------------------------------------------
+
+function extractStepImagesFromHtml(rawHtml: string): string[] {
+  try {
+    const $ = cheerio.load(rawHtml);
+    const instructionSelectors = [
+      '[class*="instruction"]',
+      '[class*="direction"]',
+      '[id*="instruction"]',
+      '[id*="direction"]',
+      '[itemprop="recipeInstructions"]',
+      '[class*="steps"]',
+      '[id*="steps"]',
+      '.recipe-instructions, #recipe-instructions',
+      '.recipe-directions, #recipe-directions',
+      '.wprm-recipe-instructions-container',
+      '.wprm-recipe-instruction',
+      '[class*="wprm-recipe-instruction"]',
+    ];
+
+    let $container: ReturnType<typeof $> | null = null;
+    for (const selector of instructionSelectors) {
+      const $match = $(selector);
+      if ($match.length) {
+        const $parent = $match.first().closest(
+          '[class*="instruction"], [class*="direction"], [class*="step"], section, div'
+        );
+        $container = $parent.length ? $parent : $match.first().parent();
+        break;
+      }
+    }
+
+    if (!$container || !$container.length) return [];
+
+    const images: string[] = [];
+    // Look for step elements within the container
+    const $steps = $container.find('li, [class*="step"]');
+    if ($steps.length === 0) return [];
+
+    $steps.each((_, step) => {
+      const $img = $(step).find("img").first();
+      const src = $img.attr("src") || $img.attr("data-src") || "";
+      images.push(src);
+    });
+
+    return images;
+  } catch {
+    return [];
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -148,44 +222,56 @@ function extractFromJsonLd(
               },
             ];
 
-            // Extract instructions
-            let instructionTexts: string[] = [];
+            // Extract instructions (with optional step images from JSON-LD)
+            interface StepData { text: string; imageUrl?: string }
+            let instructionData: StepData[] = [];
             const normalizeText = (text: string) =>
               decodeHtmlEntities(text).replace(/\s+/g, " ").trim();
 
-            const extractTexts = (node: unknown): string[] => {
+            const extractImageUrl = (img: unknown): string | undefined => {
+              if (typeof img === "string") return img;
+              if (Array.isArray(img) && img.length > 0) return extractImageUrl(img[0]);
+              if (img && typeof img === "object") {
+                const obj = img as Record<string, unknown>;
+                if (typeof obj.url === "string") return obj.url;
+              }
+              return undefined;
+            };
+
+            const extractStepData = (node: unknown): StepData[] => {
               if (typeof node === "string") {
                 const n = normalizeText(node);
-                return n ? [n] : [];
+                return n ? [{ text: n }] : [];
               }
               if (node && typeof node === "object") {
                 const obj = node as Record<string, unknown>;
                 if (Array.isArray(obj.itemListElement)) {
                   return obj.itemListElement.flatMap((i: unknown) =>
-                    extractTexts(i)
+                    extractStepData(i)
                   );
                 }
+                const imageUrl = extractImageUrl(obj.image);
                 if (typeof obj.text === "string") {
                   const n = normalizeText(obj.text);
-                  return n ? [n] : [];
+                  return n ? [{ text: n, imageUrl }] : [];
                 }
                 if (typeof obj.name === "string") {
                   const n = normalizeText(obj.name);
-                  return n ? [n] : [];
+                  return n ? [{ text: n, imageUrl }] : [];
                 }
               }
               return [];
             };
 
             if (Array.isArray(recipe.recipeInstructions)) {
-              instructionTexts = recipe.recipeInstructions
-                .flatMap((inst: unknown) => extractTexts(inst))
-                .filter((text: string) => text.length > 10);
+              instructionData = recipe.recipeInstructions
+                .flatMap((inst: unknown) => extractStepData(inst))
+                .filter((d: StepData) => d.text.length > 10);
             } else if (typeof recipe.recipeInstructions === "string") {
-              instructionTexts = recipe.recipeInstructions
+              instructionData = recipe.recipeInstructions
                 .split(/\n+/)
-                .map((s: string) => normalizeText(s))
-                .filter((s: string) => s.length > 10);
+                .map((s: string) => ({ text: normalizeText(s) }))
+                .filter((d: StepData) => d.text.length > 10);
             }
 
             // Extract author
@@ -227,8 +313,13 @@ function extractFromJsonLd(
               ? parseISODuration(recipe.totalTime)
               : undefined;
 
+            // Convert step data to objects with imageUrl for normalization
+            const instructionInputs = instructionData.map((d) => ({
+              detail: d.text,
+              ...(d.imageUrl && { imageUrl: d.imageUrl }),
+            }));
             const normalizedInstructions =
-              normalizeInstructionSteps(instructionTexts);
+              normalizeInstructionSteps(instructionInputs);
 
             if (
               title &&
@@ -457,6 +548,9 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
       return { success: false, error: "Fetched HTML is empty", method: "none" };
     }
 
+    // Extract step images from raw HTML before cleaning strips <img> tags
+    const htmlStepImages = extractStepImagesFromHtml(rawHtml);
+
     // Clean HTML
     const cleaned = cleanRecipeHTML(rawHtml);
     if (!cleaned.success || !cleaned.html) {
@@ -520,6 +614,9 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
         sourceUrl: url,
       };
 
+      // Merge HTML step images if JSON-LD didn't provide any
+      mergeStepImages(mergedRecipe.instructions, htmlStepImages);
+
       return {
         success: true,
         data: mergedRecipe,
@@ -531,6 +628,7 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
     const aiResult = await extractWithAI(cleaned.html);
     if (aiResult) {
       aiResult.sourceUrl = url;
+      mergeStepImages(aiResult.instructions, htmlStepImages);
       return { success: true, data: aiResult, method: "ai" };
     }
 

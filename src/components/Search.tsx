@@ -3,7 +3,6 @@
 import { useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useRecipe } from "@/context/RecipeContext";
-import { useUser } from "@/hooks/useUser";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -41,9 +40,8 @@ export function Search() {
   const [imageFile, setImageFile] = useState<ImageFile | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const dragCounter = useRef(0);
-  const { setRecipe, setSavedMeta, setIsLoading, setError, isLoading } =
+  const { setRecipe, setIsLoading, setError, isLoading } =
     useRecipe();
-  const { user } = useUser();
   const router = useRouter();
 
   const handleFile = useCallback(
@@ -131,7 +129,6 @@ export function Search() {
 
     setIsLoading(true);
     setError(null);
-    setSavedMeta(null);
 
     try {
       const body = imageFile
@@ -149,24 +146,6 @@ export function Search() {
       if (result.success && result.data) {
         setRecipe(result.data);
         router.push("/recipe");
-
-        // Auto-save if logged in (fire-and-forget)
-        if (user) {
-          fetch("/api/recipes", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ recipe: result.data }),
-          })
-            .then((res) => res.json())
-            .then((saved) => {
-              if (saved?.id && saved?.slug) {
-                setSavedMeta({ id: saved.id, slug: saved.slug });
-              }
-            })
-            .catch(() => {
-              // Silent fail — recipe is still in localStorage
-            });
-        }
       } else {
         setError(result.error || "Failed to parse recipe");
       }

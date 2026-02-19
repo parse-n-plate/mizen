@@ -46,91 +46,96 @@ function IngredientGroupSection({
   onToggle: (key: string) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
-  const checkedCount = group.ingredients.filter((_, i) =>
-    checked.has(`${group.groupName}-${i}`)
-  ).length;
 
   return (
-    <div>
+    <div className="ingredient-group">
       <button
+        type="button"
         onClick={() => setCollapsed(!collapsed)}
-        className="group flex w-full items-center justify-between pb-2"
+        className="w-full flex items-center py-3 pl-2 pr-0 group cursor-pointer transition-colors duration-[180ms] hover:opacity-80"
+        aria-expanded={!collapsed}
       >
-        <div className="flex items-center gap-2">
-          <h3 className="font-sans text-sm font-semibold uppercase tracking-wide text-stone-500">
+        <div className="flex items-center gap-3 flex-1">
+          <h3 className="font-sans text-sm font-semibold text-stone-900 capitalize">
             {group.groupName}
           </h3>
-          <span className="font-sans text-xs tabular-nums text-stone-400">
-            {checkedCount}/{group.ingredients.length}
-          </span>
+          <svg
+            className={`w-4 h-4 text-stone-400 transition-transform duration-200 ${
+              collapsed ? "-rotate-90" : ""
+            } ${!collapsed ? "ingredient-group-chevron" : ""}`}
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
         </div>
-        <svg
-          className={`h-4 w-4 text-stone-400 transition-transform ${
-            collapsed ? "-rotate-90" : ""
-          }`}
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="m6 9 6 6 6-6" />
-        </svg>
       </button>
 
-      {!collapsed && (
-        <div className="divide-y divide-stone-100">
+      <div
+        className={`grid transition-[grid-template-rows] duration-300 ease-out ${
+          collapsed ? "grid-rows-[0fr]" : "grid-rows-[1fr]"
+        }`}
+      >
+        <div className="overflow-hidden">
           {group.ingredients.map((ing, i) => {
             const key = `${group.groupName}-${i}`;
             const isChecked = checked.has(key);
+            const isLast = i === group.ingredients.length - 1;
+            const amount = `${ing.amount || ""} ${ing.units || ""}`.trim();
+
             return (
               <div
                 key={key}
-                className={`ingredient-list-item ${isChecked ? "is-checked" : ""}`}
+                className={`ingredient-list-item group ${isChecked ? "is-checked" : ""}`}
                 onClick={() => onToggle(key)}
               >
                 <div className="ingredient-list-content cursor-pointer">
-                  <div
-                    className={`flex h-5 w-5 flex-shrink-0 items-center justify-center rounded ${
-                      isChecked
-                        ? "bg-stone-900"
-                        : "bg-stone-200"
-                    }`}
-                  >
-                    {isChecked && (
-                      <svg
-                        className="h-3 w-3 text-white"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth={3}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                    )}
+                  <div className="flex-shrink-0 flex items-center">
+                    <input
+                      type="checkbox"
+                      className="ingredient-checkbox-input cursor-pointer"
+                      checked={isChecked}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        onToggle(key);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    />
                   </div>
-                  <p className="ingredient-list-name font-sans text-sm font-medium">
-                    {ing.amount && (
-                      <span className="text-stone-400">{ing.amount} </span>
-                    )}
-                    {ing.units && (
-                      <span className="text-stone-400">{ing.units} </span>
-                    )}
-                    <span className="text-stone-800">{ing.ingredient}</span>
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <div
+                      className={`flex items-baseline justify-between transition-opacity duration-[180ms] ${
+                        isChecked ? "opacity-50" : "opacity-100"
+                      }`}
+                    >
+                      <p
+                        className={`font-sans font-medium text-sm text-stone-800 group-hover:text-black ${
+                          isChecked ? "line-through" : ""
+                        }`}
+                      >
+                        {ing.ingredient}
+                      </p>
+                      {amount && (
+                        <p className="font-sans text-xs text-stone-400 ml-3 flex-shrink-0">
+                          {amount}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="ingredient-list-divider" />
+                {!isLast && (
+                  <div className="ingredient-list-divider group-hover:opacity-0" />
+                )}
               </div>
             );
           })}
         </div>
-      )}
+      </div>
     </div>
   );
 }

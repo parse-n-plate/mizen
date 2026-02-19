@@ -1,5 +1,4 @@
 import type { ParsedRecipe } from "@/lib/types";
-import { Badge } from "@/components/ui/badge";
 
 interface RecipeHeaderProps {
   recipe: ParsedRecipe;
@@ -12,67 +11,68 @@ function formatTime(minutes: number): string {
   return mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`;
 }
 
+function Dot() {
+  return <span className="text-stone-300" aria-hidden>·</span>;
+}
+
 export function RecipeHeader({ recipe }: RecipeHeaderProps) {
-  const timeItems = [
-    recipe.prepTimeMinutes && { label: "Prep", value: formatTime(recipe.prepTimeMinutes) },
-    recipe.cookTimeMinutes && { label: "Cook", value: formatTime(recipe.cookTimeMinutes) },
-    recipe.totalTimeMinutes && { label: "Total", value: formatTime(recipe.totalTimeMinutes) },
-  ].filter(Boolean) as { label: string; value: string }[];
+  const showPrepAndCook = !!recipe.prepTimeMinutes || !!recipe.cookTimeMinutes;
+
+  const meta: { label: string; value: string }[] = [];
+  if (recipe.prepTimeMinutes && recipe.prepTimeMinutes > 0)
+    meta.push({ label: "Prep", value: formatTime(recipe.prepTimeMinutes) });
+  if (recipe.cookTimeMinutes && recipe.cookTimeMinutes > 0)
+    meta.push({ label: "Cook", value: formatTime(recipe.cookTimeMinutes) });
+  if (recipe.totalTimeMinutes && recipe.totalTimeMinutes > 0 && !showPrepAndCook)
+    meta.push({ label: "Total", value: formatTime(recipe.totalTimeMinutes) });
+  if (recipe.servings && recipe.servings > 0)
+    meta.push({ label: "Serves", value: String(recipe.servings) });
 
   return (
-    <div className="space-y-4">
-      <h1 className="font-serif text-3xl font-bold leading-tight md:text-4xl">
+    <div className="flex flex-col gap-1.5">
+      <h1 className="font-serif text-2xl font-bold leading-tight md:text-3xl tracking-tight">
         {recipe.title}
       </h1>
 
-      {recipe.author && (
-        <p className="text-sm text-stone-500">by {recipe.author}</p>
-      )}
-
       {recipe.summary && (
-        <p className="text-base italic text-stone-600">{recipe.summary}</p>
+        <p className="font-sans text-sm text-stone-500 max-w-2xl leading-relaxed">
+          {recipe.summary}
+        </p>
       )}
 
-      <div className="flex flex-wrap items-center gap-2">
-        {timeItems.map((item) => (
-          <Badge
-            key={item.label}
-            variant="secondary"
-            className="gap-1.5 rounded-full px-3 py-1 font-sans text-sm font-normal"
-          >
-            <svg className="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-            {item.label}: {item.value}
-          </Badge>
-        ))}
-        {recipe.servings && (
-          <Badge
-            variant="secondary"
-            className="gap-1.5 rounded-full px-3 py-1 font-sans text-sm font-normal"
-          >
-            <svg className="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-            Serves {recipe.servings}
-          </Badge>
+      {/* Inline metadata row: author · source · prep · cook · servings */}
+      <div className="flex items-center gap-1.5 flex-wrap font-sans text-sm text-stone-500">
+        {recipe.author && (
+          <>
+            <span>{recipe.author}</span>
+            {(recipe.sourceUrl || meta.length > 0) && <Dot />}
+          </>
         )}
-      </div>
 
-      {recipe.sourceUrl && (
-        <a
-          href={recipe.sourceUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block text-sm text-stone-400 hover:text-stone-600 hover:underline"
-        >
-          {new URL(recipe.sourceUrl).hostname.replace("www.", "")}
-        </a>
-      )}
+        {recipe.sourceUrl && (
+          <>
+            <a
+              href={recipe.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-stone-400 hover:text-stone-600 transition-colors hover:underline underline-offset-4 decoration-stone-300"
+            >
+              {new URL(recipe.sourceUrl).hostname.replace("www.", "")}
+            </a>
+            {meta.length > 0 && <Dot />}
+          </>
+        )}
+
+        {meta.map((m, i) => (
+          <span key={m.label} className="flex items-center gap-1.5">
+            <span>
+              <span className="text-stone-400">{m.label}</span>{" "}
+              <span className="font-medium text-stone-600">{m.value}</span>
+            </span>
+            {i < meta.length - 1 && <Dot />}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }

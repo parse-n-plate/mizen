@@ -19,6 +19,7 @@ export const InstructionStepSchema = z.object({
   timeMinutes: z.number().optional(),
   ingredients: z.array(z.string()).optional(),
   tips: z.string().optional(),
+  imageUrl: z.string().optional(),
 });
 
 export const CoreRecipeSchema = z.object({
