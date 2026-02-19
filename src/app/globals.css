@@ -765,11 +765,12 @@ html {
   }
   
   .servings-indicator {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: flex-start;
     gap: 0.5rem; /* Space between icon and text */
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 2.25rem 0.75rem 1rem;
     background: #f5f5f4; /* stone-100 */
     border-radius: 0.5rem;
     border: 1px solid transparent;
@@ -841,14 +842,23 @@ html {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
     padding: 0.25rem;
     background: transparent;
     border: none;
     cursor: pointer;
     color: #a8a29e; /* stone-400 */
     transition: color 0.2s ease;
-    flex-shrink: 0;
-    margin-left: -1rem; /* Bring closer to the gray textbox (reduces the 1.5rem gap by 4px more) */
+  }
+
+  .servings-reset-btn-inline {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0.5rem;
+    margin-block: auto;
+    z-index: 2;
   }
   
   .servings-reset-btn:hover {
@@ -868,6 +878,9 @@ html {
     display: flex;
     align-items: center;
     cursor: pointer;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
   }
   
   .servings-slider-track {
@@ -897,6 +910,8 @@ html {
     cursor: grab;
     transition: left 50ms ease-out;
     z-index: 1;
+    user-select: none;
+    -webkit-user-select: none;
   }
   
   .servings-slider-handle:active {

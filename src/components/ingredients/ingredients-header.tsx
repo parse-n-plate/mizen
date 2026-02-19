@@ -40,10 +40,15 @@ export function IngredientsHeader({
   // Track slider dragging state
   const sliderRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [dragValue, setDragValue] = useState<number | null>(null);
+  const lastDragValueRef = useRef<number | null>(null);
+  const prevServingsRef = useRef<number | undefined>(servings);
+  const [, startTransition] = React.useTransition();
   
   // State for servings input
   const [servingsInputValue, setServingsInputValue] = useState<string>('');
   const servingsInputRef = useRef<HTMLInputElement>(null);
+  const canAdjustServings = Boolean(onServingsChange);
   
   // Determine mode: multiplier mode when originalServings is undefined
   const isMultiplierMode = originalServings === undefined;
@@ -70,28 +75,51 @@ export function IngredientsHeader({
     currentValue = servings ?? originalServings;
   }
   
+  const formatSliderValue = React.useCallback((value: number) => {
+    if (isMultiplierMode) {
+      return value % 1 === 0 ? value.toString() : value.toFixed(1);
+    }
+    return Math.round(value).toString();
+  }, [isMultiplierMode]);
+
+  const displayedValue = dragValue ?? currentValue;
+
   // Calculate slider percentage based on current value in range
   const sliderRange = sliderMax - sliderMin;
   const percentage = sliderRange > 0 
-    ? Math.max(0, Math.min(100, ((currentValue - sliderMin) / sliderRange) * 100))
+    ? Math.max(0, Math.min(100, ((displayedValue - sliderMin) / sliderRange) * 100))
     : 50; // Fallback to center if range is invalid
   
   // Format display text based on mode
   const servingsDisplay = isMultiplierMode 
-    ? `x${currentValue % 1 === 0 ? currentValue : currentValue.toFixed(1)}` // Show decimals for 0.5
-    : (servings !== undefined ? servings : '?');
+    ? `x${displayedValue % 1 === 0 ? displayedValue : displayedValue.toFixed(1)}` // Show decimals for 0.5
+    : Math.round(displayedValue);
   
   // Sync input value with servings/multiplier
   useEffect(() => {
+    if (isDragging) return;
+
+    const hasServingsChanged = servings !== prevServingsRef.current;
+
     if (servings !== undefined) {
-      setServingsInputValue(servings.toString());
+      setServingsInputValue(formatSliderValue(servings));
+      if (hasServingsChanged) {
+        setDragValue(null);
+      }
     } else if (isMultiplierMode) {
       setServingsInputValue('1');
+      if (hasServingsChanged) {
+        setDragValue(null);
+      }
     }
-  }, [servings, isMultiplierMode]);
+
+    prevServingsRef.current = servings;
+  }, [servings, isMultiplierMode, isDragging, formatSliderValue]);
   
   // Handle servings input change
   const handleServingsInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!canAdjustServings) return;
+
     const value = e.target.value;
     
     if (isMultiplierMode) {
@@ -124,6 +152,8 @@ export function IngredientsHeader({
   
   // Handle servings input blur - validate and set value
   const handleServingsInputBlur = () => {
+    if (!canAdjustServings) return;
+
     if (isMultiplierMode) {
       const numValue = parseFloat(servingsInputValue);
       if (isNaN(numValue) || numValue < sliderMin) {
@@ -148,13 +178,15 @@ export function IngredientsHeader({
     }
   };
   
-  // Check if value has been changed from original/default
+  // Check if value has been changed from original/default (based on displayed value for immediate UI feedback)
   const hasChanged = isMultiplierMode
-    ? (servings !== undefined && servings !== 1)  // In multiplier mode, changed if not x1
-    : (originalServings !== undefined && servings !== undefined && servings !== originalServings);  // In servings mode, changed if not original
+    ? Math.abs(displayedValue - 1) > 0.001
+    : (originalServings !== undefined && Math.round(displayedValue) !== originalServings);
   
   // Handle reset to original/default value
   const handleResetServings = () => {
+    if (!canAdjustServings) return;
+
     if (isMultiplierMode) {
       // Reset to x1 in multiplier mode
       if (onServingsChange) {
@@ -170,7 +202,7 @@ export function IngredientsHeader({
 
   // Handle slider interaction - converts slider position to servings/multiplier
   const updateServingsFromPosition = React.useCallback((clientX: number) => {
-    if (!sliderRef.current || !onServingsChange) return;
+    if (!sliderRef.current || !canAdjustServings) return;
 
     const rect = sliderRef.current.getBoundingClientRect();
     const x = clientX - rect.left;
@@ -188,15 +220,27 @@ export function IngredientsHeader({
     }
 
     const clampedValue = Math.max(sliderMin, Math.min(sliderMax, newValue));
-    onServingsChange(clampedValue);
-  }, [onServingsChange, sliderMin, sliderMax, isMultiplierMode]);
+    if (lastDragValueRef.current === clampedValue) return;
+
+    lastDragValueRef.current = clampedValue;
+    setDragValue(clampedValue);
+    setServingsInputValue(formatSliderValue(clampedValue));
+
+    startTransition(() => {
+      onServingsChange?.(clampedValue);
+    });
+  }, [canAdjustServings, onServingsChange, sliderMin, sliderMax, isMultiplierMode, formatSliderValue, startTransition]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (!canAdjustServings) return;
+    e.preventDefault();
     setIsDragging(true);
     updateServingsFromPosition(e.clientX);
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (!canAdjustServings) return;
+    e.preventDefault();
     setIsDragging(true);
     updateServingsFromPosition(e.touches[0].clientX);
   };
@@ -210,19 +254,26 @@ export function IngredientsHeader({
 
     const handleTouchMove = (e: TouchEvent) => {
       if (isDragging) {
+        if (e.touches.length === 0) return;
+        e.preventDefault();
         updateServingsFromPosition(e.touches[0].clientX);
       }
     };
 
     const handleEnd = () => {
       setIsDragging(false);
+      if (!onServingsChange) {
+        setDragValue(null);
+      }
+      lastDragValueRef.current = null;
     };
 
     if (isDragging) {
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleEnd);
-      window.addEventListener('touchmove', handleTouchMove);
+      window.addEventListener('touchmove', handleTouchMove, { passive: false });
       window.addEventListener('touchend', handleEnd);
+      window.addEventListener('touchcancel', handleEnd);
     }
 
     return () => {
@@ -230,8 +281,9 @@ export function IngredientsHeader({
       window.removeEventListener('mouseup', handleEnd);
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleEnd);
+      window.removeEventListener('touchcancel', handleEnd);
     };
-  }, [isDragging, updateServingsFromPosition]);
+  }, [isDragging, onServingsChange, updateServingsFromPosition]);
 
   return (
     <div className="ingredients-header-container">
@@ -287,9 +339,9 @@ export function IngredientsHeader({
             initial={{ opacity: 0, y: -10, height: 0 }}
             animate={{ opacity: 1, y: 0, height: 'auto' }}
             exit={{ opacity: 0, y: -10, height: 0 }}
-            transition={{ 
-              type: "spring", 
-              damping: 25, 
+            transition={{
+              type: "spring",
+              damping: 25,
               stiffness: 350,
               opacity: { duration: 0.2 }
             }}
@@ -313,6 +365,7 @@ export function IngredientsHeader({
                       type="text"
                       inputMode="numeric"
                       pattern="[0-9]*"
+                      disabled={!canAdjustServings}
                       value={servingsInputValue}
                       onChange={handleServingsInputChange}
                       onBlur={handleServingsInputBlur}
@@ -322,37 +375,45 @@ export function IngredientsHeader({
                       max={maxAllowedServings}
                     />
                   </span>
+
+                  {/* Reset button appears only when changed and is anchored inside the indicator */}
+                  <AnimatePresence>
+                    {hasChanged && (
+                      <motion.button
+                        key="reset-btn"
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.5 }}
+                        transition={{ duration: 0.15, ease: "easeOut" }}
+                        onClick={handleResetServings}
+                        className="servings-reset-btn servings-reset-btn-inline"
+                        aria-label={isMultiplierMode ? "Reset to x1" : "Reset to original servings"}
+                        type="button"
+                      >
+                        <X className="w-4 h-4" />
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
                 </div>
-                
-                {/* Reset button - appears when value has changed, positioned outside gray box to the right */}
-                {hasChanged && (
-                  <button
-                    onClick={handleResetServings}
-                    className="servings-reset-btn"
-                    aria-label={isMultiplierMode ? "Reset to x1" : "Reset to original servings"}
-                    type="button"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
                 
                 {/* Slider track */}
                 <div 
                   ref={sliderRef}
                   className="servings-slider-track-container"
+                  aria-disabled={!canAdjustServings}
                   onMouseDown={handleMouseDown}
                   onTouchStart={handleTouchStart}
                 >
                   <div className="servings-slider-track">
                     <div 
                       className="servings-slider-fill" 
-                      style={{ width: `${percentage}%` }}
+                      style={{ width: `${percentage}%`, transition: isDragging ? 'none' : undefined }}
                     />
                   </div>
                   {/* Slider handle */}
                   <div 
                     className="servings-slider-handle"
-                    style={{ left: `${percentage}%` }}
+                    style={{ left: `${percentage}%`, transition: isDragging ? 'none' : undefined }}
                   >
                     <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
                       <circle cx="18" cy="18" r="14" fill="#0088ff" />

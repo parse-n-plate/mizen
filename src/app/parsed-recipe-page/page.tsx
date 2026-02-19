@@ -45,6 +45,9 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 
+type RecipeIngredient = string | { amount?: string; units?: string; ingredient: string };
+type IngredientGroups = Array<{ groupName: string; ingredients: RecipeIngredient[] }>;
+
 // Helper function to extract domain from URL for display
 const getDomainFromUrl = (url: string): string => {
   try {
@@ -209,14 +212,11 @@ export default function ParsedRecipePage({
   const originalServings = useMemo(() => parsedRecipe?.servings, [parsedRecipe?.servings]);
   
   const [servings, setServings] = useState<number | undefined>(parsedRecipe?.servings);
-  const [multiplier, setMultiplier] = useState<string>('1x');
   const [activeTab, setActiveTab] = useState<string>('prep');
   const [copied, setCopied] = useState(false);
 
-  // Unit system and scale modal state
+  // Unit system state
   const [unitSystem, setUnitSystem] = useState<UnitSystem>('original');
-  const [customMultiplier, setCustomMultiplier] = useState<number>(1);
-  const [ingredientScaleOverrides, setIngredientScaleOverrides] = useState<Record<string, number>>({});
   
   // Mobile detection for swipe gestures
   const [isMobile, setIsMobile] = useState(false);
@@ -420,10 +420,8 @@ export default function ParsedRecipePage({
     const saved = localStorage.getItem(scaleSettingsKey);
     if (saved) {
       try {
-        const { unitSystem: savedUnitSystem, customMultiplier: savedCustomMultiplier, ingredientScaleOverrides: savedOverrides } = JSON.parse(saved);
+        const { unitSystem: savedUnitSystem } = JSON.parse(saved);
         if (savedUnitSystem) setUnitSystem(savedUnitSystem);
-        if (savedCustomMultiplier !== undefined) setCustomMultiplier(savedCustomMultiplier);
-        if (savedOverrides) setIngredientScaleOverrides(savedOverrides);
       } catch {
         console.error('Error loading scale settings');
       }
@@ -433,9 +431,8 @@ export default function ParsedRecipePage({
   // Save scale settings to localStorage
   useEffect(() => {
     if (!scaleSettingsKey) return;
-    const data = { unitSystem, customMultiplier, ingredientScaleOverrides };
-    localStorage.setItem(scaleSettingsKey, JSON.stringify(data));
-  }, [scaleSettingsKey, unitSystem, customMultiplier, ingredientScaleOverrides]);
+    localStorage.setItem(scaleSettingsKey, JSON.stringify({ unitSystem }));
+  }, [scaleSettingsKey, unitSystem]);
 
   const handleIngredientCheck = (groupName: string, ingredientName: string, isChecked: boolean) => {
     setCheckedIngredients(prev => {
@@ -691,34 +688,19 @@ export default function ParsedRecipePage({
   }, [parsedRecipe]);
 
   // Calculate scaled ingredients
-  const scaledIngredients = (() => {
-    if (!parsedRecipe || !parsedRecipe.ingredients) return [];
+  const scaledIngredients: IngredientGroups = (() => {
+    const ingredientGroups = parsedRecipe?.ingredients as IngredientGroups | undefined;
 
-    // If servings are unknown, return ingredients unscaled (but still apply unit conversion)
-    if (!parsedRecipe.servings || !servings) {
-      const unscaled = parsedRecipe.ingredients;
-      // Apply unit conversion even if not scaling
-      return convertIngredientGroupUnits(unscaled as Array<{ groupName: string; ingredients: (string | { amount?: string; units?: string; ingredient: string })[] }>, unitSystem);
+    if (!ingredientGroups) {
+      return [];
     }
 
-    // Get multiplier value (1x = 1, 2x = 2, 3x = 3)
-    const multiplierValue = parseInt(multiplier.replace('x', ''));
+    const scaledGroups =
+      parsedRecipe?.servings && servings
+        ? (scaleIngredients(ingredientGroups, parsedRecipe.servings, servings) as IngredientGroups)
+        : ingredientGroups;
 
-    // Calculate effective servings: base servings * multiplier * customMultiplier
-    const effectiveServings = servings * multiplierValue * customMultiplier;
-
-    // Cast the ingredients to the expected type for the scaler
-    // The context type is slightly different but compatible structure-wise
-    let scaled = scaleIngredients(
-      parsedRecipe.ingredients as Array<{ groupName: string; ingredients: (string | { amount?: string; units?: string; ingredient: string })[] }>,
-      parsedRecipe.servings,
-      effectiveServings
-    );
-
-    // Apply unit conversion
-    scaled = convertIngredientGroupUnits(scaled as Array<{ groupName: string; ingredients: (string | { amount?: string; units?: string; ingredient: string })[] }>, unitSystem);
-
-    return scaled;
+    return convertIngredientGroupUnits(scaledGroups, unitSystem) as IngredientGroups;
   })();
 
   // Filter ingredients based on search query (searches name, amount, and units)
@@ -766,18 +748,6 @@ export default function ParsedRecipePage({
     setServings(newServings);
   };
 
-  // Multiplier change handler - passed to ServingsControls component (currently unused but kept for potential future use)
-  const _handleMultiplierChange = (newMultiplier: string) => {
-    setMultiplier(newMultiplier);
-  };
-
-  // Reset to original servings handler - resets both servings and multiplier (currently unused but kept for potential future use)
-  const _handleResetServings = () => {
-    if (originalServings !== undefined) {
-      setServings(originalServings);
-      setMultiplier('1x');
-    }
-  };
 
   // Memoize normalized steps for bidirectional linking
   const normalizedSteps = useMemo(() => {
