@@ -1,6 +1,7 @@
 "use client";
 
 import { Search } from "@/components/Search";
+import { RecentRecipes } from "@/components/RecentRecipes";
 import { useRecipe } from "@/context/RecipeContext";
 
 export default function HomePage() {
@@ -10,12 +11,12 @@ export default function HomePage() {
     <div className="flex min-h-[calc(100vh-3.5rem)] flex-col">
       <main className="flex flex-1 flex-col items-center justify-center px-6 pb-32">
         <div className="page-fade-in-up w-full max-w-2xl space-y-8 text-center">
-          <h1 className="font-serif text-[clamp(40px,8vw,72px)] font-bold leading-[1.1] text-stone-900">
+          <h1 className="font-serif text-[clamp(40px,8vw,72px)] font-bold leading-[1.1] text-stone-900 dark:text-stone-100">
             Clean recipes,
             <br />
             calm cooking.
           </h1>
-          <p className="page-fade-in-up page-fade-delay-1 mx-auto max-w-md font-sans text-lg text-stone-500">
+          <p className="page-fade-in-up page-fade-delay-1 mx-auto max-w-md font-sans text-lg text-stone-500 dark:text-stone-400">
             Paste a recipe URL. We strip the clutter and give you a clean,
             focused cooking experience.
           </p>
@@ -26,7 +27,7 @@ export default function HomePage() {
         </div>
 
         {isLoading && (
-          <p className="mt-6 font-sans text-sm text-stone-400 animate-pulse">
+          <p className="mt-6 font-sans text-sm text-stone-400 dark:text-stone-500 animate-pulse">
             Parsing recipe...
           </p>
         )}
@@ -36,6 +37,10 @@ export default function HomePage() {
             {error}
           </p>
         )}
+
+        <div className="mt-12 w-full flex justify-center">
+          <RecentRecipes />
+        </div>
       </main>
     </div>
   );

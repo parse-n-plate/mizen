@@ -14,6 +14,11 @@ interface SavedMeta {
   slug: string;
 }
 
+export interface HistoryEntry {
+  recipe: ParsedRecipe;
+  parsedAt: string;
+}
+
 interface RecipeContextType {
   recipe: ParsedRecipe | null;
   setRecipe: (recipe: ParsedRecipe | null) => void;
@@ -23,18 +28,22 @@ interface RecipeContextType {
   setIsLoading: (loading: boolean) => void;
   error: string | null;
   setError: (error: string | null) => void;
+  history: HistoryEntry[];
 }
 
 const RecipeContext = createContext<RecipeContextType | undefined>(undefined);
 
 const STORAGE_KEY = "baby-mizen-recipe";
 const META_STORAGE_KEY = "baby-mizen-recipe-meta";
+const HISTORY_KEY = "baby-mizen-history";
+const MAX_HISTORY = 10;
 
 export function RecipeProvider({ children }: { children: ReactNode }) {
   const [recipe, setRecipeState] = useState<ParsedRecipe | null>(null);
   const [savedMeta, setSavedMetaState] = useState<SavedMeta | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -47,6 +56,10 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
       if (storedMeta) {
         setSavedMetaState(JSON.parse(storedMeta));
       }
+      const storedHistory = localStorage.getItem(HISTORY_KEY);
+      if (storedHistory) {
+        setHistory(JSON.parse(storedHistory));
+      }
     } catch {
       // Ignore parse errors
     }
@@ -57,6 +70,18 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     try {
       if (newRecipe) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(newRecipe));
+
+        // Add to parse history (dedup by title, newest first)
+        const entry: HistoryEntry = {
+          recipe: newRecipe,
+          parsedAt: new Date().toISOString(),
+        };
+        const updated = [
+          entry,
+          ...history.filter((h) => h.recipe.title !== newRecipe.title),
+        ].slice(0, MAX_HISTORY);
+        setHistory(updated);
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
       } else {
         localStorage.removeItem(STORAGE_KEY);
         localStorage.removeItem(META_STORAGE_KEY);
@@ -91,6 +116,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
         setIsLoading,
         error,
         setError,
+        history,
       }}
     >
       {children}

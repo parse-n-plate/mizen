@@ -131,6 +131,7 @@ html {
   --spacing-lg: 1.5rem;
 
   /* Custom Easing Curves — Based on Emil Kowalski's animation guidelines */
+  color-scheme: light;
   --ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   --ease-out-cubic: cubic-bezier(0.215, 0.61, 0.355, 1);
   --ease-out-quart: cubic-bezier(0.165, 0.84, 0.44, 1);
@@ -143,13 +144,59 @@ html {
   --ease-in-out-quint: cubic-bezier(0.86, 0, 0.07, 1);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   DARK MODE — Variable overrides
+═══════════════════════════════════════════════════════════════════════════ */
+
+.dark {
+  color-scheme: dark;
+
+  /* shadcn/ui semantic tokens */
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.922 0 0);
+  --card: oklch(0.178 0 0);
+  --card-foreground: oklch(0.922 0 0);
+  --popover: oklch(0.178 0 0);
+  --popover-foreground: oklch(0.922 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.264 0 0);
+  --secondary-foreground: oklch(0.922 0 0);
+  --muted: oklch(0.264 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.264 0 0);
+  --accent-foreground: oklch(0.922 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.320 0 0);
+  --input: oklch(0.320 0 0);
+  --ring: oklch(0.556 0 0);
+
+  /* Mizen palette — Neutrals (inverted) */
+  --color-white: #1c1917;
+  --color-cream: #1c1917;
+  --color-background-cream: #171412;
+  --color-gray-light: #3a3633;
+  --color-black: #fafaf9;
+
+  /* Semantic aliases */
+  --color-text-heading: #fafaf9;
+  --color-text-body: #d6d3d1;
+  --color-text-muted: #a8a29e;
+  --color-border-light: #3a3633;
+
+  /* Primary — slightly brighter blue for dark backgrounds */
+  --color-blue: #3b82f6;
+  --color-primary-blue: #3b82f6;
+  --color-blue-light: #1e293b;
+}
+
 /* Base Typography — Outside @layer for higher specificity over Tailwind preflight */
 /* Note: font vars (--font-albert, --font-domine) are set on <body> by Next.js font loader,
    so font-family must be applied on body (not html) to resolve the CSS variables. */
 html {
   line-height: var(--line-height-body);
   color: var(--color-text-body);
-  background-color: white;
+  background-color: var(--color-background-cream);
   overflow-x: hidden;
 }
 
@@ -158,7 +205,7 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  background-color: #ffffff;
+  background-color: var(--color-background-cream);
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -262,7 +309,7 @@ h1, h2, h3, h4, h5, h6 {
     border-radius: 16px 16px 0 0 !important;
     transition: none;
     background-color: transparent !important;
-    color: #78716C;
+    color: var(--color-text-muted);
     border: 1px solid transparent !important;
     position: relative;
     cursor: pointer;
@@ -273,15 +320,15 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .folder-tab-trigger:hover:not([data-state="active"]) {
-    background-color: rgba(231, 229, 228, 0.4) !important;
-    color: #1c1917;
+    background-color: color-mix(in srgb, var(--color-gray-light) 40%, transparent) !important;
+    color: var(--color-black);
   }
 
   .folder-tab-trigger[data-state="active"] {
-    background-color: white !important;
-    color: #1c1917;
-    border-color: #e7e5e4 !important;
-    border-bottom-color: white !important;
+    background-color: var(--color-white) !important;
+    color: var(--color-black);
+    border-color: var(--color-border-light) !important;
+    border-bottom-color: var(--color-white) !important;
     z-index: 3;
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.03) !important;
   }
@@ -377,7 +424,7 @@ h1, h2, h3, h4, h5, h6 {
     left: 8px;
     right: 8px;
     height: 1px;
-    background-color: #f5f5f4;
+    background-color: var(--color-border-light);
     transition: opacity 0.18s ease;
   }
 
@@ -387,7 +434,7 @@ h1, h2, h3, h4, h5, h6 {
     height: 20px;
     border: none;
     border-radius: 4px;
-    background-color: #E7E5E4;
+    background-color: var(--color-gray-light);
     cursor: pointer;
     appearance: none;
     -webkit-appearance: none;
@@ -398,7 +445,7 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .ingredient-checkbox-input:checked {
-    background-color: #1c1917;
+    background-color: var(--color-black);
     border: none;
   }
 
@@ -427,7 +474,7 @@ h1, h2, h3, h4, h5, h6 {
     font-weight: 400;
     font-size: 12px;
     line-height: 16px;
-    color: #78716b;
+    color: var(--color-text-muted);
     margin: 0;
   }
 
@@ -446,14 +493,14 @@ h1, h2, h3, h4, h5, h6 {
   .loading-progress-container {
     width: 100%;
     height: 6px;
-    background: #e7e5e4;
+    background: var(--color-gray-light);
     border-radius: 100px;
     overflow: hidden;
   }
 
   .loading-progress-bar {
     height: 100%;
-    background: #000000;
+    background: var(--color-black);
     border-radius: 100px;
     transition: width 0.5s ease-out;
   }
@@ -481,7 +528,7 @@ h1, h2, h3, h4, h5, h6 {
     align-items: flex-start;
     gap: 1rem;
     padding: 1rem 0;
-    border-bottom: 1px solid #e7e5e4;
+    border-bottom: 1px solid var(--color-border-light);
     transition: background-color 0.2s ease;
   }
 
@@ -490,7 +537,7 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .recipe-step-list-item:hover {
-    background-color: rgba(250, 250, 249, 0.5);
+    background-color: color-mix(in srgb, var(--color-background-cream) 50%, transparent);
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
@@ -498,7 +545,7 @@ h1, h2, h3, h4, h5, h6 {
   ═══════════════════════════════════════════════════════════════════════════ */
 
   .quantity-highlight {
-    color: #a8a29e;
+    color: var(--color-text-muted);
     font-weight: 500;
   }
 

@@ -56,11 +56,11 @@ function IngredientGroupSection({
         aria-expanded={!collapsed}
       >
         <div className="flex items-center gap-3 flex-1">
-          <h3 className="font-sans text-sm font-semibold text-stone-900 capitalize">
+          <h3 className="font-sans text-sm font-semibold text-stone-900 dark:text-stone-100 capitalize">
             {group.groupName}
           </h3>
           <svg
-            className={`w-4 h-4 text-stone-400 transition-transform duration-200 ${
+            className={`w-4 h-4 text-stone-400 dark:text-stone-500 transition-transform duration-200 ${
               collapsed ? "-rotate-90" : ""
             } ${!collapsed ? "ingredient-group-chevron" : ""}`}
             xmlns="http://www.w3.org/2000/svg"
@@ -114,14 +114,14 @@ function IngredientGroupSection({
                       }`}
                     >
                       <p
-                        className={`font-sans font-medium text-sm text-stone-800 group-hover:text-black ${
+                        className={`font-sans font-medium text-sm text-stone-800 dark:text-stone-200 group-hover:text-black dark:group-hover:text-white ${
                           isChecked ? "line-through" : ""
                         }`}
                       >
                         {ing.ingredient}
                       </p>
                       {amount && (
-                        <p className="font-sans text-xs text-stone-400 ml-3 flex-shrink-0">
+                        <p className="font-sans text-xs text-stone-400 dark:text-stone-500 ml-3 flex-shrink-0">
                           {amount}
                         </p>
                       )}

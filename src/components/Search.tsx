@@ -161,10 +161,10 @@ export function Search() {
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-2xl">
       <div
-        className={`rounded-2xl border bg-white shadow-sm transition-all focus-within:border-stone-300 focus-within:shadow-md ${
+        className={`rounded-2xl border bg-white dark:bg-stone-900 shadow-sm transition-all focus-within:border-stone-300 dark:focus-within:border-stone-600 focus-within:shadow-md ${
           isDragging
             ? "border-[var(--color-blue)] ring-2 ring-[var(--color-blue)]/20"
-            : "border-stone-200"
+            : "border-stone-200 dark:border-stone-700"
         }`}
         onDragEnter={onDragEnter}
         onDragLeave={onDragLeave}
@@ -187,7 +187,7 @@ export function Search() {
                 if (imageFile) removeImage();
               }}
               onPaste={onPaste}
-              className="border-0 bg-transparent px-0 text-base shadow-none placeholder:text-stone-400 focus-visible:ring-0"
+              className="border-0 bg-transparent px-0 text-base shadow-none placeholder:text-stone-400 dark:placeholder:text-stone-500 dark:text-stone-100 focus-visible:ring-0"
               disabled={isLoading || !!imageFile}
               autoFocus
             />
@@ -198,20 +198,20 @@ export function Search() {
         <div className="flex items-center justify-between px-3 pb-3">
           <div className="flex items-center gap-1">
             {imageFile ? (
-              <div className="flex h-8 items-center gap-2 rounded-lg bg-stone-100 px-2">
+              <div className="flex h-8 items-center gap-2 rounded-lg bg-stone-100 dark:bg-stone-800 px-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={imageFile.preview}
                   alt="Recipe"
                   className="h-5 w-5 rounded object-cover"
                 />
-                <span className="max-w-[160px] truncate text-xs font-medium text-stone-600">
+                <span className="max-w-[160px] truncate text-xs font-medium text-stone-600 dark:text-stone-300">
                   {imageFile.name}
                 </span>
                 <button
                   type="button"
                   onClick={removeImage}
-                  className="ml-0.5 text-stone-400 hover:text-stone-600"
+                  className="ml-0.5 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
                   aria-label="Remove image"
                 >
                   <svg
@@ -244,7 +244,7 @@ export function Search() {
                   <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                   <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                 </svg>
-                <span className="text-xs font-medium text-stone-500">URL</span>
+                <span className="text-xs font-medium text-stone-500 dark:text-stone-400">URL</span>
               </div>
             )}
           </div>

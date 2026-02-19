@@ -111,7 +111,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-stone-500">or</span>
+              <span className="bg-background px-2 text-stone-500 dark:text-stone-400">or</span>
             </div>
           </div>
 
@@ -148,7 +148,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
             </Button>
           </form>
 
-          <p className="text-center text-sm text-stone-500">
+          <p className="text-center text-sm text-stone-500 dark:text-stone-400">
             {mode === "login" ? (
               <>
                 No account?{" "}

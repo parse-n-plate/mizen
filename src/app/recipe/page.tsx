@@ -50,7 +50,7 @@ export default function RecipePage() {
   if (!recipe) {
     return (
       <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center gap-4 px-6">
-        <p className="font-sans text-stone-500">No recipe loaded.</p>
+        <p className="font-sans text-stone-500 dark:text-stone-400">No recipe loaded.</p>
         <Link
           href="/"
           className="font-sans text-sm text-[var(--color-blue)] hover:underline"
@@ -62,7 +62,7 @@ export default function RecipePage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-[#FAFAF9] flex flex-col">
+    <div className="min-h-[calc(100vh-3.5rem)] bg-[#FAFAF9] dark:bg-stone-950 flex flex-col">
       {/* Header section with cream background */}
       <div className="px-6 pt-8 pb-0">
         <div className="max-w-3xl mx-auto w-full pb-8">
@@ -75,7 +75,7 @@ export default function RecipePage() {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 font-sans text-xs font-medium text-stone-600 transition-colors hover:bg-stone-50 disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-1.5 font-sans text-xs font-medium text-stone-600 dark:text-stone-300 transition-colors hover:bg-stone-50 dark:hover:bg-stone-700 disabled:opacity-50"
                 >
                   <svg className="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
@@ -88,7 +88,7 @@ export default function RecipePage() {
 
               {savedMeta && (
                 <>
-                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 font-sans text-xs font-medium text-emerald-600">
+                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950 px-3 py-1.5 font-sans text-xs font-medium text-emerald-600 dark:text-emerald-400">
                     <svg className="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
@@ -114,16 +114,16 @@ export default function RecipePage() {
                           className="fixed inset-0 z-30"
                           onClick={() => setShareOpen(false)}
                         />
-                        <div className="absolute right-0 top-full z-40 mt-2 w-80 rounded-xl border border-stone-200 bg-white p-4 shadow-lg shadow-stone-200/50">
-                          <p className="mb-2 font-sans text-sm font-medium text-stone-700">
+                        <div className="absolute right-0 top-full z-40 mt-2 w-80 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 p-4 shadow-lg shadow-stone-200/50 dark:shadow-black/30">
+                          <p className="mb-2 font-sans text-sm font-medium text-stone-700 dark:text-stone-200">
                             Share this recipe
                           </p>
-                          <p className="mb-3 font-sans text-xs text-stone-400">
+                          <p className="mb-3 font-sans text-xs text-stone-400 dark:text-stone-500">
                             Anyone with this link can view the recipe.
                           </p>
                           <div className="flex items-center gap-2">
-                            <div className="flex-1 overflow-hidden rounded-lg border border-stone-200 bg-stone-50 px-3 py-2">
-                              <p className="truncate font-mono text-xs text-stone-500">
+                            <div className="flex-1 overflow-hidden rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 px-3 py-2">
+                              <p className="truncate font-mono text-xs text-stone-500 dark:text-stone-400">
                                 {shareUrl}
                               </p>
                             </div>
@@ -131,7 +131,7 @@ export default function RecipePage() {
                               onClick={handleCopy}
                               className={`inline-flex flex-shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 font-sans text-xs font-medium transition-colors ${
                                 copied
-                                  ? "bg-emerald-50 text-emerald-600"
+                                  ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400"
                                   : "bg-[var(--color-blue)] text-white hover:opacity-90"
                               }`}
                             >
@@ -161,7 +161,7 @@ export default function RecipePage() {
               )}
 
               {!user && (
-                <span className="font-sans text-xs text-stone-400">
+                <span className="font-sans text-xs text-stone-400 dark:text-stone-500">
                   <Link href="/" className="text-[var(--color-blue)] hover:underline">
                     Sign in
                   </Link>{" "}
@@ -177,7 +177,7 @@ export default function RecipePage() {
       <div className="flex-1 flex flex-col px-6">
         <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col">
           <Tabs defaultValue="prep" className="flex-1 flex flex-col">
-            <TabsList className="flex items-end w-full relative rounded-none border-b border-stone-200 bg-transparent p-0 gap-0">
+            <TabsList className="flex items-end w-full relative rounded-none border-b border-stone-200 dark:border-stone-700 bg-transparent p-0 gap-0">
               <TabsTrigger
                 value="prep"
                 className="folder-tab-trigger h-11 px-8 font-sans text-sm font-medium"
@@ -193,7 +193,7 @@ export default function RecipePage() {
             </TabsList>
 
             {/* Tab content */}
-            <div className="bg-white rounded-b-lg border border-t-0 border-stone-200 flex-1">
+            <div className="bg-white dark:bg-stone-900 rounded-b-lg border border-t-0 border-stone-200 dark:border-stone-700 flex-1">
               <div className="max-w-3xl mx-auto px-6 pt-6 pb-12">
                 <TabsContent value="prep" className="space-y-0">
                   <IngredientList groups={recipe.ingredients} />

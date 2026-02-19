@@ -17,7 +17,7 @@ export function RecipeList({ initialRecipes }: RecipeListProps) {
 
   if (recipes.length === 0) {
     return (
-      <p className="mt-3 font-sans text-sm text-stone-400">
+      <p className="mt-3 font-sans text-sm text-stone-400 dark:text-stone-500">
         No saved recipes yet.
       </p>
     );

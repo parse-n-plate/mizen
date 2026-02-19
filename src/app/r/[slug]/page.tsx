@@ -25,7 +25,7 @@ export default async function SharedRecipePage({
   const recipe = data.recipe as ParsedRecipe;
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-[#FAFAF9] flex flex-col">
+    <div className="min-h-[calc(100vh-3.5rem)] bg-[#FAFAF9] dark:bg-stone-950 flex flex-col">
       {/* Header section with cream background */}
       <div className="px-6 pt-6 pb-0">
         <div className="max-w-3xl mx-auto w-full pb-8">
@@ -37,7 +37,7 @@ export default async function SharedRecipePage({
       <div className="flex-1 flex flex-col px-6">
         <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col">
           <Tabs defaultValue="prep" className="flex-1 flex flex-col">
-            <TabsList className="flex items-end w-full relative rounded-none border-b border-stone-200 bg-transparent p-0 gap-0">
+            <TabsList className="flex items-end w-full relative rounded-none border-b border-stone-200 dark:border-stone-700 bg-transparent p-0 gap-0">
               <TabsTrigger
                 value="prep"
                 className="folder-tab-trigger h-11 px-8 font-sans text-sm font-medium"
@@ -53,7 +53,7 @@ export default async function SharedRecipePage({
             </TabsList>
 
             {/* Tab content */}
-            <div className="bg-white rounded-b-lg border border-t-0 border-stone-200 flex-1">
+            <div className="bg-white dark:bg-stone-900 rounded-b-lg border border-t-0 border-stone-200 dark:border-stone-700 flex-1">
               <div className="max-w-3xl mx-auto px-6 pt-6 pb-12">
                 <TabsContent value="prep" className="space-y-0">
                   <IngredientList groups={recipe.ingredients} />

@@ -24,7 +24,7 @@ export default async function ProfilePage() {
   const avatarUrl = user.user_metadata?.avatar_url;
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-white">
+    <div className="min-h-[calc(100vh-3.5rem)] bg-white dark:bg-stone-950">
       <div className="mx-auto max-w-lg px-6 py-8">
         <div className="space-y-6">
           <div className="flex items-center gap-4">
@@ -35,20 +35,20 @@ export default async function ProfilePage() {
                 className="h-16 w-16 rounded-full"
               />
             ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-stone-100 font-serif text-2xl font-bold text-stone-600">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-stone-100 dark:bg-stone-800 font-serif text-2xl font-bold text-stone-600 dark:text-stone-300">
                 {name[0]}
               </div>
             )}
             <div>
               <h1 className="font-serif text-2xl font-bold">{name}</h1>
-              <p className="font-sans text-sm text-stone-500">{email}</p>
+              <p className="font-sans text-sm text-stone-500 dark:text-stone-400">{email}</p>
             </div>
           </div>
 
           <form action="/api/auth/signout" method="post">
             <button
               type="submit"
-              className="font-sans text-sm text-stone-400 hover:text-stone-600 hover:underline"
+              className="font-sans text-sm text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 hover:underline"
             >
               Sign out
             </button>
