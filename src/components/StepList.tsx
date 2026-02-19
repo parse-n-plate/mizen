@@ -26,11 +26,6 @@ function StepRow({ step, index }: { step: InstructionStep; index: number }) {
   return (
     <div className="py-5 border-b border-stone-100 last:border-0 rounded-lg px-2 -mx-2 hover:bg-[#FAFAF9] transition-colors duration-200">
       <div className="flex gap-4 group">
-        <div className="flex-shrink-0 pt-0.5">
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-stone-100 text-stone-600 text-xs font-bold font-sans">
-            {index + 1}
-          </span>
-        </div>
         <div className="flex-1 min-w-0 space-y-1.5">
           {step.title && (
             <h4 className="font-sans text-sm font-semibold text-stone-900">
@@ -68,7 +63,7 @@ function StepRow({ step, index }: { step: InstructionStep; index: number }) {
       </div>
 
       {expanded && hasImage && (
-        <div className="mt-3 ml-11">
+        <div className="mt-3">
           <img
             src={step.imageUrl}
             alt={`Step ${index + 1}`}
