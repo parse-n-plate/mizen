@@ -3,7 +3,7 @@ import { useRecipe } from '@/contexts/RecipeContext';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo, use } from 'react';
-import RecipeSkeleton from '@/components/ui/recipe-skeleton';
+import RecipeSkeleton from '@/components/recipe/recipe-skeleton';
 import * as Tabs from '@radix-ui/react-tabs';
 import { ArrowLeft, Copy, Check, PenLine } from 'lucide-react';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
@@ -14,15 +14,15 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useSwipeable } from 'react-swipeable';
 import { scaleIngredients } from '@/utils/ingredientScaler';
 import { convertIngredientGroupUnits, type UnitSystem } from '@/utils/unitConverter';
-import ClassicSplitView from '@/components/ClassicSplitView';
-import IngredientCard from '@/components/ui/ingredient-card';
-import { IngredientGroup } from '@/components/ui/ingredient-group';
-import { IngredientsHeader } from '@/components/ui/ingredients-header';
+import CookMode from '@/components/recipe/CookMode';
+import IngredientCard from '@/components/ingredients/ingredient-card';
+import { IngredientGroup } from '@/components/ingredients/ingredient-group';
+import { IngredientsHeader } from '@/components/ingredients/ingredients-header';
 import { UISettingsProvider } from '@/contexts/UISettingsContext';
 
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 import Image from 'next/image';
-import ImagePreview from '@/components/ui/image-preview';
+import ImagePreview from '@/components/shared/image-preview';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import {
   DropdownMenu,
@@ -32,10 +32,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { convertTextFractionsToSymbols } from '@/lib/utils';
-import PlatePhotoCapture from '@/components/ui/plate-photo-capture';
-import PlatingGuidanceCard from '@/components/ui/plating-guidance-card';
-import StorageGuidanceCard from '@/components/ui/storage-guidance-card';
-import IngredientsOverlay from '@/components/ui/ingredients-overlay';
+import PlatePhotoCapture from '@/components/recipe/dish-photo-gallery';
+import PlatingGuidanceCard from '@/components/recipe/plating-guidance-card';
+import StorageGuidanceCard from '@/components/recipe/storage-guidance-card';
+import IngredientsOverlay from '@/components/ingredients/ingredients-overlay';
 import {
   Dialog,
   DialogContent,
@@ -44,8 +44,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { useSidebar } from '@/contexts/SidebarContext';
-import { useIsMobile } from '@/hooks/useIsMobile';
 
 type RecipeIngredient = string | { amount?: string; units?: string; ingredient: string };
 type IngredientGroups = Array<{ groupName: string; ingredients: RecipeIngredient[] }>;
@@ -210,8 +208,6 @@ export default function ParsedRecipePage({
   const { parsedRecipe, setParsedRecipe, isLoaded } = useRecipe();
   const { recentRecipes, isBookmarked, toggleBookmark, removeRecipe, getBookmarkedRecipes, updateRecipe } = useParsedRecipes();
   const router = useRouter();
-  const { showMobileNav } = useSidebar();
-  const isMobileViewport = useIsMobile();
   // Store original servings from recipe (never changes) - use useMemo to preserve it
   const originalServings = useMemo(() => parsedRecipe?.servings, [parsedRecipe?.servings]);
   
@@ -835,26 +831,18 @@ export default function ParsedRecipePage({
                 {/* Top Navigation Bar - Back arrow on left, Bookmark/Settings on right */}
                 <div className="w-full mb-6 md:mb-8">
                   <div className="flex items-center justify-between">
-                    {/* Back Button - Visible on all screen sizes */}
+                    {/* Back Button - Hidden on mobile (hamburger menu handles nav) */}
                     <button
-                      onClick={() => {
-                        if (isMobileViewport) {
-                          showMobileNav();
-                        } else {
-                          router.push('/');
-                        }
-                      }}
-                      className="flex items-center gap-2 text-stone-600 hover:text-stone-800 transition-colors cursor-pointer group"
+                      onClick={() => router.push('/')}
+                      className="hidden md:flex items-center gap-2 text-stone-600 hover:text-stone-800 transition-colors cursor-pointer group"
                       aria-label="Back to Home"
                     >
                       <ArrowLeft className="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1" />
-                      {/* Desktop: Show "Back to Home" text, Mobile: Show "Menu" */}
-                      <span className="hidden md:inline font-albert text-[15px] font-medium">Back to Home</span>
-                      <span className="md:hidden font-albert text-[15px] font-medium">Menu</span>
+                      <span className="font-albert text-[15px] font-medium">Back</span>
                     </button>
                     
                     {/* Bookmark and Settings Buttons */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
                       {/* Bookmark Button */}
                       {recipeId && (
                         <motion.button
@@ -1327,7 +1315,7 @@ export default function ParsedRecipePage({
                       className="w-full -mx-4 md:-mx-8 flex flex-col items-center"
                     >
                       <div className="w-full max-w-[700px]">
-                        <ClassicSplitView
+                        <CookMode
                           title={parsedRecipe.title}
                           allIngredients={flattenedIngredients}
                           steps={normalizedSteps}

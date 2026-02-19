@@ -183,6 +183,7 @@ export interface ParserResult {
   error?: string;
   method?: 'json-ld' | 'ai' | 'json-ld+ai' | 'none';
   retryAfter?: number; // Timestamp (milliseconds) when to retry after rate limit
+  warnings?: string[]; // Non-fatal issues (e.g., missing API key)
 }
 
 // ---------------------------------------------------------------------------
@@ -209,6 +210,25 @@ function parseISODuration(duration: string): number | undefined {
   
   // Return undefined if total is 0 (invalid duration)
   return totalMinutes > 0 ? totalMinutes : undefined;
+}
+
+/**
+ * Decode common HTML entities from source fields (e.g., "Chef John&#39;s" -> "Chef John's").
+ * Some JSON-LD blobs contain entity-encoded text that should be normalized.
+ */
+function decodeHtmlEntities(text: string): string {
+  if (!text) return text;
+
+  return text
+    .replace(/&#(\d+);/g, (_, dec: string) => String.fromCodePoint(parseInt(dec, 10)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex: string) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&apos;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .trim();
 }
 
 /**
@@ -305,7 +325,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
 
             if (!recipe) continue;
 
-            const title = recipe.name || '';
+            const title = decodeHtmlEntities(String(recipe.name || ''));
 
             // Normalize double parentheses to single parentheses (some sites have ((...)) in their JSON-LD)
             const normalizeDoubleParens = (text: string): string => {
@@ -370,54 +390,46 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             };
 
             // Handle different instruction formats
+            const normalizeInstructionText = (text: string): string =>
+              normalizeDoubleParens(decodeHtmlEntities(text).replace(/\s+/g, ' ').trim());
+
+            const extractInstructionTexts = (node: unknown): string[] => {
+              // String format
+              if (typeof node === 'string') {
+                const normalized = normalizeInstructionText(node);
+                return normalized ? [normalized] : [];
+              }
+
+              // Object format
+              if (node && typeof node === 'object') {
+                const obj = node as Record<string, unknown>;
+
+                // HowToSection or nested list: preserve each sub-step as its own instruction.
+                if (Array.isArray(obj.itemListElement)) {
+                  return obj.itemListElement.flatMap((item: unknown) =>
+                    extractInstructionTexts(item)
+                  );
+                }
+
+                if (typeof obj.text === 'string') {
+                  const normalized = normalizeInstructionText(obj.text);
+                  return normalized ? [normalized] : [];
+                }
+
+                if (typeof obj.name === 'string') {
+                  const normalized = normalizeInstructionText(obj.name);
+                  return normalized ? [normalized] : [];
+                }
+              }
+
+              return [];
+            };
+
             if (Array.isArray(recipe.recipeInstructions)) {
               instructions = recipe.recipeInstructions
-                .map((inst: string | Record<string, unknown>) => {
-                  // Handle string format
-                  if (typeof inst === 'string') return normalizeDoubleParens(inst.trim());
-
-                  // Handle object with text property
-                  if (inst.text && typeof inst.text === 'string')
-                    return normalizeDoubleParens(inst.text.trim());
-
-                  // Handle HowToStep format
-                  if (
-                    inst['@type'] === 'HowToStep' &&
-                    inst.text &&
-                    typeof inst.text === 'string'
-                  )
-                    return normalizeDoubleParens(inst.text.trim());
-
-                  // Handle HowToStep with name property
-                  if (
-                    inst['@type'] === 'HowToStep' &&
-                    inst.name &&
-                    typeof inst.name === 'string'
-                  )
-                    return normalizeDoubleParens(inst.name.trim());
-
-                  // Handle itemListElement format (HowToSection with nested steps).
-                  // NOTE: This joins all sub-steps into a single string with spaces,
-                  // which flattens multi-step sections into one long instruction.
-                  // TODO: Consider preserving individual sub-steps as separate instructions.
-                  if (
-                    inst.itemListElement &&
-                    Array.isArray(inst.itemListElement)
-                  ) {
-                    return normalizeDoubleParens(
-                      inst.itemListElement
-                        .map((item: Record<string, unknown>) => {
-                          if (typeof item.text === 'string') return item.text.trim();
-                          if (typeof item.name === 'string') return item.name.trim();
-                          return '';
-                        })
-                        .filter((t: string) => t.length > 0)
-                        .join(' ')
-                    );
-                  }
-
-                  return '';
-                })
+                .flatMap((inst: string | Record<string, unknown>) =>
+                  extractInstructionTexts(inst)
+                )
                 // FIXME: The 10-char minimum silently drops short but valid steps
                 // (e.g., "Serve hot.", "Rest 5 min."). Consider lowering or removing.
                 .filter((text: string) => text.length > 10 && !isAuthorName(text));
@@ -428,7 +440,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
               // Split string instructions by newlines
               instructions = recipe.recipeInstructions
                 .split(/\n+/)
-                .map((s: string) => normalizeDoubleParens(s.trim()))
+                .map((s: string) => normalizeInstructionText(s))
                 // Same 10-char filter as above — see FIXME.
                 .filter((s: string) => s.length > 10 && !isAuthorName(s));
             }
@@ -439,11 +451,11 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             // Try different author field formats
             if (recipe.author) {
               if (typeof recipe.author === 'string') {
-                author = recipe.author.trim();
+                author = decodeHtmlEntities(recipe.author);
               } else if (typeof recipe.author === 'object' && recipe.author !== null) {
                 // Handle author as object (e.g., {"@type": "Person", "name": "John Doe"})
                 if (recipe.author.name && typeof recipe.author.name === 'string') {
-                  author = recipe.author.name.trim();
+                  author = decodeHtmlEntities(recipe.author.name);
                 }
               }
             }
@@ -451,10 +463,10 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             // Try publisher as fallback
             if (!author && recipe.publisher) {
               if (typeof recipe.publisher === 'string') {
-                author = recipe.publisher.trim();
+                author = decodeHtmlEntities(recipe.publisher);
               } else if (typeof recipe.publisher === 'object' && recipe.publisher !== null) {
                 if (recipe.publisher.name && typeof recipe.publisher.name === 'string') {
-                  author = recipe.publisher.name.trim();
+                  author = decodeHtmlEntities(recipe.publisher.name);
                 }
               }
             }
@@ -462,17 +474,17 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             // Try creator as another fallback
             if (!author && recipe.creator) {
               if (typeof recipe.creator === 'string') {
-                author = recipe.creator.trim();
+                author = decodeHtmlEntities(recipe.creator);
               } else if (Array.isArray(recipe.creator) && recipe.creator.length > 0) {
                 const firstCreator = recipe.creator[0];
                 if (typeof firstCreator === 'string') {
-                  author = firstCreator.trim();
+                  author = decodeHtmlEntities(firstCreator);
                 } else if (typeof firstCreator === 'object' && firstCreator !== null && firstCreator.name) {
-                  author = firstCreator.name.trim();
+                  author = decodeHtmlEntities(firstCreator.name);
                 }
               } else if (typeof recipe.creator === 'object' && recipe.creator !== null) {
                 if (recipe.creator.name && typeof recipe.creator.name === 'string') {
-                  author = recipe.creator.name.trim();
+                  author = decodeHtmlEntities(recipe.creator.name);
                 }
               }
             }
@@ -584,93 +596,6 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
 }
 
 // ---------------------------------------------------------------------------
-// Summary Generation (separate AI call, ~80 tokens)
-// ---------------------------------------------------------------------------
-
-/**
- * Generate a one-sentence recipe summary.
- *
- * Uses only the first 12 ingredients and 4 steps to stay well within
- * the 80-token max_tokens limit. Returns null silently on any failure
- * (summary is considered non-critical).
- */
-async function generateRecipeSummary(recipe: ParsedRecipe): Promise<string | null> {
-  if (!process.env.GROQ_API_KEY) return null;
-
-  try {
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
-    const title = (recipe.title || '').trim();
-
-    const ingredients = recipe.ingredients
-      .flatMap((g) => g.ingredients)
-      .map((i) => (i.ingredient || '').trim())
-      .filter(Boolean)
-      .slice(0, 12);
-
-    const steps = recipe.instructions
-      .map((s) => (typeof s === 'string' ? s : s.detail))
-      .map((t) => (t || '').trim())
-      .filter(Boolean)
-      .slice(0, 4);
-
-    const response = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      temperature: 0.1,
-      max_tokens: 80,
-      messages: [
-        {
-          role: 'system',
-          content:
-            `Write ONE short sentence describing the dish.
-
-Hard rules:
-- Output ONLY the sentence text.
-- Exactly one sentence.
-- Max 200 characters.
-- No cooking method explanations.
-- No phrases like "characterized by", "achieved through", or "typically prepared".
-- No hype or marketing language.
-- Do NOT explain technique or process.
-- Do NOT guess missing information.
-
-Style:
-- Neutral menu-style description.
-- Structure:
-  A [simple descriptor if implied] [dish type] with [key components] in/on [base, sauce, or broth].
-- Use plain nouns and minimal adjectives.
-
-If details are incomplete or unclear, output exactly:
-Recipe details incomplete. Review ingredients and steps.`
-        },
-        {
-          role: 'user',
-          content:
-            `Title: ${title || '(missing)'}
-Ingredients: ${ingredients.join(', ')}
-Steps: ${steps.join(' ')}`,
-        },
-      ],
-    });
-
-    const summary = response.choices?.[0]?.message?.content?.trim();
-    if (!summary) return null;
-
-    // Minimal cleanup only
-    const cleaned = summary.replace(/^["']|["']$/g, '').trim();
-
-    // Ensure single sentence - take first sentence if multiple exist
-    const sentenceMatch = cleaned.match(/^[^.!?]+[.!?]/);
-    if (sentenceMatch) return sentenceMatch[0].trim();
-    
-    // If no sentence-ending punctuation, add period
-    return cleaned.replace(/[.!?]+$/, '') + '.';
-  } catch {
-    return null;
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Layer 2: AI Parsing (Groq / llama-3.3-70b-versatile)
 // ---------------------------------------------------------------------------
 
@@ -740,6 +665,7 @@ NEVER use strings like ["Step 1", "Step 2"] - ALWAYS use objects like [{"title":
 Required JSON structure:
 {
   "title": "string (cleaned recipe title following TITLE EXTRACTION RULES - no prefixes/suffixes)",
+  "summary": "string (exactly one concise sentence, max 200 chars, neutral dish description)",
   "author": "string (optional - recipe author name if found)",
   "servings": 4, // Only include if found in HTML - omit if not available
   "prepTimeMinutes": 15, // Prep time in minutes - only include if found in HTML
@@ -792,6 +718,12 @@ CRITICAL: ingredients and instructions MUST be arrays, NEVER null.
 - WRONG: ["Mix blueberries, sugar..."] ← This is FORBIDDEN
 - If NO instructions found: use empty array []
 - NEVER use null for ingredients or instructions - ALWAYS use [] if nothing is found
+
+SUMMARY RULES:
+- Include "summary" as EXACTLY one sentence (max 200 characters)
+- Neutral menu-style dish description only
+- No technique/process explanations
+- If details are incomplete, use: "Recipe details incomplete. Review ingredients and steps."
 
 ========================================
 THE HTML PROVIDED IS YOUR ONLY SOURCE OF DATA
@@ -1287,6 +1219,7 @@ Output ONLY the JSON object. No markdown, no code blocks, no explanations, no te
 START with { and END with }. Nothing else.
 
 ABSOLUTE REQUIREMENTS:
+- summary: MUST be exactly one sentence (REQUIRED FIELD)
 - ingredients: MUST be an array [] (never null)
 - instructions: MUST be an array [] (never null)
 - cuisine: MUST be an array [] (REQUIRED FIELD - analyze every recipe, can be empty [] if truly uncertain)
@@ -1398,6 +1331,9 @@ ABSOLUTE REQUIREMENTS:
           ingredients: parsedData.ingredients,
           instructions: normalizedInstructions,
         };
+        if (typeof parsedData.summary === 'string' && parsedData.summary.trim()) {
+          recipe.summary = parsedData.summary.trim();
+        }
         if (parsedData.author && typeof parsedData.author === 'string') {
           recipe.author = parsedData.author;
         }
@@ -1528,7 +1464,7 @@ ABSOLUTE REQUIREMENTS:
  *      a. If JSON-LD has only a "Main" group → call AI for better groupings → merge
  *      b. If JSON-LD has good groups → still call AI for cuisine/metadata → merge
  *   3. If no JSON-LD → full AI parse
- *   4. Generate summary (separate AI call)
+ *   4. Use summary returned from the same AI parse call (when available)
  *
  * NOTE: Even when JSON-LD succeeds, we always call the AI (step 2a/2b),
  * so every successful parse costs at least one AI call.
@@ -1571,12 +1507,21 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
 
       // Always call AI — needed for cuisine, storage, plating, descriptions
       console.log(`[Recipe Parser] JSON-LD found. Calling AI for enrichment (mainGroupOnly=${hasOnlyMainGroup})...`);
+      const warnings: string[] = [];
       let aiResult: ParsedRecipe | null = null;
-      try {
-        aiResult = await parseWithAI(cleaned.html);
-      } catch (error) {
-        console.error('[Recipe Parser] AI enrichment failed:', error);
-        // Continue with JSON-LD data only
+      if (!process.env.GROQ_API_KEY) {
+        warnings.push('AI_NOT_CONFIGURED');
+      } else {
+        try {
+          aiResult = await parseWithAI(cleaned.html);
+          if (!aiResult) {
+            warnings.push('AI_ENRICHMENT_FAILED');
+          }
+        } catch (error) {
+          console.error('[Recipe Parser] AI enrichment failed:', error);
+          warnings.push('AI_ENRICHMENT_FAILED');
+          // Continue with JSON-LD data only
+        }
       }
 
       // Merge: JSON-LD fields take priority for ground-truth data (title, author,
@@ -1598,6 +1543,7 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
         ...(aiResult?.platingNotes && { platingNotes: aiResult.platingNotes }),
         ...(aiResult?.servingVessel && { servingVessel: aiResult.servingVessel }),
         ...(aiResult?.servingTemp && { servingTemp: aiResult.servingTemp }),
+        ...(aiResult?.summary && { summary: aiResult.summary }),
         // JSON-LD takes priority for these; fall back to AI if missing
         ...(jsonLdResult.servings ? { servings: jsonLdResult.servings } : (aiResult?.servings ? { servings: aiResult.servings } : {})),
         ...(jsonLdResult.prepTimeMinutes ? { prepTimeMinutes: jsonLdResult.prepTimeMinutes } : (aiResult?.prepTimeMinutes ? { prepTimeMinutes: aiResult.prepTimeMinutes } : {})),
@@ -1613,11 +1559,11 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
         usedAiGroupings: !!useBetterAiGroupings,
       });
 
-      const summary = await generateRecipeSummary(mergedRecipe);
       return {
         success: true,
-        data: { ...mergedRecipe, ...(summary && { summary }) },
-        method: 'json-ld+ai',
+        data: mergedRecipe,
+        method: aiResult ? 'json-ld+ai' : 'json-ld',
+        ...(warnings.length > 0 && { warnings }),
       };
     }
 
@@ -1633,10 +1579,9 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
         cuisine: aiResult.cuisine?.join(', ') ?? '(none)',
       });
 
-      const summary = await generateRecipeSummary(aiResult);
       return {
         success: true,
-        data: { ...aiResult, ...(summary && { summary }) },
+        data: aiResult,
         method: 'ai',
       };
     }
@@ -1828,6 +1773,7 @@ export async function parseRecipeFromImage(imageBase64: string): Promise<ParserR
 
 {
   "title": "Recipe Name Here",
+  "summary": "One sentence dish description.",
   "ingredients": [
     {
       "groupName": "Main",
@@ -1855,7 +1801,8 @@ Rules:
 5. If no groups, use "Main" as the groupName
 6. Extract every instruction step you can see
 7. Write a concise, action-focused title for each step (3-8 words)
-8. If no recipe is visible, return: {"title": "No recipe found", "ingredients": [], "instructions": []}
+8. Include "summary" as exactly one concise sentence (max 200 characters)
+9. If no recipe is visible, return: {"title": "No recipe found", "summary": "Recipe details incomplete. Review ingredients and steps.", "ingredients": [], "instructions": []}
 
 Start your response with { and end with }`,
             },
@@ -1953,10 +1900,8 @@ Start your response with { and end with }`,
           ...parsedData,
           instructions: normalizedInstructions,
         };
-        // Generate summary for image-parsed recipe
-        const summary = await generateRecipeSummary(recipe);
-        if (summary) {
-          recipe.summary = summary;
+        if (typeof parsedData.summary === 'string' && parsedData.summary.trim()) {
+          recipe.summary = parsedData.summary.trim();
         }
         return {
           success: true,
