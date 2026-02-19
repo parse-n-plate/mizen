@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import PPLogo from '@/components/ui/Navbar/pplogo';
-import InlineSearch from '@/components/ui/Navbar/inline-search';
+import PPLogo from '@/components/layout/Navbar/pplogo';
+import InlineSearch from '@/components/layout/Navbar/inline-search';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';

@@ -18,13 +18,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-interface ClassicSplitViewProps {
+interface CookModeProps {
   steps: RecipeStep[];
   title?: string;
   allIngredients?: IngredientInfo[];
 }
 
-export default function ClassicSplitView({ steps, title: _title = 'Recipe Steps', allIngredients = [] }: ClassicSplitViewProps) {
+export default function CookMode({ steps, title: _title = 'Recipe Steps', allIngredients = [] }: CookModeProps) {
   const [view, setView] = useState<'list' | 'card'>('list');
   const [currentStep, setCurrentStep] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');

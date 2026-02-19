@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, MessageCircle, Link as LinkIcon } from 'lucide-react';
-import StarIcon from './star-icon';
+import StarIcon from '@/components/shared/star-icon';
 import Image from 'next/image';
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 

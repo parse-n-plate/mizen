@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ProgressPie } from './progress-pie';
+import { ProgressPie } from '@/components/shared/progress-pie';
 
 /**
  * IngredientGroup Component

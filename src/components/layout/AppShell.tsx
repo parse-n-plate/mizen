@@ -4,8 +4,8 @@ import React, { useCallback, useEffect } from 'react';
 import { motion, useDragControls, useReducedMotion, type PanInfo } from 'framer-motion';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import Sidebar from '@/components/ui/Sidebar';
-import MobileMenuToggle from '@/components/ui/MobileMenuToggle';
+import Sidebar from '@/components/layout/Sidebar';
+import MobileMenuToggle from '@/components/layout/MobileMenuToggle';
 
 const NAV_ID = 'mobile-sidebar-nav';
 const NAV_WIDTH = '85vw';

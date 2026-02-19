@@ -25,12 +25,12 @@ function toTitleCase(text: string): string {
   });
 }
 
-interface ContextPanelProps {
+interface StepDetailsPanelProps {
   step: RecipeStep;
   allIngredients: IngredientInfo[];
 }
 
-export default function ContextPanel({ step, allIngredients }: ContextPanelProps) {
+export default function StepDetailsPanel({ step, allIngredients }: StepDetailsPanelProps) {
   // Find ingredients mentioned in the step text for detailed view
   const matchedIngredients = findIngredientsInText(step.detail, allIngredients);
   const handleIngredientClick = (name: string) => {

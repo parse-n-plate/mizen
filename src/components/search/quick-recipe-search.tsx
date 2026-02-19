@@ -15,7 +15,7 @@ import { isUrl, normalizeUrl } from '@/utils/searchUtils';
 import { addToSearchHistory } from '@/lib/searchHistory';
 import { useToast } from '@/hooks/useToast';
 import { ERROR_CODES } from '@/utils/formatError';
-import LoadingAnimation from '@/components/ui/loading-animation';
+import LoadingAnimation from '@/components/shared/loading-animation';
 
 /**
  * HomepageSearch Component

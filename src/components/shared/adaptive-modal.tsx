@@ -6,7 +6,7 @@ import { Drawer } from 'vaul';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useModalViewMode } from '@/hooks/use-modal-view-mode';
-import { ModalViewSwitcher } from './modal-view-switcher';
+import { ModalViewSwitcher } from './view-mode-switcher';
 
 interface AdaptiveModalProps {
   isOpen: boolean;

@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 import { usePrototypeLab } from '@/contexts/PrototypeLabContext';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { TEST_FIXTURE_RECIPES } from '@/lib/mockRecipeData';
-import LoadingAnimation from '@/components/ui/loading-animation';
+import LoadingAnimation from '@/components/shared/loading-animation';
 import { Button } from '@/components/ui/button';
 
 export function AdminPrototypingPanel() {

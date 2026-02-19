@@ -28,7 +28,7 @@ import { isUrl } from '@/utils/searchUtils';
 import FeedbackDialog, {
   CATEGORIES as FEEDBACK_CATEGORIES,
   type FeedbackType,
-} from '@/components/ui/Sidebar/FeedbackDialog';
+} from '@/components/layout/Sidebar/FeedbackDialog';
 import type { ParsedRecipe } from '@/lib/storage';
 
 interface SearchCommandModalProps {

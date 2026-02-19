@@ -1,7 +1,7 @@
 'use client';
 
 import { SearchX, ChefHat, Link as LinkIcon } from 'lucide-react';
-import { Button } from './button';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 export type EmptyStateVariant = 'no-input' | 'no-results' | 'no-recent';

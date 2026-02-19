@@ -8,7 +8,7 @@ import React, {
   useEffect,
   useCallback,
 } from 'react';
-import SearchCommandModal from '@/components/ui/SearchCommandModal';
+import SearchCommandModal from '@/components/search/SearchCommandModal';
 
 interface CommandKContextType {
   isOpen: boolean;

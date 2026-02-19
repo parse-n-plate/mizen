@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { Camera, X, Share2, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { compressImage, validateImageFile } from '@/lib/imageUtils';
-import PhotoRatingModal from './photo-rating-modal';
+import PhotoRatingModal from './dish-rating-modal';
 import ShareSheetModal from './share-sheet-modal';
 
 export interface Photo {

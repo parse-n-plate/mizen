@@ -14,9 +14,9 @@ import {
 import { errorLogger } from '@/utils/errorLogger';
 // Note: Command+K handling is now done globally via CommandKContext
 import { isUrl, normalizeUrl } from '@/utils/searchUtils';
-import LoadingAnimation from '@/components/ui/loading-animation';
+import LoadingAnimation from '@/components/shared/loading-animation';
 import { useToast } from '@/hooks/useToast';
-import EmptyState from '@/components/ui/empty-state';
+import EmptyState from '@/components/shared/empty-state';
 
 export default function NavbarSearch() {
   const [query, setQuery] = useState('');

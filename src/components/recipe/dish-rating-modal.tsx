@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
-import StarIcon from './star-icon';
-import { Textarea } from './textarea';
+import StarIcon from '@/components/shared/star-icon';
+import { Textarea } from '@/components/ui/textarea';
 
 interface PhotoRatingModalProps {
   photos: Array<{ data: string; filename: string }>;

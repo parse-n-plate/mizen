@@ -9,7 +9,7 @@ import { highlightQuantitiesAndIngredients } from '@/lib/utils';
 import { useUISettings } from '@/contexts/UISettingsContext';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-interface StepDisplayProps {
+interface StepViewerProps {
   step: RecipeStep;
   currentStep: number;
   totalSteps: number;
@@ -19,7 +19,7 @@ interface StepDisplayProps {
   allIngredients: IngredientInfo[];
 }
 
-export default function StepDisplay({ step, currentStep, totalSteps, onNext, onPrev, onBackToList: _onBackToList, allIngredients }: StepDisplayProps) {
+export default function StepViewer({ step, currentStep, totalSteps, onNext, onPrev, onBackToList: _onBackToList, allIngredients }: StepViewerProps) {
   const { settings } = useUISettings();
   const { stepSizing } = settings;
 

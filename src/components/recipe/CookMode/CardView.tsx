@@ -2,8 +2,8 @@
 
 import { RecipeStep } from './types';
 import { IngredientInfo } from '@/utils/ingredientMatcher';
-import StepDisplay from './StepDisplay';
-import ContextPanel from './ContextPanel';
+import StepViewer from './StepViewer';
+import StepDetailsPanel from './StepDetailsPanel';
 import { motion } from 'framer-motion';
 
 interface CardViewProps {
@@ -43,7 +43,7 @@ export default function CardView({ steps, currentStep, onNext, onPrev, onBackToL
       className="flex flex-col h-full bg-white max-w-6xl mx-auto px-4 md:px-8"
     >
       {/* Top Half: Step Display */}
-      <StepDisplay
+      <StepViewer
         step={step}
         currentStep={safeCurrentStep}
         totalSteps={steps.length}
@@ -53,9 +53,9 @@ export default function CardView({ steps, currentStep, onNext, onPrev, onBackToL
         allIngredients={allIngredients}
       />
 
-      {/* Bottom Half: Context Panel */}
+      {/* Bottom Half: Step Details Panel */}
       <div className="border-t border-stone-100">
-        <ContextPanel step={step} allIngredients={allIngredients} />
+        <StepDetailsPanel step={step} allIngredients={allIngredients} />
       </div>
     </motion.div>
   );

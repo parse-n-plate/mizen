@@ -1,7 +1,7 @@
 'use client';
 
-import { IngredientDrawerContent } from './ingredient-drawer-content';
-import { AdaptiveModal } from './adaptive-modal';
+import { IngredientDrawerContent } from './ingredient-details-content';
+import { AdaptiveModal } from '@/components/shared/adaptive-modal';
 
 interface IngredientExpandedDrawerProps {
   ingredientName: string;

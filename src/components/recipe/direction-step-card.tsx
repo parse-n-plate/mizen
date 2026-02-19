@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { RecipeStep, ParsedRecipe } from '@/contexts/RecipeContext';
-import { IngredientsNeededSection } from './ingredients-needed-section';
+import { IngredientsNeededSection } from '@/components/ingredients/ingredients-needed-section';
 import { ToolsNeededSection } from './tools-needed-section';
 import { StepTimer } from './step-timer';
 import { cn } from '@/lib/utils';

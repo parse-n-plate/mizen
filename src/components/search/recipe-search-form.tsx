@@ -10,10 +10,10 @@ import { useRecipe } from '@/contexts/RecipeContext';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { errorLogger } from '@/utils/errorLogger';
 import { X, Image as ImageIcon, Link as LinkIcon, ChevronDown } from 'lucide-react';
-import LoadingAnimation from './loading-animation';
+import LoadingAnimation from '@/components/shared/loading-animation';
 import { ParsedRecipe } from '@/lib/storage';
 import { useToast } from '@/hooks/useToast';
-import EmptyState from './empty-state';
+import EmptyState from '@/components/shared/empty-state';
 import { isUrl, normalizeUrl } from '@/utils/searchUtils';
 
 interface SearchFormProps {

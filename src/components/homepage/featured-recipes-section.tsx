@@ -1,8 +1,8 @@
 'use client';
 
 import { getRecipesByCategory } from '@/lib/mockRecipeData';
-import RecipeCard from './recipe-card';
-import PotIcon from './pot-icon';
+import RecipeCard from '@/components/recipe/recipe-card';
+import PotIcon from '@/components/shared/pot-icon';
 
 interface FeaturedRecipesSectionProps {
   selectedCuisine: string;

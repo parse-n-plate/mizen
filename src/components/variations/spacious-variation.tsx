@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ParsedRecipe, RecipeStep } from '@/contexts/RecipeContext';
-import { DirectionStepCard } from '@/components/ui/direction-step-card';
+import { DirectionStepCard } from '@/components/recipe/direction-step-card';
 import { isEnhancedInstructions, migrateInstructionsToSteps } from '@/utils/recipe-helpers';
 
 interface VariationProps {
