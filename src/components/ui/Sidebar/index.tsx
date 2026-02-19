@@ -41,8 +41,13 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
 import FeedbackDialog from './FeedbackDialog';
+import { useUISettings } from '@/contexts/UISettingsContext';
+import { Switch } from '@/components/ui/switch';
+import SidebarMinimalistic from '@solar-icons/react/csr/it/SidebarMinimalistic';
+import HomeIcon from '@solar-icons/react/csr/ui/Home';
 
 // Shared easing for all sidebar transitions — ease-in-out-cubic
 const SIDEBAR_EASING = 'cubic-bezier(0.645,0.045,0.355,1)';
@@ -193,6 +198,19 @@ export default function Sidebar() {
   } = useSidebar();
   const { openSearch } = useCommandK();
   const { openLab } = usePrototypeLab();
+  const { settings, setSidebarMinimal } = useUISettings();
+  const toggleSidebarMinimal = useCallback(() => {
+    setSidebarMinimal(!settings.sidebarMinimal);
+  }, [setSidebarMinimal, settings.sidebarMinimal]);
+  const handleSidebarToggleRowKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        toggleSidebarMinimal();
+      }
+    },
+    [toggleSidebarMinimal],
+  );
 
   const {
     width: sidebarWidth,
@@ -203,7 +221,7 @@ export default function Sidebar() {
     maxWidth: 480,
     defaultWidth: 288,
     storageKey: 'sidebar-width',
-    isCollapsed: isMobile ? false : isCollapsed,
+    isCollapsed: isMobile ? false : (isCollapsed || settings.sidebarMinimal),
   });
 
   // Stable recipe list derived from context (pinned-first or persisted order)
@@ -407,7 +425,146 @@ export default function Sidebar() {
 
 
   // Whether we're showing the desktop collapsed rail
-  const isRail = !isMobile && isCollapsed;
+  const isMinimal = !isMobile && settings.sidebarMinimal;
+  const isRail = !isMobile && (isCollapsed || isMinimal);
+
+  // ── Floating dock (minimal mode) ──────────────────────────────────
+  if (isMinimal) {
+    const isHome = pathname === '/';
+    const isRecipe = pathname === '/parsed-recipe-page';
+
+    return (
+      <TooltipProvider delayDuration={200} skipDelayDuration={100}>
+        <aside
+          className="flex flex-col items-center w-[52px] bg-white border border-stone-200/60 rounded-[26px] py-3 gap-1 shadow-md shadow-black/[0.04]"
+        >
+          {/* Home */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => router.push('/')}
+                className={cn(
+                  'w-10 h-10 flex items-center justify-center rounded-xl transition-colors',
+                  isHome
+                    ? 'bg-stone-100 text-stone-900'
+                    : 'text-stone-400 hover:bg-stone-100 hover:text-stone-600',
+                )}
+                aria-label="Home"
+              >
+                <HomeIcon className="w-[22px] h-[22px]" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right">Home</TooltipContent>
+          </Tooltip>
+
+          {/* Divider */}
+          <div className="w-7 border-t border-stone-200/80 my-0.5" />
+
+          {/* Search */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={openSearch}
+                className="w-10 h-10 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors"
+                aria-label="Search"
+              >
+                <Magnifer className="w-[22px] h-[22px]" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right">Search</TooltipContent>
+          </Tooltip>
+
+          {/* Cookbook */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                className="w-10 h-10 flex items-center justify-center rounded-xl text-stone-300 cursor-not-allowed"
+                aria-label="Cookbook"
+                aria-disabled="true"
+              >
+                <BookBookmarkIcon className="w-[22px] h-[22px]" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="right">Cookbook</TooltipContent>
+          </Tooltip>
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Divider */}
+          <div className="w-7 border-t border-stone-200/80 my-0.5" />
+
+          {/* Settings */}
+          <DropdownMenu>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="w-10 h-10 flex items-center justify-center rounded-xl text-stone-400 hover:bg-stone-100 hover:text-stone-600 transition-colors"
+                    aria-label="Settings"
+                  >
+                    <SettingsIcon className="w-[22px] h-[22px]" />
+                  </button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="right">Settings</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent side="right" align="end">
+              <DropdownMenuLabel>Appearance</DropdownMenuLabel>
+              <div
+                className="flex items-center justify-between gap-6 px-2 py-1.5 rounded-sm hover:bg-stone-50 cursor-pointer"
+                role="switch"
+                aria-checked={settings.sidebarMinimal}
+                tabIndex={0}
+                onClick={toggleSidebarMinimal}
+                onKeyDown={handleSidebarToggleRowKeyDown}
+              >
+                <div className="flex items-center gap-2">
+                  <SidebarMinimalistic className="w-4 h-4 text-stone-400" />
+                  <span className="font-albert text-sm text-stone-700">
+                    Minimal sidebar
+                  </span>
+                </div>
+                <Switch
+                  checked={settings.sidebarMinimal}
+                  onCheckedChange={setSidebarMinimal}
+                  onClick={(event) => event.stopPropagation()}
+                  onKeyDown={(event) => event.stopPropagation()}
+                  aria-label="Toggle minimal sidebar"
+                />
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setFeedbackOpen(true)}>
+                <ChatRoundLine className="w-4 h-4 text-stone-400" />
+                Leave Feedback
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Profile */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                href="/profile"
+                className="mt-1 w-8 h-8 rounded-full overflow-hidden ring-2 ring-transparent hover:ring-stone-200 transition-all"
+                aria-label="Profile"
+              >
+                <Image
+                  src="/assets/icons/Fish Logo.svg"
+                  alt="Profile"
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-cover"
+                />
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="right">Profile</TooltipContent>
+          </Tooltip>
+        </aside>
+        <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
+      </TooltipProvider>
+    );
+  }
 
   return (
     <TooltipProvider delayDuration={300} skipDelayDuration={100}>
@@ -479,10 +636,10 @@ export default function Sidebar() {
                     onClick={() => setIsCollapsed(false)}
                     className={cn(
                       'absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-stone-100 transition-opacity duration-200',
-                      isRail ? 'opacity-100' : 'opacity-0 pointer-events-none',
+                      isRail && !isMinimal ? 'opacity-100' : 'opacity-0 pointer-events-none',
                     )}
                     aria-label="Expand sidebar"
-                    tabIndex={isRail ? undefined : -1}
+                    tabIndex={isRail && !isMinimal ? undefined : -1}
                   >
                     <SquareDoubleAltArrowRight
                       weight="Outline"
@@ -490,7 +647,7 @@ export default function Sidebar() {
                     />
                   </button>
                 </TooltipTrigger>
-                {isRail && (
+                {isRail && !isMinimal && (
                   <TooltipContent side="right">Expand sidebar</TooltipContent>
                 )}
               </Tooltip>
@@ -764,19 +921,50 @@ export default function Sidebar() {
               </DropdownMenu>
             </NavTooltip>
             <NavTooltip isCollapsed={isCollapsed} isMobile={isMobile} label="Settings">
-              <button
-                disabled
-                className="p-2 rounded-lg cursor-not-allowed"
-                aria-label="Settings"
-              >
-                <SettingsIcon className="w-5 h-5 text-stone-300" />
-              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="p-2 rounded-lg hover:bg-stone-100 transition-colors"
+                    aria-label="Settings"
+                  >
+                    <SettingsIcon className="w-5 h-5 text-stone-400" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  side={isRail ? 'right' : 'top'}
+                  align={isRail ? 'start' : 'end'}
+                >
+                  <DropdownMenuLabel>Appearance</DropdownMenuLabel>
+                  <div
+                    className="flex items-center justify-between gap-6 px-2 py-1.5 rounded-sm hover:bg-stone-50 cursor-pointer"
+                    role="switch"
+                    aria-checked={settings.sidebarMinimal}
+                    tabIndex={0}
+                    onClick={toggleSidebarMinimal}
+                    onKeyDown={handleSidebarToggleRowKeyDown}
+                  >
+                    <div className="flex items-center gap-2">
+                      <SidebarMinimalistic className="w-4 h-4 text-stone-400" />
+                      <span className="font-albert text-sm text-stone-700">
+                        Minimal sidebar
+                      </span>
+                    </div>
+                    <Switch
+                      checked={settings.sidebarMinimal}
+                      onCheckedChange={setSidebarMinimal}
+                      onClick={(event) => event.stopPropagation()}
+                      onKeyDown={(event) => event.stopPropagation()}
+                      aria-label="Toggle minimal sidebar"
+                    />
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </NavTooltip>
           </div>
         </div>
 
         {/* Resize handle - desktop expanded only */}
-        {!isMobile && !isCollapsed && (
+        {!isMobile && !isCollapsed && !isMinimal && (
           <div
             onMouseDown={handleMouseDown}
             className={cn(
