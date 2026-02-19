@@ -2,13 +2,15 @@
 
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { useUISettings } from '@/contexts/UISettingsContext';
 import { ArrowLeft } from 'lucide-react';
 
 export default function MobileBackButton() {
   const isMobile = useIsMobile();
   const { showMobileNav } = useSidebar();
+  const { settings } = useUISettings();
 
-  if (!isMobile) return null;
+  if (!isMobile || settings.sidebarMinimal) return null;
 
   return (
     <button

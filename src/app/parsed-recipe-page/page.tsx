@@ -18,7 +18,6 @@ import ClassicSplitView from '@/components/ClassicSplitView';
 import IngredientCard from '@/components/ui/ingredient-card';
 import { IngredientGroup } from '@/components/ui/ingredient-group';
 import { IngredientsHeader } from '@/components/ui/ingredients-header';
-import { UISettingsProvider } from '@/contexts/UISettingsContext';
 
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 import Image from 'next/image';
@@ -46,6 +45,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { useUISettings } from '@/contexts/UISettingsContext';
 
 // Helper function to extract domain from URL for display
 const getDomainFromUrl = (url: string): string => {
@@ -209,6 +209,7 @@ export default function ParsedRecipePage({
   const router = useRouter();
   const { showMobileNav } = useSidebar();
   const isMobileViewport = useIsMobile();
+  const { settings } = useUISettings();
   // Store original servings from recipe (never changes) - use useMemo to preserve it
   const originalServings = useMemo(() => parsedRecipe?.servings, [parsedRecipe?.servings]);
   
@@ -848,7 +849,6 @@ export default function ParsedRecipePage({
   }
 
   return (
-    <UISettingsProvider>
       <TooltipProvider>
         <div className="bg-white min-h-screen relative max-w-full overflow-x-hidden pb-12 md:pb-16">
           <div className="transition-opacity duration-300 ease-in-out opacity-100">
@@ -868,7 +868,7 @@ export default function ParsedRecipePage({
                     {/* Back Button - Visible on all screen sizes */}
                     <button
                       onClick={() => {
-                        if (isMobileViewport) {
+                        if (isMobileViewport && !settings.sidebarMinimal) {
                           showMobileNav();
                         } else {
                           router.push('/');
@@ -878,9 +878,11 @@ export default function ParsedRecipePage({
                       aria-label="Back to Home"
                     >
                       <ArrowLeft className="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1" />
-                      {/* Desktop: Show "Back to Home" text, Mobile: Show "Menu" */}
+                      {/* Desktop: Show "Back to Home" text, Mobile: Show "Menu" or "Home" */}
                       <span className="hidden md:inline font-albert text-[15px] font-medium">Back to Home</span>
-                      <span className="md:hidden font-albert text-[15px] font-medium">Menu</span>
+                      <span className="md:hidden font-albert text-[15px] font-medium">
+                        {settings.sidebarMinimal ? 'Home' : 'Menu'}
+                      </span>
                     </button>
                     
                     {/* Bookmark and Settings Buttons */}
@@ -1635,6 +1637,5 @@ export default function ParsedRecipePage({
         </Dialog>
       </div>
       </TooltipProvider>
-    </UISettingsProvider>
   );
 }
