@@ -15,6 +15,7 @@ export type FontFamily = 'sans' | 'serif';
 type UISettingsState = {
   stepSizing: StepSizing;
   fontFamily: FontFamily;
+  sidebarMinimal: boolean;
 };
 
 type UISettingsContextType = {
@@ -22,6 +23,7 @@ type UISettingsContextType = {
   isReady: boolean;
   setStepSizing: (sizing: StepSizing) => void;
   setFontFamily: (family: FontFamily) => void;
+  setSidebarMinimal: (minimal: boolean) => void;
 };
 
 const STORAGE_KEY = 'uiSettings';
@@ -29,6 +31,7 @@ const STORAGE_KEY = 'uiSettings';
 const defaultSettings: UISettingsState = {
   stepSizing: 'med',
   fontFamily: 'sans',
+  sidebarMinimal: false,
 };
 
 const UISettingsContext = createContext<UISettingsContextType | undefined>(
@@ -50,6 +53,8 @@ export function UISettingsProvider({ children }: { children: ReactNode }) {
             parsed.stepSizing ?? defaultSettings.stepSizing,
           fontFamily:
             parsed.fontFamily ?? defaultSettings.fontFamily,
+          sidebarMinimal:
+            parsed.sidebarMinimal ?? defaultSettings.sidebarMinimal,
         });
       }
     } catch (error) {
@@ -78,12 +83,17 @@ export function UISettingsProvider({ children }: { children: ReactNode }) {
     setSettings((prev) => ({ ...prev, fontFamily: family }));
   };
 
+  const setSidebarMinimal = (minimal: boolean) => {
+    setSettings((prev) => ({ ...prev, sidebarMinimal: minimal }));
+  };
+
   const value = useMemo(
     () => ({
       settings,
       isReady,
       setStepSizing,
       setFontFamily,
+      setSidebarMinimal,
     }),
     [settings, isReady],
   );

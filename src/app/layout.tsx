@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Domine, Albert_Sans } from 'next/font/google';
 import AppShell from '@/components/ui/AppShell';
 import { AdminSettingsProvider } from '@/contexts/AdminSettingsContext';
+import { UISettingsProvider } from '@/contexts/UISettingsContext';
 import { RecipeProvider } from '@/contexts/RecipeContext';
 import { ParsedRecipesProvider } from '@/contexts/ParsedRecipesContext';
 import { TimerProvider } from '@/contexts/TimerContext';
@@ -60,6 +61,7 @@ export default function RootLayout({
         suppressHydrationWarning={true}
       >
         <AdminSettingsProvider>
+          <UISettingsProvider>
           <RecipeProvider>
             <ParsedRecipesProvider>
               <TimerProvider>
@@ -78,6 +80,7 @@ export default function RootLayout({
               </TimerProvider>
             </ParsedRecipesProvider>
           </RecipeProvider>
+          </UISettingsProvider>
         </AdminSettingsProvider>
       </body>
     </html>
