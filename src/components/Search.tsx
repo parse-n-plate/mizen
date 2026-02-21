@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useRecipe } from "@/context/RecipeContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -115,11 +116,11 @@ export function Search() {
   const handleFile = useCallback(
     async (file: File) => {
       if (!ALLOWED_TYPES.includes(file.type)) {
-        setError("Only JPEG, PNG, and WebP images are supported.");
+        toast.error("Only JPEG, PNG, and WebP images are supported.");
         return;
       }
       if (file.size > MAX_SIZE) {
-        setError("Image is too large (max 10 MB).");
+        toast.error("Image is too large (max 10 MB).");
         return;
       }
       try {
@@ -128,7 +129,7 @@ export function Search() {
         setUrl("");
         setError(null);
       } catch {
-        setError("Failed to read image.");
+        toast.error("Failed to read image.");
       }
     },
     [setError]
@@ -210,15 +211,15 @@ export function Search() {
           setRecipe(result.data);
           router.push("/recipe");
         } else {
-          setError(result.error || "Failed to parse recipe");
+          toast.error(result.error || "Failed to parse recipe");
         }
       } catch {
-        setError("Something went wrong. Please try again.");
+        toast.error("Something went wrong. Please try again.");
       } finally {
         setIsLoading(false);
       }
     },
-    [isLoading, setIsLoading, setError, setRecipe, router]
+    [isLoading, setIsLoading, setRecipe, router]
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -245,10 +246,10 @@ export function Search() {
           setRecipe(result.data);
           router.push("/recipe");
         } else {
-          setError(result.error || "Failed to parse recipe");
+          toast.error(result.error || "Failed to parse recipe");
         }
       } catch {
-        setError("Something went wrong. Please try again.");
+        toast.error("Something went wrong. Please try again.");
       } finally {
         setIsLoading(false);
       }

@@ -3,11 +3,10 @@
 import { useState } from "react";
 import { useRecipe } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
-import { useTimers } from "@/hooks/useTimers";
+import { toast } from "sonner";
 import { RecipeHeader, formatTime } from "@/components/RecipeHeader";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
-import { TimerVault } from "@/components/TimerVault";
 import Link from "next/link";
 
 export default function RecipePage() {
@@ -17,7 +16,6 @@ export default function RecipePage() {
   const [unsaving, setUnsaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"prep" | "cook">("prep");
-  const { timers, hasTimers, addTimer, pauseTimer, resumeTimer, removeTimer } = useTimers();
 
   const shareUrl = savedMeta
     ? `${typeof window !== "undefined" ? window.location.origin : ""}/r/${savedMeta.slug}`
@@ -35,9 +33,10 @@ export default function RecipePage() {
       const saved = await res.json();
       if (saved?.id && saved?.slug) {
         setSavedMeta({ id: saved.id, slug: saved.slug });
+        toast.success("Recipe saved");
       }
     } catch {
-      // Silent fail
+      toast.error("Failed to save recipe");
     } finally {
       setSaving(false);
     }
@@ -52,9 +51,10 @@ export default function RecipePage() {
       });
       if (res.ok) {
         setSavedMeta(null);
+        toast.success("Recipe removed");
       }
     } catch {
-      // Silent fail
+      toast.error("Failed to remove recipe");
     } finally {
       setUnsaving(false);
     }
@@ -62,9 +62,14 @@ export default function RecipePage() {
 
   const handleCopy = async () => {
     if (!shareUrl) return;
-    await navigator.clipboard.writeText(shareUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast.success("Link copied");
+    } catch {
+      toast.error("Failed to copy link");
+    }
   };
 
   if (!recipe) {
@@ -90,8 +95,40 @@ export default function RecipePage() {
         </div>
       </div>
 
+      {/* Print-only: linear layout with ingredients + instructions */}
+      <div className="hidden print:block px-6">
+        <div className="max-w-3xl mx-auto w-full">
+          <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 mb-3">Ingredients</h3>
+          {recipe.ingredients.map((group) => (
+            <div key={group.groupName} className="mb-4">
+              <h4 className="font-sans text-sm font-semibold capitalize mb-1">{group.groupName}</h4>
+              <ul className="list-disc pl-5 space-y-0.5">
+                {group.ingredients.map((ing, i) => (
+                  <li key={i} className="text-sm">
+                    {ing.ingredient}
+                    {(ing.amount || ing.units) && (
+                      <span className="text-stone-500 ml-1">— {`${ing.amount || ""} ${ing.units || ""}`.trim()}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+          <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 mb-3 mt-6">Instructions</h3>
+          <ol className="list-decimal pl-5 space-y-3">
+            {recipe.instructions.map((step, i) => (
+              <li key={i} className="text-sm leading-relaxed">
+                <strong>{step.title}</strong>
+                <br />
+                {step.detail}
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
+
       {/* Tabs + content */}
-      <div className="flex-1 flex flex-col px-6">
+      <div className="flex-1 flex flex-col px-6 print:hidden">
         <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col">
           {/* Desktop: top folder tabs + quick actions (hidden on mobile) */}
           <div className="hidden sm:flex items-end w-full relative border-b border-stone-200 dark:border-stone-700 gap-0">
@@ -222,7 +259,7 @@ export default function RecipePage() {
                 </div>
               ) : (
                 <div key="cook" className="tab-content-animate">
-                  <StepList steps={recipe.instructions} onStartTimer={addTimer} />
+                  <StepList steps={recipe.instructions} />
                 </div>
               )}
             </div>
@@ -230,22 +267,11 @@ export default function RecipePage() {
         </div>
       </div>
 
-      {/* Timer vault */}
-      {hasTimers && (
-        <TimerVault
-          timers={timers}
-          onPause={pauseTimer}
-          onResume={resumeTimer}
-          onRemove={removeTimer}
-          onAdd={addTimer}
-        />
-      )}
-
       {/* Mobile: fade above bottom tabs */}
-      <div className="sm:hidden fixed bottom-12 left-0 right-0 z-[19] h-24 pointer-events-none bg-gradient-to-t from-white via-white/80 dark:from-stone-900 dark:via-stone-900/80 to-transparent" />
+      <div className="sm:hidden print:hidden fixed bottom-12 left-0 right-0 z-[19] h-24 pointer-events-none bg-gradient-to-t from-white via-white/80 dark:from-stone-900 dark:via-stone-900/80 to-transparent" />
 
       {/* Mobile: fixed bottom folder tabs (hidden on desktop) */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-20 pb-[env(safe-area-inset-bottom)] bg-[#FAFAF9] dark:bg-stone-950">
+      <div className="sm:hidden print:hidden fixed bottom-0 left-0 right-0 z-20 pb-[env(safe-area-inset-bottom)] bg-[#FAFAF9] dark:bg-stone-950">
         <div className="px-6">
           <div className="flex items-start w-full relative border-t border-stone-200 dark:border-stone-700 gap-0">
             <button
