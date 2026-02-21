@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { IngredientGroup, InstructionStep } from "@/lib/types";
 import { IngredientList } from "@/components/IngredientList";
+import { convertGroup, detectSystem, type UnitSystem } from "@/utils/unitConverter";
 
 interface PrepSectionProps {
   ingredients: IngredientGroup[];
@@ -10,19 +11,37 @@ interface PrepSectionProps {
 }
 
 export function PrepSection({ ingredients, steps }: PrepSectionProps) {
+  const defaultSystem = useMemo(() => detectSystem(ingredients), [ingredients]);
+  const [unitSystem, setUnitSystem] = useState<UnitSystem>(defaultSystem);
+
   const tips = steps
     .filter((s) => s.tips)
     .map((s, i) => ({ tip: s.tips!, stepTitle: s.title, index: i }));
+
+  const convertedIngredients = useMemo(
+    () => ingredients.map((g) => convertGroup(g, unitSystem)),
+    [ingredients, unitSystem]
+  );
 
   return (
     <div className="space-y-6">
       {tips.length > 0 && <TipsCallout tips={tips} />}
 
       <div>
-        <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-3 pl-2">
-          Ingredients
-        </h3>
-        <IngredientList groups={ingredients} />
+        <div className="flex items-center justify-between mb-3 pl-2">
+          <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500">
+            Ingredients
+          </h3>
+          <select
+            value={unitSystem}
+            onChange={(e) => setUnitSystem(e.target.value as UnitSystem)}
+            className="font-sans text-[11px] px-2 py-1 rounded-md border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-600 dark:text-stone-300 cursor-pointer outline-none"
+          >
+            <option value="metric">Metric</option>
+            <option value="imperial">Imperial</option>
+          </select>
+        </div>
+        <IngredientList groups={convertedIngredients} />
       </div>
     </div>
   );
