@@ -773,3 +773,52 @@ h1, h2, h3, h4, h5, h6 {
     scroll-behavior: auto !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PRINT — Clean recipe layout for printing
+═══════════════════════════════════════════════════════════════════════════ */
+
+@media print {
+  @page {
+    margin: 0.75in;
+    size: auto;
+  }
+
+  html, body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt !important;
+  }
+
+  /* Hide non-print elements */
+  header,
+  .folder-tab-trigger,
+  .folder-tab-trigger-bottom,
+  .vault-animate,
+  [data-sonner-toaster],
+  .clipboard-pill-animate,
+  nav {
+    display: none !important;
+  }
+
+  /* Clean card appearance */
+  .ingredient-group {
+    break-inside: avoid;
+  }
+
+  .recipe-step-list-item {
+    break-inside: avoid;
+  }
+
+  .ingredient-checkbox-input {
+    display: none !important;
+  }
+
+  .ingredient-list-content {
+    padding: 6px 0 !important;
+  }
+
+  .ingredient-list-divider {
+    left: 0 !important;
+  }
+}
