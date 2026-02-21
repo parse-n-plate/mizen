@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Domine, Albert_Sans } from "next/font/google";
 import { AppShell } from "@/components/AppShell";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const domine = Domine({
@@ -36,6 +37,7 @@ export default function RootLayout({
       </head>
       <body className={`${domine.variable} ${albertSans.variable} antialiased`}>
         <AppShell>{children}</AppShell>
+        <Toaster />
       </body>
     </html>
   );
