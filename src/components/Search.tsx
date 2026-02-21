@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useRecipe } from "@/context/RecipeContext";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,49 @@ import { Button } from "@/components/ui/button";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+
+const RECIPE_DOMAINS = new Set([
+  "allrecipes.com",
+  "bonappetit.com",
+  "budgetbytes.com",
+  "cooking.nytimes.com",
+  "cookinglight.com",
+  "delish.com",
+  "eatingwell.com",
+  "epicurious.com",
+  "food52.com",
+  "food.com",
+  "foodandwine.com",
+  "foodnetwork.com",
+  "halfbakedharvest.com",
+  "justonecookbook.com",
+  "kingarthurbaking.com",
+  "minimalistbaker.com",
+  "pinchofyum.com",
+  "recipetineats.com",
+  "seriouseats.com",
+  "simplyrecipes.com",
+  "skinnytaste.com",
+  "smittenkitchen.com",
+  "tasteofhome.com",
+  "tasty.co",
+  "thekitchn.com",
+  "thespruceeats.com",
+]);
+
+const RECIPE_PATH_PATTERNS = /\/(recipes?|cooking|dish|meal|baking)\b/i;
+
+function looksLikeRecipeUrl(urlString: string): boolean {
+  try {
+    const parsed = new URL(urlString);
+    const host = parsed.hostname.replace(/^www\./, "");
+    if (RECIPE_DOMAINS.has(host)) return true;
+    if (RECIPE_PATH_PATTERNS.test(parsed.pathname)) return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
 
 interface ImageFile {
   base64: string;
@@ -39,10 +83,34 @@ export function Search() {
   const [url, setUrl] = useState("");
   const [imageFile, setImageFile] = useState<ImageFile | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [clipboardUrl, setClipboardUrl] = useState<string | null>(null);
+  const [dismissedUrl, setDismissedUrl] = useState<string | null>(null);
   const dragCounter = useRef(0);
+  const formRef = useRef<HTMLFormElement>(null);
   const { setRecipe, setIsLoading, setError, isLoading } =
     useRecipe();
   const router = useRouter();
+
+  // Clipboard URL detection
+  useEffect(() => {
+    const checkClipboard = async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        const trimmed = text?.trim();
+        if (trimmed && looksLikeRecipeUrl(trimmed)) {
+          setClipboardUrl(trimmed);
+        } else {
+          setClipboardUrl(null);
+        }
+      } catch {
+        // Permission denied or unavailable — silently skip
+      }
+    };
+
+    checkClipboard();
+    window.addEventListener("focus", checkClipboard);
+    return () => window.removeEventListener("focus", checkClipboard);
+  }, []);
 
   const handleFile = useCallback(
     async (file: File) => {
@@ -122,44 +190,153 @@ export function Search() {
     [handleFile]
   );
 
+  const submitUrl = useCallback(
+    async (recipeUrl: string) => {
+      if (isLoading) return;
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch("/api/parse", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: recipeUrl }),
+        });
+
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          setRecipe(result.data);
+          router.push("/recipe");
+        } else {
+          setError(result.error || "Failed to parse recipe");
+        }
+      } catch {
+        setError("Something went wrong. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isLoading, setIsLoading, setError, setRecipe, router]
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoading) return;
-    if (!imageFile && !url.trim()) return;
 
-    setIsLoading(true);
-    setError(null);
+    if (imageFile) {
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const body = imageFile
-        ? { image: imageFile.base64, mimeType: imageFile.mimeType }
-        : { url: url.trim() };
+      try {
+        const response = await fetch("/api/parse", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            image: imageFile.base64,
+            mimeType: imageFile.mimeType,
+          }),
+        });
 
-      const response = await fetch("/api/parse", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+        const result = await response.json();
 
-      const result = await response.json();
-
-      if (result.success && result.data) {
-        setRecipe(result.data);
-        router.push("/recipe");
-      } else {
-        setError(result.error || "Failed to parse recipe");
+        if (result.success && result.data) {
+          setRecipe(result.data);
+          router.push("/recipe");
+        } else {
+          setError(result.error || "Failed to parse recipe");
+        }
+      } catch {
+        setError("Something went wrong. Please try again.");
+      } finally {
+        setIsLoading(false);
       }
-    } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setIsLoading(false);
+      return;
+    }
+
+    if (url.trim()) {
+      submitUrl(url.trim());
     }
   };
 
+  const handleClipboardPaste = () => {
+    if (!clipboardUrl || isLoading) return;
+    setUrl(clipboardUrl);
+    setClipboardUrl(null);
+    submitUrl(clipboardUrl);
+  };
+
   const hasInput = imageFile || url.trim();
+  const showPill =
+    clipboardUrl &&
+    clipboardUrl !== dismissedUrl &&
+    !url &&
+    !imageFile &&
+    !isLoading;
+
+  let clipboardDomain = "";
+  if (clipboardUrl) {
+    try {
+      clipboardDomain = new URL(clipboardUrl).hostname.replace(/^www\./, "");
+    } catch {
+      clipboardDomain = "link";
+    }
+  }
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-2xl">
+    <div className="w-full max-w-2xl flex flex-col items-center">
+      {showPill &&
+        createPortal(
+          <div className="fixed bottom-8 left-0 right-0 z-50 flex justify-center pointer-events-none">
+            <div className="clipboard-pill-animate pointer-events-auto flex items-center gap-1 rounded-full bg-stone-900 pl-4 pr-1.5 py-2 shadow-lg dark:bg-stone-100">
+              <button
+                type="button"
+                onClick={handleClipboardPaste}
+                className="flex items-center gap-2 text-sm font-medium text-white dark:text-stone-900 whitespace-nowrap"
+              >
+                Paste {clipboardDomain}
+                <svg
+                  className="h-3.5 w-3.5 opacity-50"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDismissedUrl(clipboardUrl);
+                }}
+                className="ml-1 flex h-6 w-6 items-center justify-center rounded-full text-stone-400 transition-colors hover:bg-stone-700 hover:text-white dark:text-stone-500 dark:hover:bg-stone-300 dark:hover:text-stone-900"
+                aria-label="Dismiss"
+              >
+                <svg
+                  className="h-3 w-3"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
+      <form ref={formRef} onSubmit={handleSubmit} className="w-full">
       <div
         className={`rounded-2xl border bg-white dark:bg-stone-900 shadow-sm transition-all focus-within:border-stone-300 dark:focus-within:border-stone-600 focus-within:shadow-md ${
           isDragging
@@ -253,7 +430,7 @@ export function Search() {
             type="submit"
             size="icon"
             disabled={!hasInput || isLoading}
-            className="h-8 w-8 rounded-lg bg-[var(--color-blue)] transition-opacity hover:bg-[var(--color-blue)]/90 disabled:opacity-30"
+            className="press-scale h-8 w-8 rounded-lg bg-[var(--color-blue)] transition-opacity hover:bg-[var(--color-blue)]/90 disabled:opacity-30"
           >
             {isLoading ? (
               <svg
@@ -295,5 +472,6 @@ export function Search() {
         </div>
       </div>
     </form>
+    </div>
   );
 }

@@ -30,7 +30,7 @@ Required JSON structure:
     {
       "title": "Short step title (2-8 words)",
       "detail": "Full instruction text exactly as written",
-      "timeMinutes": 0,
+      "timers": [{"text": "15 minutes", "seconds": 900}],
       "ingredients": ["ingredient 1"],
       "tips": "Optional tip"
     }
@@ -69,10 +69,14 @@ INGREDIENT GROUPING:
 
 INSTRUCTION RULES:
 - Extract ALL steps, do not combine or skip any
-- "title": concise summary (2-8 words)
+- "title": YOU MUST generate a unique, descriptive title for EVERY step (2-8 words). Do NOT copy the recipe's heading — write your own short summary of what the step does (e.g. "Bloom the spices", "Sear the chicken thighs", "Fold in the egg whites"). Every step MUST have a non-empty title.
 - "detail": full instruction text exactly as written
 - Preserve all temperatures, times, measurements
 - Do NOT shorten or summarize the detail text
+- "timers": extract EVERY time duration from the detail text as an array of objects:
+  - "text": the EXACT substring as it appears in detail (e.g. "15 minutes", "1 hour", "30 seconds", "5-10 minutes")
+  - "seconds": the duration converted to seconds (e.g. 900, 3600, 30). For ranges like "5-10 minutes", use the higher value (600)
+  - If a step has no time durations, omit timers or use []
 
 SUMMARY:
 - Exactly one sentence, max 200 characters

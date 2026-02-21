@@ -2,10 +2,13 @@
 
 import { Search } from "@/components/Search";
 import { RecentRecipes } from "@/components/RecentRecipes";
+import { GettingStarted } from "@/components/GettingStarted";
 import { useRecipe } from "@/context/RecipeContext";
+import { useUser } from "@/hooks/useUser";
 
 export default function HomePage() {
   const { error, isLoading } = useRecipe();
+  const { user, loading: authLoading } = useUser();
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] flex-col">
@@ -39,7 +42,7 @@ export default function HomePage() {
         )}
 
         <div className="mt-12 w-full flex justify-center">
-          <RecentRecipes />
+          {!authLoading && (user ? <RecentRecipes /> : <GettingStarted />)}
         </div>
       </main>
     </div>

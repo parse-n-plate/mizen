@@ -3,18 +3,21 @@
 import { useState } from "react";
 import { useRecipe } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
-import { RecipeHeader } from "@/components/RecipeHeader";
-import { IngredientList } from "@/components/IngredientList";
+import { useTimers } from "@/hooks/useTimers";
+import { RecipeHeader, formatTime } from "@/components/RecipeHeader";
+import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TimerVault } from "@/components/TimerVault";
 import Link from "next/link";
 
 export default function RecipePage() {
   const { recipe, savedMeta, setSavedMeta } = useRecipe();
   const { user } = useUser();
   const [saving, setSaving] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
+  const [unsaving, setUnsaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<"prep" | "cook">("prep");
+  const { timers, hasTimers, addTimer, pauseTimer, resumeTimer, removeTimer } = useTimers();
 
   const shareUrl = savedMeta
     ? `${typeof window !== "undefined" ? window.location.origin : ""}/r/${savedMeta.slug}`
@@ -37,6 +40,23 @@ export default function RecipePage() {
       // Silent fail
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleUnsave = async () => {
+    if (!savedMeta || unsaving) return;
+    setUnsaving(true);
+    try {
+      const res = await fetch(`/api/recipes/${savedMeta.id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setSavedMeta(null);
+      }
+    } catch {
+      // Silent fail
+    } finally {
+      setUnsaving(false);
     }
   };
 
@@ -66,144 +86,195 @@ export default function RecipePage() {
       {/* Header section with cream background */}
       <div className="px-6 pt-8 pb-0">
         <div className="max-w-3xl mx-auto w-full pb-8">
-          <div className="flex items-start justify-between gap-4">
-            <RecipeHeader recipe={recipe} />
+          <RecipeHeader recipe={recipe} />
+        </div>
+      </div>
 
-            {/* Action buttons — right-aligned */}
-            <div className="flex items-center gap-2 flex-shrink-0 pt-1">
+      {/* Tabs + content */}
+      <div className="flex-1 flex flex-col px-6">
+        <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col">
+          {/* Desktop: top folder tabs + quick actions (hidden on mobile) */}
+          <div className="hidden sm:flex items-end w-full relative border-b border-stone-200 dark:border-stone-700 gap-0">
+            <button
+              onClick={() => setActiveTab("prep")}
+              className="folder-tab-trigger h-11 px-8 font-sans text-sm font-medium"
+              data-state={activeTab === "prep" ? "active" : "inactive"}
+            >
+              Prep
+              {recipe.prepTimeMinutes ? (
+                <>
+                  <span className="text-stone-300 dark:text-stone-600" aria-hidden>·</span>
+                  <span className="font-normal text-stone-400 dark:text-stone-500">{formatTime(recipe.prepTimeMinutes)}</span>
+                </>
+              ) : null}
+            </button>
+            <button
+              onClick={() => setActiveTab("cook")}
+              className="folder-tab-trigger h-11 px-8 font-sans text-sm font-medium"
+              data-state={activeTab === "cook" ? "active" : "inactive"}
+            >
+              Cook
+              {recipe.cookTimeMinutes ? (
+                <>
+                  <span className="text-stone-300 dark:text-stone-600" aria-hidden>·</span>
+                  <span className="font-normal text-stone-400 dark:text-stone-500">{formatTime(recipe.cookTimeMinutes)}</span>
+                </>
+              ) : null}
+            </button>
+
+            {/* Quick actions — right-aligned on tab row */}
+            <div className="ml-auto flex items-center gap-1 pb-2">
+              {/* Save / Saved */}
               {user && !savedMeta && (
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 px-3 py-1.5 font-sans text-xs font-medium text-stone-600 dark:text-stone-300 transition-colors hover:bg-stone-50 dark:hover:bg-stone-700 disabled:opacity-50"
+                  title="Save recipe"
+                  className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors disabled:opacity-50"
                 >
-                  <svg className="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                    <polyline points="17 21 17 13 7 13 7 21" />
-                    <polyline points="7 3 7 8 15 8" />
+                  <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
                   </svg>
-                  {saving ? "Saving..." : "Save"}
+                </button>
+              )}
+              {savedMeta && (
+                <button
+                  onClick={handleUnsave}
+                  disabled={unsaving}
+                  title="Remove from saved"
+                  className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-emerald-500 dark:text-emerald-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors disabled:opacity-50"
+                >
+                  <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                  </svg>
                 </button>
               )}
 
+              {/* Share / Copy link */}
               {savedMeta && (
-                <>
-                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950 px-3 py-1.5 font-sans text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                    <svg className="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    Saved
-                  </span>
-
-                  <div className="relative">
-                    <button
-                      onClick={() => setShareOpen(!shareOpen)}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-blue)] px-3 py-1.5 font-sans text-xs font-medium text-white transition-opacity hover:opacity-90"
-                    >
-                      <svg className="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                        <polyline points="16 6 12 2 8 6" />
-                        <line x1="12" y1="2" x2="12" y2="15" />
+                <div className="relative">
+                  <button
+                    onClick={handleCopy}
+                    title={copied ? "Copied!" : "Copy share link"}
+                    className={`press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors ${
+                      copied
+                        ? "text-emerald-500 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950"
+                        : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
+                    }`}
+                  >
+                    {copied ? (
+                      <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
                       </svg>
-                      Share
-                    </button>
-
-                    {shareOpen && (
-                      <>
-                        <div
-                          className="fixed inset-0 z-30"
-                          onClick={() => setShareOpen(false)}
-                        />
-                        <div className="absolute right-0 top-full z-40 mt-2 w-80 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 p-4 shadow-lg shadow-stone-200/50 dark:shadow-black/30">
-                          <p className="mb-2 font-sans text-sm font-medium text-stone-700 dark:text-stone-200">
-                            Share this recipe
-                          </p>
-                          <p className="mb-3 font-sans text-xs text-stone-400 dark:text-stone-500">
-                            Anyone with this link can view the recipe.
-                          </p>
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 overflow-hidden rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 px-3 py-2">
-                              <p className="truncate font-mono text-xs text-stone-500 dark:text-stone-400">
-                                {shareUrl}
-                              </p>
-                            </div>
-                            <button
-                              onClick={handleCopy}
-                              className={`inline-flex flex-shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 font-sans text-xs font-medium transition-colors ${
-                                copied
-                                  ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400"
-                                  : "bg-[var(--color-blue)] text-white hover:opacity-90"
-                              }`}
-                            >
-                              {copied ? (
-                                <>
-                                  <svg className="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="20 6 9 17 4 12" />
-                                  </svg>
-                                  Copied!
-                                </>
-                              ) : (
-                                <>
-                                  <svg className="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                                  </svg>
-                                  Copy
-                                </>
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                      </>
+                    ) : (
+                      <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                      </svg>
                     )}
-                  </div>
-                </>
+                  </button>
+                </div>
               )}
 
-              {!user && (
-                <span className="font-sans text-xs text-stone-400 dark:text-stone-500">
-                  <Link href="/" className="text-[var(--color-blue)] hover:underline">
-                    Sign in
-                  </Link>{" "}
-                  to save
-                </span>
+              {/* Divider */}
+              {(user || recipe.sourceUrl) && (
+                <div className="h-4 w-px bg-stone-200 dark:bg-stone-700 mx-0.5" />
+              )}
+
+              {/* Source link */}
+              {recipe.sourceUrl && (
+                <a
+                  href={recipe.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="View original recipe"
+                  className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                >
+                  <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                    <polyline points="15 3 21 3 21 9" />
+                    <line x1="10" y1="14" x2="21" y2="3" />
+                  </svg>
+                </a>
+              )}
+
+              {/* Print */}
+              <button
+                onClick={() => window.print()}
+                title="Print recipe"
+                className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+              >
+                <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 6 2 18 2 18 9" />
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                  <rect width="12" height="8" x="6" y="14" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Content card */}
+          <div className="bg-white dark:bg-stone-900 sm:rounded-b-lg rounded-lg sm:rounded-t-none border border-stone-200 dark:border-stone-700 sm:border-t-0 flex-1">
+            <div className="max-w-3xl mx-auto px-5 sm:px-6 pt-5 pb-24 sm:pb-12">
+              {activeTab === "prep" ? (
+                <div key="prep" className="tab-content-animate">
+                  <PrepSection ingredients={recipe.ingredients} steps={recipe.instructions} />
+                </div>
+              ) : (
+                <div key="cook" className="tab-content-animate">
+                  <StepList steps={recipe.instructions} onStartTimer={addTimer} />
+                </div>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Tabs navigation */}
-      <div className="flex-1 flex flex-col px-6">
-        <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col">
-          <Tabs defaultValue="prep" className="flex-1 flex flex-col">
-            <TabsList className="flex items-end w-full relative rounded-none border-b border-stone-200 dark:border-stone-700 bg-transparent p-0 gap-0">
-              <TabsTrigger
-                value="prep"
-                className="folder-tab-trigger h-11 px-8 font-sans text-sm font-medium"
-              >
-                Prep
-              </TabsTrigger>
-              <TabsTrigger
-                value="cook"
-                className="folder-tab-trigger h-11 px-8 font-sans text-sm font-medium"
-              >
-                Cook
-              </TabsTrigger>
-            </TabsList>
+      {/* Timer vault */}
+      {hasTimers && (
+        <TimerVault
+          timers={timers}
+          onPause={pauseTimer}
+          onResume={resumeTimer}
+          onRemove={removeTimer}
+          onAdd={addTimer}
+        />
+      )}
 
-            {/* Tab content */}
-            <div className="bg-white dark:bg-stone-900 rounded-b-lg border border-t-0 border-stone-200 dark:border-stone-700 flex-1">
-              <div className="max-w-3xl mx-auto px-6 pt-6 pb-12">
-                <TabsContent value="prep" className="space-y-0">
-                  <IngredientList groups={recipe.ingredients} />
-                </TabsContent>
-                <TabsContent value="cook" className="space-y-0">
-                  <StepList steps={recipe.instructions} />
-                </TabsContent>
-              </div>
-            </div>
-          </Tabs>
+      {/* Mobile: fade above bottom tabs */}
+      <div className="sm:hidden fixed bottom-12 left-0 right-0 z-[19] h-24 pointer-events-none bg-gradient-to-t from-white via-white/80 dark:from-stone-900 dark:via-stone-900/80 to-transparent" />
+
+      {/* Mobile: fixed bottom folder tabs (hidden on desktop) */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-20 pb-[env(safe-area-inset-bottom)] bg-[#FAFAF9] dark:bg-stone-950">
+        <div className="px-6">
+          <div className="flex items-start w-full relative border-t border-stone-200 dark:border-stone-700 gap-0">
+            <button
+              onClick={() => setActiveTab("prep")}
+              className="folder-tab-trigger-bottom flex-1 h-12 font-sans text-sm font-medium"
+              data-state={activeTab === "prep" ? "active" : "inactive"}
+            >
+              Prep
+              {recipe.prepTimeMinutes ? (
+                <>
+                  <span className="text-stone-300 dark:text-stone-600" aria-hidden>·</span>
+                  <span className="font-normal text-stone-400 dark:text-stone-500">{formatTime(recipe.prepTimeMinutes)}</span>
+                </>
+              ) : null}
+            </button>
+            <button
+              onClick={() => setActiveTab("cook")}
+              className="folder-tab-trigger-bottom flex-1 h-12 font-sans text-sm font-medium"
+              data-state={activeTab === "cook" ? "active" : "inactive"}
+            >
+              Cook
+              {recipe.cookTimeMinutes ? (
+                <>
+                  <span className="text-stone-300 dark:text-stone-600" aria-hidden>·</span>
+                  <span className="font-normal text-stone-400 dark:text-stone-500">{formatTime(recipe.cookTimeMinutes)}</span>
+                </>
+              ) : null}
+            </button>
+          </div>
         </div>
       </div>
     </div>

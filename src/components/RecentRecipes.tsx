@@ -43,7 +43,7 @@ export function RecentRecipes() {
             <button
               key={entry.parsedAt}
               onClick={() => handleClick(entry)}
-              className="flex min-w-[180px] max-w-[220px] shrink-0 flex-col gap-1.5 rounded-2xl border border-stone-200 dark:border-stone-700 px-4 py-4 text-left transition-colors hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800"
+              className="flex min-w-[180px] max-w-[220px] shrink-0 flex-col gap-1.5 rounded-2xl border border-stone-200 dark:border-stone-700 bg-[var(--color-white)] px-4 py-4 text-left transition-colors hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800"
             >
               <p className="w-full truncate font-sans text-[15px] font-medium text-stone-900 dark:text-stone-100">
                 {entry.recipe.title}

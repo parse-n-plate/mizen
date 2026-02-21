@@ -8,6 +8,7 @@ import type {
   ParserResult,
   IngredientGroup,
   InstructionStep,
+  TimeMarker,
 } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
@@ -49,7 +50,7 @@ function normalizeInstructionSteps(instructions: unknown): InstructionStep[] {
     (text || "").replace(/^[\s.:;,\-–—]+/, "").trim();
 
   return instructions
-    .map((item: unknown, index: number) => {
+    .map((item: unknown, index: number): InstructionStep | null => {
       if (typeof item === "string") {
         const detail = cleanLeading(item.trim());
         if (!detail) return null;
@@ -76,6 +77,7 @@ function normalizeInstructionSteps(instructions: unknown): InstructionStep[] {
           title,
           detail,
           timeMinutes: obj.timeMinutes as number | undefined,
+          timers: Array.isArray(obj.timers) ? obj.timers as TimeMarker[] : undefined,
           ingredients: obj.ingredients as string[] | undefined,
           tips: obj.tips as string | undefined,
           imageUrl: obj.imageUrl as string | undefined,

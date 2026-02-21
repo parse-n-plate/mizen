@@ -98,21 +98,26 @@ html {
   --color-cream: #fafaf9;
   --color-background-cream: #fafaf9;
   --color-gray-light: #e7e5e4;
-  --color-black: #1c1917;
+  --color-black: #292524;
 
   /* Mizen palette — Primary */
-  --color-blue: #2563eb;
-  --color-primary-blue: #2563eb;
-  --color-blue-light: #ebf3ff;
+  --color-blue: #0072fb;
+  --color-primary-blue: #0072fb;
+  --color-blue-light: #e6f0ff;
 
   /* Mizen palette — Accents */
-  --color-mint: #d5f0ec;
-  --color-navy: #003b8e;
-  --color-red: #e84a1b;
-  --color-olive: #7e9a1e;
-  --color-green: #1a7d3f;
-  --color-wheat: #f5deb3;
-  --color-orange: #f08c28;
+  --color-mint: #d3f4f0;
+  --color-navy: #034497;
+  --color-red: #fe4703;
+  --color-olive: #6e9f00;
+  --color-green: #1a8521;
+  --color-wheat: #fdeecc;
+  --color-orange: #fb9c00;
+
+  /* Accent tints — soft pastel backgrounds */
+  --color-wheat-tint: #fef8eb;
+  --color-mint-tint: #edfaf7;
+  --color-orange-tint: #fff5e0;
 
   /* Semantic aliases */
   --color-text-heading: #1c1917;
@@ -172,8 +177,8 @@ html {
   --ring: oklch(0.556 0 0);
 
   /* Mizen palette — Neutrals (inverted) */
-  --color-white: #1c1917;
-  --color-cream: #1c1917;
+  --color-white: #292524;
+  --color-cream: #292524;
   --color-background-cream: #171412;
   --color-gray-light: #3a3633;
   --color-black: #fafaf9;
@@ -184,10 +189,19 @@ html {
   --color-text-muted: #a8a29e;
   --color-border-light: #3a3633;
 
-  /* Primary — slightly brighter blue for dark backgrounds */
-  --color-blue: #3b82f6;
-  --color-primary-blue: #3b82f6;
+  /* Primary — brighter blue for dark backgrounds */
+  --color-blue: #3b9bff;
+  --color-primary-blue: #3b9bff;
   --color-blue-light: #1e293b;
+
+  /* Accents — brighter for dark backgrounds */
+  --color-green: #2ecc55;
+  --color-olive: #8ec420;
+
+  /* Accent tints — dark mode variants */
+  --color-wheat-tint: #2a2520;
+  --color-mint-tint: #1e2926;
+  --color-orange-tint: #2a2218;
 }
 
 /* Base Typography — Outside @layer for higher specificity over Tailwind preflight */
@@ -197,14 +211,14 @@ html {
   line-height: var(--line-height-body);
   color: var(--color-text-body);
   background-color: var(--color-background-cream);
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
   font-family: var(--font-family-sans);
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
+  overflow-x: clip;
   background-color: var(--color-background-cream);
 }
 
@@ -307,7 +321,7 @@ h1, h2, h3, h4, h5, h6 {
     gap: 8px;
     padding: 0 8px;
     border-radius: 16px 16px 0 0 !important;
-    transition: none;
+    transition: color 150ms ease, background-color 150ms ease;
     background-color: transparent !important;
     color: var(--color-text-muted);
     border: 1px solid transparent !important;
@@ -329,6 +343,7 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--color-black);
     border-color: var(--color-border-light) !important;
     border-bottom-color: var(--color-white) !important;
+    border-top: 2px solid var(--color-orange) !important;
     z-index: 3;
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.03) !important;
   }
@@ -346,13 +361,58 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
+     FOLDER TABS (BOTTOM) — Flipped folder tabs anchored to bottom of screen
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  .folder-tab-trigger-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 8px;
+    border-radius: 0 0 16px 16px !important;
+    transition: color 150ms ease, background-color 150ms ease;
+    background-color: transparent !important;
+    color: var(--color-text-muted);
+    border: 1px solid transparent !important;
+    position: relative;
+    cursor: pointer;
+    outline: none;
+    margin-top: -1px;
+    z-index: 1;
+    box-shadow: none !important;
+  }
+
+  .folder-tab-trigger-bottom:hover:not([data-state="active"]) {
+    background-color: color-mix(in srgb, var(--color-gray-light) 40%, transparent) !important;
+    color: var(--color-black);
+  }
+
+  .folder-tab-trigger-bottom[data-state="active"] {
+    background-color: var(--color-white) !important;
+    color: var(--color-black);
+    border-color: var(--color-border-light) !important;
+    border-top-color: var(--color-white) !important;
+    border-bottom: 2px solid var(--color-orange) !important;
+    z-index: 3;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+  }
+
+  @media (max-width: 640px) {
+    .folder-tab-trigger-bottom {
+      padding: 0 4px;
+      gap: 4px;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
      LANDING PAGE ONLOAD ANIMATION
   ═══════════════════════════════════════════════════════════════════════════ */
 
   @keyframes page-fade-in-up {
     from {
       opacity: 0;
-      transform: translateY(20px);
+      transform: translateY(12px);
     }
     to {
       opacity: 1;
@@ -386,7 +446,7 @@ h1, h2, h3, h4, h5, h6 {
 
   .ingredient-group-chevron {
     opacity: 0;
-    transition: opacity 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 150ms ease;
   }
 
   .group:hover .ingredient-group-chevron,
@@ -410,7 +470,7 @@ h1, h2, h3, h4, h5, h6 {
     gap: 12px;
     padding: 16px 8px;
     position: relative;
-    transition: background-color 0ms;
+    transition: background-color 150ms ease;
     border-radius: 8px;
   }
 
@@ -425,7 +485,7 @@ h1, h2, h3, h4, h5, h6 {
     right: 8px;
     height: 1px;
     background-color: var(--color-border-light);
-    transition: opacity 0.18s ease;
+    transition: opacity 150ms ease;
   }
 
   /* Native checkbox styled to match production */
@@ -445,7 +505,7 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .ingredient-checkbox-input:checked {
-    background-color: var(--color-black);
+    background-color: var(--color-green);
     border: none;
   }
 
@@ -500,7 +560,7 @@ h1, h2, h3, h4, h5, h6 {
 
   .loading-progress-bar {
     height: 100%;
-    background: var(--color-black);
+    background: var(--color-orange);
     border-radius: 100px;
     transition: width 0.5s ease-out;
   }
@@ -520,6 +580,29 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
+     STEP IMAGE — Smooth reveal/hide for expanded step photos
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  .step-image-reveal {
+    display: grid;
+    transition: grid-template-rows 250ms var(--ease-out-quart), opacity 250ms var(--ease-out-quart);
+  }
+
+  .step-image-reveal[data-open="true"] {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+
+  .step-image-reveal[data-open="false"] {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+
+  .step-image-reveal > div {
+    overflow: hidden;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
      RECIPE STEP LIST
   ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -529,7 +612,7 @@ h1, h2, h3, h4, h5, h6 {
     gap: 1rem;
     padding: 1rem 0;
     border-bottom: 1px solid var(--color-border-light);
-    transition: background-color 0.2s ease;
+    transition: background-color 150ms ease;
   }
 
   .recipe-step-list-item:last-child {
@@ -555,8 +638,8 @@ h1, h2, h3, h4, h5, h6 {
 
   .tooltip {
     transition:
-      transform 0.125s ease-out,
-      opacity 0.125s ease-out;
+      transform 125ms var(--ease-out-quart),
+      opacity 125ms var(--ease-out-quart);
     transform-origin: var(--radix-tooltip-content-transform-origin);
   }
 
@@ -568,6 +651,111 @@ h1, h2, h3, h4, h5, h6 {
 
   .tooltip[data-instant] {
     transition-duration: 0ms;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     POPOVER / DROPDOWN — Enter animation for floating panels
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  @keyframes popover-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .popover-animate {
+    animation: popover-in 150ms var(--ease-out-quart) forwards;
+    transform-origin: top right;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     TAB CONTENT — Crossfade on tab switch
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  @keyframes tab-fade-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .tab-content-animate {
+    animation: tab-fade-in 180ms var(--ease-out-quart) forwards;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     CHECKBOX — Satisfying pop on check
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  @keyframes checkbox-pop {
+    0%   { transform: translateY(-1px) scale(1); }
+    50%  { transform: translateY(-1px) scale(1.2); }
+    100% { transform: translateY(-1px) scale(1); }
+  }
+
+  .ingredient-checkbox-input:checked {
+    animation: checkbox-pop 180ms var(--ease-out-quart);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     CLIPBOARD PILL — Slide-down entry animation
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  @keyframes clipboard-pill-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .clipboard-pill-animate {
+    animation: clipboard-pill-in 250ms var(--ease-out-quint) forwards;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     TIMER VAULT — Slide up from bottom
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  @keyframes vault-slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .vault-animate {
+    animation: vault-slide-up 200ms var(--ease-out-quart) forwards;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     TIMER DONE — Gentle pulse to draw attention
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  @keyframes timer-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  .timer-done-pulse {
+    animation: timer-pulse 1.5s var(--ease-in-out-quad) infinite;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     BUTTON PRESS — Tactile active state
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  .press-scale {
+    transition: transform 100ms ease;
+    will-change: transform;
+  }
+
+  .press-scale:active {
+    transform: scale(0.97);
   }
 }
 

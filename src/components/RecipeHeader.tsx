@@ -4,7 +4,7 @@ interface RecipeHeaderProps {
   recipe: ParsedRecipe;
 }
 
-function formatTime(minutes: number): string {
+export function formatTime(minutes: number): string {
   if (minutes < 60) return `${minutes} min`;
   const hrs = Math.floor(minutes / 60);
   const mins = minutes % 60;
@@ -19,10 +19,6 @@ export function RecipeHeader({ recipe }: RecipeHeaderProps) {
   const showPrepAndCook = !!recipe.prepTimeMinutes || !!recipe.cookTimeMinutes;
 
   const meta: { label: string; value: string }[] = [];
-  if (recipe.prepTimeMinutes && recipe.prepTimeMinutes > 0)
-    meta.push({ label: "Prep", value: formatTime(recipe.prepTimeMinutes) });
-  if (recipe.cookTimeMinutes && recipe.cookTimeMinutes > 0)
-    meta.push({ label: "Cook", value: formatTime(recipe.cookTimeMinutes) });
   if (recipe.totalTimeMinutes && recipe.totalTimeMinutes > 0 && !showPrepAndCook)
     meta.push({ label: "Total", value: formatTime(recipe.totalTimeMinutes) });
   if (recipe.servings && recipe.servings > 0)
@@ -40,7 +36,7 @@ export function RecipeHeader({ recipe }: RecipeHeaderProps) {
         </p>
       )}
 
-      {/* Inline metadata row: author · source · prep · cook · servings */}
+      {/* Inline metadata row: author · source · servings (prep/cook times shown on tabs) */}
       <div className="flex items-center gap-1.5 flex-wrap font-sans text-sm text-stone-500 dark:text-stone-400">
         {recipe.author && (
           <>

@@ -67,9 +67,12 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
 
   const setRecipe = (newRecipe: ParsedRecipe | null) => {
     setRecipeState(newRecipe);
+    // Clear saved meta — caller must explicitly setSavedMeta if recipe is already saved
+    setSavedMetaState(null);
     try {
       if (newRecipe) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(newRecipe));
+        localStorage.removeItem(META_STORAGE_KEY);
 
         // Add to parse history (dedup by title, newest first)
         const entry: HistoryEntry = {
@@ -85,7 +88,6 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
       } else {
         localStorage.removeItem(STORAGE_KEY);
         localStorage.removeItem(META_STORAGE_KEY);
-        setSavedMetaState(null);
       }
     } catch {
       // Ignore storage errors
