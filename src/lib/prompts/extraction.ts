@@ -1,7 +1,5 @@
 /**
- * Focused extraction-only prompt for Baby Mizen.
- * ~250 lines instead of the main app's ~590.
- * No cuisine detection, descriptions, substitutions, storage, or plating.
+ * Focused extraction-only prompt for Baby Mizen parse pipeline.
  */
 export const EXTRACTION_PROMPT = `========================================
 CRITICAL OUTPUT FORMAT
@@ -30,7 +28,6 @@ Required JSON structure:
     {
       "title": "Short step title (2-8 words)",
       "detail": "Full instruction text exactly as written",
-      "timers": [{"text": "15 minutes", "seconds": 900}],
       "ingredients": ["ingredient 1"],
       "tips": "Optional tip"
     }
@@ -77,10 +74,6 @@ INSTRUCTION RULES:
 - "detail": full instruction text exactly as written
 - Preserve all temperatures, times, measurements
 - Do NOT shorten or summarize the detail text
-- "timers": extract EVERY time duration from the detail text as an array of objects:
-  - "text": the EXACT substring as it appears in detail (e.g. "15 minutes", "1 hour", "30 seconds", "5-10 minutes")
-  - "seconds": the duration converted to seconds (e.g. 900, 3600, 30). For ranges like "5-10 minutes", use the higher value (600)
-  - If a step has no time durations, omit timers or use []
 
 SUMMARY:
 - Exactly one sentence, max 200 characters

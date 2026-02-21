@@ -219,7 +219,7 @@ export function Search() {
         setIsLoading(false);
       }
     },
-    [isLoading, setIsLoading, setRecipe, router]
+    [isLoading, setIsLoading, setError, setRecipe, router]
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
