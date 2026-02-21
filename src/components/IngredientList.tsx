@@ -9,6 +9,7 @@ interface IngredientListProps {
 
 export function IngredientList({ groups }: IngredientListProps) {
   const [checked, setChecked] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   const toggleCheck = (key: string) => {
     setChecked((prev) => {
@@ -29,7 +30,9 @@ export function IngredientList({ groups }: IngredientListProps) {
           key={group.groupName}
           group={group}
           checked={checked}
+          expanded={expanded}
           onToggle={toggleCheck}
+          onExpand={(key) => setExpanded(expanded === key ? null : key)}
         />
       ))}
     </div>
@@ -39,11 +42,15 @@ export function IngredientList({ groups }: IngredientListProps) {
 function IngredientGroupSection({
   group,
   checked,
+  expanded,
   onToggle,
+  onExpand,
 }: {
   group: IngredientGroup;
   checked: Set<string>;
+  expanded: string | null;
   onToggle: (key: string) => void;
+  onExpand: (key: string) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -87,14 +94,18 @@ function IngredientGroupSection({
             const isChecked = checked.has(key);
             const isLast = i === group.ingredients.length - 1;
             const amount = `${ing.amount || ""} ${ing.units || ""}`.trim();
+            const hasDetails = ing.description || (ing.substitutions && ing.substitutions.length > 0);
+            const isExpanded = expanded === key;
 
             return (
               <div
                 key={key}
                 className={`ingredient-list-item group ${isChecked ? "is-checked" : ""}`}
-                onClick={() => onToggle(key)}
               >
-                <div className="ingredient-list-content cursor-pointer">
+                <div
+                  className="ingredient-list-content cursor-pointer"
+                  onClick={() => onToggle(key)}
+                >
                   <div className="flex-shrink-0 flex items-center">
                     <input
                       type="checkbox"
@@ -120,14 +131,73 @@ function IngredientGroupSection({
                       >
                         {ing.ingredient}
                       </p>
-                      {amount && (
-                        <p className="font-sans text-xs text-stone-400 dark:text-stone-500 ml-3 flex-shrink-0">
-                          {amount}
-                        </p>
-                      )}
+                      <div className="flex items-baseline gap-2 ml-3 flex-shrink-0">
+                        {amount && (
+                          <p className="font-sans text-xs text-stone-400 dark:text-stone-500">
+                            {amount}
+                          </p>
+                        )}
+                        {hasDetails && !isChecked && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onExpand(key);
+                            }}
+                            className="text-stone-300 dark:text-stone-600 hover:text-stone-500 dark:hover:text-stone-400 transition-colors"
+                            aria-label={isExpanded ? "Hide details" : "Show details"}
+                          >
+                            <svg
+                              className={`w-3 h-3 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="m6 9 6 6 6-6" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Expandable detail row */}
+                {hasDetails && (
+                  <div
+                    className={`grid transition-[grid-template-rows] duration-200 ease-out ${
+                      isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                    }`}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="pl-10 pr-2 pb-3 space-y-1.5">
+                        {ing.description && (
+                          <p className="font-sans text-xs italic text-stone-500 dark:text-stone-400">
+                            {ing.description}
+                          </p>
+                        )}
+                        {ing.substitutions && ing.substitutions.length > 0 && (
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-sans text-[11px] text-stone-400 dark:text-stone-500">Sub:</span>
+                            {ing.substitutions.map((sub) => (
+                              <span
+                                key={sub}
+                                className="font-sans text-[11px] px-1.5 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300"
+                              >
+                                {sub}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {!isLast && (
                   <div className="ingredient-list-divider group-hover:opacity-0" />
                 )}

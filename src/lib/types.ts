@@ -2,6 +2,8 @@ export interface Ingredient {
   amount: string;
   units: string;
   ingredient: string;
+  description?: string;
+  substitutions?: string[];
 }
 
 export interface IngredientGroup {

@@ -4,6 +4,8 @@ export const IngredientSchema = z.object({
   amount: z.string().default(""),
   units: z.string().default(""),
   ingredient: z.string().min(1),
+  description: z.string().optional(),
+  substitutions: z.array(z.string()).optional(),
 });
 
 export const IngredientGroupSchema = z.object({

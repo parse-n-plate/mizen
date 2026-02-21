@@ -22,7 +22,7 @@ Required JSON structure:
     {
       "groupName": "string",
       "ingredients": [
-        { "amount": "string", "units": "string", "ingredient": "string" }
+        { "amount": "string", "units": "string", "ingredient": "string", "description": "string", "substitutions": ["string"] }
       ]
     }
   ],
@@ -60,6 +60,10 @@ INGREDIENT RULES:
 - Copy amounts EXACTLY: "2 1/2", "1/4", "½" — no conversions
 - Copy units EXACTLY: "cups", "tbsp", "grams" — no abbreviation changes
 - If no amount, use "as needed" with empty units ""
+
+INGREDIENT DESCRIPTION & SUBSTITUTIONS:
+- "description": A brief phrase (3-8 words) explaining the ingredient's role in the dish (e.g. "Adds richness and body", "Provides the base flavor", "Binds the mixture together"). Omit for obvious items like "salt" or "water".
+- "substitutions": 1-2 common substitutions if applicable (e.g. ["tamari", "coconut aminos"] for soy sauce). Omit if no good substitution exists.
 
 INGREDIENT GROUPING:
 - If HTML has explicit groups ("For the sauce:", etc.), use those names
