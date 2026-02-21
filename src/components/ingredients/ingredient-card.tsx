@@ -2,13 +2,6 @@
 
 import { useState, useMemo } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { findStepsForIngredient } from '@/utils/ingredientMatcher';
-import dynamic from 'next/dynamic';
-
-const IngredientExpandedDrawer = dynamic(
-  () => import('./ingredient-expanded-drawer').then(m => m.IngredientExpandedDrawer),
-  { ssr: false }
-);
 import { cn, convertTextFractionsToSymbols } from '@/lib/utils';
 
 /**
@@ -39,7 +32,6 @@ function toTitleCase(text: string): string {
  * @param ingredient - The ingredient object with amount, units, and ingredient name
  * @param description - Optional description/preparation notes (not yet connected to backend)
  * @param isLast - Whether this is the last item in the list (to hide bottom divider)
- * @param recipeSteps - Optional array of recipe steps to find bidirectional links
  */
 
 interface IngredientCardProps {
@@ -52,11 +44,8 @@ interface IngredientCardProps {
   };
   description?: string; // Future: will be populated from backend
   isLast?: boolean; // Hide divider if this is the last item
-  recipeSteps?: { instruction: string; title?: string }[]; // Step data with instruction and optional title
   /** Ingredient group name (e.g., "Main", "Sauce") */
   groupName?: string;
-  /** Recipe URL for note persistence */
-  recipeUrl?: string;
   /** Controlled checked state */
   checked?: boolean;
   /** Callback when checked state changes */
@@ -65,22 +54,17 @@ interface IngredientCardProps {
   isExpanded?: boolean;
   /** Callback when expansion state changes */
   onExpandChange?: (expanding: boolean) => void;
-  /** Callback when notes change */
-  onNotesChange?: (notes: string) => void;
 }
 
 export default function IngredientCard({
   ingredient,
   description,
   isLast = false,
-  recipeSteps = [],
   groupName: _groupName = 'Main',
-  recipeUrl: _recipeUrl,
   checked,
   onCheckedChange,
   isExpanded: controlledIsExpanded,
   onExpandChange,
-  onNotesChange: _onNotesChange
 }: IngredientCardProps) {
   const [internalChecked, setInternalChecked] = useState(false);
   const isChecked = checked !== undefined ? checked : internalChecked;
@@ -147,29 +131,6 @@ export default function IngredientCard({
     return ingredient.ingredient;
   }, [ingredient]);
 
-  // Find which steps use this ingredient
-  const linkedSteps = useMemo(() => {
-    return findStepsForIngredient(ingredientNameOnly, recipeSteps);
-  }, [ingredientNameOnly, recipeSteps]);
-
-  // Create a map of step numbers to step titles for displaying in buttons
-  const stepTitlesMap = useMemo(() => {
-    const map: Record<number, string> = {};
-    recipeSteps.forEach((step, index) => {
-      // Step numbers are 1-indexed, array indices are 0-indexed
-      const stepNumber = index + 1;
-      // Use title if available, otherwise fallback to empty string (will show just step number)
-      map[stepNumber] = step.title || '';
-    });
-    return map;
-  }, [recipeSteps]);
-
-  const handleStepClick = (stepNumber: number) => {
-    // Dispatch custom event to navigate to a specific step in the Cook tab
-    const event = new CustomEvent('navigate-to-step', { detail: { stepNumber } });
-    window.dispatchEvent(event);
-  };
-
   // Format the ingredient text (combines amount, units, and ingredient name)
   // Also converts text fractions to Unicode symbols (1/2 → ½)
   const formatIngredientText = (): string => {
@@ -221,17 +182,6 @@ export default function IngredientCard({
     // Convert fractions to symbols in the computed amount
     const computed = `${ingredient.amount || ''} ${ingredient.units || ''}`.trim();
     return convertTextFractionsToSymbols(computed);
-  }, [ingredient]);
-
-  // Extract AI-generated description and substitutions from the ingredient object
-  const ingredientDescription = useMemo(() => {
-    if (typeof ingredient === 'string') return undefined;
-    return ingredient.description;
-  }, [ingredient]);
-
-  const ingredientSubstitutions = useMemo(() => {
-    if (typeof ingredient === 'string') return undefined;
-    return ingredient.substitutions;
   }, [ingredient]);
 
   const ingredientText = formatIngredientText();
@@ -400,19 +350,6 @@ export default function IngredientCard({
         </div>
       </div>
 
-      <IngredientExpandedDrawer
-        ingredientName={ingredientNameOnly}
-        ingredientAmount={ingredientAmount}
-        description={ingredientDescription}
-        substitutions={ingredientSubstitutions}
-        linkedSteps={linkedSteps}
-        stepTitlesMap={stepTitlesMap}
-        onStepClick={handleStepClick}
-        isOpen={isExpanded}
-        onClose={() => onExpandChange ? onExpandChange(false) : setInternalExpanded(false)}
-      />
     </div>
   );
 }
-
-

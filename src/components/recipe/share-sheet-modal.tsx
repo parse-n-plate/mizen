@@ -15,7 +15,6 @@ interface ShareSheetModalProps {
   recipeTitle?: string;
   recipeAuthor?: string;
   cuisine?: string[];
-  notes?: string;
   onClose: () => void;
 }
 
@@ -34,7 +33,7 @@ const CARD_COLORS = [
  * 
  * Features:
  * - Header with close button
- * - Share card preview (photo, title, cuisine, rating, notes, metadata)
+ * - Share card preview (photo, title, cuisine, rating, metadata)
  * - Share options row (Messages, IG Story, Photos, More)
  * - Editable rating on the card
  * 
@@ -46,7 +45,6 @@ const CARD_COLORS = [
  * @param recipeTitle - Recipe title to display
  * @param recipeAuthor - Recipe author/source
  * @param cuisine - Array of cuisine types (e.g., ["Japanese"])
- * @param notes - Optional notes from the rating modal
  * @param onClose - Callback to close the modal
  */
 export default function ShareSheetModal({
@@ -56,7 +54,6 @@ export default function ShareSheetModal({
   recipeTitle = 'Your Dish',
   recipeAuthor,
   cuisine,
-  notes,
   onClose,
 }: ShareSheetModalProps) {
   // Get today's date formatted
@@ -113,8 +110,7 @@ export default function ShareSheetModal({
 
     try {
       // Dynamically import html2canvas for capturing the card
-      let html2canvas;
-      html2canvas = (await import('html2canvas-pro')).default;
+      const html2canvas = (await import('html2canvas-pro')).default;
       
       // Create a full-resolution clone for export
       // The displayed card is scaled to fit viewport, but we want full resolution for export
@@ -425,18 +421,6 @@ export default function ShareSheetModal({
                   />
                 ))}
               </div>
-
-              {/* Notes section - Only show if notes are provided */}
-              {notes && notes.trim() && (
-                <div className="bg-white/20 backdrop-blur-md rounded-lg sm:rounded-xl md:rounded-2xl p-2.5 sm:p-3 md:p-4 w-full flex flex-col gap-1.5 sm:gap-2 md:gap-2.5 border border-white/30">
-                  <p className="font-albert font-normal text-[8px] sm:text-[9px] md:text-[10px] text-white/60 uppercase tracking-wider">
-                    My Notes
-                  </p>
-                  <p className="font-albert font-normal text-xs sm:text-sm md:text-base text-white leading-relaxed whitespace-pre-wrap break-words">
-                    {notes}
-                  </p>
-                </div>
-              )}
 
               {/* Metadata section - Responsive padding and typography */}
               <div className="bg-white/20 backdrop-blur-md rounded-lg sm:rounded-xl md:rounded-2xl p-2.5 sm:p-3 md:p-4 w-full flex flex-col gap-2 sm:gap-3 md:gap-4 border border-white/30">

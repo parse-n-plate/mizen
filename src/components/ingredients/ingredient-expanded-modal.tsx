@@ -16,8 +16,6 @@ interface IngredientExpandedModalProps {
   onStepClick: (stepNumber: number) => void;
   isOpen: boolean;
   onClose: () => void;
-  recipeUrl?: string;
-  onNotesChange?: (notes: string) => void;
 }
 
 export function IngredientExpandedModal({
@@ -31,8 +29,6 @@ export function IngredientExpandedModal({
   onStepClick,
   isOpen,
   onClose,
-  recipeUrl,
-  onNotesChange
 }: IngredientExpandedModalProps) {
   return (
     <AnimatePresence>
@@ -78,8 +74,6 @@ export function IngredientExpandedModal({
                 stepTitlesMap={stepTitlesMap}
                 onStepClick={onStepClick}
                 variant="modal"
-                recipeUrl={recipeUrl}
-                onNotesChange={onNotesChange}
               />
             </div>
           </motion.div>
@@ -88,4 +82,3 @@ export function IngredientExpandedModal({
     </AnimatePresence>
   );
 }
-

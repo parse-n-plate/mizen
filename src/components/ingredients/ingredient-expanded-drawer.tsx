@@ -13,6 +13,10 @@ interface IngredientExpandedDrawerProps {
   onStepClick: (stepNumber: number) => void;
   isOpen: boolean;
   onClose: () => void;
+  onPrevious?: () => void;
+  onNext?: () => void;
+  hasPrevious?: boolean;
+  hasNext?: boolean;
 }
 
 export function IngredientExpandedDrawer({
@@ -25,6 +29,10 @@ export function IngredientExpandedDrawer({
   onStepClick,
   isOpen,
   onClose,
+  onPrevious,
+  onNext,
+  hasPrevious,
+  hasNext,
 }: IngredientExpandedDrawerProps) {
   return (
     <AdaptiveModal
@@ -33,8 +41,13 @@ export function IngredientExpandedDrawer({
       title={ingredientName}
       subtitle={ingredientAmount}
       description={description || 'A staple in this dish, providing that signature flavor and texture you love.'}
+      onPrevious={onPrevious}
+      onNext={onNext}
+      hasPrevious={hasPrevious}
+      hasNext={hasNext}
     >
       <IngredientDrawerContent
+        key={`${ingredientName}:${ingredientAmount || ''}`}
         ingredientName={ingredientName}
         ingredientAmount={ingredientAmount}
         substitutions={substitutions}

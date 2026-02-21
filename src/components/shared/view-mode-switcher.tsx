@@ -22,7 +22,7 @@ export function ModalViewSwitcher({ mode, onModeChange }: ModalViewSwitcherProps
       <DropdownMenuTrigger asChild>
         <button
           className={cn(
-            'p-2 rounded-full text-stone-400 hover:text-stone-900 hover:bg-stone-50 transition-colors focus-visible:ring-2 focus-visible:ring-stone-400 focus-visible:outline-none',
+            'p-2 rounded-full text-stone-400 hover:text-stone-900 hover:bg-stone-50 transition-[background-color,color] focus-visible:ring-2 focus-visible:ring-stone-400 focus-visible:outline-none',
           )}
           aria-label="Change view mode"
         >

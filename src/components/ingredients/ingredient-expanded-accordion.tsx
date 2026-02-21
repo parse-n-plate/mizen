@@ -14,8 +14,6 @@ interface IngredientExpandedAccordionProps {
   stepTitlesMap?: Record<number, string>; // Map of step numbers to step titles
   onStepClick: (stepNumber: number) => void;
   isOpen: boolean;
-  recipeUrl?: string;
-  onNotesChange?: (notes: string) => void;
 }
 
 export function IngredientExpandedAccordion({
@@ -27,9 +25,7 @@ export function IngredientExpandedAccordion({
   linkedSteps,
   stepTitlesMap,
   onStepClick,
-  isOpen,
-  recipeUrl,
-  onNotesChange
+  isOpen
 }: IngredientExpandedAccordionProps) {
   return (
     <motion.div
@@ -49,11 +45,8 @@ export function IngredientExpandedAccordion({
           stepTitlesMap={stepTitlesMap}
           onStepClick={onStepClick}
           variant="accordion"
-          recipeUrl={recipeUrl}
-          onNotesChange={onNotesChange}
         />
       </div>
     </motion.div>
   );
 }
-

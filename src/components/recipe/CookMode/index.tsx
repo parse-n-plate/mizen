@@ -22,9 +22,20 @@ interface CookModeProps {
   steps: RecipeStep[];
   title?: string;
   allIngredients?: IngredientInfo[];
+  stepNavigationRequest?: {
+    stepNumber: number;
+    requestId: number;
+  } | null;
+  onStepNavigationHandled?: (requestId: number) => void;
 }
 
-export default function CookMode({ steps, title: _title = 'Recipe Steps', allIngredients = [] }: CookModeProps) {
+export default function CookMode({
+  steps,
+  title: _title = 'Recipe Steps',
+  allIngredients = [],
+  stepNavigationRequest,
+  onStepNavigationHandled,
+}: CookModeProps) {
   const [view, setView] = useState<'list' | 'card'>('list');
   const [currentStep, setCurrentStep] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
@@ -187,6 +198,19 @@ export default function CookMode({ steps, title: _title = 'Recipe Steps', allIng
   const showStepSizingSection = !searchQuery || searchLower.includes('step') || searchLower.includes('siz');
   const showMenuActions = !searchQuery || filteredMenuItems.length > 0;
 
+  const navigateToStep = useCallback((stepNumber: number) => {
+    if (stepNumber < 1 || stepNumber > steps.length) return;
+
+    setCurrentStep(stepNumber - 1);
+    setView('card');
+
+    // Scroll to top of the split view so the focused step is immediately visible.
+    const element = document.querySelector('.classic-split-view-container');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [steps.length]);
+
   // Focus search input when menu opens
   useEffect(() => {
     if (isMenuOpen && searchInputRef.current) {
@@ -199,21 +223,25 @@ export default function CookMode({ steps, title: _title = 'Recipe Steps', allIng
     const handleSetStep = (event: Event) => {
       const customEvent = event as CustomEvent<{ stepNumber: number }>;
       const { stepNumber } = customEvent.detail;
-      if (stepNumber >= 1 && stepNumber <= steps.length) {
-        setCurrentStep(stepNumber - 1);
-        setView('card');
-        
-        // Scroll to top of the split view
-        const element = document.querySelector('.classic-split-view-container');
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }
+      navigateToStep(stepNumber);
     };
 
     window.addEventListener('navigate-to-step', handleSetStep);
     return () => window.removeEventListener('navigate-to-step', handleSetStep);
-  }, [steps.length]);
+  }, [navigateToStep]);
+
+  // Handle navigation requests when the component mounts after a tab switch.
+  useEffect(() => {
+    if (!stepNavigationRequest) return;
+    const { stepNumber, requestId } = stepNavigationRequest;
+
+    const timeoutId = window.setTimeout(() => {
+      navigateToStep(stepNumber);
+      onStepNavigationHandled?.(requestId);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [navigateToStep, onStepNavigationHandled, stepNavigationRequest]);
 
   // Safety check: ensure steps is valid
   if (!steps || !Array.isArray(steps) || steps.length === 0) {
