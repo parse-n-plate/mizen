@@ -1,0 +1,459 @@
+"use client"
+
+import * as React from "react"
+import { useState, useRef, useEffect } from "react"
+import User from "@solar-icons/react/csr/users/User"
+import Magnifer from "@solar-icons/react/csr/search/Magnifer"
+import { ChevronDown, MoreHorizontal, X } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import type { UnitSystem } from "@/utils/unitConverter"
+
+interface IngredientsHeaderProps {
+  unitSystem: UnitSystem;
+  onUnitSystemChange: (system: UnitSystem) => void;
+  servings?: number;
+  originalServings?: number;
+  onServingsChange?: (servings: number) => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+}
+
+export function IngredientsHeader({
+  unitSystem,
+  onUnitSystemChange,
+  servings,
+  originalServings,
+  onServingsChange,
+  searchQuery = '',
+  onSearchChange,
+}: IngredientsHeaderProps) {
+  // State to toggle the servings slider card
+  const [isSliderOpen, setIsSliderOpen] = useState(false);
+
+  // Track slider dragging state
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragValue, setDragValue] = useState<number | null>(null);
+  const lastDragValueRef = useRef<number | null>(null);
+  const prevServingsRef = useRef<number | undefined>(servings);
+  const [, startTransition] = React.useTransition();
+  
+  // State for servings input
+  const [servingsInputValue, setServingsInputValue] = useState<string>('');
+  const servingsInputRef = useRef<HTMLInputElement>(null);
+  const canAdjustServings = Boolean(onServingsChange);
+  
+  // Determine mode: multiplier mode when originalServings is undefined
+  const isMultiplierMode = originalServings === undefined;
+  
+  // Slider configuration - dual mode based on whether originalServings is defined
+  const minServings = 1;
+  const maxAllowedServings = 99;
+  
+  // Calculate slider range based on mode
+  let sliderMin: number;
+  let sliderMax: number;
+  let currentValue: number;
+  
+  if (isMultiplierMode) {
+    // Multiplier Mode: x0.5 to x4 range
+    sliderMin = 0.5;  // x0.5
+    sliderMax = 4;    // x4
+    currentValue = servings ?? 1; // Default to x1 if undefined
+  } else {
+    // Servings Mode: fixed offset +/- 5 from original
+    const offset = 5;
+    sliderMin = Math.max(1, originalServings - offset);
+    sliderMax = originalServings + offset;
+    currentValue = servings ?? originalServings;
+  }
+  
+  const formatSliderValue = React.useCallback((value: number) => {
+    if (isMultiplierMode) {
+      return value % 1 === 0 ? value.toString() : value.toFixed(1);
+    }
+    return Math.round(value).toString();
+  }, [isMultiplierMode]);
+
+  const displayedValue = dragValue ?? currentValue;
+
+  // Calculate slider percentage based on current value in range
+  const sliderRange = sliderMax - sliderMin;
+  const percentage = sliderRange > 0 
+    ? Math.max(0, Math.min(100, ((displayedValue - sliderMin) / sliderRange) * 100))
+    : 50; // Fallback to center if range is invalid
+  
+  // Format display text based on mode
+  const servingsDisplay = isMultiplierMode 
+    ? `x${displayedValue % 1 === 0 ? displayedValue : displayedValue.toFixed(1)}` // Show decimals for 0.5
+    : Math.round(displayedValue);
+  
+  // Sync input value with servings/multiplier
+  useEffect(() => {
+    if (isDragging) return;
+
+    const hasServingsChanged = servings !== prevServingsRef.current;
+
+    if (servings !== undefined) {
+      setServingsInputValue(formatSliderValue(servings));
+      if (hasServingsChanged) {
+        setDragValue(null);
+      }
+    } else if (isMultiplierMode) {
+      setServingsInputValue('1');
+      if (hasServingsChanged) {
+        setDragValue(null);
+      }
+    }
+
+    prevServingsRef.current = servings;
+  }, [servings, isMultiplierMode, isDragging, formatSliderValue]);
+  
+  // Handle servings input change
+  const handleServingsInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!canAdjustServings) return;
+
+    const value = e.target.value;
+    
+    if (isMultiplierMode) {
+      // Multiplier mode: allow decimals (e.g., 0.5, 1.5, 2.0)
+      // Pattern: allows numbers with optional decimal point and one decimal place
+      if (value === '' || /^\d*\.?\d*$/.test(value)) {
+        const numValue = parseFloat(value);
+        // Allow empty, or values between 0.5 and 4 (or up to maxAllowedServings for flexibility)
+        if (value === '' || (!isNaN(numValue) && numValue >= sliderMin && numValue <= Math.max(sliderMax, maxAllowedServings))) {
+          setServingsInputValue(value);
+          if (!isNaN(numValue) && numValue >= sliderMin && onServingsChange) {
+            onServingsChange(numValue);
+          }
+        }
+      }
+    } else {
+      // Servings mode: integers only
+      if (value === '' || /^\d+$/.test(value)) {
+        const numValue = parseInt(value, 10);
+        // Only update if within valid range or empty
+        if (value === '' || (numValue >= minServings && numValue <= maxAllowedServings)) {
+          setServingsInputValue(value);
+          if (!isNaN(numValue) && numValue >= minServings && onServingsChange) {
+            onServingsChange(numValue);
+          }
+        }
+      }
+    }
+  };
+  
+  // Handle servings input blur - validate and set value
+  const handleServingsInputBlur = () => {
+    if (!canAdjustServings) return;
+
+    if (isMultiplierMode) {
+      const numValue = parseFloat(servingsInputValue);
+      if (isNaN(numValue) || numValue < sliderMin) {
+        // Reset to current value if invalid
+        setServingsInputValue(currentValue.toString());
+      } else if (onServingsChange) {
+        // Round to nearest 0.5 increment, then clamp to valid range
+        const roundedValue = Math.round(numValue * 2) / 2;
+        const clampedValue = Math.max(sliderMin, Math.min(sliderMax, roundedValue));
+        onServingsChange(clampedValue);
+        // Update input to show the rounded value
+        setServingsInputValue(clampedValue % 1 === 0 ? clampedValue.toString() : clampedValue.toFixed(1));
+      }
+    } else {
+      const numValue = parseInt(servingsInputValue, 10);
+      if (isNaN(numValue) || numValue < minServings) {
+        // Reset to current value if invalid
+        setServingsInputValue(currentValue.toString());
+      } else if (onServingsChange) {
+        onServingsChange(numValue);
+      }
+    }
+  };
+  
+  // Check if value has been changed from original/default (based on displayed value for immediate UI feedback)
+  const hasChanged = isMultiplierMode
+    ? Math.abs(displayedValue - 1) > 0.001
+    : (originalServings !== undefined && Math.round(displayedValue) !== originalServings);
+  
+  // Handle reset to original/default value
+  const handleResetServings = () => {
+    if (!canAdjustServings) return;
+
+    if (isMultiplierMode) {
+      // Reset to x1 in multiplier mode
+      if (onServingsChange) {
+        onServingsChange(1);
+        setServingsInputValue('1');
+      }
+    } else if (originalServings !== undefined && onServingsChange) {
+      // Reset to original servings in servings mode
+      onServingsChange(originalServings);
+      setServingsInputValue(originalServings.toString());
+    }
+  };
+
+  // Handle slider interaction - converts slider position to servings/multiplier
+  const updateServingsFromPosition = React.useCallback((clientX: number) => {
+    if (!sliderRef.current || !canAdjustServings) return;
+
+    const rect = sliderRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const percent = Math.max(0, Math.min(100, (x / rect.width) * 100));
+
+    // Convert percentage to value using the calculated slider range
+    const range = sliderMax - sliderMin;
+    let newValue: number;
+
+    if (isMultiplierMode) {
+      newValue = sliderMin + (percent / 100) * range;
+      newValue = Math.round(newValue * 2) / 2;
+    } else {
+      newValue = Math.round(sliderMin + (percent / 100) * range);
+    }
+
+    const clampedValue = Math.max(sliderMin, Math.min(sliderMax, newValue));
+    if (lastDragValueRef.current === clampedValue) return;
+
+    lastDragValueRef.current = clampedValue;
+    setDragValue(clampedValue);
+    setServingsInputValue(formatSliderValue(clampedValue));
+
+    startTransition(() => {
+      onServingsChange?.(clampedValue);
+    });
+  }, [canAdjustServings, onServingsChange, sliderMin, sliderMax, isMultiplierMode, formatSliderValue, startTransition]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!canAdjustServings) return;
+    e.preventDefault();
+    setIsDragging(true);
+    updateServingsFromPosition(e.clientX);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!canAdjustServings) return;
+    e.preventDefault();
+    setIsDragging(true);
+    updateServingsFromPosition(e.touches[0].clientX);
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        updateServingsFromPosition(e.clientX);
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (isDragging) {
+        if (e.touches.length === 0) return;
+        e.preventDefault();
+        updateServingsFromPosition(e.touches[0].clientX);
+      }
+    };
+
+    const handleEnd = () => {
+      setIsDragging(false);
+      if (!onServingsChange) {
+        setDragValue(null);
+      }
+      lastDragValueRef.current = null;
+    };
+
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleEnd);
+      window.addEventListener('touchmove', handleTouchMove, { passive: false });
+      window.addEventListener('touchend', handleEnd);
+      window.addEventListener('touchcancel', handleEnd);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleEnd);
+      window.removeEventListener('touchcancel', handleEnd);
+    };
+  }, [isDragging, onServingsChange, updateServingsFromPosition]);
+
+  return (
+    <div className="ingredients-header-container">
+      {/* Header Row */}
+      <div className="ingredients-header">
+        <div className="ingredients-header-left">
+          <h2 className="ingredients-header-title">Ingredients</h2>
+          {/* Servings/Scale Button - toggles slider card */}
+          <button
+            onClick={() => setIsSliderOpen(!isSliderOpen)}
+            className="ingredients-header-servings-btn"
+            aria-label={isMultiplierMode ? "Adjust scale" : "Adjust servings"}
+            aria-expanded={isSliderOpen}
+          >
+            <ChevronDown
+              className={`w-4 h-4 text-stone-500 transition-transform duration-200 ${isSliderOpen ? 'rotate-180' : ''}`}
+            />
+            {!isMultiplierMode && (
+              <span className="user-icon-wrapper">
+                <User weight="Bold" className="w-4 h-4 text-stone-600" />
+              </span>
+            )}
+            <span className="ingredients-header-servings-text">
+              {isMultiplierMode ? `Scale ${servingsDisplay}` : `Serves ${servingsDisplay}`}
+            </span>
+          </button>
+        </div>
+
+        {/* Ellipsis menu icon - opens unit type options */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className="p-2 rounded-full transition-colors text-stone-400 hover:bg-stone-50 data-[state=open]:bg-stone-100 data-[state=open]:text-stone-900"
+              aria-label="Unit type options"
+            >
+              <MoreHorizontal className="w-5 h-5" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[180px]">
+            <DropdownMenuRadioGroup value={unitSystem} onValueChange={(value) => onUnitSystemChange(value as UnitSystem)}>
+              <DropdownMenuRadioItem value="original">Original</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="metric">Metric</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="imperial">Imperial</DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Servings Slider Card - appears when toggled with snappy animation */}
+      <AnimatePresence>
+        {isSliderOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            exit={{ opacity: 0, y: -10, height: 0 }}
+            transition={{
+              type: "spring",
+              damping: 25,
+              stiffness: 350,
+              opacity: { duration: 0.2 }
+            }}
+            style={{ overflow: 'visible' }}
+          >
+            <div className="servings-slider-card">
+              <p className="servings-slider-label">{isMultiplierMode ? 'Scale' : 'Servings'}</p>
+              
+              <div className="servings-slider-row">
+                {/* Current servings/scale indicator - editable input */}
+                <div className="servings-indicator">
+                  {!isMultiplierMode && (
+                    <span className="user-icon-wrapper">
+                      <User weight="Bold" className="w-5 h-5 text-stone-500" />
+                    </span>
+                  )}
+                  <span className="servings-indicator-text">
+                    {isMultiplierMode ? 'x' : 'Serves'}
+                    <input
+                      ref={servingsInputRef}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      disabled={!canAdjustServings}
+                      value={servingsInputValue}
+                      onChange={handleServingsInputChange}
+                      onBlur={handleServingsInputBlur}
+                      className="servings-indicator-input"
+                      aria-label={isMultiplierMode ? "Multiplier value" : "Number of servings"}
+                      min={minServings}
+                      max={maxAllowedServings}
+                    />
+                  </span>
+
+                  {/* Reset button appears only when changed and is anchored inside the indicator */}
+                  <AnimatePresence>
+                    {hasChanged && (
+                      <motion.button
+                        key="reset-btn"
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.5 }}
+                        transition={{ duration: 0.15, ease: "easeOut" }}
+                        onClick={handleResetServings}
+                        className="servings-reset-btn servings-reset-btn-inline"
+                        aria-label={isMultiplierMode ? "Reset to x1" : "Reset to original servings"}
+                        type="button"
+                      >
+                        <X className="w-4 h-4" />
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
+                </div>
+                
+                {/* Slider track */}
+                <div 
+                  ref={sliderRef}
+                  className="servings-slider-track-container"
+                  aria-disabled={!canAdjustServings}
+                  onMouseDown={handleMouseDown}
+                  onTouchStart={handleTouchStart}
+                >
+                  <div className="servings-slider-track">
+                    <div 
+                      className="servings-slider-fill" 
+                      style={{ width: `${percentage}%`, transition: isDragging ? 'none' : undefined }}
+                    />
+                  </div>
+                  {/* Slider handle */}
+                  <div 
+                    className="servings-slider-handle"
+                    style={{ left: `${percentage}%`, transition: isDragging ? 'none' : undefined }}
+                  >
+                    <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                      <circle cx="18" cy="18" r="14" fill="#0088ff" />
+                      <circle cx="18" cy="18" r="12" fill="#0088ff" stroke="white" strokeWidth="2" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Search Bar - positioned directly under the header */}
+      {onSearchChange && (
+        <div className="ingredients-search-container">
+          <div className="ingredients-search-wrapper">
+            <Magnifer className="ingredients-search-icon" />
+            <input
+              type="text"
+              placeholder="Search ingredients"
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="ingredients-search-input"
+              aria-label="Search ingredients"
+            />
+            {/* Clear Button - appears when there's text in the search field */}
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => onSearchChange('')}
+                className="ml-2 flex-shrink-0 p-1 rounded transition-colors"
+                aria-label="Clear search"
+              >
+                <X className="w-4 h-4 text-stone-400 hover:text-stone-600 transition-colors duration-150 ease" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
  * 
  * @example
  * <Textarea 
- *   placeholder="Enter your notes..."
+ *   placeholder="Enter your notes"
  *   value={notes}
  *   onChange={(e) => setNotes(e.target.value)}
  *   rows={4}

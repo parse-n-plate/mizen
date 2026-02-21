@@ -480,7 +480,7 @@ export default function DebugParserPage({
             <div className="flex gap-4 mb-4">
               <Input
                 type="url"
-                placeholder="Enter recipe URL to debug..."
+                placeholder="Enter recipe URL to debug"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleDebugParse()}
@@ -609,7 +609,7 @@ export default function DebugParserPage({
                   value={customPrompt}
                   onChange={(e) => setCustomPrompt(e.target.value)}
                   className="w-full h-64 p-3 border border-gray-300 rounded-md font-mono text-xs resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter your custom AI prompt here..."
+                  placeholder="Enter your custom AI prompt here"
                   spellCheck={false}
                 />
                 <p className="text-xs text-gray-400 mt-2">

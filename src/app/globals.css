@@ -40,7 +40,6 @@ html {
   /* Colors */
   --color-primary-blue: #0072ff;
   --color-primary-orange: #ff6f00;
-  --color-primary-yellow: #ffcc00;
   --color-primary-tomato-red: #ff3b3b;
   --color-primary-fresh-green: #00b96d;
   --color-things3-blue: #007aff;
@@ -766,11 +765,12 @@ html {
   }
   
   .servings-indicator {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: flex-start;
     gap: 0.5rem; /* Space between icon and text */
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 2.25rem 0.75rem 1rem;
     background: #f5f5f4; /* stone-100 */
     border-radius: 0.5rem;
     border: 1px solid transparent;
@@ -842,14 +842,23 @@ html {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
     padding: 0.25rem;
     background: transparent;
     border: none;
     cursor: pointer;
     color: #a8a29e; /* stone-400 */
     transition: color 0.2s ease;
-    flex-shrink: 0;
-    margin-left: -1rem; /* Bring closer to the gray textbox (reduces the 1.5rem gap by 4px more) */
+  }
+
+  .servings-reset-btn-inline {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0.5rem;
+    margin-block: auto;
+    z-index: 2;
   }
   
   .servings-reset-btn:hover {
@@ -869,6 +878,9 @@ html {
     display: flex;
     align-items: center;
     cursor: pointer;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
   }
   
   .servings-slider-track {
@@ -898,6 +910,8 @@ html {
     cursor: grab;
     transition: left 50ms ease-out;
     z-index: 1;
+    user-select: none;
+    -webkit-user-select: none;
   }
   
   .servings-slider-handle:active {
@@ -2118,58 +2132,6 @@ html {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   MOBILE FULL-WIDTH SEARCH — Slide in from sidebar (left edge)
-   On mobile the search replaces the content entirely as a full-width page.
-   No dark overlay. Slides in/out from the left to suggest sidebar origin.
-   Enter: 250ms ease-out-quint — snappy, responsive jump from left edge.
-   Exit:  200ms ease-out-quad  — quick, non-blocking dismiss.
-═══════════════════════════════════════════════════════════════════════════ */
-
-@keyframes search-cmd-mobile-enter {
-  from { transform: translateX(-100%); }
-  to   { transform: translateX(0); }
-}
-
-@keyframes search-cmd-mobile-exit {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-100%); }
-}
-
-@media (max-width: 767px) {
-  /* Hide the dark overlay — search replaces content, not a modal layer */
-  .search-command-overlay {
-    display: none;
-  }
-
-  /* Remove centering translate — mobile uses inset:0 positioning */
-  [data-slot="dialog-content"].search-command-modal {
-    translate: none;
-  }
-
-  [data-slot="dialog-content"].search-command-modal[data-state="open"] {
-    animation: search-cmd-mobile-enter 250ms var(--ease-out-quint) forwards;
-  }
-
-  [data-slot="dialog-content"].search-command-modal[data-state="closed"] {
-    animation: search-cmd-mobile-exit 200ms var(--ease-out-quad) forwards;
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   MOBILE SLIDE NAVIGATION — iOS-style push/pop transitions
-   Sidebar and content panels slide horizontally using GPU-accelerated
-   translateX transforms. Both panels move simultaneously.
-   Duration: 350ms with ease-out-quint for a responsive, physical feel.
-   Only active on mobile (<768px) — desktop uses standard flex layout.
-═══════════════════════════════════════════════════════════════════════════ */
-
-@media (max-width: 767px) {
-  .mobile-slide-panel {
-    transition: translate 350ms var(--ease-out-quint);
-    will-change: translate;
-  }
-}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    REDUCED MOTION - Accessibility support for users who prefer reduced motion

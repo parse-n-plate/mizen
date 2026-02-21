@@ -4,7 +4,7 @@ import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useEffect, useState, useMemo, use, useRef, useCallback } from 'react';
-import RecipeSkeleton from '@/components/ui/recipe-skeleton';
+import RecipeSkeleton from '@/components/recipe/recipe-skeleton';
 import * as Tabs from '@radix-ui/react-tabs';
 import { ArrowLeft, Copy, Check, PenLine } from 'lucide-react';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';
@@ -15,15 +15,15 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useSwipeable } from 'react-swipeable';
 import { scaleIngredients } from '@/utils/ingredientScaler';
 import { convertIngredientGroupUnits, type UnitSystem } from '@/utils/unitConverter';
-import ClassicSplitView from '@/components/ClassicSplitView';
-import IngredientCard from '@/components/ui/ingredient-card';
-import { IngredientGroup } from '@/components/ui/ingredient-group';
-import { IngredientsHeader } from '@/components/ui/ingredients-header';
+import CookMode from '@/components/recipe/CookMode';
+import IngredientCard from '@/components/ingredients/ingredient-card';
+import { IngredientGroup } from '@/components/ingredients/ingredient-group';
+import { IngredientsHeader } from '@/components/ingredients/ingredients-header';
 import { UISettingsProvider } from '@/contexts/UISettingsContext';
 
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 import Image from 'next/image';
-import ImagePreview from '@/components/ui/image-preview';
+import ImagePreview from '@/components/shared/image-preview';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import {
   DropdownMenu,
@@ -33,10 +33,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { convertTextFractionsToSymbols } from '@/lib/utils';
-import PlatePhotoCapture from '@/components/ui/plate-photo-capture';
-import PlatingGuidanceCard from '@/components/ui/plating-guidance-card';
-import StorageGuidanceCard from '@/components/ui/storage-guidance-card';
-import IngredientsOverlay from '@/components/ui/ingredients-overlay';
+import PlatePhotoCapture from '@/components/recipe/dish-photo-gallery';
+import PlatingGuidanceCard from '@/components/recipe/plating-guidance-card';
+import StorageGuidanceCard from '@/components/recipe/storage-guidance-card';
+import IngredientsOverlay from '@/components/ingredients/ingredients-overlay';
 import { findStepsForIngredient } from '@/utils/ingredientMatcher';
 import {
   Dialog,
@@ -46,11 +46,12 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { useSidebar } from '@/contexts/SidebarContext';
-import { useIsMobile } from '@/hooks/useIsMobile';
+
+type RecipeIngredient = string | { amount?: string; units?: string; ingredient: string };
+type IngredientGroups = Array<{ groupName: string; ingredients: RecipeIngredient[] }>;
 
 const IngredientExpandedDrawer = dynamic(
-  () => import('@/components/ui/ingredient-expanded-drawer').then(m => m.IngredientExpandedDrawer),
+  () => import('@/components/ingredients/ingredient-expanded-drawer').then(m => m.IngredientExpandedDrawer),
   { ssr: false }
 );
 
@@ -254,13 +255,10 @@ export default function ParsedRecipePage({
   const { parsedRecipe, setParsedRecipe, isLoaded } = useRecipe();
   const { recentRecipes, isBookmarked, toggleBookmark, removeRecipe, getBookmarkedRecipes, updateRecipe } = useParsedRecipes();
   const router = useRouter();
-  const { showMobileNav } = useSidebar();
-  const isMobileViewport = useIsMobile();
   // Store original servings from recipe (never changes) - use useMemo to preserve it
   const originalServings = useMemo(() => parsedRecipe?.servings, [parsedRecipe?.servings]);
   
   const [servings, setServings] = useState<number | undefined>(parsedRecipe?.servings);
-  const [multiplier, setMultiplier] = useState<string>('1x');
   const [activeTab, setActiveTab] = useState<string>('prep');
   // Track which ingredient is currently expanded (accordion behavior - only one at a time)
   // Format: "groupName:ingredientName" or null if none expanded
@@ -273,10 +271,8 @@ export default function ParsedRecipePage({
   const activeTabRef = useRef(activeTab);
   const cookStepRequestIdRef = useRef(0);
 
-  // Unit system and scale modal state
+  // Unit system state
   const [unitSystem, setUnitSystem] = useState<UnitSystem>('original');
-  const [customMultiplier, setCustomMultiplier] = useState<number>(1);
-  const [ingredientScaleOverrides, setIngredientScaleOverrides] = useState<Record<string, number>>({});
   
   // Mobile detection for swipe gestures
   const [isMobile, setIsMobile] = useState(false);
@@ -497,10 +493,8 @@ export default function ParsedRecipePage({
     const saved = localStorage.getItem(scaleSettingsKey);
     if (saved) {
       try {
-        const { unitSystem: savedUnitSystem, customMultiplier: savedCustomMultiplier, ingredientScaleOverrides: savedOverrides } = JSON.parse(saved);
+        const { unitSystem: savedUnitSystem } = JSON.parse(saved);
         if (savedUnitSystem) setUnitSystem(savedUnitSystem);
-        if (savedCustomMultiplier !== undefined) setCustomMultiplier(savedCustomMultiplier);
-        if (savedOverrides) setIngredientScaleOverrides(savedOverrides);
       } catch {
         console.error('Error loading scale settings');
       }
@@ -510,9 +504,8 @@ export default function ParsedRecipePage({
   // Save scale settings to localStorage
   useEffect(() => {
     if (!scaleSettingsKey) return;
-    const data = { unitSystem, customMultiplier, ingredientScaleOverrides };
-    localStorage.setItem(scaleSettingsKey, JSON.stringify(data));
-  }, [scaleSettingsKey, unitSystem, customMultiplier, ingredientScaleOverrides]);
+    localStorage.setItem(scaleSettingsKey, JSON.stringify({ unitSystem }));
+  }, [scaleSettingsKey, unitSystem]);
 
   const handleIngredientCheck = (groupName: string, ingredientName: string, isChecked: boolean) => {
     setCheckedIngredients(prev => {
@@ -785,34 +778,19 @@ export default function ParsedRecipePage({
   }, [parsedRecipe]);
 
   // Calculate scaled ingredients
-  const scaledIngredients = (() => {
-    if (!parsedRecipe || !parsedRecipe.ingredients) return [];
+  const scaledIngredients: IngredientGroups = (() => {
+    const ingredientGroups = parsedRecipe?.ingredients as IngredientGroups | undefined;
 
-    // If servings are unknown, return ingredients unscaled (but still apply unit conversion)
-    if (!parsedRecipe.servings || !servings) {
-      const unscaled = parsedRecipe.ingredients;
-      // Apply unit conversion even if not scaling
-      return convertIngredientGroupUnits(unscaled as Array<{ groupName: string; ingredients: (string | { amount?: string; units?: string; ingredient: string })[] }>, unitSystem);
+    if (!ingredientGroups) {
+      return [];
     }
 
-    // Get multiplier value (1x = 1, 2x = 2, 3x = 3)
-    const multiplierValue = parseInt(multiplier.replace('x', ''));
+    const scaledGroups =
+      parsedRecipe?.servings && servings
+        ? (scaleIngredients(ingredientGroups, parsedRecipe.servings, servings) as IngredientGroups)
+        : ingredientGroups;
 
-    // Calculate effective servings: base servings * multiplier * customMultiplier
-    const effectiveServings = servings * multiplierValue * customMultiplier;
-
-    // Cast the ingredients to the expected type for the scaler
-    // The context type is slightly different but compatible structure-wise
-    let scaled = scaleIngredients(
-      parsedRecipe.ingredients as Array<{ groupName: string; ingredients: (string | { amount?: string; units?: string; ingredient: string })[] }>,
-      parsedRecipe.servings,
-      effectiveServings
-    );
-
-    // Apply unit conversion
-    scaled = convertIngredientGroupUnits(scaled as Array<{ groupName: string; ingredients: (string | { amount?: string; units?: string; ingredient: string })[] }>, unitSystem);
-
-    return scaled;
+    return convertIngredientGroupUnits(scaledGroups, unitSystem) as IngredientGroups;
   })();
 
   // Filter ingredients based on search query (searches name, amount, and units)
@@ -860,18 +838,6 @@ export default function ParsedRecipePage({
     setServings(newServings);
   };
 
-  // Multiplier change handler - passed to ServingsControls component (currently unused but kept for potential future use)
-  const _handleMultiplierChange = (newMultiplier: string) => {
-    setMultiplier(newMultiplier);
-  };
-
-  // Reset to original servings handler - resets both servings and multiplier (currently unused but kept for potential future use)
-  const _handleResetServings = () => {
-    if (originalServings !== undefined) {
-      setServings(originalServings);
-      setMultiplier('1x');
-    }
-  };
 
   // Memoize normalized steps for bidirectional linking
   const normalizedSteps = useMemo(() => {
@@ -1077,26 +1043,18 @@ export default function ParsedRecipePage({
                 {/* Top Navigation Bar - Back arrow on left, Bookmark/Settings on right */}
                 <div className="w-full mb-6 md:mb-8">
                   <div className="flex items-center justify-between">
-                    {/* Back Button - Visible on all screen sizes */}
+                    {/* Back Button - Hidden on mobile (hamburger menu handles nav) */}
                     <button
-                      onClick={() => {
-                        if (isMobileViewport) {
-                          showMobileNav();
-                        } else {
-                          router.push('/');
-                        }
-                      }}
-                      className="flex items-center gap-2 text-stone-600 hover:text-stone-800 transition-colors cursor-pointer group"
+                      onClick={() => router.push('/')}
+                      className="hidden md:flex items-center gap-2 text-stone-600 hover:text-stone-800 transition-colors cursor-pointer group"
                       aria-label="Back to Home"
                     >
                       <ArrowLeft className="w-5 h-5 transition-transform duration-200 group-hover:-translate-x-1" />
-                      {/* Desktop: Show "Back to Home" text, Mobile: Show "Menu" */}
-                      <span className="hidden md:inline font-albert text-[15px] font-medium">Back to Home</span>
-                      <span className="md:hidden font-albert text-[15px] font-medium">Menu</span>
+                      <span className="font-albert text-[15px] font-medium">Back</span>
                     </button>
                     
                     {/* Bookmark and Settings Buttons */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
                       {/* Bookmark Button */}
                       {recipeId && (
                         <motion.button
@@ -1567,7 +1525,7 @@ export default function ParsedRecipePage({
                       className="w-full -mx-4 md:-mx-8 flex flex-col items-center"
                     >
                       <div className="w-full max-w-[700px]">
-                        <ClassicSplitView
+                        <CookMode
                           title={parsedRecipe.title}
                           allIngredients={flattenedIngredients}
                           steps={normalizedSteps}
