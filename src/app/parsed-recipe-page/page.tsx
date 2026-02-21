@@ -1001,6 +1001,38 @@ export default function ParsedRecipePage({
     };
   }, [expandedIngredient, filteredIngredients, scaledIngredients, normalizedSteps]);
 
+  // Flat list of all ingredient keys for prev/next navigation
+  const allIngredientKeys = useMemo(() => {
+    return scaledIngredients.flatMap((group) => {
+      const groupName = group.groupName || 'Main';
+      return group.ingredients.map((ingredient) => {
+        const name = typeof ingredient === 'string' ? ingredient : ingredient.ingredient;
+        return `${groupName}:${name}`;
+      });
+    });
+  }, [scaledIngredients]);
+
+  const expandedIngredientIndex = expandedIngredient
+    ? allIngredientKeys.indexOf(expandedIngredient)
+    : -1;
+
+  const hasPreviousIngredient = expandedIngredientIndex > 0;
+  const hasNextIngredient =
+    expandedIngredientIndex >= 0 &&
+    expandedIngredientIndex < allIngredientKeys.length - 1;
+
+  const handlePreviousIngredient = useCallback(() => {
+    if (expandedIngredientIndex > 0) {
+      setExpandedIngredient(allIngredientKeys[expandedIngredientIndex - 1]);
+    }
+  }, [expandedIngredientIndex, allIngredientKeys]);
+
+  const handleNextIngredient = useCallback(() => {
+    if (expandedIngredientIndex < allIngredientKeys.length - 1) {
+      setExpandedIngredient(allIngredientKeys[expandedIngredientIndex + 1]);
+    }
+  }, [expandedIngredientIndex, allIngredientKeys]);
+
   const handleDrawerStepClick = useCallback((stepNumber: number) => {
     window.dispatchEvent(new CustomEvent('navigate-to-step', { detail: { stepNumber } }));
   }, []);
@@ -1762,6 +1794,10 @@ export default function ParsedRecipePage({
           onStepClick={handleDrawerStepClick}
           isOpen={expandedIngredient !== null && expandedIngredientData !== null}
           onClose={() => setExpandedIngredient(null)}
+          onPrevious={handlePreviousIngredient}
+          onNext={handleNextIngredient}
+          hasPrevious={hasPreviousIngredient}
+          hasNext={hasNextIngredient}
         />
 
         {/* Ingredients Overlay - Modal (desktop) / Drawer (mobile) */}

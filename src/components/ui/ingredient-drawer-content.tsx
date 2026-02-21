@@ -110,7 +110,7 @@ export function IngredientDrawerContent({
   const hasAiSubstitutes = aiSubstitutions && aiSubstitutions.length > 0;
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-8">
       {/* Substitutes */}
       <div className="space-y-3">
         <p className="text-[11px] font-albert font-bold uppercase tracking-widest text-stone-400">
