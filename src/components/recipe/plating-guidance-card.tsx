@@ -55,42 +55,12 @@ export default function PlatingGuidanceCard({
               <div className="h-px bg-stone-200 mb-4" />
 
               {/* Plating notes */}
-              {isEditing ? (
-                <div className="space-y-3">
-                  <textarea
-                    value={editedNotes}
-                    onChange={(e) => setEditedNotes(e.target.value)}
-                    onKeyDown={(e) => {
-                      // Enter alone (without Shift) saves and exits editing mode
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault(); // Prevent default newline behavior
-                        handleSave();
-                      }
-                      // Shift+Enter allows normal newline behavior
-                    }}
-                    className="w-full min-h-[120px] p-3 border border-stone-200 rounded-lg font-albert text-[16px] text-[#57534e] leading-[1.6] focus:outline-none focus:ring-2 focus:ring-stone-300 resize-none"
-                    style={{
-                      color: 'rgba(87, 83, 78, 1)',
-                      backgroundColor: 'var(--color-white)',
-                    }}
-                    placeholder="Add your plating notes here"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleSave}
-                      className="px-4 py-2 bg-stone-900 text-white rounded-lg font-albert text-[14px] font-medium hover:bg-stone-800 transition-colors"
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={handleCancel}
-                      className="px-4 py-2 bg-stone-200 text-stone-700 rounded-lg font-albert text-[14px] font-medium hover:bg-stone-300 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                )}
-              </div>
+              <p
+                className="font-albert text-[16px] leading-[1.6] whitespace-pre-wrap"
+                style={{ color: 'rgba(87, 83, 78, 1)' }}
+              >
+                {displayNotes}
+              </p>
             </div>
           </motion.div>
         )}
