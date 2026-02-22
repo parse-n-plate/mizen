@@ -14,6 +14,7 @@ import { cleanRecipeHTML } from './htmlCleaner';
 import { SUPPORTED_CUISINES, isSupportedCuisine } from '@/config/cuisineConfig';
 import { initLog, logDecision, prettyPrint, indentLines } from './decisionLogger';
 import { formatAmount, parseIngredientString } from './ingredientScaler';
+import { removeQuantitiesFromInstructions } from './recipe-helpers';
 
 // Derive a concise, human-friendly title from an instruction detail
 // Normalize any instruction array (strings or objects) into InstructionStep objects
@@ -35,8 +36,10 @@ const stripHtmlTags = (s: string): string => s.replace(/<[^>]+>/g, '');
       if (typeof item === 'string') {
         // strip tags from legacy string inputs as well
         const raw = stripHtmlTags(item);
-        const detail = cleanLeading(raw.trim());
+        let detail = cleanLeading(raw.trim());
         if (!detail) return null;
+        // Remove ingredient quantities from instruction text
+        detail = removeQuantitiesFromInstructions(detail);
         // Use generic title for legacy string inputs
         return {
           title: `Step ${index + 1}`,
@@ -70,7 +73,9 @@ const stripHtmlTags = (s: string): string => s.replace(/<[^>]+>/g, '');
         // Use AI-provided title, or fallback to generic if missing
         const title = aiTitle ? cleanLeading(aiTitle) : `Step ${index + 1}`;
         // strip any HTML tags that may have slipped through
-        const detail = cleanLeading(stripHtmlTags(rawDetail).trim());
+        let detail = cleanLeading(stripHtmlTags(rawDetail).trim());
+        // Remove ingredient quantities from instruction text
+        detail = removeQuantitiesFromInstructions(detail);
 
         return {
           title,

@@ -5,6 +5,7 @@ import { RecipeStep, ParsedRecipe } from '@/contexts/RecipeContext';
 import { IngredientsNeededSection } from './ingredients-needed-section';
 import { ToolsNeededSection } from './tools-needed-section';
 import { StepTimer } from './step-timer';
+import { removeQuantitiesFromInstructions } from '@/utils/recipe-helpers';
 import { cn } from '@/lib/utils';
 
 interface DirectionStepCardProps {
@@ -32,7 +33,7 @@ export function DirectionStepCard({
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-start gap-4 mb-1">
             <p className="text-[15px] leading-relaxed text-stone-800 font-albert">
-              {step.instruction}
+              {removeQuantitiesFromInstructions(step.instruction)}
             </p>
             {step.timerMinutes && (
               <div className="flex-shrink-0">
@@ -81,7 +82,7 @@ export function DirectionStepCard({
           </div>
           
           <p className="text-lg leading-relaxed text-stone-900 font-domine mb-6">
-            {step.instruction}
+            {removeQuantitiesFromInstructions(step.instruction)}
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -134,7 +135,7 @@ export function DirectionStepCard({
         </div>
         
         <p className="text-2xl md:text-3xl text-center leading-tight text-stone-900 font-domine mb-12">
-          {step.instruction}
+          {removeQuantitiesFromInstructions(step.instruction)}
         </p>
         
         {step.timerMinutes && (
