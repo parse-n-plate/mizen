@@ -14,7 +14,7 @@ interface Ingredient {
 export type UnitSystem = 'original' | 'metric' | 'imperial';
 
 // Volume conversions to mL (base unit for volume)
-const VOLUME_TO_ML: Record<string, number> = {
+export const VOLUME_TO_ML: Record<string, number> = {
   // Imperial/US volume
   'cup': 240,
   'cups': 240,
@@ -60,7 +60,7 @@ const VOLUME_TO_ML: Record<string, number> = {
 };
 
 // Weight conversions to grams (base unit for weight)
-const WEIGHT_TO_GRAMS: Record<string, number> = {
+export const WEIGHT_TO_GRAMS: Record<string, number> = {
   // Imperial/US weight
   'pound': 454,
   'pounds': 454,
@@ -82,7 +82,7 @@ const WEIGHT_TO_GRAMS: Record<string, number> = {
 };
 
 // Units that should never be converted (countable items, qualitative measures)
-const NON_CONVERTIBLE_UNITS = new Set([
+export const NON_CONVERTIBLE_UNITS = new Set([
   'piece', 'pieces', 'pc', 'pcs',
   'clove', 'cloves',
   'slice', 'slices',

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { formatError, ERROR_CODES } from '@/utils/formatError';
-import { parseRecipeFromUrl } from '@/utils/aiRecipeParser';
+import { parseRecipeFromUrl, parseRecipeFromImage } from '@/utils/aiRecipeParser';
 
 /**
  * API endpoint for recipe scraping - now uses unified AI-based parser
@@ -72,16 +72,25 @@ export async function POST(req: NextRequest): Promise<Response> {
     console.log(`[API /recipeScraperPython] Starting recipe parse${url ? ` for URL: ${url}` : ''}${imageFile ? ' with image' : ''}`);
 
     // Use the new unified parser with optional URL and image
-    const result = url 
-      ? await parseRecipeFromUrl(url, imageFile)
-      : await parseRecipeFromImage(imageFile!); // imageFile is guaranteed to exist if no URL
+    let result;
+    if (url) {
+      result = await parseRecipeFromUrl(url);
+    } else if (imageFile) {
+      // convert File to base64 string
+      const arrayBuffer = await imageFile.arrayBuffer();
+      const base64 = `data:${imageFile.type};base64,${Buffer.from(arrayBuffer).toString('base64')}`;
+      result = await parseRecipeFromImage(base64);
+    } else {
+      // should never happen due to earlier validation
+      return NextResponse.json(formatError(ERROR_CODES.ERR_INVALID_URL, 'No input provided'));
+    }
 
     // Check if parsing failed
     if (!result.success || !result.data) {
       console.error('[API /recipeScraperPython] Parsing failed:', result.error);
       
       // Determine appropriate error code
-      let errorCode = ERROR_CODES.ERR_NO_RECIPE_FOUND;
+      let errorCode: string = ERROR_CODES.ERR_NO_RECIPE_FOUND;
       let errorMessage = 'Could not extract recipe from this page';
 
       if (result.error) {
@@ -161,7 +170,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     // Return successful response with recipe data
     // Maintaining backward compatibility with original API contract
     console.log(
-      `[API /recipeScraperPython] Successfully parsed recipe using ${result.method}: "${result.data.title}" with ${result.data.ingredients.reduce((sum, g) => sum + g.ingredients.length, 0)} total ingredients and ${result.data.instructions.length} instructions`,
+      `[API /recipeScraperPython] Successfully parsed recipe using ${result.method}: "${result.data.title}" with ${result.data.ingredients.reduce((sum: number, g: any) => sum + g.ingredients.length, 0)} total ingredients and ${result.data.instructions.length} instructions`,
     );
     console.log('[API /recipeScraperPython] 🍽️ Cuisine data in response:', {
       cuisine: result.data.cuisine,

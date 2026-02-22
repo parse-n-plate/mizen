@@ -2,6 +2,8 @@
  * Utility functions for scaling ingredient amounts based on servings
  */
 
+import { VOLUME_TO_ML, WEIGHT_TO_GRAMS, NON_CONVERTIBLE_UNITS } from './unitConverter';
+
 interface Ingredient {
   amount?: string;
   units?: string;
@@ -152,28 +154,53 @@ export function formatAmount(amount: number): string {
 }
 
 /**
+ * Normalize unit string by lowercasing and removing common variations
+ */
+function normalizeUnit(unit: string): string {
+  return unit.toLowerCase().trim();
+}
+
+/**
+ * Check if a unit string is a recognized cooking unit
+ */
+function isRecognizedUnit(unit: string): boolean {
+  const normalized = normalizeUnit(unit);
+  
+  // Build set of all known units
+  const knownUnits = new Set<string>();
+  
+  // Add volume units
+  Object.keys(VOLUME_TO_ML).forEach((u: string) => knownUnits.add(normalizeUnit(u)));
+  
+  // Add weight units
+  Object.keys(WEIGHT_TO_GRAMS).forEach((u: string) => knownUnits.add(normalizeUnit(u)));
+  
+  // Add non-convertible units
+  NON_CONVERTIBLE_UNITS.forEach((u: string) => knownUnits.add(normalizeUnit(u)));
+  
+  return knownUnits.has(normalized);
+}
+
+/**
  * Parse amount/unit from ingredient string when amount/units fields are empty
  * Handles patterns like "1½ Tbsp soy sauce", "2 cups dashi", etc.
  */
-function parseIngredientString(ingredientStr: string): { amount: string; unit: string; name: string } | null {
-  // Pattern: matches amount (can include fractions like 1½, 2½, ⅛) + unit + ingredient name
-  // Examples: "1½ Tbsp soy sauce", "2½ cups dashi", "1 tsp sugar"
-  const match = ingredientStr.match(/^([\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+(?:\s*[–-]\s*[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)?)\s+([a-zA-Z]+)\s+(.+)$/);
+export function parseIngredientString(ingredientStr: string): { amount: string; unit: string; name: string } | null {
+  // Pattern: matches amount (can include fractions like 1½, 2½, ⅛, 1/4, 2/3) + unit + ingredient name
+  // Examples: "1½ Tbsp soy sauce", "2½ cups dashi", "1/4 cup red wine", "1 tsp sugar"
+  // Fraction notation: plain digits with optional slash for fractions (1/4, 2/3) or Unicode fractions (½, ¼)
+  const fractionPattern = /^([\d]+(?:\/[\d]+)?(?:\s+[\d]+\/[\d]+)?|[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+(?:\s*[–-]\s*[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)?)\s+([a-zA-Z]+)\s+(.+)$/;
+  const match = ingredientStr.match(fractionPattern);
   if (match) {
-    return {
-      amount: match[1].trim(),
-      unit: match[2].trim(),
-      name: match[3].trim()
-    };
-  }
-  // Fallback: try simpler pattern without fractions
-  const simpleMatch = ingredientStr.match(/^(\d+(?:\s*[–-]\s*\d+)?)\s+([a-zA-Z]+)\s+(.+)$/);
-  if (simpleMatch) {
-    return {
-      amount: simpleMatch[1].trim(),
-      unit: simpleMatch[2].trim(),
-      name: simpleMatch[3].trim()
-    };
+    const unit = match[2].trim();
+    // Validate that the captured unit is actually a recognized cooking unit
+    if (isRecognizedUnit(unit)) {
+      return {
+        amount: match[1].trim(),
+        unit: unit,
+        name: match[3].trim()
+      };
+    }
   }
   return null;
 }
