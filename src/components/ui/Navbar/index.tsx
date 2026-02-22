@@ -1,7 +1,8 @@
-'use client';
+"use client";
 
+import dynamic from 'next/dynamic';
 import PPLogo from '@/components/ui/Navbar/pplogo';
-import InlineSearch from '@/components/ui/Navbar/inline-search';
+const InlineSearch = dynamic(() => import('@/components/ui/Navbar/inline-search'), { ssr: false });
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Bookmark from '@solar-icons/react/csr/school/Bookmark';

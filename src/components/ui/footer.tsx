@@ -1,7 +1,27 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
+
+function AvatarLink({ profileUrl, imageSrc, alt, ariaLabel, className }: { profileUrl: string; imageSrc: string; alt: string; ariaLabel: string; className?: string; }) {
+  return (
+    <a
+      href={profileUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={ariaLabel}
+      className={`relative w-[37px] h-[37px] rounded-full overflow-hidden border-2 border-stone-100 hover:border-stone-100 transition-all hover:scale-110 flex-shrink-0 ${className || ''}`}
+    >
+      <img
+        src={imageSrc}
+        alt={alt}
+        width={37}
+        height={37}
+        className="object-cover rounded-full w-full h-full"
+        draggable={false}
+      />
+    </a>
+  );
+}
 
 export default function Footer() {
   // Social profile URLs for team members
@@ -9,6 +29,7 @@ export default function Footer() {
     gage: 'https://gageminamoto.vercel.app/',
     michelle: 'https://www.linkedin.com/in/michelle-tran-a48a14203/',
     will: 'https://www.linkedin.com/in/william-liang808/',
+    rahul: 'https://linkedin.com/in/rahulj24',
   };
 
   return (
@@ -52,57 +73,34 @@ export default function Footer() {
               </p>
               {/* Avatar Group - slightly overlapping based on Figma design */}
               <div className="flex items-start justify-start w-full -space-x-2">
-                {/* Gage Avatar */}
-                <Link
-                  href={linkedInProfiles.gage}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="relative w-[37px] h-[37px] rounded-full overflow-hidden border-2 border-stone-100 hover:border-stone-100 transition-all hover:scale-110 flex-shrink-0 z-10"
-                  aria-label="Visit Gage's LinkedIn profile"
-                >
-                  <Image
-                    src="/assets/avatars/Gage_Avatar.jpg"
-                    alt="Gage"
-                    width={37}
-                    height={37}
-                    className="object-cover rounded-full"
-                    draggable={false}
-                  />
-                </Link>
-                {/* Michelle Avatar */}
-                <Link
-                  href={linkedInProfiles.michelle}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="relative w-[37px] h-[37px] rounded-full overflow-hidden border-2 border-stone-100 hover:border-stone-100 transition-all hover:scale-110 flex-shrink-0 z-20"
-                  aria-label="Visit Michelle's LinkedIn profile"
-                >
-                  <Image
-                    src="/assets/avatars/Michelle_Avatar.jpg"
-                    alt="Michelle"
-                    width={37}
-                    height={37}
-                    className="object-cover rounded-full"
-                    draggable={false}
-                  />
-                </Link>
-                {/* Will Avatar */}
-                <Link
-                  href={linkedInProfiles.will}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="relative w-[37px] h-[37px] rounded-full overflow-hidden border-2 border-stone-100 hover:border-stone-100 transition-all hover:scale-110 flex-shrink-0 z-30"
-                  aria-label="Visit Will's LinkedIn profile"
-                >
-                  <Image
-                    src="/assets/avatars/Will_Avatar.jpg"
-                    alt="Will"
-                    width={37}
-                    height={37}
-                    className="object-cover rounded-full"
-                    draggable={false}
-                  />
-                </Link>
+                <AvatarLink
+                  profileUrl={linkedInProfiles.gage}
+                  imageSrc="/assets/avatars/Gage_Avatar.jpg"
+                  alt="Gage"
+                  ariaLabel="Visit Gage's profile"
+                  className="z-10"
+                />
+                <AvatarLink
+                  profileUrl={linkedInProfiles.michelle}
+                  imageSrc="/assets/avatars/Michelle_Avatar.jpg"
+                  alt="Michelle"
+                  ariaLabel="Visit Michelle's profile"
+                  className="z-20"
+                />
+                <AvatarLink
+                  profileUrl={linkedInProfiles.will}
+                  imageSrc="/assets/avatars/Will_Avatar.jpg"
+                  alt="Will"
+                  ariaLabel="Visit Will's profile"
+                  className="z-30"
+                />
+                <AvatarLink
+                  profileUrl={linkedInProfiles.rahul}
+                  imageSrc="/assets/avatars/Rahul_Avatar.jpg"
+                  alt="Rahul"
+                  ariaLabel="Visit Rahul's profile"
+                  className="z-40"
+                />
               </div>
             </div>
           </div>
