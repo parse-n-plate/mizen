@@ -7,14 +7,25 @@ import type { User } from "@supabase/supabase-js";
 export function useUser() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [supabaseDown, setSupabaseDown] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
-
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
+    if (!supabase) {
       setLoading(false);
-    });
+      return;
+    }
+
+    supabase.auth
+      .getUser()
+      .then(({ data: { user } }) => {
+        setUser(user);
+        setLoading(false);
+      })
+      .catch(() => {
+        setSupabaseDown(true);
+        setLoading(false);
+      });
 
     const {
       data: { subscription },
@@ -27,9 +38,14 @@ export function useUser() {
 
   const signOut = async () => {
     const supabase = createClient();
-    await supabase.auth.signOut();
+    if (!supabase) return;
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // silent — user state cleared below regardless
+    }
     setUser(null);
   };
 
-  return { user, loading, signOut };
+  return { user, loading, signOut, supabaseDown };
 }

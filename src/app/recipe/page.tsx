@@ -36,7 +36,7 @@ export default function RecipePage() {
         toast.success("Recipe saved");
       }
     } catch {
-      toast.error("Failed to save recipe");
+      toast.error("Saving recipes is temporarily unavailable. Please try again later.");
     } finally {
       setSaving(false);
     }
@@ -54,7 +54,7 @@ export default function RecipePage() {
         toast.success("Recipe removed");
       }
     } catch {
-      toast.error("Failed to remove recipe");
+      toast.error("Removing recipes is temporarily unavailable. Please try again later.");
     } finally {
       setUnsaving(false);
     }
