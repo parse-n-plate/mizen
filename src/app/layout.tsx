@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Domine, Albert_Sans } from "next/font/google";
+import { Agentation } from "agentation";
 import { AppShell } from "@/components/AppShell";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -46,6 +47,7 @@ export default function RootLayout({
       <body className={`${domine.variable} ${albertSans.variable} antialiased`}>
         <AppShell>{children}</AppShell>
         <Toaster />
+        {process.env.NODE_ENV === "development" && <Agentation />}
       </body>
     </html>
   );
