@@ -63,7 +63,7 @@ export function TopBar() {
             {showBackArrow ? (
               <Link
                 href="/"
-                className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:bg-stone-200/60 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-200/60 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
               >
                 <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="m12 19-7-7 7-7" />
@@ -140,7 +140,7 @@ export function TopBar() {
           <div className="flex items-center gap-1">
             <Link
               href="/"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:bg-stone-200/60 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-200/60 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
               aria-label="Search"
             >
               <svg className="h-[18px] w-[18px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -151,7 +151,7 @@ export function TopBar() {
             {isSupabaseConfigured && (
               <Link
                 href="/cookbook"
-                className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:bg-stone-200/60 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-200/60 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
                 aria-label="Cookbook"
               >
                 <svg className="h-[18px] w-[18px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -161,7 +161,7 @@ export function TopBar() {
             )}
             <button
               onClick={() => setSettingsOpen(true)}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:bg-stone-200/60 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-200/60 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
               aria-label="Settings"
             >
               <svg className="h-[18px] w-[18px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -175,16 +175,16 @@ export function TopBar() {
                 {user ? (
                   <button
                     onClick={() => setMenuOpen(!menuOpen)}
-                    className="flex h-8 w-8 items-center justify-center rounded-full overflow-hidden hover:ring-2 hover:ring-stone-300 dark:hover:ring-stone-700 transition-all"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden hover:ring-2 hover:ring-stone-300 dark:hover:ring-stone-700 transition-all"
                   >
                     {user.user_metadata?.avatar_url ? (
                       <img
                         src={user.user_metadata.avatar_url}
                         alt={name}
-                        className="h-8 w-8 rounded-full"
+                        className="h-8 w-8 rounded-lg"
                       />
                     ) : (
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-200 dark:bg-stone-700 font-sans text-xs font-medium text-stone-600 dark:text-stone-300">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-200 dark:bg-stone-700 font-sans text-xs font-medium text-stone-600 dark:text-stone-300">
                         {name[0]?.toUpperCase()}
                       </div>
                     )}
