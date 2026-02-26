@@ -1,19 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { toast } from "sonner";
 import { useUser } from "@/hooks/useUser";
 import { useRecipe } from "@/context/RecipeContext";
 import { AuthModal } from "@/components/AuthModal";
 import { SettingsModal } from "@/components/SettingsModal";
+import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 
 
 export function TopBar() {
-  const { user, loading: authLoading } = useUser();
+  const { user, loading: authLoading, supabaseDown } = useUser();
   const { recipe, history, setRecipe } = useRecipe();
   const pathname = usePathname();
-  const router = useRouter();
   const [authOpen, setAuthOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -28,6 +29,31 @@ export function TopBar() {
   const isProfilePage = pathname === "/profile";
   const isCookbookPage = pathname === "/cookbook";
   const showBackArrow = isRecipePage || isProfilePage || isCookbookPage;
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+      toast.info(
+        "Supabase is not connected. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local to enable accounts and saving.",
+        { id: "supabase-status", duration: Infinity, position: "bottom-right" }
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+      return;
+    }
+
+    if (supabaseDown) {
+      toast.info(
+        "Some features like saving recipes are temporarily unavailable.",
+        { id: "supabase-down", duration: Infinity, position: "bottom-right" }
+      );
+      return;
+    }
+
+    toast.dismiss("supabase-down");
+  }, [supabaseDown]);
 
   return (
     <>
@@ -123,15 +149,17 @@ export function TopBar() {
                 <path d="m21 21-4.3-4.3" />
               </svg>
             </Link>
-            <Link
-              href="/cookbook"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:bg-stone-200/60 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
-              aria-label="Cookbook"
-            >
-              <svg className="h-[18px] w-[18px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
-              </svg>
-            </Link>
+            {isSupabaseConfigured && (
+              <Link
+                href="/cookbook"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:bg-stone-200/60 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
+                aria-label="Cookbook"
+              >
+                <svg className="h-[18px] w-[18px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
+                </svg>
+              </Link>
+            )}
             <button
               onClick={() => setSettingsOpen(true)}
               className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:bg-stone-200/60 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
@@ -143,7 +171,7 @@ export function TopBar() {
               </svg>
             </button>
             {/* User avatar / sign in */}
-            {!authLoading && (
+            {!authLoading && isSupabaseConfigured && (
               <div className="relative">
                 {user ? (
                   <button

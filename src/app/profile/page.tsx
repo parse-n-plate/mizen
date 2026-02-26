@@ -1,27 +1,48 @@
 import { createClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { redirect } from "next/navigation";
 import { RecipeList } from "@/components/RecipeList";
 import type { SavedRecipe } from "@/lib/types";
 
 export default async function ProfilePage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+  if (!isSupabaseConfigured) {
     redirect("/");
   }
 
-  const { data: recipes } = await supabase
-    .from("recipes")
-    .select("id, slug, recipe, source_url, created_at, updated_at")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+  let recipes: SavedRecipe[] = [];
+  let name = "User";
+  let email = "";
+  let avatarUrl: string | undefined;
 
-  const name = user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
-  const email = user.email || "";
-  const avatarUrl = user.user_metadata?.avatar_url;
+  try {
+    const supabase = await createClient();
+    if (!supabase) {
+      throw new Error("Supabase unavailable");
+    }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      redirect("/");
+    }
+
+    const { data, error } = await supabase
+      .from("recipes")
+      .select("id, slug, recipe, source_url, created_at, updated_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    if (error) {
+      throw error;
+    }
+    recipes = (data as SavedRecipe[]) || [];
+
+    name = user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
+    email = user.email || "";
+    avatarUrl = user.user_metadata?.avatar_url;
+  } catch {
+    redirect("/");
+  }
 
   return (
     <div className="min-h-[calc(100vh-3.5rem)] bg-white dark:bg-stone-950">
@@ -57,7 +78,7 @@ export default async function ProfilePage() {
 
         <div className="mt-10">
           <h2 className="font-serif text-lg font-semibold">Saved Recipes</h2>
-          <RecipeList initialRecipes={(recipes as SavedRecipe[]) || []} />
+          <RecipeList initialRecipes={recipes} />
         </div>
       </div>
     </div>

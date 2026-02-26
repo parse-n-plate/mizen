@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AuthModal } from "@/components/AuthModal";
 import { useRecipe } from "@/context/RecipeContext";
 import type { ParsedRecipe } from "@/lib/types";
+import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 
 const EXAMPLE_RECIPES: { emoji: string; time: string; recipe: ParsedRecipe }[] = [
   {
@@ -240,20 +241,24 @@ export function GettingStarted() {
         </div>
 
         {/* Sign up CTA */}
-        <div className="flex items-center justify-center gap-3">
-          <button
-            onClick={() => setAuthOpen(true)}
-            className="press-scale rounded-xl bg-stone-900 dark:bg-stone-100 px-5 py-2.5 font-sans text-sm font-medium text-white dark:text-stone-900 transition-colors hover:bg-stone-800 dark:hover:bg-stone-200"
-          >
-            Create free account
-          </button>
-          <span className="font-sans text-sm text-stone-400 dark:text-stone-500">
-            to save your recipes
-          </span>
-        </div>
+        {isSupabaseConfigured && (
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={() => setAuthOpen(true)}
+              className="press-scale rounded-xl bg-stone-900 dark:bg-stone-100 px-5 py-2.5 font-sans text-sm font-medium text-white dark:text-stone-900 transition-colors hover:bg-stone-800 dark:hover:bg-stone-200"
+            >
+              Create free account
+            </button>
+            <span className="font-sans text-sm text-stone-400 dark:text-stone-500">
+              to save your recipes
+            </span>
+          </div>
+        )}
       </section>
 
-      <AuthModal open={authOpen} onOpenChange={setAuthOpen} />
+      {isSupabaseConfigured && (
+        <AuthModal open={authOpen} onOpenChange={setAuthOpen} />
+      )}
     </>
   );
 }

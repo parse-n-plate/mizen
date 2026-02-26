@@ -1,25 +1,42 @@
 import { createClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { redirect } from "next/navigation";
 import { CookbookGrid } from "@/components/CookbookGrid";
 import type { SavedRecipe } from "@/lib/types";
 
 export default async function CookbookPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+  if (!isSupabaseConfigured) {
     redirect("/");
   }
 
-  const { data: recipes } = await supabase
-    .from("recipes")
-    .select("id, slug, recipe, source_url, created_at, updated_at")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
+  let recipes: SavedRecipe[] = [];
+  try {
+    const supabase = await createClient();
+    if (!supabase) {
+      throw new Error("Supabase unavailable");
+    }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  const count = recipes?.length ?? 0;
+    if (!user) {
+      redirect("/");
+    }
+
+    const { data, error } = await supabase
+      .from("recipes")
+      .select("id, slug, recipe, source_url, created_at, updated_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    if (error) {
+      throw error;
+    }
+    recipes = (data as SavedRecipe[]) || [];
+  } catch {
+    redirect("/");
+  }
+
+  const count = recipes.length;
 
   return (
     <div className="min-h-[calc(100vh-3.5rem)] bg-white">
@@ -34,7 +51,7 @@ export default async function CookbookPage() {
         </div>
 
         <div className="page-fade-in-up page-fade-delay-1">
-          <CookbookGrid initialRecipes={(recipes as SavedRecipe[]) || []} />
+          <CookbookGrid initialRecipes={recipes} />
         </div>
       </div>
     </div>

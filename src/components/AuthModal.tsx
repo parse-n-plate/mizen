@@ -26,6 +26,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
 
   const handleGoogleLogin = async () => {
     const supabase = createClient();
+    if (!supabase) return;
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
@@ -41,6 +42,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
     setMessage(null);
 
     const supabase = createClient();
+    if (!supabase) return;
 
     if (mode === "login") {
       const { error } = await supabase.auth.signInWithPassword({

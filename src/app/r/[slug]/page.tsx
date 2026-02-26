@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { notFound } from "next/navigation";
 import { RecipeHeader, formatTime } from "@/components/RecipeHeader";
 import { PrepSection } from "@/components/PrepSection";
@@ -11,18 +12,33 @@ export default async function SharedRecipePage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
-  const supabase = await createClient();
+  if (!isSupabaseConfigured) {
+    notFound();
+  }
 
-  const { data, error } = await supabase
-    .from("recipes")
-    .select("recipe")
-    .eq("slug", slug)
-    .single();
+  let recipe: ParsedRecipe | null = null;
+  try {
+    const { slug } = await params;
+    const supabase = await createClient();
+    if (!supabase) {
+      throw new Error("Supabase unavailable");
+    }
 
-  if (error || !data) notFound();
+    const { data, error } = await supabase
+      .from("recipes")
+      .select("recipe")
+      .eq("slug", slug)
+      .single();
 
-  const recipe = data.recipe as ParsedRecipe;
+    if (error || !data) notFound();
+    recipe = data.recipe as ParsedRecipe;
+  } catch {
+    notFound();
+  }
+
+  if (!recipe) {
+    notFound();
+  }
 
   return (
     <div className="min-h-[calc(100vh-3.5rem)] bg-white dark:bg-stone-950 flex flex-col">
