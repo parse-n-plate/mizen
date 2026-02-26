@@ -414,7 +414,7 @@ body {
   @keyframes page-fade-in-up {
     from {
       opacity: 0;
-      transform: translateY(12px);
+      transform: translateY(16px);
     }
     to {
       opacity: 1;
@@ -424,12 +424,13 @@ body {
 
   .page-fade-in-up {
     opacity: 0;
-    animation: page-fade-in-up 200ms var(--ease-out-cubic) forwards;
+    animation: page-fade-in-up 400ms var(--ease-out-quint) forwards;
+    will-change: transform;
   }
 
-  .page-fade-delay-1 { animation-delay: 50ms; }
-  .page-fade-delay-2 { animation-delay: 100ms; }
-  .page-fade-delay-3 { animation-delay: 150ms; }
+  .page-fade-delay-1 { animation-delay: 100ms; }
+  .page-fade-delay-2 { animation-delay: 200ms; }
+  .page-fade-delay-3 { animation-delay: 300ms; }
 
   @media (prefers-reduced-motion: reduce) {
     .page-fade-in-up {

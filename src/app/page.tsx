@@ -8,7 +8,7 @@ import { useUser } from "@/hooks/useUser";
 
 export default function HomePage() {
   const { error, isLoading } = useRecipe();
-  const { user, loading: authLoading } = useUser();
+  const { user } = useUser();
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] flex-col">
@@ -42,7 +42,7 @@ export default function HomePage() {
         )}
 
         <div className="mt-12 w-full flex justify-center">
-          {!authLoading && (user ? <RecentRecipes /> : <GettingStarted />)}
+          {user ? <RecentRecipes /> : <GettingStarted />}
         </div>
       </main>
     </div>
