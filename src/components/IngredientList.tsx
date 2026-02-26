@@ -125,7 +125,7 @@ function IngredientGroupSection({
                       }`}
                     >
                       <p
-                        className={`font-sans font-medium text-sm text-stone-800 dark:text-stone-200 group-hover:text-black dark:group-hover:text-white ${
+                        className={`font-sans font-medium text-sm text-stone-800 dark:text-stone-200 group-hover:text-black dark:group-hover:text-white capitalize ${
                           isChecked ? "line-through" : ""
                         }`}
                       >

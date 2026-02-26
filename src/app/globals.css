@@ -222,11 +222,13 @@ body {
   background-color: var(--color-background-cream);
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-family-serif);
-  line-height: var(--line-height-heading);
-  color: var(--color-text-heading);
-  font-weight: 600;
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-family-serif);
+    line-height: var(--line-height-heading);
+    color: var(--color-text-heading);
+    font-weight: 600;
+  }
 }
 
 @layer base {
@@ -343,9 +345,9 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--color-black);
     border-color: var(--color-border-light) !important;
     border-bottom-color: var(--color-white) !important;
-    border-top: 2px solid var(--color-orange) !important;
+    border-top-color: var(--color-border-light) !important;
     z-index: 3;
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.03) !important;
+    box-shadow: none !important;
   }
 
   /* Hide the line-style active indicator */
@@ -505,7 +507,7 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .ingredient-checkbox-input:checked {
-    background-color: var(--color-green);
+    background-color: var(--color-primary-blue);
     border: none;
   }
 
