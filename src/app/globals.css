@@ -101,8 +101,8 @@ html {
   --color-black: #292524;
 
   /* Mizen palette — Primary */
-  --color-blue: #0072fb;
-  --color-primary-blue: #0072fb;
+  --color-blue: #18A1F7;
+  --color-primary-blue: #18A1F7;
   --color-blue-light: #e6f0ff;
 
   /* Mizen palette — Accents */
@@ -190,8 +190,8 @@ html {
   --color-border-light: #3a3633;
 
   /* Primary — brighter blue for dark backgrounds */
-  --color-blue: #3b9bff;
-  --color-primary-blue: #3b9bff;
+  --color-blue: #18A1F7;
+  --color-primary-blue: #18A1F7;
   --color-blue-light: #1e293b;
 
   /* Accents — brighter for dark backgrounds */
