@@ -57,8 +57,7 @@ export function TopBar() {
 
   return (
     <>
-      <header className="sticky top-0 z-20 px-4 pt-4">
-        <div className="mx-auto flex h-14 max-w-3xl items-center justify-between rounded-2xl border border-[#E9E9E9] dark:border-stone-800 bg-white dark:bg-stone-900 backdrop-blur-sm px-5">
+      <header className="mx-auto flex h-14 max-w-3xl items-center justify-between pt-4">
           {/* Left: back arrow or logo */}
           <div className="flex items-center gap-3">
             {showBackArrow ? (
@@ -248,7 +247,6 @@ export function TopBar() {
               </div>
             )}
           </div>
-        </div>
       </header>
 
       <AuthModal open={authOpen} onOpenChange={setAuthOpen} />
