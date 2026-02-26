@@ -2,17 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import type { User } from "@supabase/supabase-js";
 
 export function useUser() {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isSupabaseConfigured);
   const [supabaseDown, setSupabaseDown] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
     if (!supabase) {
-      setLoading(false);
       return;
     }
 
@@ -20,6 +20,7 @@ export function useUser() {
       .getUser()
       .then(({ data: { user } }) => {
         setUser(user);
+        setSupabaseDown(false);
         setLoading(false);
       })
       .catch(() => {
@@ -31,6 +32,8 @@ export function useUser() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      setSupabaseDown(false);
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();

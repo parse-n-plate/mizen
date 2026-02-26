@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { toast } from "sonner";
 import { useUser } from "@/hooks/useUser";
 import { useRecipe } from "@/context/RecipeContext";
 import { AuthModal } from "@/components/AuthModal";
@@ -11,10 +12,9 @@ import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 
 
 export function TopBar() {
-  const { user, loading: authLoading } = useUser();
+  const { user, loading: authLoading, supabaseDown } = useUser();
   const { recipe, history, setRecipe } = useRecipe();
   const pathname = usePathname();
-  const router = useRouter();
   const [authOpen, setAuthOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -29,6 +29,31 @@ export function TopBar() {
   const isProfilePage = pathname === "/profile";
   const isCookbookPage = pathname === "/cookbook";
   const showBackArrow = isRecipePage || isProfilePage || isCookbookPage;
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+      toast.info(
+        "Supabase is not connected. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local to enable accounts and saving.",
+        { id: "supabase-status", duration: Infinity, position: "bottom-right" }
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+      return;
+    }
+
+    if (supabaseDown) {
+      toast.info(
+        "Some features like saving recipes are temporarily unavailable.",
+        { id: "supabase-down", duration: Infinity, position: "bottom-right" }
+      );
+      return;
+    }
+
+    toast.dismiss("supabase-down");
+  }, [supabaseDown]);
 
   return (
     <>

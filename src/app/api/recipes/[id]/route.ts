@@ -13,17 +13,24 @@ export async function DELETE(
     );
   }
 
+  const { id } = await params;
+  if (!id) {
+    return NextResponse.json({ error: "Invalid recipe id" }, { status: 400 });
+  }
+
   try {
-    const { id } = await params;
     const supabase = await createClient();
+    if (!supabase) {
+      throw new Error("Supabase unavailable");
+    }
     const {
       data: { user },
-    } = await supabase!.auth.getUser();
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { error } = await supabase!
+    const { error } = await supabase
       .from("recipes")
       .delete()
       .eq("id", id)

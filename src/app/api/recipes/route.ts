@@ -19,25 +19,35 @@ export async function POST(request: Request) {
     );
   }
 
+  let recipe: ParsedRecipe;
+  try {
+    const body = (await request.json()) as { recipe?: ParsedRecipe };
+    recipe = body.recipe as ParsedRecipe;
+  } catch {
+    return NextResponse.json({ error: "Invalid recipe" }, { status: 400 });
+  }
+
+  if (!recipe?.title) {
+    return NextResponse.json({ error: "Invalid recipe" }, { status: 400 });
+  }
+
+  const sourceUrl = recipe.sourceUrl || null;
+
   try {
     const supabase = await createClient();
+    if (!supabase) {
+      throw new Error("Supabase unavailable");
+    }
     const {
       data: { user },
-    } = await supabase!.auth.getUser();
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { recipe } = (await request.json()) as { recipe: ParsedRecipe };
-    if (!recipe?.title) {
-      return NextResponse.json({ error: "Invalid recipe" }, { status: 400 });
-    }
-
-    const sourceUrl = recipe.sourceUrl || null;
-
     // Deduplicate: if user already saved a recipe from this URL, update it
     if (sourceUrl) {
-      const { data: existing } = await supabase!
+      const { data: existing } = await supabase
         .from("recipes")
         .select("id, slug")
         .eq("user_id", user.id)
@@ -45,7 +55,7 @@ export async function POST(request: Request) {
         .maybeSingle();
 
       if (existing) {
-        const { data, error } = await supabase!
+        const { data, error } = await supabase
           .from("recipes")
           .update({ recipe, updated_at: new Date().toISOString() })
           .eq("id", existing.id)
@@ -61,7 +71,7 @@ export async function POST(request: Request) {
 
     const slug = `${slugify(recipe.title)}-${crypto.randomUUID().slice(0, 8)}`;
 
-    const { data, error } = await supabase!
+    const { data, error } = await supabase
       .from("recipes")
       .insert({ user_id: user.id, slug, recipe, source_url: sourceUrl })
       .select("id, slug, recipe, source_url, created_at, updated_at")
@@ -89,14 +99,17 @@ export async function GET() {
 
   try {
     const supabase = await createClient();
+    if (!supabase) {
+      throw new Error("Supabase unavailable");
+    }
     const {
       data: { user },
-    } = await supabase!.auth.getUser();
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data, error } = await supabase!
+    const { data, error } = await supabase
       .from("recipes")
       .select("id, slug, recipe, source_url, created_at, updated_at")
       .eq("user_id", user.id)
