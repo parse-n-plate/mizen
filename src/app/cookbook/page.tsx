@@ -22,8 +22,8 @@ export default async function CookbookPage() {
   const count = recipes?.length ?? 0;
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-cream">
-      <div className="mx-auto max-w-4xl px-6 py-10">
+    <div className="min-h-[calc(100vh-3.5rem)] bg-white">
+      <div className="mx-auto max-w-3xl px-6 py-10">
         <div className="page-fade-in-up mb-8">
           <h1 className="font-serif text-3xl font-bold sm:text-4xl">
             Cookbook

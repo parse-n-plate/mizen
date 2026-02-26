@@ -87,7 +87,7 @@ export default function RecipePage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-[#FAFAF9] dark:bg-stone-950 flex flex-col">
+    <div className="min-h-[calc(100vh-3.5rem)] bg-white dark:bg-stone-950 flex flex-col">
       {/* Header section with cream background */}
       <div className="px-6 pt-8 pb-0">
         <div className="max-w-3xl mx-auto w-full pb-8">
@@ -271,7 +271,7 @@ export default function RecipePage() {
       <div className="sm:hidden print:hidden fixed bottom-12 left-0 right-0 z-[19] h-24 pointer-events-none bg-gradient-to-t from-white via-white/80 dark:from-stone-900 dark:via-stone-900/80 to-transparent" />
 
       {/* Mobile: fixed bottom folder tabs (hidden on desktop) */}
-      <div className="sm:hidden print:hidden fixed bottom-0 left-0 right-0 z-20 pb-[env(safe-area-inset-bottom)] bg-[#FAFAF9] dark:bg-stone-950">
+      <div className="sm:hidden print:hidden fixed bottom-0 left-0 right-0 z-20 pb-[env(safe-area-inset-bottom)] bg-white dark:bg-stone-950">
         <div className="px-6">
           <div className="flex items-start w-full relative border-t border-stone-200 dark:border-stone-700 gap-0">
             <button
