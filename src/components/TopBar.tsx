@@ -33,10 +33,14 @@ export function TopBar() {
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
-      toast.info(
-        "Supabase is not connected. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local to enable accounts and saving.",
-        { id: "supabase-status", duration: Infinity, position: "bottom-right" }
-      );
+      // Small delay to ensure Toaster is mounted
+      const t = setTimeout(() => {
+        toast("Supabase is not connected. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local to enable accounts and saving.", {
+          id: "supabase-status",
+          duration: Infinity,
+        });
+      }, 100);
+      return () => clearTimeout(t);
     }
   }, []);
 
@@ -48,7 +52,7 @@ export function TopBar() {
     if (supabaseDown) {
       toast.info(
         "Some features like saving recipes are temporarily unavailable.",
-        { id: "supabase-down", duration: Infinity, position: "bottom-right" }
+        { id: "supabase-down", duration: Infinity }
       );
       return;
     }
