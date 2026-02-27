@@ -73,7 +73,7 @@ function StepRow({
             <div>
               <div className="pt-2">
                 <Image
-                  src={step.imageUrl}
+                  src={step.imageUrl!}
                   alt={`Step ${index + 1}`}
                   width={400}
                   height={320}
@@ -99,7 +99,7 @@ function StepRow({
           aria-label={expanded ? "Hide step photo" : "Show step photo"}
         >
           <Image
-            src={step.imageUrl}
+            src={step.imageUrl!}
             alt=""
             width={40}
             height={40}
