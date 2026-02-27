@@ -339,7 +339,7 @@ export function Search() {
         )}
       <form ref={formRef} onSubmit={handleSubmit} className="w-full">
       <div
-        className={`rounded-2xl border bg-white dark:bg-stone-900 shadow-sm transition-all focus-within:border-stone-300 dark:focus-within:border-stone-600 focus-within:shadow-md ${
+        className={`rounded-2xl border bg-white dark:bg-transparent shadow-sm transition-all focus-within:border-stone-300 dark:focus-within:border-stone-600 focus-within:shadow-md ${
           isDragging
             ? "border-[var(--color-blue)] ring-2 ring-[var(--color-blue)]/20"
             : "border-stone-200 dark:border-stone-700"
@@ -365,7 +365,7 @@ export function Search() {
                 if (imageFile) removeImage();
               }}
               onPaste={onPaste}
-              className="border-0 bg-transparent px-0 text-base shadow-none placeholder:text-stone-400 dark:placeholder:text-stone-500 dark:text-stone-100 focus-visible:ring-0"
+              className="border-0 bg-transparent dark:bg-transparent px-0 text-base shadow-none placeholder:text-stone-400 dark:placeholder:text-stone-500 dark:text-stone-100 focus-visible:ring-0"
               disabled={isLoading || !!imageFile}
               autoFocus
             />

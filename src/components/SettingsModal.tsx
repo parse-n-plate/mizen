@@ -54,7 +54,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
                 <li key={item.id}>
                   <button
                     onClick={() => setActiveSection(item.id)}
-                    className={`w-full text-left px-2 py-1.5 rounded-md font-sans text-sm transition-colors ${
+                    className={`w-full text-left px-2 py-1.5 rounded-md font-sans text-sm ${
                       activeSection === item.id
                         ? "bg-stone-200/70 dark:bg-stone-700/70 text-stone-900 dark:text-stone-100 font-medium"
                         : "text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-900 dark:hover:text-stone-100"

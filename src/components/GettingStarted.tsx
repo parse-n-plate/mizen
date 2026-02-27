@@ -172,7 +172,7 @@ export function GettingStarted() {
                   key={example.recipe.title}
                   onClick={() => handleTryRecipe(example.recipe)}
                   disabled={!!loadingTitle}
-                  className="press-scale flex flex-col items-start gap-1 rounded-2xl border border-stone-200 dark:border-stone-700 bg-[#fafaf9] px-4 py-3.5 text-left transition-all hover:border-stone-300 dark:hover:border-stone-600 hover:shadow-sm disabled:opacity-50"
+                  className="press-scale flex flex-col items-start gap-1 rounded-2xl border border-stone-200 dark:border-stone-700 bg-[#fafaf9] dark:bg-stone-800 px-4 py-3.5 text-left transition-all hover:border-stone-300 dark:hover:border-stone-600 hover:shadow-sm disabled:opacity-50"
                 >
                   <span className="text-xl leading-none">{example.emoji}</span>
                   <span className="font-sans text-[14px] font-medium text-stone-900 dark:text-stone-100 leading-snug">

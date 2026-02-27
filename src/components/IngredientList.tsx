@@ -125,7 +125,7 @@ function IngredientGroupSection({
                       }`}
                     >
                       <p
-                        className={`font-sans font-medium text-sm text-stone-800 dark:text-stone-200 group-hover:text-black dark:group-hover:text-white capitalize ${
+                        className={`font-sans font-medium text-sm text-stone-800 dark:text-stone-200 capitalize ${
                           isChecked ? "line-through" : ""
                         }`}
                       >
@@ -199,7 +199,7 @@ function IngredientGroupSection({
                 )}
 
                 {!isLast && (
-                  <div className="ingredient-list-divider group-hover:opacity-0" />
+                  <div className="absolute bottom-0 left-2 right-2 h-px bg-stone-100 dark:bg-stone-800 group-hover:opacity-0" />
                 )}
               </div>
             );
