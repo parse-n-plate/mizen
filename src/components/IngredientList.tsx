@@ -199,7 +199,7 @@ function IngredientGroupSection({
                 )}
 
                 {!isLast && (
-                  <div className="absolute bottom-0 left-2 right-2 h-px bg-stone-100 dark:bg-stone-800 group-hover:opacity-0" />
+                  <div className="ingredient-list-divider absolute bottom-0 left-2 right-2 h-px bg-stone-100 dark:bg-stone-800 transition-opacity duration-150 group-hover:opacity-0" />
                 )}
               </div>
             );

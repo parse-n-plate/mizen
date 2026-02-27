@@ -54,7 +54,7 @@
   --text-body-lg-md: 19px;
   --text-body-md-sm: 17px;
   --text-body-md: 18px;
-  --text-body-sm: 15px;
+  --text-body-sm: 16px;
   --text-label-lg-sm: 13px;
   --text-label-lg-md: 14px;
   --text-label-sm: 13px;
@@ -472,6 +472,12 @@ body {
     background-color: var(--color-cream);
   }
 
+  /* Hide the previous item's divider when the next item is hovered */
+  .ingredient-list-item:has(+ .ingredient-list-item:hover) .ingredient-list-divider,
+  .group:has(+ .group:hover) .step-list-divider {
+    opacity: 0;
+  }
+
   .ingredient-list-content {
     display: flex;
     align-items: center;
@@ -493,9 +499,9 @@ body {
   .ingredient-checkbox-input {
     width: 20px;
     height: 20px;
-    border: none;
+    border: 1.5px solid var(--color-gray-light);
     border-radius: 4px;
-    background-color: var(--color-gray-light);
+    background-color: transparent;
     cursor: pointer;
     appearance: none;
     -webkit-appearance: none;

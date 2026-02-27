@@ -41,7 +41,7 @@ function StepRow({
       className="relative flex gap-4 py-4 px-2 rounded-lg group hover:bg-[var(--color-cream)]"
     >
       {!isLast && (
-        <div className="absolute bottom-0 left-2 right-2 h-px bg-stone-100 dark:bg-stone-800 group-hover:opacity-0" />
+        <div className="step-list-divider absolute bottom-0 left-2 right-2 h-px bg-stone-100 dark:bg-stone-800 transition-opacity duration-150 group-hover:opacity-0" />
       )}
       {/* Content */}
       <div className="flex-1 min-w-0 space-y-1">
@@ -50,7 +50,7 @@ function StepRow({
             {step.title}
           </h4>
         )}
-        <p className="font-sans text-sm leading-relaxed text-stone-600 dark:text-stone-300">
+        <p className="font-sans text-base leading-relaxed text-stone-600 dark:text-stone-300">
           {step.detail}
         </p>
         {step.tips && (
