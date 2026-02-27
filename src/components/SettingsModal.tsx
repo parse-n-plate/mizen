@@ -5,6 +5,7 @@ import { useUser } from "@/hooks/useUser";
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { type Theme, getTheme, setTheme } from "@/lib/theme";
 
@@ -41,6 +42,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
         showCloseButton={false}
         className="sm:max-w-2xl p-0 gap-0 overflow-hidden"
       >
+        <DialogTitle className="sr-only">Settings</DialogTitle>
         <div className="flex min-h-[420px]">
           {/* Sidebar */}
           <nav className="w-52 shrink-0 border-r border-stone-200 dark:border-stone-700 bg-[var(--color-background-cream)] p-4 flex flex-col">
