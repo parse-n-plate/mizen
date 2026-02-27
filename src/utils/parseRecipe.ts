@@ -419,8 +419,7 @@ async function extractWithAI(
 // ---------------------------------------------------------------------------
 
 export async function parseRecipeFromImage(
-  base64: string,
-  mimeType: string
+  base64: string
 ): Promise<ParserResult> {
   try {
     const groq = getGroqClient();
@@ -434,7 +433,7 @@ export async function parseRecipeFromImage(
           content: [
             {
               type: "image_url",
-              image_url: { url: `data:${mimeType};base64,${base64}` },
+              image_url: { url: base64 },
             },
             {
               type: "text",

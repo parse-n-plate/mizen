@@ -55,29 +55,9 @@ function looksLikeRecipeUrl(urlString: string): boolean {
 }
 
 interface ImageFile {
-  base64: string;
-  mimeType: string;
+  file: File;
   name: string;
   preview: string; // object URL for thumbnail
-}
-
-function fileToImageFile(file: File): Promise<ImageFile> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result as string;
-      // Strip "data:<mime>;base64," prefix
-      const base64 = dataUrl.split(",")[1];
-      resolve({
-        base64,
-        mimeType: file.type,
-        name: file.name || "pasted-image",
-        preview: URL.createObjectURL(file),
-      });
-    };
-    reader.onerror = () => reject(new Error("Failed to read file"));
-    reader.readAsDataURL(file);
-  });
 }
 
 export function Search() {
@@ -114,7 +94,7 @@ export function Search() {
   }, []);
 
   const handleFile = useCallback(
-    async (file: File) => {
+    (file: File) => {
       if (!ALLOWED_TYPES.includes(file.type)) {
         toast.error("Only JPEG, PNG, and WebP images are supported.");
         return;
@@ -123,14 +103,13 @@ export function Search() {
         toast.error("Image is too large (max 10 MB).");
         return;
       }
-      try {
-        const img = await fileToImageFile(file);
-        setImageFile(img);
-        setUrl("");
-        setError(null);
-      } catch {
-        toast.error("Failed to read image.");
-      }
+      setImageFile({
+        file,
+        name: file.name || "pasted-image",
+        preview: URL.createObjectURL(file),
+      });
+      setUrl("");
+      setError(null);
     },
     [setError]
   );
@@ -199,10 +178,12 @@ export function Search() {
       setError(null);
 
       try {
+        const body = new FormData();
+        body.append("url", recipeUrl);
+
         const response = await fetch("/api/parse", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url: recipeUrl }),
+          body,
         });
 
         const result = await response.json();
@@ -231,13 +212,12 @@ export function Search() {
       setError(null);
 
       try {
+        const body = new FormData();
+        body.append("file", imageFile.file);
+
         const response = await fetch("/api/parse", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            image: imageFile.base64,
-            mimeType: imageFile.mimeType,
-          }),
+          body,
         });
 
         const result = await response.json();
