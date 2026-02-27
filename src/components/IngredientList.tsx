@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { IngredientGroup } from "@/lib/types";
+import { ProgressPie } from "@/components/shared/progress-pie";
 
 interface IngredientListProps {
   groups: IngredientGroup[];
@@ -23,6 +24,22 @@ export function IngredientList({ groups }: IngredientListProps) {
     });
   };
 
+  const toggleAll = (groupName: string, totalCount: number) => {
+    setChecked((prev) => {
+      const next = new Set(prev);
+      const keys = Array.from({ length: totalCount }, (_, i) => `${groupName}-${i}`);
+      const allChecked = keys.every((k) => prev.has(k));
+      for (const k of keys) {
+        if (allChecked) {
+          next.delete(k);
+        } else {
+          next.add(k);
+        }
+      }
+      return next;
+    });
+  };
+
   return (
     <div className="space-y-6">
       {groups.map((group) => (
@@ -33,6 +50,7 @@ export function IngredientList({ groups }: IngredientListProps) {
           expanded={expanded}
           onToggle={toggleCheck}
           onExpand={(key) => setExpanded(expanded === key ? null : key)}
+          onToggleAll={toggleAll}
         />
       ))}
     </div>
@@ -45,14 +63,24 @@ function IngredientGroupSection({
   expanded,
   onToggle,
   onExpand,
+  onToggleAll,
 }: {
   group: IngredientGroup;
   checked: Set<string>;
   expanded: string | null;
   onToggle: (key: string) => void;
   onExpand: (key: string) => void;
+  onToggleAll: (groupName: string, totalCount: number) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
+
+  const totalCount = group.ingredients.length;
+  const checkedCount = group.ingredients.filter(
+    (_, i) => checked.has(`${group.groupName}-${i}`)
+  ).length;
+  const progressPercentage = totalCount > 0
+    ? Math.round((checkedCount / totalCount) * 100)
+    : 0;
 
   return (
     <div className="ingredient-group">
@@ -66,6 +94,35 @@ function IngredientGroupSection({
           <h3 className="font-sans text-sm font-semibold text-stone-900 dark:text-stone-100 capitalize">
             {group.groupName}
           </h3>
+
+          {/* Progress Pie - appears when at least one ingredient is checked */}
+          <div
+            className={`flex items-center flex-shrink-0 transition-all duration-150 ease-out ${
+              checkedCount > 0 ? "opacity-100" : "opacity-0 w-0 -ml-3 overflow-hidden pointer-events-none"
+            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleAll(group.groupName, totalCount);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                e.stopPropagation();
+                onToggleAll(group.groupName, totalCount);
+              }
+            }}
+            role="button"
+            tabIndex={checkedCount > 0 ? 0 : -1}
+            aria-label={`${checkedCount === totalCount ? "Uncheck" : "Check"} all ingredients in ${group.groupName}`}
+          >
+            <ProgressPie
+              percentage={progressPercentage}
+              size={18}
+              strokeWidth={1.5}
+              color="#18A1F7"
+            />
+          </div>
+
           <svg
             className={`w-4 h-4 text-stone-400 dark:text-stone-500 transition-transform duration-200 ${
               collapsed ? "-rotate-90" : ""
