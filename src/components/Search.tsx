@@ -220,7 +220,6 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
         setIsLoading(false);
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [isLoading, setIsLoading, setError, setRecipe, router, onSuccess]
   );
 
