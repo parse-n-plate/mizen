@@ -38,8 +38,11 @@ function StepRow({
 
   return (
     <div
-      className={`flex gap-4 py-4 group ${!isLast ? "border-b border-stone-100 dark:border-stone-800" : ""}`}
+      className="relative flex gap-4 py-4 px-2 rounded-lg group hover:bg-[var(--color-cream)]"
     >
+      {!isLast && (
+        <div className="absolute bottom-0 left-2 right-2 h-px bg-stone-100 dark:bg-stone-800 group-hover:opacity-0" />
+      )}
       {/* Content */}
       <div className="flex-1 min-w-0 space-y-1">
         {step.title && (

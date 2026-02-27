@@ -139,12 +139,6 @@ const EXAMPLE_RECIPES: { emoji: string; time: string; recipe: ParsedRecipe }[] =
   },
 ];
 
-const HOW_IT_WORKS = [
-  { step: "Paste a URL", icon: "link" },
-  { step: "We strip the clutter", icon: "sparkles" },
-  { step: "Cook in peace", icon: "check" },
-];
-
 export function GettingStarted() {
   const [authOpen, setAuthOpen] = useState(false);
   const [loadingTitle, setLoadingTitle] = useState<string | null>(null);
@@ -165,57 +159,20 @@ export function GettingStarted() {
   return (
     <>
       <section className="page-fade-in-up page-fade-delay-3 w-full max-w-2xl space-y-8">
-        {/* How it works — simple inline steps */}
-        <div className="flex items-center justify-center gap-2 font-sans text-sm text-stone-400 dark:text-stone-500">
-          {HOW_IT_WORKS.map((item, i) => (
-            <span key={item.step} className="flex items-center gap-2">
-              {i > 0 && (
-                <svg className="h-3 w-3 text-stone-300 dark:text-stone-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="m9 18 6-6-6-6" />
-                </svg>
-              )}
-              <span className="flex items-center gap-1.5">
-                {item.icon === "link" && (
-                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                  </svg>
-                )}
-                {item.icon === "sparkles" && (
-                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
-                  </svg>
-                )}
-                {item.icon === "check" && (
-                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 6 9 17l-5-5" />
-                  </svg>
-                )}
-                {item.step}
-              </span>
-            </span>
-          ))}
-        </div>
-
         {/* Example recipes */}
         <div>
           <p className="mb-3 text-center font-sans text-sm font-medium text-stone-500 dark:text-stone-400">
             Try one
           </p>
           <div className="grid grid-cols-3 gap-2.5">
-            {EXAMPLE_RECIPES.map((example, i) => {
+            {EXAMPLE_RECIPES.map((example) => {
               const isActive = loadingTitle === example.recipe.title;
-              const tints = [
-                "bg-[var(--color-wheat-tint)]",
-                "bg-[var(--color-mint-tint)]",
-                "bg-[var(--color-orange-tint)]",
-              ];
               return (
                 <button
                   key={example.recipe.title}
                   onClick={() => handleTryRecipe(example.recipe)}
                   disabled={!!loadingTitle}
-                  className={`press-scale flex flex-col items-start gap-1 rounded-2xl border border-stone-200 dark:border-stone-700 ${tints[i]} px-4 py-3.5 text-left transition-all hover:border-stone-300 dark:hover:border-stone-600 hover:shadow-sm disabled:opacity-50`}
+                  className="press-scale flex flex-col items-start gap-1 rounded-2xl border border-stone-200 dark:border-stone-700 bg-[#fafaf9] dark:bg-stone-800 px-4 py-3.5 text-left transition-all hover:border-stone-300 dark:hover:border-stone-600 hover:shadow-sm disabled:opacity-50"
                 >
                   <span className="text-xl leading-none">{example.emoji}</span>
                   <span className="font-sans text-[14px] font-medium text-stone-900 dark:text-stone-100 leading-snug">

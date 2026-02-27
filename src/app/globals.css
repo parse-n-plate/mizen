@@ -465,6 +465,11 @@ body {
     position: relative;
     width: 100%;
     cursor: pointer;
+    border-radius: 8px;
+  }
+
+  .ingredient-list-item:hover {
+    background-color: var(--color-cream);
   }
 
   .ingredient-list-content {
@@ -473,12 +478,6 @@ body {
     gap: 12px;
     padding: 16px 8px;
     position: relative;
-    transition: background-color 150ms ease;
-    border-radius: 8px;
-  }
-
-  .ingredient-list-item:hover .ingredient-list-content {
-    background-color: var(--color-background-cream);
   }
 
   .ingredient-list-divider {
@@ -488,7 +487,6 @@ body {
     right: 8px;
     height: 1px;
     background-color: var(--color-border-light);
-    transition: opacity 150ms ease;
   }
 
   /* Native checkbox styled to match production */
