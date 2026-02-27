@@ -1,6 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import Magnifer from "@solar-icons/react/csr/search/Magnifer";
+import { X } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import type { IngredientGroup } from "@/lib/types";
 
 interface IngredientListProps {
@@ -10,6 +13,7 @@ interface IngredientListProps {
 export function IngredientList({ groups }: IngredientListProps) {
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const toggleCheck = (key: string) => {
     setChecked((prev) => {
@@ -23,18 +27,64 @@ export function IngredientList({ groups }: IngredientListProps) {
     });
   };
 
+  const filteredGroups = useMemo(() => {
+    if (!searchQuery.trim()) return groups;
+    const query = searchQuery.toLowerCase().trim();
+    return groups
+      .map((group) => ({
+        ...group,
+        ingredients: group.ingredients.filter(
+          (ing) =>
+            ing.ingredient.toLowerCase().includes(query) ||
+            (ing.description && ing.description.toLowerCase().includes(query)) ||
+            (ing.substitutions &&
+              ing.substitutions.some((sub) => sub.toLowerCase().includes(query)))
+        ),
+      }))
+      .filter((group) => group.ingredients.length > 0);
+  }, [groups, searchQuery]);
+
   return (
     <div className="space-y-6">
-      {groups.map((group) => (
-        <IngredientGroupSection
-          key={group.groupName}
-          group={group}
-          checked={checked}
-          expanded={expanded}
-          onToggle={toggleCheck}
-          onExpand={(key) => setExpanded(expanded === key ? null : key)}
+      {/* Search Bar */}
+      <div className="relative w-full max-w-[700px] mx-auto">
+        <Magnifer className="absolute left-3 top-1/2 -translate-y-1/2 size-[18px] text-muted-foreground pointer-events-none" />
+        <Input
+          type="text"
+          placeholder="Search ingredients"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          aria-label="Search ingredients"
+          className="pl-10 pr-9 h-11 rounded-lg border-transparent bg-stone-100 dark:bg-stone-800 font-sans text-[15px] placeholder:text-muted-foreground focus-visible:bg-background focus-visible:border-input"
         />
-      ))}
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={() => setSearchQuery("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-sm text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Clear search"
+          >
+            <X className="size-4" />
+          </button>
+        )}
+      </div>
+
+      {filteredGroups.length === 0 && searchQuery.trim() ? (
+        <p className="font-sans text-sm text-muted-foreground text-center py-4">
+          No ingredients match &ldquo;{searchQuery}&rdquo;
+        </p>
+      ) : (
+        filteredGroups.map((group) => (
+          <IngredientGroupSection
+            key={group.groupName}
+            group={group}
+            checked={checked}
+            expanded={expanded}
+            onToggle={toggleCheck}
+            onExpand={(key) => setExpanded(expanded === key ? null : key)}
+          />
+        ))
+      )}
     </div>
   );
 }
