@@ -165,19 +165,14 @@ export function GettingStarted() {
             Try one
           </p>
           <div className="grid grid-cols-3 gap-2.5">
-            {EXAMPLE_RECIPES.map((example, i) => {
+            {EXAMPLE_RECIPES.map((example) => {
               const isActive = loadingTitle === example.recipe.title;
-              const tints = [
-                "bg-[var(--color-wheat-tint)]",
-                "bg-[var(--color-mint-tint)]",
-                "bg-[var(--color-orange-tint)]",
-              ];
               return (
                 <button
                   key={example.recipe.title}
                   onClick={() => handleTryRecipe(example.recipe)}
                   disabled={!!loadingTitle}
-                  className={`press-scale flex flex-col items-start gap-1 rounded-2xl border border-stone-200 dark:border-stone-700 ${tints[i]} px-4 py-3.5 text-left transition-all hover:border-stone-300 dark:hover:border-stone-600 hover:shadow-sm disabled:opacity-50`}
+                  className="press-scale flex flex-col items-start gap-1 rounded-2xl border border-stone-200 dark:border-stone-700 bg-[var(--color-wheat-tint)] px-4 py-3.5 text-left transition-all hover:border-stone-300 dark:hover:border-stone-600 hover:shadow-sm disabled:opacity-50"
                 >
                   <span className="text-xl leading-none">{example.emoji}</span>
                   <span className="font-sans text-[14px] font-medium text-stone-900 dark:text-stone-100 leading-snug">
