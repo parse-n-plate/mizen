@@ -43,6 +43,92 @@ function decodeHtmlEntities(text: string): string {
     .trim();
 }
 
+function parseIngredientString(raw: string): {
+  amount: string;
+  units: string;
+  ingredient: string;
+} {
+  const s = raw.trim();
+  if (!s) return { amount: "", units: "", ingredient: s };
+
+  // Match amount at start: integers, fractions, decimals, mixed numbers, unicode fractions, and ranges.
+  const unicodeFractions = "½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞";
+  const numberToken = `(?:\\d+\\s+\\d+/\\d+|\\d+[${unicodeFractions}]|\\d+/\\d+|\\d*\\.\\d+|\\d+|[${unicodeFractions}])`;
+  const amountRe = new RegExp(
+    `^((?:${numberToken})(?:\\s*[\\-–—]\\s*(?:${numberToken}))?)\\s*`
+  );
+  const amountMatch = s.match(amountRe);
+  if (!amountMatch) return { amount: "", units: "", ingredient: s };
+
+  const amount = amountMatch[1].trim();
+  const rest = s.slice(amountMatch[0].length).trim();
+
+  // Match common cooking units (singular/plural)
+  const unitPatterns = [
+    "cups?",
+    "tablespoons?",
+    "tbsps?\\.?",
+    "teaspoons?",
+    "tsps?\\.?",
+    "ounces?",
+    "oz\\.?",
+    "pounds?",
+    "lbs?\\.?",
+    "grams?",
+    "g",
+    "kilograms?",
+    "kg",
+    "millilit(?:er|re)s?",
+    "ml",
+    "lit(?:er|re)s?",
+    "l",
+    "pints?",
+    "quarts?",
+    "gallons?",
+    "pinch(?:es)?",
+    "dash(?:es)?",
+    "cloves?",
+    "slices?",
+    "pieces?",
+    "stalks?",
+    "sprigs?",
+    "bunche?s?",
+    "cans?",
+    "packages?",
+    "pkgs?\\.?",
+    "sticks?",
+    "heads?",
+    "ears?",
+    "large",
+    "medium",
+    "small",
+    "whole",
+  ];
+  const unitRe = new RegExp(
+    `^(${unitPatterns.join("|")})(?:\\b|\\.)\\s*`,
+    "i"
+  );
+  const unitMatch = rest.match(unitRe);
+
+  if (unitMatch) {
+    return {
+      amount,
+      units: unitMatch[1].replace(/\.$/, ""),
+      ingredient: rest
+        .slice(unitMatch[0].length)
+        .replace(/^of\s+/i, "")
+        .trim(),
+    };
+  }
+
+  // If parsing left a dangling dash, treat as an ambiguous parse and preserve the original string.
+  if (/^[\-–—]/.test(rest)) {
+    return { amount: "", units: "", ingredient: s };
+  }
+
+  return { amount, units: "", ingredient: rest };
+}
+
 function normalizeInstructionSteps(instructions: unknown): InstructionStep[] {
   if (!Array.isArray(instructions)) return [];
 
@@ -216,11 +302,9 @@ function extractFromJsonLd(
             const ingredients: IngredientGroup[] = [
               {
                 groupName: "Main",
-                ingredients: ingredientStrings.map((ing) => ({
-                  amount: "",
-                  units: "",
-                  ingredient: ing,
-                })),
+                ingredients: ingredientStrings.map((ing) =>
+                  parseIngredientString(ing)
+                ),
               },
             ];
 
