@@ -89,6 +89,32 @@ function normalizeInstructionSteps(instructions: unknown): InstructionStep[] {
 }
 
 /**
+ * If the ingredient name starts with the same word as units, strip the
+ * duplicate. Handles plural/singular variants (tablespoon / tablespoons).
+ */
+function deduplicateUnits(groups: IngredientGroup[]): IngredientGroup[] {
+  return groups.map((group) => ({
+    ...group,
+    ingredients: group.ingredients.map((ing) => {
+      if (!ing.units || !ing.ingredient) return ing;
+      const unit = ing.units.toLowerCase();
+      const name = ing.ingredient.toLowerCase();
+      // Check exact match or plural/singular variant
+      const variants = [unit];
+      if (unit.endsWith("s")) variants.push(unit.slice(0, -1));
+      else variants.push(unit + "s");
+
+      for (const v of variants) {
+        if (name.startsWith(v + " ")) {
+          return { ...ing, ingredient: ing.ingredient.slice(v.length).trim() };
+        }
+      }
+      return ing;
+    }),
+  }));
+}
+
+/**
  * Merge step images into instructions that don't already have one.
  * Applies positionally — only fills in gaps.
  */
@@ -399,7 +425,7 @@ async function extractWithAI(
 
   return {
     title: data.title,
-    ingredients: data.ingredients,
+    ingredients: deduplicateUnits(data.ingredients),
     instructions: normalizedInstructions,
     ...(data.author && { author: data.author }),
     ...(data.summary && { summary: data.summary }),
@@ -498,7 +524,7 @@ export async function parseRecipeFromImage(
 
     const recipe: ParsedRecipe = {
       title: data.title,
-      ingredients: data.ingredients,
+      ingredients: deduplicateUnits(data.ingredients),
       instructions: normalizedInstructions,
       ...(data.author && { author: data.author }),
       ...(data.summary && { summary: data.summary }),
