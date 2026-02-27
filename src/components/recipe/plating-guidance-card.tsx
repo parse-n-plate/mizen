@@ -12,8 +12,8 @@ interface PlatingGuidanceCardProps {
 
 export default function PlatingGuidanceCard({
   platingNotes,
-  servingVessel,
-  servingTemp,
+  servingVessel: _servingVessel,
+  servingTemp: _servingTemp,
 }: PlatingGuidanceCardProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
