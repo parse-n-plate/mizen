@@ -22,7 +22,7 @@ const team = [
 export function Footer() {
   return (
     <footer className="w-full px-6 py-12">
-      <div className="mx-auto flex max-w-3xl items-center justify-between">
+      <div className="mx-auto flex max-w-2xl items-center justify-between">
         <div className="flex items-center gap-1.5">
           <p className="font-sans text-xs text-stone-400">
             Cooked with love by

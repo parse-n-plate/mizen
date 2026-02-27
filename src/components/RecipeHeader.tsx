@@ -31,7 +31,7 @@ export function RecipeHeader({ recipe }: RecipeHeaderProps) {
       </h1>
 
       {recipe.summary && (
-        <p className="font-sans text-sm text-stone-500 dark:text-stone-400 max-w-2xl leading-relaxed">
+        <p className="font-sans text-base text-stone-500 dark:text-stone-400 max-w-2xl leading-relaxed">
           {recipe.summary}
         </p>
       )}

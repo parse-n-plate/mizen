@@ -252,7 +252,7 @@ export default function RecipePage() {
 
           {/* Content card */}
           <div className="bg-white dark:bg-stone-900 sm:rounded-b-lg rounded-lg sm:rounded-t-none border border-stone-200 dark:border-stone-700 sm:border-t-0 flex-1">
-            <div className="max-w-3xl mx-auto px-5 sm:px-6 pt-5 pb-24 sm:pb-12">
+            <div className="max-w-3xl mx-auto px-5 sm:px-6 pt-5 pb-24 sm:pb-6">
               {activeTab === "prep" ? (
                 <div key="prep" className="tab-content-animate">
                   <PrepSection ingredients={recipe.ingredients} steps={recipe.instructions} />
