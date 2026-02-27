@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { ChevronRight, Link, Upload, X } from 'lucide-react';
@@ -56,9 +56,11 @@ export default function SearchCommandModal({
   const isUrlInput = search.trim().length > 0 && isUrl(search);
 
   // Collapse feedback sub-items when search changes
-  useEffect(() => {
+  const [prevSearch, setPrevSearch] = useState(search);
+  if (search !== prevSearch) {
+    setPrevSearch(search);
     setFeedbackExpanded(false);
-  }, [search]);
+  }
 
   const allRecipes = useMemo(() => {
     const bookmarkedRecipes = getBookmarkedRecipes();

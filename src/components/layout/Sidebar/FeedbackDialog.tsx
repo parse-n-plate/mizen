@@ -19,6 +19,7 @@ import Bug from '@solar-icons/react/csr/it/Bug';
 import Lightbulb from '@solar-icons/react/csr/devices/Lightbulb';
 import ChatRoundLine from '@solar-icons/react/csr/messages/ChatRoundLine';
 import Confetti from '@solar-icons/react/csr/ui/Confetti';
+import Image from 'next/image';
 
 export type FeedbackType = 'Bug Report' | 'Feature Idea' | 'User Feedback';
 
@@ -78,12 +79,14 @@ export default function FeedbackDialog({
   const selectedCategory = CATEGORIES.find((c) => c.type === type)!;
 
   // Sync initial props when dialog opens
-  useEffect(() => {
-    if (open) {
-      if (initialType) setType(initialType);
-      if (initialStep) setStep(initialStep);
-    }
-  }, [open, initialType, initialStep]);
+  const [prevOpen, setPrevOpen] = useState(false);
+  if (open && !prevOpen) {
+    if (initialType) setType(initialType);
+    if (initialStep) setStep(initialStep);
+  }
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+  }
 
   const handleClose = useCallback(() => {
     onOpenChange(false);
@@ -324,12 +327,13 @@ export default function FeedbackDialog({
                 <div className="flex gap-2 px-6 pb-2">
                   {screenshots.map((file, index) => (
                     <div key={index} className="relative size-16 flex-shrink-0">
-                      <img
+                      <Image
                         src={URL.createObjectURL(file)}
                         alt={`Screenshot ${index + 1}`}
                         width={64}
                         height={64}
                         className="size-full object-cover rounded-lg border border-stone-200"
+                        unoptimized
                       />
                       <button
                         type="button"

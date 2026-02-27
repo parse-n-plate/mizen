@@ -25,12 +25,14 @@ export function StepTimer({
   const [isComplete, setIsComplete] = useState(false);
 
   // Reset state when timer becomes inactive
-  useEffect(() => {
-    if (!activeTimer) {
-      setTimeLeft(durationMinutes * 60);
-      setIsComplete(false);
-    }
-  }, [activeTimer, durationMinutes]);
+  const [prevHadTimer, setPrevHadTimer] = useState(!!activeTimer);
+  const [prevDuration, setPrevDuration] = useState(durationMinutes);
+  if (!activeTimer && (prevHadTimer || durationMinutes !== prevDuration)) {
+    setTimeLeft(durationMinutes * 60);
+    setIsComplete(false);
+  }
+  if (!!activeTimer !== prevHadTimer) setPrevHadTimer(!!activeTimer);
+  if (durationMinutes !== prevDuration) setPrevDuration(durationMinutes);
 
   // Update time left via interval when timer is active
   useEffect(() => {

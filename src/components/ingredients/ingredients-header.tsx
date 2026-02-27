@@ -42,7 +42,7 @@ export function IngredientsHeader({
   const [isDragging, setIsDragging] = useState(false);
   const [dragValue, setDragValue] = useState<number | null>(null);
   const lastDragValueRef = useRef<number | null>(null);
-  const prevServingsRef = useRef<number | undefined>(servings);
+  const [prevServings, setPrevServings] = useState<number | undefined>(servings);
   const [, startTransition] = React.useTransition();
   
   // State for servings input
@@ -96,25 +96,18 @@ export function IngredientsHeader({
     : Math.round(displayedValue);
   
   // Sync input value with servings/multiplier
-  useEffect(() => {
-    if (isDragging) return;
-
-    const hasServingsChanged = servings !== prevServingsRef.current;
-
-    if (servings !== undefined) {
-      setServingsInputValue(formatSliderValue(servings));
-      if (hasServingsChanged) {
+  if (servings !== prevServings) {
+    setPrevServings(servings);
+    if (!isDragging) {
+      if (servings !== undefined) {
+        setServingsInputValue(formatSliderValue(servings));
         setDragValue(null);
-      }
-    } else if (isMultiplierMode) {
-      setServingsInputValue('1');
-      if (hasServingsChanged) {
+      } else if (isMultiplierMode) {
+        setServingsInputValue('1');
         setDragValue(null);
       }
     }
-
-    prevServingsRef.current = servings;
-  }, [servings, isMultiplierMode, isDragging, formatSliderValue]);
+  }
   
   // Handle servings input change
   const handleServingsInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

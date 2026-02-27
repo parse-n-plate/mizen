@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import ChefHatHeartBold from '@solar-icons/react/csr/food/ChefHatHeart';
 import { X } from 'lucide-react';
 
@@ -25,14 +25,9 @@ import { X } from 'lucide-react';
  * - Sticky positioning: remains visible at top of viewport when scrolling
  */
 export default function HomepageBanner() {
-  const [isDismissed, setIsDismissed] = useState<boolean>(false);
-
-  // Read localStorage after mount to avoid hydration mismatch
-  useEffect(() => {
-    if (localStorage.getItem('homepage-banner-dismissed') === 'true') {
-      setIsDismissed(true);
-    }
-  }, []);
+  const [isDismissed, setIsDismissed] = useState<boolean>(
+    () => typeof window !== 'undefined' && localStorage.getItem('homepage-banner-dismissed') === 'true'
+  );
 
   // Handle dismiss button click
   const handleDismiss = () => {

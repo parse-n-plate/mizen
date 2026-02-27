@@ -465,9 +465,10 @@ export default function ParsedRecipePage({
   // Search query for filtering ingredients
   const [ingredientSearchQuery, setIngredientSearchQuery] = useState<string>('');
 
-  // Load persistence from localStorage
-  useEffect(() => {
-    if (!recipeKey) return;
+  // Load persistence from localStorage when recipeKey changes
+  const [prevRecipeKey, setPrevRecipeKey] = useState(recipeKey);
+  if (recipeKey && recipeKey !== prevRecipeKey) {
+    setPrevRecipeKey(recipeKey);
     const saved = localStorage.getItem(recipeKey);
     if (saved) {
       try {
@@ -478,7 +479,7 @@ export default function ParsedRecipePage({
         console.error('Error loading recipe progress');
       }
     }
-  }, [recipeKey]);
+  }
 
   // Save persistence to localStorage
   useEffect(() => {
@@ -487,9 +488,10 @@ export default function ParsedRecipePage({
     localStorage.setItem(recipeKey, JSON.stringify(data));
   }, [recipeKey, checkedIngredients, collapsedGroups]);
 
-  // Load scale settings from localStorage
-  useEffect(() => {
-    if (!scaleSettingsKey) return;
+  // Load scale settings from localStorage when scaleSettingsKey changes
+  const [prevScaleSettingsKey, setPrevScaleSettingsKey] = useState(scaleSettingsKey);
+  if (scaleSettingsKey && scaleSettingsKey !== prevScaleSettingsKey) {
+    setPrevScaleSettingsKey(scaleSettingsKey);
     const saved = localStorage.getItem(scaleSettingsKey);
     if (saved) {
       try {
@@ -499,7 +501,7 @@ export default function ParsedRecipePage({
         console.error('Error loading scale settings');
       }
     }
-  }, [scaleSettingsKey]);
+  }
 
   // Save scale settings to localStorage
   useEffect(() => {
@@ -773,9 +775,11 @@ export default function ParsedRecipePage({
   }, [isLoaded, parsedRecipe, router]);
 
   // Initialize servings from recipe when loaded
-  useEffect(() => {
+  const [prevParsedRecipe, setPrevParsedRecipe] = useState(parsedRecipe);
+  if (parsedRecipe !== prevParsedRecipe) {
+    setPrevParsedRecipe(parsedRecipe);
     setServings(parsedRecipe?.servings);
-  }, [parsedRecipe]);
+  }
 
   // Calculate scaled ingredients
   const scaledIngredients: IngredientGroups = (() => {
@@ -1323,10 +1327,13 @@ export default function ParsedRecipePage({
                         <motion.div
                           className="relative shrink-0 w-8 h-8 md:w-9 md:h-9 group-hover:rotate-[-5deg] transition-transform duration-200"
                         >
-                          <img
+                          <Image
                             alt="Prep icon"
                             className={`absolute inset-0 w-full h-full object-contain ${activeTab === 'prep' ? '' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
                             src="/assets/icons/Prep_Icon.png"
+                            width={36}
+                            height={36}
+                            unoptimized
                           />
                         </motion.div>
                         <Tooltip>
@@ -1347,10 +1354,13 @@ export default function ParsedRecipePage({
                         <motion.div
                           className="relative shrink-0 w-8 h-8 md:w-9 md:h-9 group-hover:scale-105 group-hover:rotate-[5deg] transition-transform duration-200"
                         >
-                          <img
+                          <Image
                             alt="Cook icon"
                             className={`absolute inset-0 w-full h-full object-contain ${activeTab === 'cook' ? '' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
                             src="/assets/icons/Cook_Icon.png"
+                            width={36}
+                            height={36}
+                            unoptimized
                           />
                         </motion.div>
                         <Tooltip>
@@ -1371,10 +1381,13 @@ export default function ParsedRecipePage({
                         <motion.div
                           className="relative shrink-0 w-8 h-8 md:w-9 md:h-9 group-hover:scale-105 group-hover:rotate-[-3deg] transition-transform duration-200"
                         >
-                          <img
+                          <Image
                             alt="Plate icon"
                             className={`absolute inset-0 w-full h-full object-contain ${activeTab === 'plate' ? '' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}
                             src="/assets/icons/Plate_Icon.png"
+                            width={36}
+                            height={36}
+                            unoptimized
                           />
                         </motion.div>
                         <Tooltip>

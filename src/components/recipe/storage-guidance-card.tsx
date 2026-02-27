@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { Calendar, Refrigerator, Snowflake, Clock, RotateCcw, Edit2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -31,9 +31,11 @@ export default function StorageGuidanceCard({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Update storage text when storageGuide prop changes (e.g., when AI generates new guidance)
-  useEffect(() => {
+  const [prevStorageGuide, setPrevStorageGuide] = useState(storageGuide);
+  if (storageGuide !== prevStorageGuide) {
+    setPrevStorageGuide(storageGuide);
     setStorageText(storageGuide || "Storage guidance not available. Refrigerate leftovers promptly.");
-  }, [storageGuide]);
+  }
 
   // Auto-focus textarea when editing starts
   useEffect(() => {
