@@ -12,7 +12,7 @@ export default function HomePage() {
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] flex-col">
-      <main className="flex flex-1 flex-col items-center justify-center px-6 pb-32">
+      <main className="flex flex-1 flex-col items-center justify-center px-6 pb-6">
         <div className="page-fade-in-up w-full max-w-2xl space-y-8 text-center">
           <h1 className="font-serif text-[clamp(40px,8vw,72px)] font-bold leading-[1.1] text-stone-900 dark:text-stone-100">
             Clean recipes,
