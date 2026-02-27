@@ -107,7 +107,7 @@ export function TopBar() {
                         className="fixed inset-0 z-30"
                         onClick={() => setRecipeSwitcherOpen(false)}
                       />
-                      <div className="popover-animate absolute left-0 top-full z-40 mt-2 w-64 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 py-1 shadow-lg shadow-stone-200/50 dark:shadow-black/30">
+                      <div className="popover-animate absolute left-0 top-full z-40 mt-2 w-64 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 py-1 shadow-lg">
                         <p className="px-3 py-1.5 font-sans text-xs font-medium text-stone-400 dark:text-stone-500">
                           Recent recipes
                         </p>
@@ -166,16 +166,6 @@ export function TopBar() {
                     </svg>
                   </Link>
                 )}
-                <button
-                  onClick={() => setSettingsOpen(true)}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-200/60 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
-                  aria-label="Settings"
-                >
-                  <svg className="h-[18px] w-[18px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                </button>
               </>
             )}
             {/* User avatar / sign in + sign up */}
@@ -222,7 +212,7 @@ export function TopBar() {
                       className="fixed inset-0 z-30"
                       onClick={() => setMenuOpen(false)}
                     />
-                    <div className="popover-animate absolute right-0 top-full z-40 mt-2 w-48 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 py-1 shadow-lg shadow-stone-200/50 dark:shadow-black/30">
+                    <div className="popover-animate absolute right-0 top-full z-40 mt-2 w-48 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 py-1 shadow-lg">
                       <div className="border-b border-stone-100 dark:border-stone-800 px-3 py-2">
                         <p className="truncate font-sans text-sm font-medium text-stone-900 dark:text-stone-100">{name}</p>
                         <p className="truncate font-sans text-xs text-stone-400 dark:text-stone-500">{user.email}</p>
