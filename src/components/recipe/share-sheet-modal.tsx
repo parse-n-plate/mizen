@@ -374,16 +374,18 @@ export default function ShareSheetModal({
                         }}
                       >
                         <div
-                          className="w-full h-full bg-white border-2 sm:border-[3px] md:border-[4px] border-white rounded-lg sm:rounded-xl md:rounded-2xl overflow-hidden shadow-lg sm:shadow-xl md:shadow-2xl transition-transform hover:scale-105 duration-300"
+                          className="w-full h-full bg-white border-2 sm:border-[3px] md:border-[4px] border-white rounded-lg sm:rounded-xl md:rounded-2xl overflow-hidden shadow-lg sm:shadow-xl md:shadow-2xl transition-transform hover:scale-105 duration-300 relative"
                           style={{
                             transform: `rotate(${rotations[index]}deg)`,
                             transformOrigin: 'center',
                           }}
                         >
-                          <img
+                          <Image
                             src={photo.data}
                             alt={`Your dish ${index + 1}`}
-                            className="w-full h-full object-cover"
+                            fill
+                            unoptimized
+                            className="object-cover"
                           />
                         </div>
                       </div>

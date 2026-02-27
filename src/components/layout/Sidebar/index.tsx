@@ -230,7 +230,7 @@ export default function Sidebar() {
     return () => subscription.unsubscribe();
   }, [supabase]);
 
-  const handleLogout = async () => {
+  const _handleLogout = async () => {
     await supabase.auth.signOut();
     setUser(null);
     router.refresh();
@@ -823,13 +823,15 @@ export default function Sidebar() {
                 {isRail ? (
                   <NavTooltip isCollapsed={isCollapsed} isMobile={isMobile} label={user.user_metadata?.full_name || 'Profile'}>
                     <Link href="/profile" className="block">
-                      <div className="w-8 h-8 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0">
+                      <div className="relative w-8 h-8 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0">
                         {user.user_metadata?.avatar_url ? (
-                          <img
+                          <Image
                             src={user.user_metadata.avatar_url}
                             alt="Profile"
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"
+                            fill
+                            unoptimized
                           />
                         ) : (
                           <span className="font-albert text-xs font-bold text-stone-600">
@@ -841,13 +843,15 @@ export default function Sidebar() {
                   </NavTooltip>
                 ) : (
                   <>
-                    <div className="w-10 h-10 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0">
+                    <div className="relative w-10 h-10 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0">
                       {user.user_metadata?.avatar_url ? (
-                        <img
+                        <Image
                           src={user.user_metadata.avatar_url}
                           alt="Profile"
                           className="w-full h-full object-cover"
                           referrerPolicy="no-referrer"
+                          fill
+                          unoptimized
                         />
                       ) : (
                         <span className="font-albert text-sm font-bold text-stone-600">

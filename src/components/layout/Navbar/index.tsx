@@ -10,6 +10,7 @@ import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { createClient } from '@/utils/supabase/client';
 import { User } from '@supabase/supabase-js';
 import AuthModal from '@/components/auth/AuthModal';
+import Image from 'next/image';
 
 export default function Navbar() {
   const { bookmarkedRecipeIds, isLoaded } = useParsedRecipes();
@@ -100,12 +101,14 @@ export default function Navbar() {
           ) : (
             <div className="flex items-center gap-3 pl-2 border-l border-stone-200">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-stone-100 rounded-full flex items-center justify-center border border-stone-200 overflow-hidden flex-shrink-0">
+                <div className="relative w-8 h-8 bg-stone-100 rounded-full flex items-center justify-center border border-stone-200 overflow-hidden flex-shrink-0">
                   {user.user_metadata?.avatar_url ? (
-                    <img
+                    <Image
                       src={user.user_metadata.avatar_url}
                       alt="Profile"
                       className="w-full h-full object-cover"
+                      fill
+                      unoptimized
                     />
                   ) : (
                     <span className="font-albert text-xs font-bold text-stone-600">

@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import Gallery from '@solar-icons/react/csr/video/Gallery';
 import { LogIn, UserPlus, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import Image from 'next/image';
 
 export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -104,7 +105,7 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
             {/* Social login */}
             <div className="space-y-3 mb-6">
               <Button variant="outline" className="w-full justify-start" onClick={handleGoogleLogin}>
-                <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="" />
+                <Image src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="" width={16} height={16} unoptimized />
                 Sign in with Google
               </Button>
             </div>

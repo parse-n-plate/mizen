@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import Image from 'next/image';
 import { Camera, X, Share2, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { compressImage, validateImageFile } from '@/lib/imageUtils';
@@ -229,10 +230,12 @@ export default function PlatePhotoCapture({
                         transformOrigin: 'center',
                       }}
                     >
-                      <img
+                      <Image
                         src={photo.data}
                         alt={`Dish photo ${index + 1}`}
-                        className="w-full h-full object-cover"
+                        fill
+                        unoptimized
+                        className="object-cover"
                       />
                       {/* Remove button on hover */}
                       {onPhotoRemove && (

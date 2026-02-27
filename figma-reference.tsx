@@ -11,11 +11,13 @@ const imgRectangle121 = "http://localhost:3845/assets/52eb81526ed03a76a3674e2f41
 const imgRectangle122 = "http://localhost:3845/assets/17f01c326fef07fb6780233cacd13a00f8e0bad9.png";
 const imgRectangle123 = "http://localhost:3845/assets/c4fd4bcb77d41538f29efbbc295860e24e4cb066.png";
 
+import Image from 'next/image';
+
 function FishLogo() {
   return (
     <div className="absolute box-border content-stretch flex flex-col gap-[10px] items-center justify-center left-[48px] p-px size-[48px] top-[24px]" data-name="Fish Logo">
       <div className="aspect-[46/38.4615] relative shrink-0 w-full" data-name="image 49">
-        <img alt="" className="absolute inset-0 max-w-none object-50%-50% object-cover pointer-events-none size-full" src={imgImage49} />
+        <Image alt="" className="absolute inset-0 max-w-none object-50%-50% object-cover pointer-events-none size-full" src={imgImage49} fill unoptimized />
       </div>
     </div>
   );
@@ -111,7 +113,7 @@ function Frame284() {
     <div className="content-stretch flex gap-[12px] items-center relative shrink-0">
       <div className="h-[35.739px] relative shrink-0 w-[43.5px]" data-name="image 47">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <img alt="" className="absolute h-[310.87%] left-[-17.24%] max-w-none top-[-172.37%] w-[255.4%]" src={imgImage47} />
+          <Image alt="" className="absolute h-[310.87%] left-[-17.24%] max-w-none top-[-172.37%] w-[255.4%]" src={imgImage47} width={111} height={111} unoptimized />
         </div>
       </div>
       <p className="font-['Domine:Regular',sans-serif] font-normal leading-[1.1] relative shrink-0 text-[24px] text-black text-nowrap whitespace-pre">{`Parse & Plate`}</p>
@@ -294,7 +296,7 @@ function Frame301() {
     <div className="content-stretch flex gap-[10px] items-center justify-center relative shrink-0">
       <div className="h-[35.739px] relative shrink-0 w-[43.5px]" data-name="image 47">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <img alt="" className="absolute h-[295.1%] left-[-130.68%] max-w-none top-[-27.67%] w-[247.34%]" src={imgImage47} />
+          <Image alt="" className="absolute h-[295.1%] left-[-130.68%] max-w-none top-[-27.67%] w-[247.34%]" src={imgImage47} width={108} height={105} unoptimized />
         </div>
       </div>
       <p className="font-['Domine:Regular',sans-serif] font-normal leading-[1.1] relative shrink-0 text-[32px] text-black text-nowrap whitespace-pre">Asian</p>
@@ -320,7 +322,7 @@ function Frame290() {
       <div className="size-full">
         <div className="box-border content-stretch flex flex-col gap-[24px] items-start p-[24px] relative w-full">
           <div className="aspect-[282.667/204] relative rounded-[8px] shrink-0 w-full">
-            <img alt="" className="absolute inset-0 max-w-none object-50%-50% object-cover pointer-events-none rounded-[8px] size-full" src={imgRectangle121} />
+            <Image alt="" className="absolute inset-0 max-w-none object-50%-50% object-cover pointer-events-none rounded-[8px] size-full" src={imgRectangle121} fill unoptimized />
           </div>
           <Frame289 />
         </div>
@@ -345,7 +347,7 @@ function Frame291() {
       <div className="size-full">
         <div className="box-border content-stretch flex flex-col gap-[24px] items-start p-[24px] relative w-full">
           <div className="aspect-[282.667/204] relative rounded-[8px] shrink-0 w-full">
-            <img alt="" className="absolute inset-0 max-w-none object-50%-50% object-cover pointer-events-none rounded-[8px] size-full" src={imgRectangle122} />
+            <Image alt="" className="absolute inset-0 max-w-none object-50%-50% object-cover pointer-events-none rounded-[8px] size-full" src={imgRectangle122} fill unoptimized />
           </div>
           <Frame302 />
         </div>
@@ -372,7 +374,7 @@ function Frame292() {
       <div className="size-full">
         <div className="box-border content-stretch flex flex-col gap-[24px] items-start p-[24px] relative w-full">
           <div className="aspect-[282.667/204] relative rounded-[8px] shrink-0 w-full">
-            <img alt="" className="absolute inset-0 max-w-none object-50%-50% object-cover pointer-events-none rounded-[8px] size-full" src={imgRectangle123} />
+            <Image alt="" className="absolute inset-0 max-w-none object-50%-50% object-cover pointer-events-none rounded-[8px] size-full" src={imgRectangle123} fill unoptimized />
           </div>
           <Frame303 />
         </div>
@@ -409,7 +411,7 @@ function Frame305() {
       <div className="size-full">
         <div className="box-border content-stretch flex flex-col gap-[24px] items-start p-[24px] relative w-full">
           <div className="aspect-[460/204] relative rounded-[8px] shrink-0 w-full">
-            <img alt="" className="absolute inset-0 max-w-none object-50%-50% object-cover pointer-events-none rounded-[8px] size-full" src={imgRectangle121} />
+            <Image alt="" className="absolute inset-0 max-w-none object-50%-50% object-cover pointer-events-none rounded-[8px] size-full" src={imgRectangle121} fill unoptimized />
           </div>
           <Frame304 />
         </div>

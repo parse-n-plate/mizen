@@ -10,6 +10,7 @@ import { useRecipe } from '@/contexts/RecipeContext';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { errorLogger } from '@/utils/errorLogger';
 import { X, Image as ImageIcon, Link as LinkIcon, ChevronDown } from 'lucide-react';
+import Image from 'next/image';
 import LoadingAnimation from '@/components/shared/loading-animation';
 import { ParsedRecipe } from '@/lib/storage';
 import { useToast } from '@/hooks/useToast';
@@ -725,11 +726,14 @@ export default function SearchForm({
             {imagePreview && (
               <div className="space-y-3">
                 <div className="relative rounded-lg overflow-hidden border border-[#d9d9d9]">
-                  <img
+                  <Image
                     src={imagePreview}
                     alt="Recipe preview"
                     className="w-full h-auto max-h-96 object-contain bg-stone-50"
-                    draggable="false"
+                    draggable={false}
+                    width={800}
+                    height={600}
+                    unoptimized
                   />
                 </div>
 

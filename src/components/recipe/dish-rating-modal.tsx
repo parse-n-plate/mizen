@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import StarIcon from '@/components/shared/star-icon';
-import { Textarea } from '@/components/ui/textarea';
 
 interface PhotoRatingModalProps {
   photos: Array<{ data: string; filename: string }>;
@@ -116,16 +116,18 @@ export default function PhotoRatingModal({
           {photos.length > 0 && (
             <div className="absolute" style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
               <div
-                className="transform bg-white border-[3.8px] border-white rounded-[15px] w-[99px] md:w-[120px] h-[122px] md:h-[148px] overflow-hidden shadow-lg"
+                className="transform bg-white border-[3.8px] border-white rounded-[15px] w-[99px] md:w-[120px] h-[122px] md:h-[148px] overflow-hidden shadow-lg relative"
                 style={{
                   transform: 'rotate(-8deg)',
                   transformOrigin: 'center',
                 }}
               >
-                <img
+                <Image
                   src={photos[0].data}
                   alt="Your dish"
-                  className="w-full h-full object-cover"
+                  fill
+                  unoptimized
+                  className="object-cover"
                 />
               </div>
             </div>

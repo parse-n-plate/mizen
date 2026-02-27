@@ -234,10 +234,12 @@ export default function RecipeQuickViewModal({
           <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-gradient-to-b from-stone-50 to-stone-100 border border-stone-200">
             {recipe.plate?.photoData ? (
               // Show user's cooked dish photo
-              <img
+              <Image
                 src={recipe.plate.photoData}
                 alt="Your dish"
-                className="w-full h-full object-cover"
+                fill
+                unoptimized
+                className="object-cover"
               />
             ) : (
               // Show cuisine icon as placeholder with centered layout

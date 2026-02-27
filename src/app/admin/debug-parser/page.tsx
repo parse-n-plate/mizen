@@ -4,6 +4,7 @@ import { useState, useRef, use } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Upload, X } from 'lucide-react';
+import Image from 'next/image';
 
 interface Ingredient {
   amount: string;
@@ -530,10 +531,13 @@ export default function DebugParserPage({
                 <div className="space-y-3">
                   {/* Image Preview */}
                   <div className="relative rounded-lg overflow-hidden border-2 border-gray-300">
-                    <img
+                    <Image
                       src={imagePreview}
                       alt="Recipe preview"
                       className="w-full h-auto max-h-96 object-contain bg-gray-50"
+                      width={800}
+                      height={600}
+                      unoptimized
                     />
                     {/* Remove Image Button */}
                     <button

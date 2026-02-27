@@ -260,19 +260,23 @@ export default function RecipeCard({
             {recipe.platePhotoData ? (
               // Priority 1: Show plate photo if user uploaded one (shows "Cooked" badge)
               <div className="relative w-16 h-16 md:w-24 md:h-24 flex-shrink-0">
-                <img
+                <Image
                   src={recipe.platePhotoData}
                   alt="Your dish"
-                  className="w-full h-full object-cover rounded-[12px] border-2 border-stone-200 pointer-events-none"
+                  fill
+                  unoptimized
+                  className="object-cover rounded-[12px] border-2 border-stone-200 pointer-events-none"
                 />
               </div>
             ) : recipe.imageUrl ? (
               // Priority 2: Show original recipe image from website if available
               <div className="relative w-16 h-16 md:w-24 md:h-24 flex-shrink-0">
-                <img
+                <Image
                   src={recipe.imageUrl}
                   alt={recipe.title}
-                  className="w-full h-full object-cover rounded-[12px] border-2 border-stone-200 pointer-events-none"
+                  fill
+                  unoptimized
+                  className="object-cover rounded-[12px] border-2 border-stone-200 pointer-events-none"
                 />
               </div>
             ) : (

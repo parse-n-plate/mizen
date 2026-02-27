@@ -15,6 +15,7 @@ import { isUrl, normalizeUrl } from '@/utils/searchUtils';
 import { addToSearchHistory } from '@/lib/searchHistory';
 import { useToast } from '@/hooks/useToast';
 import { ERROR_CODES } from '@/utils/formatError';
+import Image from 'next/image';
 import LoadingAnimation from '@/components/shared/loading-animation';
 
 /**
@@ -521,11 +522,14 @@ export default function HomepageSearch() {
                 {selectedImage && (
                   <div className="flex items-center gap-1.5 bg-[#ebf3ff] rounded-full pl-2 pr-3 py-1.5 border border-[#0072fb]/20 animate-in fade-in slide-in-from-left-2 duration-200">
                     {imagePreviewUrl && (
-                      <img 
-                        src={imagePreviewUrl} 
+                      <Image
+                        src={imagePreviewUrl}
                         alt={selectedImage.name}
                         className="size-[28px] rounded object-cover flex-shrink-0"
-                        draggable="false"
+                        draggable={false}
+                        width={28}
+                        height={28}
+                        unoptimized
                       />
                     )}
                     <span className="font-albert font-medium text-[#0c0a09] text-[13px]">{selectedImage.name}</span>
