@@ -1,8 +1,9 @@
 import * as cheerio from "cheerio";
+import { z } from "zod";
 import { getGroqClient, extractJsonFromAiResponse } from "@/lib/groq";
-import { CoreRecipeSchema } from "@/lib/schemas/recipe";
-import { EXTRACTION_PROMPT } from "@/lib/prompts/extraction";
-import { cleanRecipeHTML } from "./htmlCleaner";
+import { CoreRecipeSchema, IngredientGroupSchema } from "@/lib/schemas/recipe";
+import { EXTRACTION_PROMPT, ENRICHMENT_PROMPT } from "@/lib/prompts/extraction";
+import { cleanRecipeHTML, type CleanedHTML } from "./htmlCleaner";
 import type {
   ParsedRecipe,
   ParserResult,
@@ -440,6 +441,103 @@ async function extractWithAI(
 }
 
 // ---------------------------------------------------------------------------
+// Layer 2b: AI Enrichment (Groq) — for JSON-LD data
+// ---------------------------------------------------------------------------
+
+async function enrichWithAI(
+  jsonLdData: ParsedRecipe
+): Promise<Partial<ParsedRecipe> | null> {
+  const groq = getGroqClient();
+
+  const inputPayload = JSON.stringify({
+    title: jsonLdData.title,
+    servings: jsonLdData.servings ?? null,
+    prepTimeMinutes: jsonLdData.prepTimeMinutes ?? null,
+    cookTimeMinutes: jsonLdData.cookTimeMinutes ?? null,
+    totalTimeMinutes: jsonLdData.totalTimeMinutes ?? null,
+    ingredients: jsonLdData.ingredients,
+    instructions: jsonLdData.instructions.map((s) => ({
+      detail: s.detail,
+    })),
+  });
+
+  const response = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages: [
+      { role: "system", content: ENRICHMENT_PROMPT },
+      { role: "user", content: inputPayload },
+    ],
+    temperature: 0.1,
+    max_tokens: 4000,
+  });
+
+  const result = response.choices[0]?.message?.content;
+  if (!result || result.trim().length === 0) return null;
+
+  const parsedData = extractJsonFromAiResponse(result);
+  if (!parsedData || typeof parsedData !== "object") return null;
+
+  const data = parsedData as Record<string, unknown>;
+
+  let enrichedIngredients: IngredientGroup[] | undefined;
+  if (Array.isArray(data.ingredients) && data.ingredients.length > 0) {
+    const result = z.array(IngredientGroupSchema).safeParse(data.ingredients);
+    if (result.success) enrichedIngredients = result.data;
+    else console.error("[Parser] Enriched ingredients failed validation:", result.error.issues);
+  }
+
+  let enrichedInstructions: InstructionStep[] | undefined;
+  if (Array.isArray(data.instructions)) {
+    const normalized = normalizeInstructionSteps(data.instructions);
+    if (normalized.length > 0) enrichedInstructions = normalized;
+  }
+
+  const summary =
+    typeof data.summary === "string" && data.summary.trim()
+      ? data.summary.trim()
+      : undefined;
+
+  const enrichedServings =
+    typeof data.servings === "number" && data.servings > 0
+      ? data.servings
+      : undefined;
+  const enrichedPrepTime =
+    typeof data.prepTimeMinutes === "number" && data.prepTimeMinutes > 0
+      ? data.prepTimeMinutes
+      : undefined;
+  const enrichedCookTime =
+    typeof data.cookTimeMinutes === "number" && data.cookTimeMinutes > 0
+      ? data.cookTimeMinutes
+      : undefined;
+  const enrichedTotalTime =
+    typeof data.totalTimeMinutes === "number" && data.totalTimeMinutes > 0
+      ? data.totalTimeMinutes
+      : undefined;
+
+  return {
+    ...(enrichedIngredients && { ingredients: enrichedIngredients }),
+    ...(enrichedInstructions && { instructions: enrichedInstructions }),
+    ...(summary && { summary }),
+    ...(enrichedServings && { servings: enrichedServings }),
+    ...(enrichedPrepTime && { prepTimeMinutes: enrichedPrepTime }),
+    ...(enrichedCookTime && { cookTimeMinutes: enrichedCookTime }),
+    ...(enrichedTotalTime && { totalTimeMinutes: enrichedTotalTime }),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Content selection for full AI extraction
+// ---------------------------------------------------------------------------
+
+function pickContentForAI(cleaned: CleanedHTML): string {
+  // Prefer recipe card container (highest signal, no blog prose)
+  if (cleaned.recipeCardHtml && cleaned.recipeCardHtml.length > 500) {
+    return cleaned.recipeCardHtml;
+  }
+  return cleaned.html || "";
+}
+
+// ---------------------------------------------------------------------------
 // Orchestrator
 // ---------------------------------------------------------------------------
 
@@ -597,11 +695,12 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
     const jsonLdResult = extractFromJsonLd($);
 
     if (jsonLdResult) {
-      // Try AI enrichment for better groupings
-      let aiResult: ParsedRecipe | null = null;
+      // Enrich JSON-LD data with AI (groupings, step titles, summary)
+      // Sends compact JSON instead of full HTML — much smaller payload
+      let enrichment: Partial<ParsedRecipe> | null = null;
       try {
         if (process.env.GROQ_API_KEY) {
-          aiResult = await extractWithAI(cleaned.html);
+          enrichment = await enrichWithAI(jsonLdResult);
         }
       } catch (error) {
         console.error("[Parser] AI enrichment failed:", error);
@@ -613,50 +712,71 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
 
       const useBetterAiGroupings =
         hasOnlyMainGroup &&
-        aiResult &&
-        aiResult.ingredients.length > 0 &&
-        (aiResult.ingredients.length > 1 ||
-          aiResult.ingredients[0].groupName !== "Main");
+        enrichment?.ingredients &&
+        enrichment.ingredients.length > 0 &&
+        (enrichment.ingredients.length > 1 ||
+          enrichment.ingredients[0].groupName !== "Main");
+
+      // Use enriched instructions if same count and has real titles
+      const useEnrichedInstructions =
+        enrichment?.instructions &&
+        enrichment.instructions.length === jsonLdResult.instructions.length &&
+        enrichment.instructions.every(
+          (s) => s.title && !s.title.startsWith("Step ")
+        );
 
       const mergedRecipe: ParsedRecipe = {
         ...jsonLdResult,
-        ...(useBetterAiGroupings && { ingredients: aiResult!.ingredients }),
-        ...(aiResult?.summary && { summary: aiResult.summary }),
-        ...(jsonLdResult.servings
-          ? { servings: jsonLdResult.servings }
-          : aiResult?.servings
-            ? { servings: aiResult.servings }
-            : {}),
-        ...(jsonLdResult.prepTimeMinutes
-          ? { prepTimeMinutes: jsonLdResult.prepTimeMinutes }
-          : aiResult?.prepTimeMinutes
-            ? { prepTimeMinutes: aiResult.prepTimeMinutes }
-            : {}),
-        ...(jsonLdResult.cookTimeMinutes
-          ? { cookTimeMinutes: jsonLdResult.cookTimeMinutes }
-          : aiResult?.cookTimeMinutes
-            ? { cookTimeMinutes: aiResult.cookTimeMinutes }
-            : {}),
-        ...(jsonLdResult.totalTimeMinutes
-          ? { totalTimeMinutes: jsonLdResult.totalTimeMinutes }
-          : aiResult?.totalTimeMinutes
-            ? { totalTimeMinutes: aiResult.totalTimeMinutes }
-            : {}),
+        ...(useBetterAiGroupings && { ingredients: enrichment!.ingredients! }),
+        ...(useEnrichedInstructions && {
+          // Pin detail text from JSON-LD as source of truth — only take titles/tips/ingredients from AI
+          instructions: enrichment!.instructions!.map((enrichedStep, i) => ({
+            ...enrichedStep,
+            detail: jsonLdResult.instructions[i]?.detail ?? enrichedStep.detail,
+          })),
+        }),
+        ...(enrichment?.summary && { summary: enrichment.summary }),
+        // Backfill time/servings from AI enrichment only when JSON-LD didn't have them
+        ...(!jsonLdResult.servings && enrichment?.servings && { servings: enrichment.servings }),
+        ...(!jsonLdResult.prepTimeMinutes && enrichment?.prepTimeMinutes && { prepTimeMinutes: enrichment.prepTimeMinutes }),
+        ...(!jsonLdResult.cookTimeMinutes && enrichment?.cookTimeMinutes && { cookTimeMinutes: enrichment.cookTimeMinutes }),
+        ...(!jsonLdResult.totalTimeMinutes && enrichment?.totalTimeMinutes && { totalTimeMinutes: enrichment.totalTimeMinutes }),
         sourceUrl: url,
       };
 
-      // Merge HTML step images if JSON-LD didn't provide any
+      // Re-apply imageUrls from JSON-LD if enrichment replaced instructions
+      if (useEnrichedInstructions) {
+        for (let i = 0; i < jsonLdResult.instructions.length; i++) {
+          if (
+            jsonLdResult.instructions[i].imageUrl &&
+            !mergedRecipe.instructions[i].imageUrl
+          ) {
+            mergedRecipe.instructions[i].imageUrl =
+              jsonLdResult.instructions[i].imageUrl;
+          }
+        }
+      }
+
       mergeStepImages(mergedRecipe.instructions, htmlStepImages);
+
+      const enrichmentApplied =
+        useBetterAiGroupings ||
+        useEnrichedInstructions ||
+        Boolean(enrichment?.summary) ||
+        Boolean(!jsonLdResult.servings && enrichment?.servings) ||
+        Boolean(!jsonLdResult.prepTimeMinutes && enrichment?.prepTimeMinutes) ||
+        Boolean(!jsonLdResult.cookTimeMinutes && enrichment?.cookTimeMinutes) ||
+        Boolean(!jsonLdResult.totalTimeMinutes && enrichment?.totalTimeMinutes);
 
       return {
         success: true,
         data: mergedRecipe,
-        method: aiResult ? "json-ld+ai" : "json-ld",
+        method: enrichmentApplied ? "json-ld+ai" : "json-ld",
       };
     }
 
-    // Layer 2: Full AI parse
-    const aiResult = await extractWithAI(cleaned.html);
+    // Layer 2: Full AI parse — prefer recipe card content over full HTML
+    const aiResult = await extractWithAI(pickContentForAI(cleaned));
     if (aiResult) {
       aiResult.sourceUrl = url;
       mergeStepImages(aiResult.instructions, htmlStepImages);
