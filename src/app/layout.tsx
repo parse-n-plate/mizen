@@ -12,6 +12,7 @@ import { PrototypeLabProvider } from '@/contexts/PrototypeLabContext';
 import { AdminPrototypingPanel } from '@/components/shared/admin-prototyping-panel';
 import { Toaster } from '@/components/ui/sonner';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/next';
 import { Agentation } from 'agentation';
 import ImageProtection from '@/components/shared/ImageProtection';
 import './globals.css';
@@ -70,6 +71,7 @@ export default function RootLayout({
                       <AppShell>{children}</AppShell>
                       <Toaster />
                       <SpeedInsights />
+                      <Analytics />
                       {process.env.NODE_ENV === 'development' && <Agentation />}
                       {(process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview') && <AdminPrototypingPanel />}
                     </PrototypeLabProvider>
