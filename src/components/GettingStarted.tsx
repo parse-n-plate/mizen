@@ -214,7 +214,7 @@ export function GettingStarted() {
       </section>
 
       {isSupabaseConfigured && (
-        <AuthModal open={authOpen} onOpenChange={setAuthOpen} />
+        <AuthModal open={authOpen} onOpenChange={setAuthOpen} initialMode="signup" />
       )}
     </>
   );
