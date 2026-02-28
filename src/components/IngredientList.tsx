@@ -119,7 +119,7 @@ function IngredientGroupSection({
               percentage={progressPercentage}
               size={18}
               strokeWidth={1.5}
-              color="#18A1F7"
+              color="var(--primary)"
             />
           </div>
 
