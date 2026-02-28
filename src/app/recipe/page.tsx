@@ -134,7 +134,7 @@ export default function RecipePage() {
           <div className="hidden sm:flex items-end w-full relative border-b border-stone-200 dark:border-stone-700 gap-0">
             <button
               onClick={() => setActiveTab("prep")}
-              className="folder-tab-trigger h-11 px-8 font-sans text-sm font-medium"
+              className="folder-tab-trigger h-11 px-8 font-sans text-[14px] font-medium"
               data-state={activeTab === "prep" ? "active" : "inactive"}
             >
               Prep
@@ -147,7 +147,7 @@ export default function RecipePage() {
             </button>
             <button
               onClick={() => setActiveTab("cook")}
-              className="folder-tab-trigger h-11 px-8 font-sans text-sm font-medium"
+              className="folder-tab-trigger h-11 px-8 font-sans text-[14px] font-medium"
               data-state={activeTab === "cook" ? "active" : "inactive"}
             >
               Cook
@@ -252,7 +252,7 @@ export default function RecipePage() {
 
           {/* Content card */}
           <div className="bg-white dark:bg-stone-900 sm:rounded-b-lg rounded-lg sm:rounded-t-none border border-stone-200 dark:border-stone-700 sm:border-t-0 flex-1">
-            <div className="max-w-3xl mx-auto px-5 sm:px-6 pt-5 pb-24 sm:pb-12">
+            <div className="max-w-3xl mx-auto px-5 sm:px-6 pt-5 pb-24 sm:pb-6">
               {activeTab === "prep" ? (
                 <div key="prep" className="tab-content-animate">
                   <PrepSection ingredients={recipe.ingredients} steps={recipe.instructions} />
@@ -268,7 +268,7 @@ export default function RecipePage() {
       </div>
 
       {/* Mobile: fade above bottom tabs */}
-      <div className="sm:hidden print:hidden fixed bottom-12 left-0 right-0 z-[19] h-24 pointer-events-none bg-gradient-to-t from-white via-white/80 dark:from-stone-900 dark:via-stone-900/80 to-transparent" />
+      <div className="sm:hidden print:hidden fixed bottom-12 left-0 right-0 z-[19] h-24 pointer-events-none bg-gradient-to-t from-white dark:from-[#0B0A0A] to-transparent" />
 
       {/* Mobile: fixed bottom folder tabs (hidden on desktop) */}
       <div className="sm:hidden print:hidden fixed bottom-0 left-0 right-0 z-20 pb-[env(safe-area-inset-bottom)] bg-white dark:bg-stone-950">
@@ -276,7 +276,7 @@ export default function RecipePage() {
           <div className="flex items-start w-full relative border-t border-stone-200 dark:border-stone-700 gap-0">
             <button
               onClick={() => setActiveTab("prep")}
-              className="folder-tab-trigger-bottom flex-1 h-12 font-sans text-sm font-medium"
+              className="folder-tab-trigger-bottom flex-1 h-12 font-sans text-[14px] font-medium"
               data-state={activeTab === "prep" ? "active" : "inactive"}
             >
               Prep
@@ -289,7 +289,7 @@ export default function RecipePage() {
             </button>
             <button
               onClick={() => setActiveTab("cook")}
-              className="folder-tab-trigger-bottom flex-1 h-12 font-sans text-sm font-medium"
+              className="folder-tab-trigger-bottom flex-1 h-12 font-sans text-[14px] font-medium"
               data-state={activeTab === "cook" ? "active" : "inactive"}
             >
               Cook
