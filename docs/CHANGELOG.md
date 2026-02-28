@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+
 - **MAJOR INFRASTRUCTURE MIGRATION**: Migrated from AWS (ECS/ECR/EC2) to Vercel serverless hosting
 - **Recipe scraper**: Converted from Python to Node.js for Vercel compatibility
 - **Deployment**: Changed from Docker containers to serverless functions
@@ -16,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Performance**: Improved global performance with Vercel's edge network and CDN
 
 ### Added
+
 - Node.js recipe scraper using Cheerio and Axios (`src/utils/scrape_recipe.ts`)
 - Multi-layer parsing approach: JSON-LD structured data + comprehensive HTML selectors
 - Vercel deployment configuration and environment variable documentation
@@ -25,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cursor rules for maintaining changelog
 
 ### Removed
+
 - Python dependencies (recipe-scrapers, beautifulsoup4, requests)
 - Docker containerization (no longer needed for Vercel)
 - AWS deployment workflow from GitHub Actions
@@ -32,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - requirements.txt file
 
 ### Technical Details
+
 - **Old Stack**: Docker → AWS ECR → ECS → EC2 (with Nginx)
 - **New Stack**: Git push → Vercel → Serverless Functions (global edge network)
 - **Scraper Migration**: Python (spawn process) → Node.js (native function call)
@@ -41,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2025-11-16
 
 ### Added
+
 - Initial release of Parse N' Plate recipe parser
 - Recipe URL parsing with Python backend (recipe-scrapers)
 - AI-powered ingredient and instruction parsing with Groq API
@@ -53,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docker support for containerized deployment
 
 ### Technical Features
+
 - Next.js 15.3.4 with React 19
 - TypeScript for type safety
 - Python integration for web scraping
@@ -65,6 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## How to Use This Changelog
 
 ### Categories
+
 - **Added** - New features
 - **Changed** - Changes to existing functionality
 - **Deprecated** - Features that will be removed in future versions
@@ -73,13 +80,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Security** - Security updates
 
 ### Versioning
+
 This project follows [Semantic Versioning](https://semver.org/):
+
 - **Major** version (X.0.0) - Incompatible API changes
 - **Minor** version (0.X.0) - New functionality (backwards compatible)
 - **Patch** version (0.0.X) - Bug fixes (backwards compatible)
 
 ### When to Update
+
 Update the changelog when you make:
+
 - New features or components
 - Breaking changes to existing functionality
 - Bug fixes
@@ -91,4 +102,3 @@ Update the changelog when you make:
 
 [Unreleased]: https://github.com/yourusername/parse-n-plate/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/yourusername/parse-n-plate/releases/tag/v0.1.0
-

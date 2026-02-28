@@ -3,20 +3,20 @@ import { cn } from '@/lib/utils';
 
 /**
  * Textarea Component
- * 
+ *
  * A reusable textarea component with consistent styling across the app.
  * Based on the design system with stone-50 background and stone-300 border.
- * 
+ *
  * Features:
  * - Stone-50 background (#FAFAF9)
  * - Stone-300 border
  * - Responsive sizing
  * - Focus states with ring
  * - Font-albert typography
- * 
+ *
  * @example
- * <Textarea 
- *   placeholder="Enter your notes..."
+ * <Textarea
+ *   placeholder="Enter your notes"
  *   value={notes}
  *   onChange={(e) => setNotes(e.target.value)}
  *   rows={4}
@@ -45,12 +45,12 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           'resize-none transition-all',
           // Responsive min-height
           'min-h-[100px] md:min-h-[120px]',
-          className
+          className,
         )}
         {...props}
       />
     );
-  }
+  },
 );
 
 Textarea.displayName = 'Textarea';

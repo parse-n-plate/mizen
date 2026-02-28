@@ -7,7 +7,13 @@
 export const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 // Supported image formats
-export const SUPPORTED_FORMATS = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/webp'];
+export const SUPPORTED_FORMATS = [
+  'image/jpeg',
+  'image/png',
+  'image/heic',
+  'image/heif',
+  'image/webp',
+];
 
 // Default compression quality (0-1)
 export const DEFAULT_COMPRESSION_QUALITY = 0.8;
@@ -20,7 +26,10 @@ export const MAX_IMAGE_HEIGHT = 2048;
  * Validates an image file
  * Checks file size and format
  */
-export function validateImageFile(file: File): { valid: boolean; error?: string } {
+export function validateImageFile(file: File): {
+  valid: boolean;
+  error?: string;
+} {
   // Check file size
   if (file.size > MAX_FILE_SIZE) {
     return {
@@ -48,7 +57,7 @@ export async function compressImage(
   file: File,
   quality: number = DEFAULT_COMPRESSION_QUALITY,
   maxWidth: number = MAX_IMAGE_WIDTH,
-  maxHeight: number = MAX_IMAGE_HEIGHT
+  maxHeight: number = MAX_IMAGE_HEIGHT,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

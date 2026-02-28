@@ -13,7 +13,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (!url || typeof url !== 'string') {
       return NextResponse.json(
         { success: false, error: 'URL is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     } catch {
       return NextResponse.json(
         { success: false, error: 'Invalid URL format' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (!response.ok) {
       return NextResponse.json(
         { success: false, error: `Failed to fetch URL: ${response.status}` },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
@@ -66,10 +66,14 @@ export async function POST(req: NextRequest): Promise<Response> {
         if (!jsonContent) return;
 
         const data = JSON.parse(jsonContent);
-        
+
         // Handle @graph structure
-        const items = Array.isArray(data) ? data : data['@graph'] ? data['@graph'] : [data];
-        
+        const items = Array.isArray(data)
+          ? data
+          : data['@graph']
+            ? data['@graph']
+            : [data];
+
         for (const item of items) {
           if (item['@type'] === 'Recipe' || item['@type'] === 'ImageObject') {
             if (item.image) {
@@ -78,7 +82,7 @@ export async function POST(req: NextRequest): Promise<Response> {
               } else if (item.image.url) {
                 images.push(item.image.url);
               } else if (Array.isArray(item.image)) {
-                item.image.forEach((img: any) => {
+                item.image.forEach((img: string | { url?: string }) => {
                   if (typeof img === 'string') {
                     images.push(img);
                   } else if (img.url) {
@@ -89,7 +93,7 @@ export async function POST(req: NextRequest): Promise<Response> {
             }
           }
         }
-      } catch (e) {
+      } catch {
         // Skip invalid JSON
       }
     });
@@ -136,10 +140,10 @@ export async function POST(req: NextRequest): Promise<Response> {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';
     console.error('[API /extractImages] Error:', errorMessage);
-    
+
     return NextResponse.json(
       { success: false, error: errorMessage },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -151,33 +155,27 @@ function isValidImageUrl(url: string): boolean {
   try {
     const urlObj = new URL(url);
     const pathname = urlObj.pathname.toLowerCase();
-    
+
     // Check for image extensions
     const imageExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg'];
     const hasImageExtension = imageExtensions.some((ext) =>
-      pathname.endsWith(ext)
+      pathname.endsWith(ext),
     );
-    
+
     // Check for common image CDN patterns
     const imagePatterns = ['/image/', '/img/', '/photo/', '/picture/'];
     const hasImagePattern = imagePatterns.some((pattern) =>
-      pathname.includes(pattern)
+      pathname.includes(pattern),
     );
-    
+
     // Exclude common non-image patterns
     const excludePatterns = ['/logo', '/icon', '/avatar', '/favicon'];
     const hasExcludePattern = excludePatterns.some((pattern) =>
-      pathname.includes(pattern)
+      pathname.includes(pattern),
     );
-    
+
     return (hasImageExtension || hasImagePattern) && !hasExcludePattern;
   } catch {
     return false;
   }
 }
-
-
-
-
-
-

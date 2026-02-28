@@ -16,94 +16,119 @@ export type UnitSystem = 'original' | 'metric' | 'imperial';
 // Volume conversions to mL (base unit for volume)
 const VOLUME_TO_ML: Record<string, number> = {
   // Imperial/US volume
-  'cup': 240,
-  'cups': 240,
-  'c': 240,
-  'tablespoon': 15,
-  'tablespoons': 15,
-  'tbsp': 15,
-  'tbs': 15,
-  'tb': 15,
-  'teaspoon': 5,
-  'teaspoons': 5,
-  'tsp': 5,
-  'ts': 5,
+  cup: 240,
+  cups: 240,
+  c: 240,
+  tablespoon: 15,
+  tablespoons: 15,
+  tbsp: 15,
+  tbs: 15,
+  tb: 15,
+  teaspoon: 5,
+  teaspoons: 5,
+  tsp: 5,
+  ts: 5,
   'fluid ounce': 30,
   'fluid ounces': 30,
   'fl oz': 30,
   'fl. oz': 30,
-  'floz': 30,
-  'ounce': 30, // When referring to liquid, not weight
-  'ounces': 30,
-  'oz': 30, // Ambiguous - could be weight or volume
-  'pint': 473,
-  'pints': 473,
-  'pt': 473,
-  'quart': 946,
-  'quarts': 946,
-  'qt': 946,
-  'gallon': 3785,
-  'gallons': 3785,
-  'gal': 3785,
+  floz: 30,
+  ounce: 30, // When referring to liquid, not weight
+  ounces: 30,
+  oz: 30, // Ambiguous - could be weight or volume
+  pint: 473,
+  pints: 473,
+  pt: 473,
+  quart: 946,
+  quarts: 946,
+  qt: 946,
+  gallon: 3785,
+  gallons: 3785,
+  gal: 3785,
 
   // Metric volume
-  'milliliter': 1,
-  'milliliters': 1,
-  'millilitre': 1,
-  'millilitres': 1,
-  'ml': 1,
-  'liter': 1000,
-  'liters': 1000,
-  'litre': 1000,
-  'litres': 1000,
-  'l': 1000,
+  milliliter: 1,
+  milliliters: 1,
+  millilitre: 1,
+  millilitres: 1,
+  ml: 1,
+  liter: 1000,
+  liters: 1000,
+  litre: 1000,
+  litres: 1000,
+  l: 1000,
 };
 
 // Weight conversions to grams (base unit for weight)
 const WEIGHT_TO_GRAMS: Record<string, number> = {
   // Imperial/US weight
-  'pound': 454,
-  'pounds': 454,
-  'lb': 454,
-  'lbs': 454,
+  pound: 454,
+  pounds: 454,
+  lb: 454,
+  lbs: 454,
   // Note: oz is ambiguous - could be volume or weight
   // If units appear to be weight (not liquid), treat as weight
 
   // Metric weight
-  'gram': 1,
-  'grams': 1,
-  'g': 1,
-  'kilogram': 1000,
-  'kilograms': 1000,
-  'kg': 1000,
-  'milligram': 0.001,
-  'milligrams': 0.001,
-  'mg': 0.001,
+  gram: 1,
+  grams: 1,
+  g: 1,
+  kilogram: 1000,
+  kilograms: 1000,
+  kg: 1000,
+  milligram: 0.001,
+  milligrams: 0.001,
+  mg: 0.001,
 };
 
 // Units that should never be converted (countable items, qualitative measures)
 const NON_CONVERTIBLE_UNITS = new Set([
-  'piece', 'pieces', 'pc', 'pcs',
-  'clove', 'cloves',
-  'slice', 'slices',
-  'whole', 'wholes',
-  'head', 'heads',
-  'bunch', 'bunches',
-  'sprig', 'sprigs',
-  'leaf', 'leaves',
-  'stalk', 'stalks',
-  'rib', 'ribs',
-  'pinch', 'pinches',
-  'dash', 'dashes',
-  'handful', 'handfuls',
-  'package', 'packages', 'pkg',
-  'can', 'cans',
-  'jar', 'jars',
-  'box', 'boxes',
-  'bag', 'bags',
-  'container', 'containers',
-  'to taste', 'as needed',
-  'large', 'medium', 'small',
+  'piece',
+  'pieces',
+  'pc',
+  'pcs',
+  'clove',
+  'cloves',
+  'slice',
+  'slices',
+  'whole',
+  'wholes',
+  'head',
+  'heads',
+  'bunch',
+  'bunches',
+  'sprig',
+  'sprigs',
+  'leaf',
+  'leaves',
+  'stalk',
+  'stalks',
+  'rib',
+  'ribs',
+  'pinch',
+  'pinches',
+  'dash',
+  'dashes',
+  'handful',
+  'handfuls',
+  'package',
+  'packages',
+  'pkg',
+  'can',
+  'cans',
+  'jar',
+  'jars',
+  'box',
+  'boxes',
+  'bag',
+  'bags',
+  'container',
+  'containers',
+  'to taste',
+  'as needed',
+  'large',
+  'medium',
+  'small',
   '', // Empty unit
 ]);
 
@@ -145,7 +170,11 @@ function isWeightUnit(unit: string): boolean {
 /**
  * Convert volume from one unit to another
  */
-function convertVolume(amount: number, fromUnit: string, toSystem: UnitSystem): { amount: number; unit: string } {
+function convertVolume(
+  amount: number,
+  fromUnit: string,
+  toSystem: UnitSystem,
+): { amount: number; unit: string } {
   const normalizedFrom = normalizeUnit(fromUnit);
   const mlValue = amount * (VOLUME_TO_ML[normalizedFrom] || 1);
 
@@ -178,7 +207,11 @@ function convertVolume(amount: number, fromUnit: string, toSystem: UnitSystem): 
 /**
  * Convert weight from one unit to another
  */
-function convertWeight(amount: number, fromUnit: string, toSystem: UnitSystem): { amount: number; unit: string } {
+function convertWeight(
+  amount: number,
+  fromUnit: string,
+  toSystem: UnitSystem,
+): { amount: number; unit: string } {
   const normalizedFrom = normalizeUnit(fromUnit);
   const gramsValue = amount * (WEIGHT_TO_GRAMS[normalizedFrom] || 1);
 
@@ -210,9 +243,22 @@ function convertWeight(amount: number, fromUnit: string, toSystem: UnitSystem): 
  */
 function isOzVolume(ingredientName: string): boolean {
   // Common liquid ingredients
-  const liquidKeywords = ['water', 'milk', 'cream', 'juice', 'oil', 'broth', 'stock', 'sauce', 'wine', 'beer', 'vinegar', 'liquid'];
+  const liquidKeywords = [
+    'water',
+    'milk',
+    'cream',
+    'juice',
+    'oil',
+    'broth',
+    'stock',
+    'sauce',
+    'wine',
+    'beer',
+    'vinegar',
+    'liquid',
+  ];
   const lowerName = ingredientName.toLowerCase();
-  return liquidKeywords.some(keyword => lowerName.includes(keyword));
+  return liquidKeywords.some((keyword) => lowerName.includes(keyword));
 }
 
 /**
@@ -220,7 +266,7 @@ function isOzVolume(ingredientName: string): boolean {
  */
 export function convertIngredientUnits(
   ingredient: Ingredient,
-  targetSystem: UnitSystem
+  targetSystem: UnitSystem,
 ): Ingredient {
   // If target is 'original', return as-is
   if (targetSystem === 'original') {
@@ -354,15 +400,15 @@ export function convertIngredientUnits(
  */
 export function convertIngredientGroupUnits(
   groups: Array<{ groupName: string; ingredients: (string | Ingredient)[] }>,
-  targetSystem: UnitSystem
+  targetSystem: UnitSystem,
 ): Array<{ groupName: string; ingredients: (string | Ingredient)[] }> {
   if (targetSystem === 'original') {
     return groups;
   }
 
-  return groups.map(group => ({
+  return groups.map((group) => ({
     ...group,
-    ingredients: group.ingredients.map(ing => {
+    ingredients: group.ingredients.map((ing) => {
       if (typeof ing === 'string') {
         return ing;
       }

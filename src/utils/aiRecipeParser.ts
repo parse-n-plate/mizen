@@ -1,11 +1,32 @@
 /**
  * AI-Based Universal Recipe Parser
- * 
- * This parser uses a two-layer approach:
- * 1. Layer 1 (Fast Path): Extract from JSON-LD structured data
- * 2. Layer 2 (AI Fallback): Use AI to parse cleaned HTML when structured data isn't available
- * 
- * This approach works with any recipe website without requiring site-specific selectors.
+ *
+ * Architecture:
+ *   Layer 1 (JSON-LD) — Fast, free, reliable when available.
+ *     Extracts structured data from <script type="application/ld+json"> tags.
+ *     Returns raw ingredient strings in a single "Main" group (no amount/unit split).
+ *
+ *   Layer 2 (AI / Groq) — Slower, costs tokens, handles any page.
+ *     Sends cleaned HTML (max 15k chars) to llama-3.3-70b-versatile.
+ *     Returns structured ingredients (amount/unit/name), grouped logically,
+ *     plus AI-generated metadata: descriptions, substitutions, cuisine,
+ *     storage guidance, plating notes.
+ *
+ *   Hybrid (JSON-LD + AI) — Most common path.
+ *     Uses JSON-LD for title/author/servings/times (ground truth),
+ *     then calls AI to enrich with groupings, cuisine, and metadata.
+ *
+ * Entry points:
+ *   parseRecipe(rawHtml)       — Parse from raw HTML string
+ *   parseRecipeFromUrl(url)    — Fetch URL then parse
+ *   parseRecipeFromImage(b64)  — Vision model extraction from image
+ *
+ * Known accuracy issues (see .context/notes.md for full list):
+ *   - Author-name heuristic can false-positive on short instructions
+ *   - AI sometimes returns instructions as strings instead of {title, detail} objects
+ *   - 15k char HTML truncation can cut off recipes on blog-heavy pages
+ *   - 4k token output limit can truncate complex recipes mid-JSON
+ *   - No deduplication if recipe appears twice in HTML (jump-to-recipe + inline)
  */
 
 import * as cheerio from 'cheerio';
@@ -13,11 +34,22 @@ import Groq from 'groq-sdk';
 import { cleanRecipeHTML } from './htmlCleaner';
 import { SUPPORTED_CUISINES, isSupportedCuisine } from '@/config/cuisineConfig';
 
-// Derive a concise, human-friendly title from an instruction detail
-// Normalize any instruction array (strings or objects) into InstructionStep objects
-// Simplified: Trust AI-generated titles, use generic fallback only for legacy string inputs
+// ---------------------------------------------------------------------------
+// Instruction Normalization
+// ---------------------------------------------------------------------------
+
+/**
+ * Normalize any instruction array into InstructionStep objects.
+ *
+ * The AI prompt asks for {title, detail} objects, but sometimes returns plain
+ * strings (see warning at line ~1232). This function handles both formats:
+ *   - string  → { title: "Step N", detail: <string> }   (lossy — no semantic title)
+ *   - object  → extracts title + detail from various key names (detail/text/name)
+ *
+ * TODO: Track how often the AI returns strings vs objects to measure prompt compliance.
+ */
 const normalizeInstructionSteps = (
-  instructions: any,
+  instructions: unknown,
 ): InstructionStep[] => {
   if (!Array.isArray(instructions)) return [];
 
@@ -25,7 +57,7 @@ const normalizeInstructionSteps = (
     (text || '').replace(/^[\s.:;,\-–—]+/, '').trim();
 
   return instructions
-    .map((item: any, index: number) => {
+    .map((item: unknown, index: number) => {
       // Handle string inputs (legacy format - AI should not return these)
       if (typeof item === 'string') {
         const detail = cleanLeading(item.trim());
@@ -39,22 +71,23 @@ const normalizeInstructionSteps = (
 
       // Handle object inputs (expected format from AI)
       if (item && typeof item === 'object') {
+        const obj = item as Record<string, unknown>;
         // Extract detail from various possible fields
         const rawDetail =
-          typeof item.detail === 'string'
-            ? item.detail
-            : typeof item.text === 'string'
-            ? item.text
-            : typeof item.name === 'string'
-            ? item.name
-            : '';
+          typeof obj.detail === 'string'
+            ? obj.detail
+            : typeof obj.text === 'string'
+              ? obj.text
+              : typeof obj.name === 'string'
+                ? obj.name
+                : '';
 
         if (!rawDetail.trim()) return null;
 
         // Extract title if provided by AI
         const aiTitle =
-          typeof item.title === 'string' && item.title.trim()
-            ? item.title.trim()
+          typeof obj.title === 'string' && obj.title.trim()
+            ? obj.title.trim()
             : null;
 
         // Use AI-provided title, or fallback to generic if missing
@@ -64,9 +97,9 @@ const normalizeInstructionSteps = (
         return {
           title,
           detail,
-          timeMinutes: item.timeMinutes,
-          ingredients: item.ingredients,
-          tips: item.tips,
+          timeMinutes: obj.timeMinutes as number | undefined,
+          ingredients: obj.ingredients as string[] | undefined,
+          tips: obj.tips as string | undefined,
         };
       }
 
@@ -75,13 +108,23 @@ const normalizeInstructionSteps = (
     .filter((step): step is InstructionStep => Boolean(step));
 };
 
+// ---------------------------------------------------------------------------
+// Type Definitions
+// ---------------------------------------------------------------------------
+
 /**
- * Interface for ingredient with amount, units, and name
+ * A single ingredient with structured amount/unit/name.
+ *
+ * When extracted via JSON-LD (Layer 1), amount and units are empty strings
+ * because JSON-LD only provides the full ingredient as a single string.
+ * The AI layer (Layer 2) splits them properly.
  */
 export interface Ingredient {
   amount: string;
   units: string;
   ingredient: string;
+  description?: string; // One sentence explaining flavor/texture contribution (max 80 chars)
+  substitutions?: string[]; // Array of 1-3 realistic alternatives (empty array if none)
 }
 
 /**
@@ -113,13 +156,16 @@ export interface ParsedRecipe {
   sourceUrl?: string;
   summary?: string; // AI-generated recipe summary (1-2 sentences)
   servings?: number; // Number of servings/yield
+  prepTimeMinutes?: number;
+  cookTimeMinutes?: number;
+  totalTimeMinutes?: number;
   ingredients: IngredientGroup[];
   instructions: InstructionStep[];
   cuisine?: string[]; // Cuisine types/tags (e.g., ["Italian", "Mediterranean"])
   // Storage guidance - generated during initial parse
   storageGuide?: string; // Storage instructions (e.g., "Store in airtight container in fridge")
   shelfLife?: {
-    fridge?: number | null;  // Days in fridge (null if not fridge-safe)
+    fridge?: number | null; // Days in fridge (null if not fridge-safe)
     freezer?: number | null; // Days in freezer (null if not freezer-friendly)
   };
   // Plating/serving guidance - generated during initial parse
@@ -135,33 +181,113 @@ export interface ParserResult {
   success: boolean;
   data?: ParsedRecipe;
   error?: string;
-  method?: 'json-ld' | 'ai' | 'none';
+  method?: 'json-ld' | 'ai' | 'json-ld+ai' | 'none';
   retryAfter?: number; // Timestamp (milliseconds) when to retry after rate limit
+  warnings?: string[]; // Non-fatal issues (e.g., missing API key)
 }
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
 /**
- * Parse ISO 8601 duration string (e.g., "PT30M", "PT1H30M") to minutes
- * Returns undefined if parsing fails or duration is invalid
+ * Parse ISO 8601 duration string (e.g., "PT30M", "PT1H30M") to minutes.
+ *
+ * NOTE: Only handles hours+minutes. Durations with days/seconds (P1DT2H, PT30S)
+ * will not match and return undefined.
  */
 function parseISODuration(duration: string): number | undefined {
   if (!duration || typeof duration !== 'string') return undefined;
-  
+
   // ISO 8601 duration format: PT[hours]H[minutes]M
   // Examples: "PT30M" (30 minutes), "PT1H30M" (1 hour 30 minutes), "PT2H" (2 hours)
   const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
   if (!match) return undefined;
-  
+
   const hours = parseInt(match[1] || '0', 10);
   const minutes = parseInt(match[2] || '0', 10);
   const totalMinutes = hours * 60 + minutes;
-  
+
   // Return undefined if total is 0 (invalid duration)
   return totalMinutes > 0 ? totalMinutes : undefined;
 }
 
 /**
- * Extract recipe data from JSON-LD structured data (Layer 1 - Fast Path)
- * This is the most reliable method when available and doesn't use AI tokens
+ * Decode common HTML entities from source fields (e.g., "Chef John&#39;s" -> "Chef John's").
+ * Some JSON-LD blobs contain entity-encoded text that should be normalized.
+ */
+function decodeHtmlEntities(text: string): string {
+  if (!text) return text;
+
+  return text
+    .replace(/&#(\d+);/g, (_, dec: string) =>
+      String.fromCodePoint(parseInt(dec, 10)),
+    )
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex: string) =>
+      String.fromCodePoint(parseInt(hex, 16)),
+    )
+    .replace(/&apos;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .trim();
+}
+
+/**
+ * Normalize a single cuisine name against the supported list.
+ * Returns the canonical name if matched (case-insensitive), or null.
+ */
+function matchSupportedCuisine(name: string): string | null {
+  if (isSupportedCuisine(name)) return name;
+  const lower = name.toLowerCase();
+  return SUPPORTED_CUISINES.find((s) => s.toLowerCase() === lower) ?? null;
+}
+
+/**
+ * Normalize the raw cuisine field from AI output into a validated string[].
+ *
+ * Handles: string, string[], or undefined/null.
+ * Filters to only supported cuisine names (case-insensitive).
+ */
+function normalizeCuisineField(raw: unknown): string[] | undefined {
+  if (!raw) return undefined;
+
+  // Collect raw values into an array
+  let candidates: string[] = [];
+  if (Array.isArray(raw)) {
+    candidates = raw
+      .filter((c): c is string => typeof c === 'string' && c.trim().length > 0)
+      .map((c) => c.trim());
+  } else if (typeof raw === 'string' && raw.trim().length > 0) {
+    candidates = [raw.trim()];
+  }
+
+  if (candidates.length === 0) return undefined;
+
+  const validated = candidates
+    .map(matchSupportedCuisine)
+    .filter((c): c is string => c !== null);
+
+  return validated.length > 0 ? validated : undefined;
+}
+
+// ---------------------------------------------------------------------------
+// Layer 1: JSON-LD Extraction (Fast Path — no AI tokens)
+// ---------------------------------------------------------------------------
+
+/**
+ * Extract recipe data from JSON-LD structured data.
+ *
+ * Searches all <script type="application/ld+json"> tags for a Recipe object,
+ * handling both top-level and @graph-nested schemas.
+ *
+ * Limitations:
+ *   - Ingredients are stored as raw strings (amount/units not split)
+ *   - All ingredients go into a single "Main" group
+ *   - No cuisine, storage, or plating metadata
+ *   - Author filtering heuristic can be overly aggressive (see isAuthorName)
  */
 function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
   try {
@@ -180,31 +306,37 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
         for (const item of items) {
           // Check if @type is Recipe (handle both string and array formats)
           const itemType = item['@type'];
-          const isRecipeType = 
+          const isRecipeType =
             itemType === 'Recipe' ||
             (Array.isArray(itemType) && itemType.includes('Recipe'));
-          
+
           // Look for Recipe type or items with recipe data
           if (
             isRecipeType ||
             (item['@graph'] &&
               Array.isArray(item['@graph']) &&
-              item['@graph'].some((g: any) => {
+              item['@graph'].some((g: Record<string, unknown>) => {
                 const gType = g['@type'];
-                return gType === 'Recipe' || (Array.isArray(gType) && gType.includes('Recipe'));
+                return (
+                  gType === 'Recipe' ||
+                  (Array.isArray(gType) && gType.includes('Recipe'))
+                );
               }))
           ) {
             // If it's in @graph, find the Recipe object
             const recipe = isRecipeType
               ? item
-              : item['@graph'].find((g: any) => {
+              : item['@graph'].find((g: Record<string, unknown>) => {
                   const gType = g['@type'];
-                  return gType === 'Recipe' || (Array.isArray(gType) && gType.includes('Recipe'));
+                  return (
+                    gType === 'Recipe' ||
+                    (Array.isArray(gType) && gType.includes('Recipe'))
+                  );
                 });
 
             if (!recipe) continue;
 
-            const title = recipe.name || '';
+            const title = decodeHtmlEntities(String(recipe.name || ''));
 
             // Normalize double parentheses to single parentheses (some sites have ((...)) in their JSON-LD)
             const normalizeDoubleParens = (text: string): string => {
@@ -213,10 +345,10 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
 
             // Extract ingredients as simple strings first
             const ingredientStrings: string[] = Array.isArray(
-              recipe.recipeIngredient
+              recipe.recipeIngredient,
             )
               ? recipe.recipeIngredient.filter(
-                  (ing: any) => typeof ing === 'string' && ing.trim()
+                  (ing: unknown) => typeof ing === 'string' && ing.trim(),
                 )
               : [];
 
@@ -234,14 +366,25 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
 
             let instructions: string[] = [];
 
-            // Helper function to check if text looks like an author name
+            /**
+             * Heuristic: detect whether a string is an author name rather than
+             * a real instruction step. Used to filter JSON-LD instructions.
+             *
+             * FIXME: Known accuracy issues:
+             *   - False positives: short legitimate steps like "Season well" or
+             *     "Plate immediately" (≤3 words, no cooking-term match) get filtered.
+             *   - False negatives: author names containing food words
+             *     (e.g., "Pat Baker", "Rosemary Gill") pass through.
+             *   - Empty/whitespace-only strings return true (treated as author),
+             *     but these should arguably be filtered separately.
+             */
             const isAuthorName = (text: string): boolean => {
               if (!text || text.length === 0) return true;
 
               const wordCount = text.split(/\s+/).length;
               const hasCookingTerms =
                 /(heat|add|stir|mix|cook|bake|simmer|boil|fry|roast|season|taste|serve|preheat|chop|dice|slice|mince|pour|drain|whisk|beat|fold|knead|roll|cut|peel|grate|zest|squeeze|melt|saute|brown|caramelize|deglaze|reduce|thicken|thaw|marinate|brine|rub|glaze|garnish|top|sprinkle|drizzle|toss|coat|dredge|flour|bread|batter|crust|filling|topping|sauce|gravy|broth|stock|marinade|dressing|vinaigrette|seasoning|spice|herb|aromatic|flavor|taste|texture|tender|crispy|golden|browned|caramelized|caramel|syrup|honey|sugar|salt|pepper|garlic|onion|herbs|spices)/i.test(
-                  text
+                  text,
                 );
 
               // If it's 1-3 words and has no cooking terms, it's likely an author name
@@ -258,52 +401,53 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             };
 
             // Handle different instruction formats
+            const normalizeInstructionText = (text: string): string =>
+              normalizeDoubleParens(
+                decodeHtmlEntities(text).replace(/\s+/g, ' ').trim(),
+              );
+
+            const extractInstructionTexts = (node: unknown): string[] => {
+              // String format
+              if (typeof node === 'string') {
+                const normalized = normalizeInstructionText(node);
+                return normalized ? [normalized] : [];
+              }
+
+              // Object format
+              if (node && typeof node === 'object') {
+                const obj = node as Record<string, unknown>;
+
+                // HowToSection or nested list: preserve each sub-step as its own instruction.
+                if (Array.isArray(obj.itemListElement)) {
+                  return obj.itemListElement.flatMap((item: unknown) =>
+                    extractInstructionTexts(item),
+                  );
+                }
+
+                if (typeof obj.text === 'string') {
+                  const normalized = normalizeInstructionText(obj.text);
+                  return normalized ? [normalized] : [];
+                }
+
+                if (typeof obj.name === 'string') {
+                  const normalized = normalizeInstructionText(obj.name);
+                  return normalized ? [normalized] : [];
+                }
+              }
+
+              return [];
+            };
+
             if (Array.isArray(recipe.recipeInstructions)) {
               instructions = recipe.recipeInstructions
-                .map((inst: any) => {
-                  // Handle string format
-                  if (typeof inst === 'string') return normalizeDoubleParens(inst.trim());
-
-                  // Handle object with text property
-                  if (inst.text && typeof inst.text === 'string')
-                    return normalizeDoubleParens(inst.text.trim());
-
-                  // Handle HowToStep format
-                  if (
-                    inst['@type'] === 'HowToStep' &&
-                    inst.text &&
-                    typeof inst.text === 'string'
-                  )
-                    return normalizeDoubleParens(inst.text.trim());
-
-                  // Handle HowToStep with name property
-                  if (
-                    inst['@type'] === 'HowToStep' &&
-                    inst.name &&
-                    typeof inst.name === 'string'
-                  )
-                    return normalizeDoubleParens(inst.name.trim());
-
-                  // Handle itemListElement format
-                  if (
-                    inst.itemListElement &&
-                    Array.isArray(inst.itemListElement)
-                  ) {
-                    return normalizeDoubleParens(
-                      inst.itemListElement
-                        .map((item: any) => {
-                          if (item.text) return item.text.trim();
-                          if (item.name) return item.name.trim();
-                          return '';
-                        })
-                        .filter((t: string) => t.length > 0)
-                        .join(' ')
-                    );
-                  }
-
-                  return '';
-                })
-                .filter((text: string) => text.length > 10 && !isAuthorName(text));
+                .flatMap((inst: string | Record<string, unknown>) =>
+                  extractInstructionTexts(inst),
+                )
+                // FIXME: The 10-char minimum silently drops short but valid steps
+                // (e.g., "Serve hot.", "Rest 5 min."). Consider lowering or removing.
+                .filter(
+                  (text: string) => text.length > 10 && !isAuthorName(text),
+                );
             } else if (
               typeof recipe.recipeInstructions === 'string' &&
               recipe.recipeInstructions.trim()
@@ -311,54 +455,80 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
               // Split string instructions by newlines
               instructions = recipe.recipeInstructions
                 .split(/\n+/)
-                .map((s: string) => normalizeDoubleParens(s.trim()))
+                .map((s: string) => normalizeInstructionText(s))
+                // Same 10-char filter as above — see FIXME.
                 .filter((s: string) => s.length > 10 && !isAuthorName(s));
             }
 
             // Extract author if available - handle various formats
             let author: string | undefined = undefined;
-            
+
             // Try different author field formats
             if (recipe.author) {
               if (typeof recipe.author === 'string') {
-                author = recipe.author.trim();
-              } else if (typeof recipe.author === 'object' && recipe.author !== null) {
+                author = decodeHtmlEntities(recipe.author);
+              } else if (
+                typeof recipe.author === 'object' &&
+                recipe.author !== null
+              ) {
                 // Handle author as object (e.g., {"@type": "Person", "name": "John Doe"})
-                if (recipe.author.name && typeof recipe.author.name === 'string') {
-                  author = recipe.author.name.trim();
+                if (
+                  recipe.author.name &&
+                  typeof recipe.author.name === 'string'
+                ) {
+                  author = decodeHtmlEntities(recipe.author.name);
                 }
               }
             }
-            
+
             // Try publisher as fallback
             if (!author && recipe.publisher) {
               if (typeof recipe.publisher === 'string') {
-                author = recipe.publisher.trim();
-              } else if (typeof recipe.publisher === 'object' && recipe.publisher !== null) {
-                if (recipe.publisher.name && typeof recipe.publisher.name === 'string') {
-                  author = recipe.publisher.name.trim();
+                author = decodeHtmlEntities(recipe.publisher);
+              } else if (
+                typeof recipe.publisher === 'object' &&
+                recipe.publisher !== null
+              ) {
+                if (
+                  recipe.publisher.name &&
+                  typeof recipe.publisher.name === 'string'
+                ) {
+                  author = decodeHtmlEntities(recipe.publisher.name);
                 }
               }
             }
-            
+
             // Try creator as another fallback
             if (!author && recipe.creator) {
               if (typeof recipe.creator === 'string') {
-                author = recipe.creator.trim();
-              } else if (Array.isArray(recipe.creator) && recipe.creator.length > 0) {
+                author = decodeHtmlEntities(recipe.creator);
+              } else if (
+                Array.isArray(recipe.creator) &&
+                recipe.creator.length > 0
+              ) {
                 const firstCreator = recipe.creator[0];
                 if (typeof firstCreator === 'string') {
-                  author = firstCreator.trim();
-                } else if (typeof firstCreator === 'object' && firstCreator !== null && firstCreator.name) {
-                  author = firstCreator.name.trim();
+                  author = decodeHtmlEntities(firstCreator);
+                } else if (
+                  typeof firstCreator === 'object' &&
+                  firstCreator !== null &&
+                  firstCreator.name
+                ) {
+                  author = decodeHtmlEntities(firstCreator.name);
                 }
-              } else if (typeof recipe.creator === 'object' && recipe.creator !== null) {
-                if (recipe.creator.name && typeof recipe.creator.name === 'string') {
-                  author = recipe.creator.name.trim();
+              } else if (
+                typeof recipe.creator === 'object' &&
+                recipe.creator !== null
+              ) {
+                if (
+                  recipe.creator.name &&
+                  typeof recipe.creator.name === 'string'
+                ) {
+                  author = decodeHtmlEntities(recipe.creator.name);
                 }
               }
             }
-            
+
             // Only set author if it's a non-empty string
             if (author && author.length === 0) {
               author = undefined;
@@ -369,7 +539,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             let servings: number | undefined = undefined;
             if (recipe.yield || recipe.recipeYield) {
               const yieldValue = recipe.yield || recipe.recipeYield;
-              
+
               // Handle string format like "4 servings" or "4"
               if (typeof yieldValue === 'string') {
                 // Extract number from string (e.g., "4 servings" -> 4, "Serves 6" -> 6)
@@ -377,7 +547,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
                 if (numberMatch) {
                   servings = parseInt(numberMatch[0], 10);
                 }
-              } 
+              }
               // Handle number format
               else if (typeof yieldValue === 'number') {
                 servings = yieldValue;
@@ -394,41 +564,51 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
                   servings = firstValue;
                 }
               }
-              
-            // Validate servings is a positive number
-            if (servings && (isNaN(servings) || servings <= 0)) {
-              servings = undefined;
-            }
-            }
+
+              // Validate servings is a positive number
+              if (servings && (isNaN(servings) || servings <= 0)) {
+                servings = undefined;
+              }
+            } // end if (recipe.yield || recipe.recipeYield)
 
             // Extract prep time, cook time, and total time from JSON-LD
             // These are typically in ISO 8601 duration format (e.g., "PT30M", "PT1H30M")
             let prepTimeMinutes: number | undefined = undefined;
             let cookTimeMinutes: number | undefined = undefined;
             let totalTimeMinutes: number | undefined = undefined;
-            
+
             // Extract prepTime (prepTime or prepTimeMinutes)
             if (recipe.prepTime) {
               prepTimeMinutes = parseISODuration(recipe.prepTime);
-            } else if (typeof recipe.prepTimeMinutes === 'number' && recipe.prepTimeMinutes > 0) {
+            } else if (
+              typeof recipe.prepTimeMinutes === 'number' &&
+              recipe.prepTimeMinutes > 0
+            ) {
               prepTimeMinutes = recipe.prepTimeMinutes;
             }
-            
+
             // Extract cookTime (cookTime or cookTimeMinutes)
             if (recipe.cookTime) {
               cookTimeMinutes = parseISODuration(recipe.cookTime);
-            } else if (typeof recipe.cookTimeMinutes === 'number' && recipe.cookTimeMinutes > 0) {
+            } else if (
+              typeof recipe.cookTimeMinutes === 'number' &&
+              recipe.cookTimeMinutes > 0
+            ) {
               cookTimeMinutes = recipe.cookTimeMinutes;
             }
-            
+
             // Extract totalTime (totalTime or totalTimeMinutes)
             if (recipe.totalTime) {
               totalTimeMinutes = parseISODuration(recipe.totalTime);
-            } else if (typeof recipe.totalTimeMinutes === 'number' && recipe.totalTimeMinutes > 0) {
+            } else if (
+              typeof recipe.totalTimeMinutes === 'number' &&
+              recipe.totalTimeMinutes > 0
+            ) {
               totalTimeMinutes = recipe.totalTimeMinutes;
             }
 
-            const normalizedInstructions = normalizeInstructionSteps(instructions);
+            const normalizedInstructions =
+              normalizeInstructionSteps(instructions);
 
             // Validate we have complete data
             if (
@@ -438,22 +618,22 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
               normalizedInstructions.length > 0
             ) {
               console.log(
-                `[JSON-LD] Found recipe: "${title}" with ${ingredients[0].ingredients.length} ingredients and ${normalizedInstructions.length} instructions${author ? `, author: "${author}"` : ''}${servings ? `, servings: ${servings}` : ''}${prepTimeMinutes ? `, prepTime: ${prepTimeMinutes}min` : ''}${cookTimeMinutes ? `, cookTime: ${cookTimeMinutes}min` : ''}${totalTimeMinutes ? `, totalTime: ${totalTimeMinutes}min` : ''}`
+                `[JSON-LD] Found recipe: "${title}" with ${ingredients[0].ingredients.length} ingredients and ${normalizedInstructions.length} instructions${author ? `, author: "${author}"` : ''}${servings ? `, servings: ${servings}` : ''}${prepTimeMinutes ? `, prepTime: ${prepTimeMinutes}min` : ''}${cookTimeMinutes ? `, cookTime: ${cookTimeMinutes}min` : ''}${totalTimeMinutes ? `, totalTime: ${totalTimeMinutes}min` : ''}`,
               );
-              return { 
-                title, 
-                ingredients, 
-                instructions: normalizedInstructions, 
+              return {
+                title,
+                ingredients,
+                instructions: normalizedInstructions,
                 author,
                 ...(servings && { servings }),
                 ...(prepTimeMinutes && { prepTimeMinutes }),
                 ...(cookTimeMinutes && { cookTimeMinutes }),
-                ...(totalTimeMinutes && { totalTimeMinutes })
+                ...(totalTimeMinutes && { totalTimeMinutes }),
               };
             }
           }
         }
-      } catch (e) {
+      } catch {
         // Continue to next script tag if this one fails
         continue;
       }
@@ -465,93 +645,28 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
   return null;
 }
 
-/**
- * Generate a one-sentence recipe summary.
- * Describes the dish, its flavor profile, and main cooking methods.
- */
-async function generateRecipeSummary(recipe: ParsedRecipe): Promise<string | null> {
-  if (!process.env.GROQ_API_KEY) return null;
-
-  try {
-    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-
-    const title = (recipe.title || '').trim();
-
-    const ingredients = recipe.ingredients
-      .flatMap((g) => g.ingredients)
-      .map((i) => (i.ingredient || '').trim())
-      .filter(Boolean)
-      .slice(0, 12);
-
-    const steps = recipe.instructions
-      .map((s) => (typeof s === 'string' ? s : s.detail))
-      .map((t) => (t || '').trim())
-      .filter(Boolean)
-      .slice(0, 4);
-
-    const response = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      temperature: 0.1,
-      max_tokens: 80,
-      messages: [
-        {
-          role: 'system',
-          content:
-            `Write ONE short sentence describing the dish.
-
-Hard rules:
-- Output ONLY the sentence text.
-- Exactly one sentence.
-- Max 200 characters.
-- No cooking method explanations.
-- No phrases like "characterized by", "achieved through", or "typically prepared".
-- No hype or marketing language.
-- Do NOT explain technique or process.
-- Do NOT guess missing information.
-
-Style:
-- Neutral menu-style description.
-- Structure:
-  A [simple descriptor if implied] [dish type] with [key components] in/on [base, sauce, or broth].
-- Use plain nouns and minimal adjectives.
-
-If details are incomplete or unclear, output exactly:
-Recipe details incomplete. Review ingredients and steps.`
-        },
-        {
-          role: 'user',
-          content:
-            `Title: ${title || '(missing)'}
-Ingredients: ${ingredients.join(', ')}
-Steps: ${steps.join(' ')}`,
-        },
-      ],
-    });
-
-    const summary = response.choices?.[0]?.message?.content?.trim();
-    if (!summary) return null;
-
-    // Minimal cleanup only
-    const cleaned = summary.replace(/^["']|["']$/g, '').trim();
-
-    // Ensure single sentence - take first sentence if multiple exist
-    const sentenceMatch = cleaned.match(/^[^.!?]+[.!?]/);
-    if (sentenceMatch) return sentenceMatch[0].trim();
-    
-    // If no sentence-ending punctuation, add period
-    return cleaned.replace(/[.!?]+$/, '') + '.';
-  } catch {
-    return null;
-  }
-}
+// ---------------------------------------------------------------------------
+// Layer 2: AI Parsing (Groq / llama-3.3-70b-versatile)
+// ---------------------------------------------------------------------------
 
 /**
- * Parse recipe using AI (Layer 2 - AI Fallback)
- * This uses the Groq API to extract recipe data from cleaned HTML
+ * Parse recipe from cleaned HTML using the Groq AI API.
+ *
+ * The prompt (~600 lines) instructs the model to return a single JSON object
+ * with structured ingredients, instructions-as-objects, cuisine tags,
+ * storage guidance, and plating notes.
+ *
+ * Constraints:
+ *   - Input is truncated to 15,000 chars to avoid token overflow.
+ *     FIXME: On blog-heavy pages the recipe content may be past the cutoff.
+ *   - Output is capped at 4,000 tokens.
+ *     FIXME: Complex recipes (20+ ingredients, 15+ steps) can exceed this,
+ *     producing truncated JSON that fails to parse.
+ *   - Temperature is 0.1 for consistency, but the model still occasionally
+ *     returns instructions as strings instead of {title, detail} objects.
  */
 async function parseWithAI(cleanedHtml: string): Promise<ParsedRecipe | null> {
   try {
-    // Check if Groq API key is configured
     if (!process.env.GROQ_API_KEY) {
       console.error('[AI Parser] GROQ_API_KEY is not configured');
       return null;
@@ -561,7 +676,8 @@ async function parseWithAI(cleanedHtml: string): Promise<ParsedRecipe | null> {
       apiKey: process.env.GROQ_API_KEY,
     });
 
-    // Limit HTML to prevent token overflow (keep first 15k characters)
+    // FIXME: 15k char limit can cut off the recipe on blog-heavy pages.
+    // The HTML cleaner should prioritize recipe content, but doesn't always.
     const limitedHtml = cleanedHtml.slice(0, 15000);
 
     console.log('[AI Parser] Sending HTML to AI for parsing...');
@@ -571,6 +687,21 @@ async function parseWithAI(cleanedHtml: string): Promise<ParsedRecipe | null> {
       messages: [
         {
           role: 'system',
+          // ---------------------------------------------------------------
+          // AI PROMPT — ~590 lines of extraction rules.
+          // Sections: Output Format, Extraction Workflow, Title Rules,
+          //   Ingredient Rules, Instruction Rules, Cuisine Detection,
+          //   Storage Guidance, Plating Guidance, Final Reminder.
+          //
+          // TODO: Consider extracting this prompt to a separate file
+          // (e.g., prompts/recipeExtractionPrompt.ts) for readability
+          // and easier A/B testing of prompt variations.
+          //
+          // FIXME: The cuisine examples contain errors that teach the model
+          // wrong associations — e.g., "Pad Thai" is mapped to ["Chinese"]
+          // when it should be ["Thai"]. Thai isn't even in SUPPORTED_CUISINES,
+          // so the prompt forces an incorrect fallback.
+          // ---------------------------------------------------------------
           content: `========================================
 CRITICAL OUTPUT FORMAT
 ========================================
@@ -584,6 +715,7 @@ NEVER use strings like ["Step 1", "Step 2"] - ALWAYS use objects like [{"title":
 Required JSON structure:
 {
   "title": "string (cleaned recipe title following TITLE EXTRACTION RULES - no prefixes/suffixes)",
+  "summary": "string (exactly one concise sentence, max 200 chars, neutral dish description)",
   "author": "string (optional - recipe author name if found)",
   "servings": 4, // Only include if found in HTML - omit if not available
   "prepTimeMinutes": 15, // Prep time in minutes - only include if found in HTML
@@ -594,7 +726,13 @@ Required JSON structure:
     {
       "groupName": "string",
       "ingredients": [
-        {"amount": "string", "units": "string", "ingredient": "string"}
+        {
+          "amount": "string",
+          "units": "string",
+          "ingredient": "string",
+          "description": "One sentence (max 80 chars) explaining flavor/texture contribution",
+          "substitutions": ["alternative1", "alternative2"]
+        }
       ]
     }
   ],
@@ -630,6 +768,12 @@ CRITICAL: ingredients and instructions MUST be arrays, NEVER null.
 - WRONG: ["Mix blueberries, sugar..."] ← This is FORBIDDEN
 - If NO instructions found: use empty array []
 - NEVER use null for ingredients or instructions - ALWAYS use [] if nothing is found
+
+SUMMARY RULES:
+- Include "summary" as EXACTLY one sentence (max 200 characters)
+- Neutral menu-style dish description only
+- No technique/process explanations
+- If details are incomplete, use: "Recipe details incomplete. Review ingredients and steps."
 
 ========================================
 THE HTML PROVIDED IS YOUR ONLY SOURCE OF DATA
@@ -715,6 +859,30 @@ INGREDIENT NAMES:
 - Copy the ingredient name EXACTLY as written in HTML
 - Include all descriptors: "all-purpose flour", "unsalted butter", "large eggs"
 - Do NOT abbreviate, simplify, or modify names
+
+INGREDIENT DESCRIPTION (AI-GENERATED):
+- For EACH ingredient, generate a brief one-sentence description (max 80 characters)
+- Explain what flavor, texture, or role this ingredient contributes to the dish
+- Focus on culinary purpose: "Adds umami depth and savory richness"
+- Keep it informative and concise, not instructional
+- Examples:
+  - gochujang: "Adds spicy-sweet depth and fermented complexity"
+  - heavy cream: "Creates silky richness and balances heat"
+  - parmesan: "Provides salty, nutty finish and umami"
+  - garlic: "Builds aromatic foundation and savory base"
+  - pasta: "The starchy canvas that absorbs the sauce"
+
+INGREDIENT SUBSTITUTIONS (AI-GENERATED):
+- For EACH ingredient, suggest 1-3 realistic substitutions
+- Only include substitutions that would work in this specific recipe
+- Use empty array [] if no good substitutions exist (e.g., for the main protein in a specific dish)
+- Prioritize common, accessible alternatives
+- Examples:
+  - gochujang: ["sriracha mixed with miso", "sambal oelek", "red pepper flakes with soy sauce"]
+  - heavy cream: ["coconut cream", "half-and-half"]
+  - parmesan: ["pecorino romano", "grana padano"]
+  - unsalted butter: ["salted butter (reduce added salt)", "ghee"]
+  - spaghetti: ["linguine", "fettuccine", "bucatini"]
 
 INGREDIENT GROUPS - MANDATORY GROUPING RULES:
 You MUST create logical ingredient groupings for EVERY recipe. Do NOT default to a single "Main" group unless the recipe truly has no logical way to group ingredients.
@@ -890,25 +1058,25 @@ Example showing logical ingredient groupings (ALWAYS create groups):
     {
       "groupName": "For the sauce",
       "ingredients": [
-        {"amount": "2", "units": "tablespoons", "ingredient": "unsalted butter"},
-        {"amount": "2", "units": "cloves", "ingredient": "garlic"},
-        {"amount": "2", "units": "tablespoons", "ingredient": "gochujang"},
-        {"amount": "1/2", "units": "cup", "ingredient": "heavy cream"},
-        {"amount": "1", "units": "teaspoon", "ingredient": "sugar"}
+        {"amount": "2", "units": "tablespoons", "ingredient": "unsalted butter", "description": "Creates silky base and rich mouthfeel", "substitutions": ["ghee", "olive oil"]},
+        {"amount": "2", "units": "cloves", "ingredient": "garlic", "description": "Builds aromatic foundation", "substitutions": ["garlic powder", "shallots"]},
+        {"amount": "2", "units": "tablespoons", "ingredient": "gochujang", "description": "Adds spicy-sweet depth and fermented complexity", "substitutions": ["sriracha mixed with miso", "sambal oelek"]},
+        {"amount": "1/2", "units": "cup", "ingredient": "heavy cream", "description": "Creates silky richness and balances heat", "substitutions": ["coconut cream", "half-and-half"]},
+        {"amount": "1", "units": "teaspoon", "ingredient": "sugar", "description": "Rounds out flavors and tempers spice", "substitutions": ["honey", "maple syrup"]}
       ]
     },
     {
       "groupName": "Main ingredients",
       "ingredients": [
-        {"amount": "8", "units": "ounces", "ingredient": "pasta"},
-        {"amount": "1/2", "units": "cup", "ingredient": "pasta water"}
+        {"amount": "8", "units": "ounces", "ingredient": "pasta", "description": "The starchy canvas that absorbs the sauce", "substitutions": ["linguine", "udon noodles"]},
+        {"amount": "1/2", "units": "cup", "ingredient": "pasta water", "description": "Starchy liquid that emulsifies the sauce", "substitutions": []}
       ]
     },
     {
       "groupName": "For garnish",
       "ingredients": [
-        {"amount": "2", "units": "stalks", "ingredient": "green onion"},
-        {"amount": "as needed", "units": "", "ingredient": "parmesan cheese"}
+        {"amount": "2", "units": "stalks", "ingredient": "green onion", "description": "Adds fresh crunch and mild onion bite", "substitutions": ["chives", "thinly sliced shallots"]},
+        {"amount": "as needed", "units": "", "ingredient": "parmesan cheese", "description": "Provides salty, nutty finish and umami", "substitutions": ["pecorino romano", "nutritional yeast"]}
       ]
     }
   ],
@@ -1101,6 +1269,7 @@ Output ONLY the JSON object. No markdown, no code blocks, no explanations, no te
 START with { and END with }. Nothing else.
 
 ABSOLUTE REQUIREMENTS:
+- summary: MUST be exactly one sentence (REQUIRED FIELD)
 - ingredients: MUST be an array [] (never null)
 - instructions: MUST be an array [] (never null)
 - cuisine: MUST be an array [] (REQUIRED FIELD - analyze every recipe, can be empty [] if truly uncertain)
@@ -1173,29 +1342,32 @@ ABSOLUTE REQUIREMENTS:
       Array.isArray(parsedData.ingredients) &&
       Array.isArray(parsedData.instructions)
     ) {
-
       // Ensure ingredients have the correct structure
       const validIngredients = parsedData.ingredients.every(
-        (group: any) =>
+        (group: Record<string, unknown>) =>
           group.groupName &&
           Array.isArray(group.ingredients) &&
-          group.ingredients.every(
-            (ing: any) =>
+          (group.ingredients as Record<string, unknown>[]).every(
+            (ing: Record<string, unknown>) =>
               typeof ing.amount === 'string' &&
               typeof ing.units === 'string' &&
-              typeof ing.ingredient === 'string'
-          )
+              typeof ing.ingredient === 'string',
+          ),
       );
 
       // Validate that AI returned objects, not strings
       const hasStringInstructions = parsedData.instructions.some(
-        (inst: any) => typeof inst === 'string'
+        (inst: unknown) => typeof inst === 'string',
       );
-      
+
       if (hasStringInstructions) {
-        console.warn('[AI Parser] ⚠️ AI returned instructions as strings instead of objects. Prompt may need adjustment.');
+        console.warn(
+          '[AI Parser] ⚠️ AI returned instructions as strings instead of objects. Prompt may need adjustment.',
+        );
       } else {
-        console.log('[AI Parser] ✅ AI correctly returned instructions as objects with title/detail');
+        console.log(
+          '[AI Parser] ✅ AI correctly returned instructions as objects with title/detail',
+        );
       }
 
       const normalizedInstructions = normalizeInstructionSteps(
@@ -1204,7 +1376,7 @@ ABSOLUTE REQUIREMENTS:
 
       if (validIngredients && normalizedInstructions.length > 0) {
         console.log(
-          `[AI Parser] Successfully parsed recipe: "${parsedData.title}" with ${parsedData.ingredients.reduce((sum: number, g: any) => sum + g.ingredients.length, 0)} ingredients and ${normalizedInstructions.length} instructions`
+          `[AI Parser] Successfully parsed recipe: "${parsedData.title}" with ${parsedData.ingredients.reduce((sum: number, g: Record<string, unknown>) => sum + (Array.isArray(g.ingredients) ? g.ingredients.length : 0), 0)} ingredients and ${normalizedInstructions.length} instructions`,
         );
         // Return recipe with author, servings, and cuisine if available
         const recipe: ParsedRecipe = {
@@ -1212,10 +1384,16 @@ ABSOLUTE REQUIREMENTS:
           ingredients: parsedData.ingredients,
           instructions: normalizedInstructions,
         };
+        if (
+          typeof parsedData.summary === 'string' &&
+          parsedData.summary.trim()
+        ) {
+          recipe.summary = parsedData.summary.trim();
+        }
         if (parsedData.author && typeof parsedData.author === 'string') {
           recipe.author = parsedData.author;
         }
-        
+
         // Extract servings if provided by AI
         if (parsedData.servings !== undefined && parsedData.servings !== null) {
           // Handle both number and string formats
@@ -1235,192 +1413,85 @@ ABSOLUTE REQUIREMENTS:
             }
           }
         }
-        
-        // Extract storage guidance if provided by AI
-        if (parsedData.storageGuide && typeof parsedData.storageGuide === 'string') {
+
+        // -- Extract optional AI-generated metadata ----------------------------
+        // These fields are entirely AI-generated (not from the source HTML).
+        // NOTE: No validation against ground truth — values are best-effort.
+
+        if (typeof parsedData.storageGuide === 'string') {
           recipe.storageGuide = parsedData.storageGuide.trim();
-          console.log('[AI Parser] 📦 Storage guide extracted:', recipe.storageGuide.substring(0, 50) + '...');
         }
-        
-        // Extract shelf life if provided by AI
         if (parsedData.shelfLife && typeof parsedData.shelfLife === 'object') {
           recipe.shelfLife = {
-            fridge: typeof parsedData.shelfLife.fridge === 'number' ? parsedData.shelfLife.fridge : null,
-            freezer: typeof parsedData.shelfLife.freezer === 'number' ? parsedData.shelfLife.freezer : null,
+            fridge:
+              typeof parsedData.shelfLife.fridge === 'number'
+                ? parsedData.shelfLife.fridge
+                : null,
+            freezer:
+              typeof parsedData.shelfLife.freezer === 'number'
+                ? parsedData.shelfLife.freezer
+                : null,
           };
-          console.log('[AI Parser] 📦 Shelf life extracted:', recipe.shelfLife);
         }
-        
-        // Extract plating notes if provided by AI
-        if (parsedData.platingNotes && typeof parsedData.platingNotes === 'string') {
+        if (typeof parsedData.platingNotes === 'string') {
           recipe.platingNotes = parsedData.platingNotes.trim();
-          console.log('[AI Parser] 🍽️ Plating notes extracted:', recipe.platingNotes.substring(0, 50) + '...');
         }
-        
-        // Extract serving vessel if provided by AI
-        if (parsedData.servingVessel && typeof parsedData.servingVessel === 'string') {
+        if (typeof parsedData.servingVessel === 'string') {
           recipe.servingVessel = parsedData.servingVessel.trim();
-          console.log('[AI Parser] 🍽️ Serving vessel extracted:', recipe.servingVessel);
         }
-        
-        // Extract serving temperature if provided by AI
-        if (parsedData.servingTemp && typeof parsedData.servingTemp === 'string') {
+        if (typeof parsedData.servingTemp === 'string') {
           recipe.servingTemp = parsedData.servingTemp.trim();
-          console.log('[AI Parser] 🌡️ Serving temp extracted:', recipe.servingTemp);
         }
-        
-        // Log important recipe output information: title, author, servings, storage, and plating
-        console.log('[AI Parser] 📋 Recipe output summary:', {
-          title: recipe.title || 'N/A',
-          author: recipe.author || 'N/A',
-          servings: recipe.servings || 'N/A',
-          hasAuthor: !!recipe.author,
-          hasServings: !!recipe.servings,
-          hasStorageGuide: !!recipe.storageGuide,
-          hasShelfLife: !!recipe.shelfLife,
-          hasPlatingNotes: !!recipe.platingNotes,
-          servingVessel: recipe.servingVessel || 'N/A',
-          servingTemp: recipe.servingTemp || 'N/A',
+
+        console.log('[AI Parser] Recipe:', {
+          title: recipe.title,
+          author: recipe.author ?? '(none)',
+          servings: recipe.servings ?? '(none)',
+          cuisine: recipe.cuisine?.join(', ') ?? '(none)',
+          hasStorage: !!recipe.storageGuide,
+          hasPlating: !!recipe.platingNotes,
         });
-        
-        // Handle cuisine - normalize to array format and filter to supported cuisines only
-        console.log('[AI Parser] 🍽️ Starting cuisine detection for recipe:', parsedData.title);
-        console.log('[AI Parser] Raw cuisine data from AI:', {
-          cuisine: parsedData.cuisine,
-          type: typeof parsedData.cuisine,
-          isArray: Array.isArray(parsedData.cuisine),
-        });
-        
-        if (parsedData.cuisine) {
-          if (Array.isArray(parsedData.cuisine)) {
-            // Filter out empty strings and ensure all items are strings
-            const detectedCuisines = parsedData.cuisine
-              .filter((c: any) => typeof c === 'string' && c.trim().length > 0)
-              .map((c: string) => c.trim());
-            
-            console.log('[AI Parser] Detected cuisines (array):', detectedCuisines);
-            
-            // Normalize cuisine names: try exact match first, then case-insensitive match
-            const normalizeCuisineName = (name: string): string | null => {
-              // Try exact match first
-              if (isSupportedCuisine(name)) {
-                console.log(`[AI Parser] ✅ Exact match found: "${name}"`);
-                return name;
-              }
-              // Try case-insensitive match
-              const lowerName = name.toLowerCase();
-              const matched = SUPPORTED_CUISINES.find(
-                (supported) => supported.toLowerCase() === lowerName
-              );
-              if (matched) {
-                console.log(`[AI Parser] ✅ Case-insensitive match: "${name}" → "${matched}"`);
-                return matched;
-              }
-              console.log(`[AI Parser] ❌ No match for: "${name}"`);
-              return null;
-            };
-            
-            // Filter to only include supported cuisines (with normalization)
-            const validCuisines = detectedCuisines
-              .map(normalizeCuisineName)
-              .filter((c): c is string => c !== null);
-            
-            if (validCuisines.length > 0) {
-              recipe.cuisine = validCuisines;
-              console.log('[AI Parser] ✅ Cuisine detection SUCCESS:', {
-                title: recipe.title,
-                detectedCuisines,
-                validCuisines,
-                unsupportedCuisines: detectedCuisines.filter(c => !normalizeCuisineName(c)),
-                supportedCuisines: SUPPORTED_CUISINES,
-              });
-            } else if (detectedCuisines.length > 0) {
-              console.warn('[AI Parser] ⚠️ Cuisine detected but not supported:', {
-                title: recipe.title,
-                detectedCuisines,
-                supportedCuisines: SUPPORTED_CUISINES,
-                reason: 'None of the detected cuisines match supported list (even with case-insensitive matching)',
-              });
-            } else {
-              console.log('[AI Parser] ⚠️ Cuisine array was empty or invalid');
-            }
-          } else if (typeof parsedData.cuisine === 'string' && parsedData.cuisine.trim().length > 0) {
-            // Handle single string cuisine
-            const cuisineStr = parsedData.cuisine.trim();
-            console.log('[AI Parser] Detected single cuisine string:', cuisineStr);
-            
-            // Try exact match first, then case-insensitive
-            let normalizedCuisine: string | null = null;
-            if (isSupportedCuisine(cuisineStr)) {
-              normalizedCuisine = cuisineStr;
-              console.log(`[AI Parser] ✅ Exact match found: "${cuisineStr}"`);
-            } else {
-              const lowerName = cuisineStr.toLowerCase();
-              const matched = SUPPORTED_CUISINES.find(
-                (supported) => supported.toLowerCase() === lowerName
-              );
-              normalizedCuisine = matched || null;
-              if (matched) {
-                console.log(`[AI Parser] ✅ Case-insensitive match: "${cuisineStr}" → "${matched}"`);
-              } else {
-                console.log(`[AI Parser] ❌ No match for: "${cuisineStr}"`);
-              }
-            }
-            
-            if (normalizedCuisine) {
-              recipe.cuisine = [normalizedCuisine];
-              console.log('[AI Parser] ✅ Single cuisine string added:', {
-                title: recipe.title,
-                detectedCuisine: cuisineStr,
-                normalizedCuisine,
-              });
-            } else {
-              console.warn('[AI Parser] ⚠️ Single cuisine string not supported:', {
-                title: recipe.title,
-                detectedCuisine: cuisineStr,
-                supportedCuisines: SUPPORTED_CUISINES,
-              });
-            }
-          } else {
-            console.log('[AI Parser] ⚠️ Cuisine field exists but is invalid type:', {
-              type: typeof parsedData.cuisine,
-              value: parsedData.cuisine,
-            });
-          }
-        } else {
-          console.warn('[AI Parser] ⚠️ No cuisine detected by AI:', {
-            title: parsedData.title,
-            hasCuisineField: 'cuisine' in parsedData,
-            cuisineValue: parsedData.cuisine,
-            note: 'AI may have skipped this optional field - check AI prompt',
-          });
-        }
-        
-        console.log('[AI Parser] Final recipe cuisine:', recipe.cuisine || 'none');
+
+        // -- Cuisine normalization -----------------------------------------------
+        // The AI returns cuisine as string | string[] | undefined.
+        // We normalize to a string[] of SUPPORTED_CUISINES values (case-insensitive match).
+        recipe.cuisine = normalizeCuisineField(parsedData.cuisine);
+        console.log(
+          '[AI Parser] Cuisine:',
+          recipe.cuisine?.length ? recipe.cuisine.join(', ') : 'none',
+        );
         return recipe;
       }
     }
 
     console.error('[AI Parser] Invalid recipe structure from AI:', parsedData);
     return null;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[AI Parser] Error:', error);
-    
+    const err = error as {
+      status?: number;
+      message?: string;
+      headers?: Record<string, string>;
+      response?: { status?: number; headers?: Record<string, string> };
+    };
+
     // Check for rate limit errors
-    if (error?.status === 429 || 
-        error?.message?.includes('rate limit') || 
-        error?.message?.includes('quota') ||
-        error?.response?.status === 429) {
+    if (
+      err?.status === 429 ||
+      err?.message?.includes('rate limit') ||
+      err?.message?.includes('quota') ||
+      err?.response?.status === 429
+    ) {
       console.error('[AI Parser] Rate limit detected');
-      
+
       // Extract retry-after header if available
       // Groq SDK may return headers in error.headers or error.response.headers
-      const retryAfterHeader = 
-        error?.headers?.['retry-after'] || 
-        error?.headers?.['Retry-After'] ||
-        error?.response?.headers?.['retry-after'] ||
-        error?.response?.headers?.['Retry-After'];
-      
+      const retryAfterHeader =
+        err?.headers?.['retry-after'] ||
+        err?.headers?.['Retry-After'] ||
+        err?.response?.headers?.['retry-after'] ||
+        err?.response?.headers?.['Retry-After'];
+
       // Calculate retry timestamp (retry-after is typically in seconds)
       let retryAfter: number | undefined;
       if (retryAfterHeader) {
@@ -1430,31 +1501,50 @@ ABSOLUTE REQUIREMENTS:
           retryAfter = Date.now() + (retrySeconds + 5) * 1000;
         }
       }
-      
+
       // Create error with retry-after information
-      const rateLimitError: any = new Error('ERR_RATE_LIMIT');
+      const rateLimitError = new Error('ERR_RATE_LIMIT') as Error & {
+        retryAfter?: number;
+      };
       if (retryAfter) {
         rateLimitError.retryAfter = retryAfter;
       }
       throw rateLimitError;
     }
-    
+
     // Check for service unavailable
-    if (error?.status === 503 || 
-        error?.status === 502 ||
-        error?.message?.includes('service unavailable') ||
-        error?.message?.includes('temporarily unavailable')) {
+    if (
+      err?.status === 503 ||
+      err?.status === 502 ||
+      err?.message?.includes('service unavailable') ||
+      err?.message?.includes('temporarily unavailable')
+    ) {
       console.error('[AI Parser] Service unavailable');
       throw new Error('ERR_API_UNAVAILABLE');
     }
-    
+
     return null;
   }
 }
 
+// ---------------------------------------------------------------------------
+// Orchestrator: parseRecipe (main entry point for HTML)
+// ---------------------------------------------------------------------------
+
 /**
- * Main parsing function - tries JSON-LD first, then AI fallback
- * 
+ * Main parsing function — tries JSON-LD first, then AI fallback.
+ *
+ * Flow:
+ *   1. Clean HTML (remove ads, nav, scripts — see htmlCleaner.ts)
+ *   2. Try JSON-LD extraction
+ *      a. If JSON-LD has only a "Main" group → call AI for better groupings → merge
+ *      b. If JSON-LD has good groups → still call AI for cuisine/metadata → merge
+ *   3. If no JSON-LD → full AI parse
+ *   4. Use summary returned from the same AI parse call (when available)
+ *
+ * NOTE: Even when JSON-LD succeeds, we always call the AI (step 2a/2b),
+ * so every successful parse costs at least one AI call.
+ *
  * @param rawHtml - Raw HTML from recipe page
  * @returns ParserResult with success status, data, error, and method used
  */
@@ -1479,135 +1569,121 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
     console.log('[Recipe Parser] Attempting JSON-LD extraction...');
     const jsonLdResult = extractFromJsonLd($);
     if (jsonLdResult) {
-      // Check if JSON-LD only has "Main" group - if so, try AI parsing for better groupings
-      const hasOnlyMainGroup = jsonLdResult.ingredients.length === 1 && 
-                                jsonLdResult.ingredients[0].groupName === 'Main';
-      
-      if (hasOnlyMainGroup) {
-        console.log('[Recipe Parser] JSON-LD has only "Main" group, trying AI parsing for better groupings...');
-        const aiResult = await parseWithAI(cleaned.html);
-        
-        if (aiResult && aiResult.ingredients.length > 0) {
-          // Use AI-detected groupings if they exist and are better than "Main"
-          const hasBetterGroupings = aiResult.ingredients.length > 1 || 
-                                    (aiResult.ingredients.length === 1 && aiResult.ingredients[0].groupName !== 'Main');
-          
-          if (hasBetterGroupings) {
-            // Merge JSON-LD data (title, author, servings, times, etc.) with AI-detected groupings and cuisine
-            const mergedRecipe: ParsedRecipe = {
-              ...jsonLdResult,
-              ingredients: aiResult.ingredients, // Use AI-detected groupings
-              cuisine: aiResult.cuisine, // Include AI-detected cuisine tags
-              // Preserve servings from JSON-LD if available, otherwise use AI-detected servings
-              ...(jsonLdResult.servings ? { servings: jsonLdResult.servings } : (aiResult.servings ? { servings: aiResult.servings } : {})),
-              // Preserve times from JSON-LD if available, otherwise use AI-detected times
-              ...(jsonLdResult.prepTimeMinutes ? { prepTimeMinutes: jsonLdResult.prepTimeMinutes } : (aiResult.prepTimeMinutes ? { prepTimeMinutes: aiResult.prepTimeMinutes } : {})),
-              ...(jsonLdResult.cookTimeMinutes ? { cookTimeMinutes: jsonLdResult.cookTimeMinutes } : (aiResult.cookTimeMinutes ? { cookTimeMinutes: aiResult.cookTimeMinutes } : {})),
-              ...(jsonLdResult.totalTimeMinutes ? { totalTimeMinutes: jsonLdResult.totalTimeMinutes } : (aiResult.totalTimeMinutes ? { totalTimeMinutes: aiResult.totalTimeMinutes } : {})),
-            };
-            
-            const summary = await generateRecipeSummary(mergedRecipe);
-            const recipeWithSummary = {
-              ...mergedRecipe,
-              ...(summary && { summary }),
-            };
-            
-            return {
-              success: true,
-              data: recipeWithSummary,
-              method: 'json-ld+ai', // Indicate hybrid approach
-            };
+      // -- JSON-LD succeeded: always call AI for cuisine + enrichment ------
+      //
+      // Two sub-cases:
+      //   a) JSON-LD has only a "Main" ingredient group → use AI groupings
+      //   b) JSON-LD has good groups → keep them, use AI only for cuisine/metadata
+      //
+      // TODO: Both sub-cases duplicate the merge logic below. Consider
+      // extracting a mergeJsonLdWithAi() helper to reduce duplication.
+
+      const hasOnlyMainGroup =
+        jsonLdResult.ingredients.length === 1 &&
+        jsonLdResult.ingredients[0].groupName === 'Main';
+
+      // Always call AI — needed for cuisine, storage, plating, descriptions
+      console.log(
+        `[Recipe Parser] JSON-LD found. Calling AI for enrichment (mainGroupOnly=${hasOnlyMainGroup})...`,
+      );
+      const warnings: string[] = [];
+      let aiResult: ParsedRecipe | null = null;
+      if (!process.env.GROQ_API_KEY) {
+        warnings.push('AI_NOT_CONFIGURED');
+      } else {
+        try {
+          aiResult = await parseWithAI(cleaned.html);
+          if (!aiResult) {
+            warnings.push('AI_ENRICHMENT_FAILED');
           }
+        } catch (error) {
+          console.error('[Recipe Parser] AI enrichment failed:', error);
+          warnings.push('AI_ENRICHMENT_FAILED');
+          // Continue with JSON-LD data only
         }
       }
-      
-      // Always try AI parsing for cuisine detection, even if JSON-LD has good groupings
-      // This ensures we get cuisine tags even when JSON-LD parsing succeeds
-      console.log('[Recipe Parser] JSON-LD succeeded, calling AI parsing for cuisine detection...');
-      let aiResult: ParsedRecipe | null = null;
-      try {
-        aiResult = await parseWithAI(cleaned.html);
-      } catch (error) {
-        console.error('[Recipe Parser] AI parsing for cuisine failed:', error);
-        // Continue without cuisine if AI fails
-      }
-      
-      // Merge JSON-LD data with AI-detected cuisine and servings (and summary if available)
-      console.log('[Recipe Parser] 🔄 Merging JSON-LD + AI results for cuisine detection');
-      console.log('[Recipe Parser] JSON-LD result cuisine:', jsonLdResult.cuisine || 'none');
-      console.log('[Recipe Parser] AI result cuisine:', aiResult?.cuisine || 'none');
-      console.log('[Recipe Parser] JSON-LD result servings:', jsonLdResult.servings || 'none');
-      console.log('[Recipe Parser] AI result servings:', aiResult?.servings || 'none');
-      
+
+      // Merge: JSON-LD fields take priority for ground-truth data (title, author,
+      // servings, times). AI provides enrichment (cuisine, storage, plating).
+      // If JSON-LD had only "Main" group and AI has better groupings, use AI's.
+      const useBetterAiGroupings =
+        hasOnlyMainGroup &&
+        aiResult &&
+        aiResult.ingredients.length > 0 &&
+        (aiResult.ingredients.length > 1 ||
+          aiResult.ingredients[0].groupName !== 'Main');
+
       const mergedRecipe: ParsedRecipe = {
         ...jsonLdResult,
-        ...(aiResult?.cuisine && aiResult.cuisine.length > 0 && { cuisine: aiResult.cuisine }), // Add cuisine from AI if detected
-        // Preserve servings from JSON-LD if available, otherwise use AI-detected servings
-        ...(jsonLdResult.servings ? { servings: jsonLdResult.servings } : (aiResult?.servings ? { servings: aiResult.servings } : {})),
-        // Preserve times from JSON-LD if available, otherwise use AI-detected times
-        ...(jsonLdResult.prepTimeMinutes ? { prepTimeMinutes: jsonLdResult.prepTimeMinutes } : (aiResult?.prepTimeMinutes ? { prepTimeMinutes: aiResult.prepTimeMinutes } : {})),
-        ...(jsonLdResult.cookTimeMinutes ? { cookTimeMinutes: jsonLdResult.cookTimeMinutes } : (aiResult?.cookTimeMinutes ? { cookTimeMinutes: aiResult.cookTimeMinutes } : {})),
-        ...(jsonLdResult.totalTimeMinutes ? { totalTimeMinutes: jsonLdResult.totalTimeMinutes } : (aiResult?.totalTimeMinutes ? { totalTimeMinutes: aiResult.totalTimeMinutes } : {})),
+        // Use AI ingredient groupings when JSON-LD only had "Main"
+        ...(useBetterAiGroupings && { ingredients: aiResult!.ingredients }),
+        // AI-only fields
+        ...(aiResult?.cuisine &&
+          aiResult.cuisine.length > 0 && { cuisine: aiResult.cuisine }),
+        ...(aiResult?.storageGuide && { storageGuide: aiResult.storageGuide }),
+        ...(aiResult?.shelfLife && { shelfLife: aiResult.shelfLife }),
+        ...(aiResult?.platingNotes && { platingNotes: aiResult.platingNotes }),
+        ...(aiResult?.servingVessel && {
+          servingVessel: aiResult.servingVessel,
+        }),
+        ...(aiResult?.servingTemp && { servingTemp: aiResult.servingTemp }),
+        ...(aiResult?.summary && { summary: aiResult.summary }),
+        // JSON-LD takes priority for these; fall back to AI if missing
+        ...(jsonLdResult.servings
+          ? { servings: jsonLdResult.servings }
+          : aiResult?.servings
+            ? { servings: aiResult.servings }
+            : {}),
+        ...(jsonLdResult.prepTimeMinutes
+          ? { prepTimeMinutes: jsonLdResult.prepTimeMinutes }
+          : aiResult?.prepTimeMinutes
+            ? { prepTimeMinutes: aiResult.prepTimeMinutes }
+            : {}),
+        ...(jsonLdResult.cookTimeMinutes
+          ? { cookTimeMinutes: jsonLdResult.cookTimeMinutes }
+          : aiResult?.cookTimeMinutes
+            ? { cookTimeMinutes: aiResult.cookTimeMinutes }
+            : {}),
+        ...(jsonLdResult.totalTimeMinutes
+          ? { totalTimeMinutes: jsonLdResult.totalTimeMinutes }
+          : aiResult?.totalTimeMinutes
+            ? { totalTimeMinutes: aiResult.totalTimeMinutes }
+            : {}),
       };
-      
-      console.log('[Recipe Parser] ✅ Final merged recipe cuisine:', mergedRecipe.cuisine || 'none');
-      
-      // Log important recipe output information: title, author, and servings
-      console.log('[Recipe Parser] 📋 Merged recipe output summary:', {
-        title: mergedRecipe.title || 'N/A',
-        author: mergedRecipe.author || 'N/A',
-        servings: mergedRecipe.servings || 'N/A',
-        hasAuthor: !!mergedRecipe.author,
-        hasServings: !!mergedRecipe.servings,
+
+      console.log('[Recipe Parser] Merged (json-ld+ai):', {
+        title: mergedRecipe.title,
+        author: mergedRecipe.author ?? '(none)',
+        servings: mergedRecipe.servings ?? '(none)',
+        cuisine: mergedRecipe.cuisine?.join(', ') ?? '(none)',
+        usedAiGroupings: !!useBetterAiGroupings,
       });
-      
-      const summary = await generateRecipeSummary(mergedRecipe);
-      const recipeWithSummary = {
-        ...mergedRecipe,
-        ...(summary && { summary }),
-      };
+
       return {
         success: true,
-        data: recipeWithSummary,
-        method: 'json-ld+ai', // Indicate hybrid approach (JSON-LD for data, AI for cuisine)
+        data: mergedRecipe,
+        method: aiResult ? 'json-ld+ai' : 'json-ld',
+        ...(warnings.length > 0 && { warnings }),
       };
     }
 
-    console.log('[Recipe Parser] JSON-LD not available, falling back to AI parsing...');
+    // -- Layer 2: Full AI parse (no JSON-LD available) ---------------------
+    console.log(
+      '[Recipe Parser] No JSON-LD found, falling back to AI parsing...',
+    );
 
-    // Layer 2: AI parsing fallback
     const aiResult = await parseWithAI(cleaned.html);
     if (aiResult) {
-      // Log when AI parsing succeeds, including whether we captured author metadata
-      console.log(
-        `[Recipe Parser] AI parsing succeeded${aiResult.author ? ` with author "${aiResult.author}"` : ' (no author found)'}`
-      );
-      // #region agent log
-      console.log('[DEBUG] AI-only parsing - cuisine check:', {
+      console.log('[Recipe Parser] AI-only parse succeeded:', {
         title: aiResult.title,
-        hasCuisine: !!aiResult.cuisine,
-        cuisine: aiResult.cuisine,
+        author: aiResult.author ?? '(none)',
+        servings: aiResult.servings ?? '(none)',
+        cuisine: aiResult.cuisine?.join(', ') ?? '(none)',
       });
-      // #endregion
-      
-      // Log important recipe output information: title, author, and servings
-      console.log('[Recipe Parser] 📋 AI-only recipe output summary:', {
-        title: aiResult.title || 'N/A',
-        author: aiResult.author || 'N/A',
-        servings: aiResult.servings || 'N/A',
-        hasAuthor: !!aiResult.author,
-        hasServings: !!aiResult.servings,
-      });
-      
-      // Generate summary for AI parsed recipe
-      const summary = await generateRecipeSummary(aiResult);
-      const recipeWithSummary = {
-        ...aiResult,
-        ...(summary && { summary }),
-      };
+
       return {
         success: true,
-        data: recipeWithSummary,
+        data: aiResult,
         method: 'ai',
       };
     }
@@ -1618,18 +1694,25 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
       error: 'Could not extract recipe data using JSON-LD or AI parsing',
       method: 'none',
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error during parsing';
     console.error('[Recipe Parser] Error:', errorMessage);
-    
+    const err = error as {
+      status?: number;
+      message?: string;
+      retryAfter?: number;
+    };
+
     // Check for rate limit errors
-    if (errorMessage === 'ERR_RATE_LIMIT' || 
-        error?.status === 429 || 
-        error?.message?.includes('rate limit') || 
-        error?.message?.includes('quota')) {
+    if (
+      errorMessage === 'ERR_RATE_LIMIT' ||
+      err?.status === 429 ||
+      err?.message?.includes('rate limit') ||
+      err?.message?.includes('quota')
+    ) {
       // Pass through retry-after timestamp if available
-      const retryAfter = error?.retryAfter;
+      const retryAfter = err?.retryAfter;
       return {
         success: false,
         error: 'ERR_RATE_LIMIT',
@@ -1637,19 +1720,21 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
         retryAfter, // Include retry timestamp if available
       };
     }
-    
+
     // Check for service unavailable
-    if (errorMessage === 'ERR_API_UNAVAILABLE' ||
-        error?.status === 503 || 
-        error?.status === 502 ||
-        error?.message?.includes('service unavailable')) {
+    if (
+      errorMessage === 'ERR_API_UNAVAILABLE' ||
+      err?.status === 503 ||
+      err?.status === 502 ||
+      err?.message?.includes('service unavailable')
+    ) {
       return {
         success: false,
         error: 'ERR_API_UNAVAILABLE',
         method: 'none',
       };
     }
-    
+
     return {
       success: false,
       error: errorMessage,
@@ -1658,11 +1743,15 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// URL Entry Point
+// ---------------------------------------------------------------------------
+
 /**
- * Parse recipe from URL (fetches HTML first)
- * 
- * @param url - Recipe URL to fetch and parse
- * @returns ParserResult with success status, data, error, and method used
+ * Fetch HTML from a URL, then parse it.
+ *
+ * Uses a Chrome-like User-Agent to avoid bot detection. 10-second timeout.
+ * Sets sourceUrl on the result so the UI can link back to the original page.
  */
 export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
   try {
@@ -1685,10 +1774,14 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
     });
 
     clearTimeout(timeoutId);
-    console.log(`[Recipe Parser] Fetch response: ${response.status} ${response.statusText}, ok: ${response.ok}`);
+    console.log(
+      `[Recipe Parser] Fetch response: ${response.status} ${response.statusText}, ok: ${response.ok}`,
+    );
 
     if (!response.ok) {
-      console.error(`[Recipe Parser] Response not ok: ${response.status} ${response.statusText}`);
+      console.error(
+        `[Recipe Parser] Response not ok: ${response.status} ${response.statusText}`,
+      );
       return {
         success: false,
         error: `Failed to fetch URL: ${response.status} ${response.statusText}`,
@@ -1710,18 +1803,18 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
 
     // Parse the fetched HTML
     const result = await parseRecipe(html);
-    
+
     // Add sourceUrl to the result if parsing was successful
     if (result.success && result.data) {
       result.data.sourceUrl = url;
     }
-    
+
     return result;
   } catch (error) {
     console.error('[Recipe Parser] Error caught:', error);
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error fetching URL';
-    
+
     // Check for timeout
     if (errorMessage.includes('abort')) {
       console.error('[Recipe Parser] Timeout error detected');
@@ -1740,16 +1833,26 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Image Entry Point (Vision Model)
+// ---------------------------------------------------------------------------
+
 /**
- * Parse recipe from image using AI vision model
- * 
- * This function uses Groq's vision-capable model to extract recipe data
- * directly from an image (photo of recipe card, cookbook page, etc.)
- * 
+ * Parse recipe from an image using Groq's vision-capable model.
+ *
+ * Uses meta-llama/llama-4-scout-17b-16e-instruct (vision model).
+ *
+ * NOTE: The prompt here is much simpler than parseWithAI — it doesn't request
+ * cuisine, storage, plating, descriptions, or substitutions. These fields
+ * will be missing from image-parsed recipes.
+ *
+ * TODO: Align the image prompt with the HTML prompt to produce consistent output.
+ *
  * @param imageBase64 - Base64-encoded image data (with data URL prefix)
- * @returns ParserResult with success status, data, error, and method used
  */
-export async function parseRecipeFromImage(imageBase64: string): Promise<ParserResult> {
+export async function parseRecipeFromImage(
+  imageBase64: string,
+): Promise<ParserResult> {
   try {
     console.log('[Recipe Parser] Starting recipe parsing from image...');
 
@@ -1767,13 +1870,15 @@ export async function parseRecipeFromImage(imageBase64: string): Promise<ParserR
       apiKey: process.env.GROQ_API_KEY,
     });
 
-    console.log('[Image Parser] Sending image to AI vision model for parsing...');
+    console.log(
+      '[Image Parser] Sending image to AI vision model for parsing...',
+    );
 
     // Use Groq's vision model to analyze the image
     // Using meta-llama/llama-4-scout-17b-16e-instruct (vision-capable model)
     const modelToUse = 'meta-llama/llama-4-scout-17b-16e-instruct';
     console.log('[Image Parser] Using model:', modelToUse);
-    
+
     const response = await groq.chat.completions.create({
       model: modelToUse,
       messages: [
@@ -1786,6 +1891,7 @@ export async function parseRecipeFromImage(imageBase64: string): Promise<ParserR
 
 {
   "title": "Recipe Name Here",
+  "summary": "One sentence dish description.",
   "ingredients": [
     {
       "groupName": "Main",
@@ -1813,7 +1919,8 @@ Rules:
 5. If no groups, use "Main" as the groupName
 6. Extract every instruction step you can see
 7. Write a concise, action-focused title for each step (3-8 words)
-8. If no recipe is visible, return: {"title": "No recipe found", "ingredients": [], "instructions": []}
+8. Include "summary" as exactly one concise sentence (max 200 characters)
+9. If no recipe is visible, return: {"title": "No recipe found", "summary": "Recipe details incomplete. Review ingredients and steps.", "ingredients": [], "instructions": []}
 
 Start your response with { and end with }`,
             },
@@ -1833,11 +1940,17 @@ Start your response with { and end with }`,
     const result = response.choices[0]?.message?.content;
 
     console.log('[Image Parser] Raw AI response length:', result?.length);
-    console.log('[Image Parser] Raw AI response (first 1000 chars):', result?.substring(0, 1000));
+    console.log(
+      '[Image Parser] Raw AI response (first 1000 chars):',
+      result?.substring(0, 1000),
+    );
 
     if (!result || result.trim().length === 0) {
       console.error('[Image Parser] No response from AI service');
-      console.error('[Image Parser] Full response object:', JSON.stringify(response, null, 2));
+      console.error(
+        '[Image Parser] Full response object:',
+        JSON.stringify(response, null, 2),
+      );
       return {
         success: false,
         error: 'No response from AI vision model',
@@ -1849,7 +1962,10 @@ Start your response with { and end with }`,
     const jsonMatch = result.match(/\{[\s\S]*\}/);
     const jsonString = jsonMatch ? jsonMatch[0] : result;
 
-    console.log('[Image Parser] Extracted JSON string (first 500 chars):', jsonString.substring(0, 500));
+    console.log(
+      '[Image Parser] Extracted JSON string (first 500 chars):',
+      jsonString.substring(0, 500),
+    );
 
     // Parse the JSON response
     let parsedData;
@@ -1857,8 +1973,14 @@ Start your response with { and end with }`,
       parsedData = JSON.parse(jsonString);
       console.log('[Image Parser] Successfully parsed JSON');
       console.log('[Image Parser] Parsed title:', parsedData.title);
-      console.log('[Image Parser] Ingredients array length:', parsedData.ingredients?.length);
-      console.log('[Image Parser] Instructions array length:', parsedData.instructions?.length);
+      console.log(
+        '[Image Parser] Ingredients array length:',
+        parsedData.ingredients?.length,
+      );
+      console.log(
+        '[Image Parser] Instructions array length:',
+        parsedData.instructions?.length,
+      );
     } catch (parseError) {
       console.error('[Image Parser] Failed to parse JSON:', parseError);
       console.error('[Image Parser] JSON string that failed:', jsonString);
@@ -1870,7 +1992,10 @@ Start your response with { and end with }`,
     }
 
     // Check if AI explicitly says no recipe found AFTER parsing
-    if (parsedData.title && parsedData.title.toLowerCase().includes('no recipe found')) {
+    if (
+      parsedData.title &&
+      parsedData.title.toLowerCase().includes('no recipe found')
+    ) {
       console.log('[Image Parser] AI determined no recipe in image');
       console.log('[Image Parser] Full AI response for debugging:', result);
       return {
@@ -1888,15 +2013,15 @@ Start your response with { and end with }`,
     ) {
       // Ensure ingredients have the correct structure
       const validIngredients = parsedData.ingredients.every(
-        (group: any) =>
+        (group: Record<string, unknown>) =>
           group.groupName &&
           Array.isArray(group.ingredients) &&
-          group.ingredients.every(
-            (ing: any) =>
+          (group.ingredients as Record<string, unknown>[]).every(
+            (ing: Record<string, unknown>) =>
               typeof ing.amount === 'string' &&
               typeof ing.units === 'string' &&
-              typeof ing.ingredient === 'string'
-          )
+              typeof ing.ingredient === 'string',
+          ),
       );
 
       const normalizedInstructions = normalizeInstructionSteps(
@@ -1905,16 +2030,17 @@ Start your response with { and end with }`,
 
       if (validIngredients && normalizedInstructions.length > 0) {
         console.log(
-          `[Image Parser] Successfully parsed recipe: "${parsedData.title}" with ${parsedData.ingredients.reduce((sum: number, g: any) => sum + g.ingredients.length, 0)} ingredients and ${normalizedInstructions.length} instructions`
+          `[Image Parser] Successfully parsed recipe: "${parsedData.title}" with ${parsedData.ingredients.reduce((sum: number, g: Record<string, unknown>) => sum + (Array.isArray(g.ingredients) ? g.ingredients.length : 0), 0)} ingredients and ${normalizedInstructions.length} instructions`,
         );
         const recipe: ParsedRecipe = {
           ...parsedData,
           instructions: normalizedInstructions,
         };
-        // Generate summary for image-parsed recipe
-        const summary = await generateRecipeSummary(recipe);
-        if (summary) {
-          recipe.summary = summary;
+        if (
+          typeof parsedData.summary === 'string' &&
+          parsedData.summary.trim()
+        ) {
+          recipe.summary = parsedData.summary.trim();
         }
         return {
           success: true,
@@ -1924,35 +2050,52 @@ Start your response with { and end with }`,
       }
     }
 
-    console.error('[Image Parser] Invalid recipe structure from AI:', parsedData);
+    console.error(
+      '[Image Parser] Invalid recipe structure from AI:',
+      parsedData,
+    );
     return {
       success: false,
       error: 'Could not extract valid recipe structure from image',
       method: 'none',
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error during image parsing';
+      error instanceof Error
+        ? error.message
+        : 'Unknown error during image parsing';
     console.error('[Image Parser] Error:', errorMessage);
     console.error('[Image Parser] Full error object:', error);
-    
+    const err = error as {
+      status?: number;
+      message?: string;
+      headers?: Record<string, string>;
+      response?: { status?: number; headers?: Record<string, string> };
+      retryAfter?: number;
+    };
+
     // If it's a Groq API error, include more details
     if (error && typeof error === 'object' && 'response' in error) {
-      console.error('[Image Parser] API error response:', JSON.stringify((error as any).response, null, 2));
+      console.error(
+        '[Image Parser] API error response:',
+        JSON.stringify(err.response, null, 2),
+      );
     }
-    
+
     // Check for rate limit errors
-    if (error?.status === 429 || 
-        error?.message?.includes('rate limit') || 
-        error?.message?.includes('quota') ||
-        error?.response?.status === 429) {
+    if (
+      err?.status === 429 ||
+      err?.message?.includes('rate limit') ||
+      err?.message?.includes('quota') ||
+      err?.response?.status === 429
+    ) {
       // Extract retry-after header if available
-      const retryAfterHeader = 
-        error?.headers?.['retry-after'] || 
-        error?.headers?.['Retry-After'] ||
-        error?.response?.headers?.['retry-after'] ||
-        error?.response?.headers?.['Retry-After'];
-      
+      const retryAfterHeader =
+        err?.headers?.['retry-after'] ||
+        err?.headers?.['Retry-After'] ||
+        err?.response?.headers?.['retry-after'] ||
+        err?.response?.headers?.['Retry-After'];
+
       // Calculate retry timestamp (retry-after is typically in seconds)
       let retryAfter: number | undefined;
       if (retryAfterHeader) {
@@ -1962,7 +2105,7 @@ Start your response with { and end with }`,
           retryAfter = Date.now() + (retrySeconds + 5) * 1000;
         }
       }
-      
+
       return {
         success: false,
         error: 'ERR_RATE_LIMIT',
@@ -1970,19 +2113,21 @@ Start your response with { and end with }`,
         retryAfter, // Include retry timestamp if available
       };
     }
-    
+
     // Check for service unavailable
-    if (error?.status === 503 || 
-        error?.status === 502 ||
-        error?.message?.includes('service unavailable') ||
-        error?.message?.includes('temporarily unavailable')) {
+    if (
+      err?.status === 503 ||
+      err?.status === 502 ||
+      err?.message?.includes('service unavailable') ||
+      err?.message?.includes('temporarily unavailable')
+    ) {
       return {
         success: false,
         error: 'ERR_API_UNAVAILABLE',
         method: 'none',
       };
     }
-    
+
     return {
       success: false,
       error: errorMessage,
@@ -1990,5 +2135,3 @@ Start your response with { and end with }`,
     };
   }
 }
-
-

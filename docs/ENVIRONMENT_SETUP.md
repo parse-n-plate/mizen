@@ -70,10 +70,12 @@ Vercel manages environment variables separately from your local `.env.local` fil
 ## Testing the Setup
 
 ### Local Development:
+
 1. **Without API Key**: Recipe scraping will work, but AI fallback parsing will fail
 2. **With API Key**: Full functionality including AI-powered fallback parsing
 
 ### Vercel Production:
+
 1. Check deployment logs in Vercel dashboard for any environment variable errors
 2. Test a recipe URL to verify API key is working
 3. Check function logs if errors occur
@@ -83,11 +85,13 @@ Vercel manages environment variables separately from your local `.env.local` fil
 ### Local Development:
 
 **Error: "GROQ_API_KEY environment variable is missing"**
+
 - Make sure you have created `.env.local` file
 - Ensure the API key is correctly formatted
 - Restart the development server after adding the environment variable
 
 **Error: "API error: 500"**
+
 - Check that your GROQ_API_KEY is valid
 - Verify you have sufficient credits in your Groq account
 - Check the server logs for more detailed error messages
@@ -95,12 +99,14 @@ Vercel manages environment variables separately from your local `.env.local` fil
 ### Vercel Production:
 
 **Environment variable not working:**
+
 - Verify the variable is set in Vercel dashboard (Settings → Environment Variables)
 - Check that it's enabled for the correct environment (Production/Preview/Development)
 - Redeploy after adding or changing environment variables
 - Check deployment logs for any errors
 
 **Function timeout or errors:**
+
 - Check Vercel function logs in the dashboard
 - Verify your Groq API key is valid and has credits
 - Monitor function execution time (10s limit on free tier, 60s on Pro)
@@ -108,11 +114,13 @@ Vercel manages environment variables separately from your local `.env.local` fil
 ## Security Notes
 
 ### Local Development:
+
 - Never commit `.env.local` to version control
 - The `.env.local` file is already in `.gitignore`
 - Keep your API keys secure and don't share them publicly
 
 ### Vercel Production:
+
 - Environment variables in Vercel are encrypted at rest
 - Only team members with appropriate permissions can view them
 - Rotate API keys periodically for security

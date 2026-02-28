@@ -368,16 +368,19 @@ export async function recipeScrape(url: string) {
 
 /**
  * Parse recipe from uploaded image file
- * 
+ *
  * This function sends an image to the backend AI vision service
  * to extract recipe information (title, ingredients, instructions)
- * 
+ *
  * @param imageFile - File object containing the recipe image
  * @returns Promise with parsed recipe data or error
  */
 export async function parseRecipeFromImage(imageFile: File) {
   try {
-    console.log('[Client] Sending image to backend for parsing:', imageFile.name);
+    console.log(
+      '[Client] Sending image to backend for parsing:',
+      imageFile.name,
+    );
 
     // Create FormData to send the image file
     const formData = new FormData();
@@ -394,7 +397,10 @@ export async function parseRecipeFromImage(imageFile: File) {
     let responseData;
 
     // Check if response looks like HTML (starts with <) or is empty
-    if (textResponse.trim().startsWith('<') || textResponse.trim().length === 0) {
+    if (
+      textResponse.trim().startsWith('<') ||
+      textResponse.trim().length === 0
+    ) {
       console.error('parseRecipeFromImage: Received HTML or empty response:', {
         status: res.status,
         statusText: res.statusText,
@@ -435,11 +441,15 @@ export async function parseRecipeFromImage(imageFile: File) {
     }
 
     // Return successful response
-    console.log('[Client] Successfully received parsed recipe from image:', responseData.title);
+    console.log(
+      '[Client] Successfully received parsed recipe from image:',
+      responseData.title,
+    );
     return responseData;
   } catch (error) {
     console.error('[Client] Error in parseRecipeFromImage:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     return {
       success: false,
       error: {

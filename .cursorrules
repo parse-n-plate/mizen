@@ -27,6 +27,7 @@ This project uses a modern, maintainable tech stack designed for both developer 
     - Add shared utility/component classes if required
     - Organize CSS logically (by layer: base, components, utilities)
 - When in doubt, update globals.css for design tokens and shared styles
+- **Dropdowns/Popovers:** Always use `modal={false}` to prevent scroll locking and layout shift
 
 ## Documentation & Workflow
 - Update docs (`README.md`, etc.) for new features, breaking changes, or complex logic

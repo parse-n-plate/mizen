@@ -1,18 +1,20 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import { Domine, Albert_Sans } from 'next/font/google';
-import Navbar from '@/components/ui/Navbar';
-import Footer from '@/components/ui/footer';
+import AppShell from '@/components/layout/AppShell';
 import { AdminSettingsProvider } from '@/contexts/AdminSettingsContext';
 import { RecipeProvider } from '@/contexts/RecipeContext';
 import { ParsedRecipesProvider } from '@/contexts/ParsedRecipesContext';
 import { TimerProvider } from '@/contexts/TimerContext';
 import { CommandKProvider } from '@/contexts/CommandKContext';
+import { SidebarProvider } from '@/contexts/SidebarContext';
+import { PrototypeLabProvider } from '@/contexts/PrototypeLabContext';
+import { AdminPrototypingPanel } from '@/components/shared/admin-prototyping-panel';
 import { Toaster } from '@/components/ui/sonner';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/next';
 import { Agentation } from 'agentation';
-import ImageProtection from '@/components/ImageProtection';
+import ImageProtection from '@/components/shared/ImageProtection';
 import './globals.css';
 
 // Default fonts: Domine for headings (serif), Albert Sans for body (sans-serif)
@@ -63,14 +65,20 @@ export default function RootLayout({
             <ParsedRecipesProvider>
               <TimerProvider>
                 <CommandKProvider>
-                  <ImageProtection />
-                  <Navbar />
-                  {children}
-                  <Footer />
-                  <Toaster />
-                  <SpeedInsights />
-                  <Analytics />
-                  {process.env.NODE_ENV === 'development' && <Agentation />}
+                  <SidebarProvider>
+                    <PrototypeLabProvider>
+                      <ImageProtection />
+                      <AppShell>{children}</AppShell>
+                      <Toaster />
+                      <SpeedInsights />
+                      <Analytics />
+                      {process.env.NODE_ENV === 'development' && <Agentation />}
+                      {(process.env.NODE_ENV === 'development' ||
+                        process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview') && (
+                        <AdminPrototypingPanel />
+                      )}
+                    </PrototypeLabProvider>
+                  </SidebarProvider>
                 </CommandKProvider>
               </TimerProvider>
             </ParsedRecipesProvider>

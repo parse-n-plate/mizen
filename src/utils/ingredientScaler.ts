@@ -56,17 +56,21 @@ const DECIMAL_TO_FRACTION: Record<string, string> = {
  */
 export function parseAmount(amountStr: string): number | null {
   if (!amountStr) return null;
-  
+
   const cleanStr = amountStr.trim();
-  if (!cleanStr || cleanStr.toLowerCase() === 'as needed' || cleanStr.toLowerCase() === 'to taste') {
+  if (
+    !cleanStr ||
+    cleanStr.toLowerCase() === 'as needed' ||
+    cleanStr.toLowerCase() === 'to taste'
+  ) {
     return null;
   }
 
   // Check if it's a range (e.g., "2-3") - handle this by returning the average or just the first number?
-  // For now, let's return null for ranges in this basic parser, 
+  // For now, let's return null for ranges in this basic parser,
   // and handle ranges specifically in the scaling function
   if (cleanStr.includes('-') || cleanStr.toLowerCase().includes(' to ')) {
-    return null; 
+    return null;
   }
 
   // Replace unicode fractions with their decimal values if they stand alone
@@ -93,7 +97,7 @@ export function parseAmount(amountStr: string): number | null {
       const num = parseFloat(fractionParts[0]);
       const den = parseFloat(fractionParts[1]);
       if (!isNaN(whole) && !isNaN(num) && !isNaN(den) && den !== 0) {
-        return whole + (num / den);
+        return whole + num / den;
       }
     } else if (parts.length === 1) {
       // Simple fraction: "1/2"
@@ -117,21 +121,19 @@ export function parseAmount(amountStr: string): number | null {
  */
 export function formatAmount(amount: number): string {
   if (amount === 0) return '0';
-  
+
   // Handle very small numbers - using Unicode fraction symbol
   if (amount < 0.01) return '< ⅛';
 
   const whole = Math.floor(amount);
   const decimal = amount - whole;
-  
+
   // Close enough to whole number
   if (decimal < 0.02) return whole.toString();
   if (decimal > 0.98) return (whole + 1).toString();
 
   // Check for common fractions
   // Round decimal to 3 places to check against map
-  const roundedDecimal = Math.round(decimal * 1000) / 1000;
-  
   // Try to find exact match first
   // Note: Unicode fractions are concatenated directly with no space for mixed numbers (e.g., "1½" not "1 ½")
   for (const [dec, frac] of Object.entries(DECIMAL_TO_FRACTION)) {
@@ -142,9 +144,9 @@ export function formatAmount(amount: number): string {
 
   // Fallback: generic fraction formatting (simplified) using Unicode symbols
   // 1/3 ≈ 0.333
-  if (Math.abs(decimal - 1/3) < 0.05) return whole > 0 ? `${whole}⅓` : '⅓';
-  if (Math.abs(decimal - 2/3) < 0.05) return whole > 0 ? `${whole}⅔` : '⅔';
-  
+  if (Math.abs(decimal - 1 / 3) < 0.05) return whole > 0 ? `${whole}⅓` : '⅓';
+  if (Math.abs(decimal - 2 / 3) < 0.05) return whole > 0 ? `${whole}⅔` : '⅔';
+
   // If no fraction match, return decimal formatted to max 2 places
   // Remove trailing zeros
   const formattedDecimal = parseFloat(amount.toFixed(2)).toString();
@@ -155,24 +157,30 @@ export function formatAmount(amount: number): string {
  * Parse amount/unit from ingredient string when amount/units fields are empty
  * Handles patterns like "1½ Tbsp soy sauce", "2 cups dashi", etc.
  */
-function parseIngredientString(ingredientStr: string): { amount: string; unit: string; name: string } | null {
+function parseIngredientString(
+  ingredientStr: string,
+): { amount: string; unit: string; name: string } | null {
   // Pattern: matches amount (can include fractions like 1½, 2½, ⅛) + unit + ingredient name
   // Examples: "1½ Tbsp soy sauce", "2½ cups dashi", "1 tsp sugar"
-  const match = ingredientStr.match(/^([\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+(?:\s*[–-]\s*[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)?)\s+([a-zA-Z]+)\s+(.+)$/);
+  const match = ingredientStr.match(
+    /^([\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+(?:\s*[–-]\s*[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)?)\s+([a-zA-Z]+)\s+(.+)$/,
+  );
   if (match) {
     return {
       amount: match[1].trim(),
       unit: match[2].trim(),
-      name: match[3].trim()
+      name: match[3].trim(),
     };
   }
   // Fallback: try simpler pattern without fractions
-  const simpleMatch = ingredientStr.match(/^(\d+(?:\s*[–-]\s*\d+)?)\s+([a-zA-Z]+)\s+(.+)$/);
+  const simpleMatch = ingredientStr.match(
+    /^(\d+(?:\s*[–-]\s*\d+)?)\s+([a-zA-Z]+)\s+(.+)$/,
+  );
   if (simpleMatch) {
     return {
       amount: simpleMatch[1].trim(),
       unit: simpleMatch[2].trim(),
-      name: simpleMatch[3].trim()
+      name: simpleMatch[3].trim(),
     };
   }
   return null;
@@ -183,7 +191,7 @@ function parseIngredientString(ingredientStr: string): { amount: string; unit: s
  */
 export function scaleIngredient(
   ingredient: string | Ingredient,
-  scaleFactor: number
+  scaleFactor: number,
 ): string | Ingredient {
   // If it's just a string, we can't reliably scale it
   if (typeof ingredient === 'string') {
@@ -202,7 +210,7 @@ export function scaleIngredient(
         return {
           amount: scaledAmount,
           units: parsed.unit,
-          ingredient: parsed.name
+          ingredient: parsed.name,
         };
       }
     }
@@ -216,31 +224,31 @@ export function scaleIngredient(
     if (parts.length === 2) {
       const min = parseAmount(parts[0]);
       const max = parseAmount(parts[1]);
-      
+
       if (min !== null && max !== null) {
         const scaledMin = formatAmount(min * scaleFactor);
         const scaledMax = formatAmount(max * scaleFactor);
         return {
           ...ingredient,
-          amount: `${scaledMin}-${scaledMax}`
+          amount: `${scaledMin}-${scaledMax}`,
         };
       }
     }
   }
-  
+
   // Check for "to" range (e.g. "2 to 3")
   if (ingredient.amount && ingredient.amount.toLowerCase().includes(' to ')) {
-     const parts = ingredient.amount.toLowerCase().split(' to ');
-     if (parts.length === 2) {
+    const parts = ingredient.amount.toLowerCase().split(' to ');
+    if (parts.length === 2) {
       const min = parseAmount(parts[0]);
       const max = parseAmount(parts[1]);
-      
+
       if (min !== null && max !== null) {
         const scaledMin = formatAmount(min * scaleFactor);
         const scaledMax = formatAmount(max * scaleFactor);
         return {
           ...ingredient,
-          amount: `${scaledMin} to ${scaledMax}`
+          amount: `${scaledMin} to ${scaledMax}`,
         };
       }
     }
@@ -254,7 +262,7 @@ export function scaleIngredient(
   if (val !== null) {
     return {
       ...ingredient,
-      amount: formatAmount(val * scaleFactor)
+      amount: formatAmount(val * scaleFactor),
     };
   }
 
@@ -268,7 +276,7 @@ export function scaleIngredient(
 export function scaleIngredients(
   groups: IngredientGroup[],
   originalServings: number,
-  newServings: number
+  newServings: number,
 ): IngredientGroup[] {
   // Avoid division by zero or negative/zero servings
   const validOriginal = Math.max(1, originalServings);
@@ -277,9 +285,10 @@ export function scaleIngredients(
 
   if (scaleFactor === 1) return groups;
 
-  return groups.map(group => ({
+  return groups.map((group) => ({
     ...group,
-    ingredients: group.ingredients.map(ing => scaleIngredient(ing, scaleFactor))
+    ingredients: group.ingredients.map((ing) =>
+      scaleIngredient(ing, scaleFactor),
+    ),
   }));
 }
-

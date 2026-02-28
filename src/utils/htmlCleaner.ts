@@ -1,9 +1,9 @@
 /**
  * HTML Cleaning Utility for Recipe Parsing
- * 
+ *
  * This utility removes unnecessary HTML elements (ads, images, scripts, navigation, etc.)
  * and preserves only the core content needed for recipe extraction.
- * 
+ *
  * The goal is to provide clean HTML optimized for AI parsing while maintaining
  * the structure of lists, paragraphs, and semantic recipe-related content.
  */
@@ -22,7 +22,7 @@ export interface CleanedHTML {
 /**
  * Clean HTML by removing unnecessary elements and preserving recipe content
  * Prioritizes ingredients and directions sections for better AI parsing
- * 
+ *
  * @param rawHtml - The raw HTML content from a recipe page
  * @returns CleanedHTML object with success status and cleaned HTML or error
  */
@@ -50,10 +50,13 @@ export function cleanRecipeHTML(rawHtml: string): CleanedHTML {
 
     // STEP 1: Extract recipe-specific sections FIRST (before removing other content)
     // This ensures we prioritize ingredients and directions
-    
+
     // Find recipe title
-    const recipeTitle = $('h1, .recipe-title, [class*="recipe-title"], [itemprop="name"]').first().text().trim() || 
-                        $('title').first().text().trim();
+    const recipeTitle =
+      $('h1, .recipe-title, [class*="recipe-title"], [itemprop="name"]')
+        .first()
+        .text()
+        .trim() || $('title').first().text().trim();
 
     // Find ingredients sections (multiple common selectors)
     // Added more flexible selectors for sites like Just One Cookbook
@@ -71,15 +74,19 @@ export function cleanRecipeHTML(rawHtml: string): CleanedHTML {
       '.wprm-recipe-ingredient',
       '[class*="wprm-recipe-ingredient"]',
     ];
-    
+
     let ingredientsHtml = '';
-    ingredientSelectors.forEach(selector => {
+    ingredientSelectors.forEach((selector) => {
       if (!ingredientsHtml) {
         const $ingredients = $(selector);
         if ($ingredients.length) {
           // Get parent container if it's a list item
-          const $container = $ingredients.first().closest('[class*="ingredient"], [id*="ingredient"], section, div');
-          ingredientsHtml = $container.length ? $container.html() || '' : $ingredients.first().parent().html() || '';
+          const $container = $ingredients
+            .first()
+            .closest('[class*="ingredient"], [id*="ingredient"], section, div');
+          ingredientsHtml = $container.length
+            ? $container.html() || ''
+            : $ingredients.first().parent().html() || '';
         }
       }
     });
@@ -90,7 +97,10 @@ export function cleanRecipeHTML(rawHtml: string): CleanedHTML {
       headings.each((_, heading) => {
         const $heading = $(heading);
         const headingText = $heading.text().trim().toLowerCase();
-        if (headingText === 'ingredients' || headingText.includes('ingredients')) {
+        if (
+          headingText === 'ingredients' ||
+          headingText.includes('ingredients')
+        ) {
           // Get the next sibling element (usually a list or div)
           let $next = $heading.next();
           // If no next sibling, try parent's next sibling
@@ -127,14 +137,20 @@ export function cleanRecipeHTML(rawHtml: string): CleanedHTML {
       '.wprm-recipe-instruction',
       '[class*="wprm-recipe-instruction"]',
     ];
-    
+
     let instructionsHtml = '';
-    instructionSelectors.forEach(selector => {
+    instructionSelectors.forEach((selector) => {
       if (!instructionsHtml) {
         const $instructions = $(selector);
         if ($instructions.length) {
-          const $container = $instructions.first().closest('[class*="instruction"], [class*="direction"], [class*="step"], section, div');
-          instructionsHtml = $container.length ? $container.html() || '' : $instructions.first().parent().html() || '';
+          const $container = $instructions
+            .first()
+            .closest(
+              '[class*="instruction"], [class*="direction"], [class*="step"], section, div',
+            );
+          instructionsHtml = $container.length
+            ? $container.html() || ''
+            : $instructions.first().parent().html() || '';
         }
       }
     });
@@ -183,12 +199,12 @@ export function cleanRecipeHTML(rawHtml: string): CleanedHTML {
     });
     // Remove other non-essential elements
     $(
-      'style, noscript, link, meta, head, svg, symbol, img, button, iframe, video, audio, canvas, form, input, select, option, textarea'
+      'style, noscript, link, meta, head, svg, symbol, img, button, iframe, video, audio, canvas, form, input, select, option, textarea',
     ).remove();
 
     // Remove navigation and site structure elements
     $(
-      'nav, .navbar, .nav, .navigation, .site-nav, .menu, .mobile-menu, [role="navigation"]'
+      'nav, .navbar, .nav, .navigation, .site-nav, .menu, .mobile-menu, [role="navigation"]',
     ).remove();
 
     // Remove header and footer elements (unless they contain recipe schema)
@@ -202,36 +218,38 @@ export function cleanRecipeHTML(rawHtml: string): CleanedHTML {
     $('footer, .footer, .site-footer, [role="contentinfo"]').remove();
 
     // Remove sidebars and secondary content
-    $('aside, .sidebar, .side-bar, .secondary, [role="complementary"]').remove();
+    $(
+      'aside, .sidebar, .side-bar, .secondary, [role="complementary"]',
+    ).remove();
 
     // Remove ads, sponsors, and promotional content
     $(
-      '.ad, .ads, .advertisement, .sponsor, .sponsored, .promo, .promotion, .banner-ad, .ad-container, .ad-slot, .adsbygoogle, .outbrain, .taboola'
+      '.ad, .ads, .advertisement, .sponsor, .sponsored, .promo, .promotion, .banner-ad, .ad-container, .ad-slot, .adsbygoogle, .outbrain, .taboola',
     ).remove();
 
     // Remove social sharing widgets and icons
     $(
-      '.social, .share, .sharing, .social-share, .share-buttons, .social-media, .follow, .social-icons, .network-icons'
+      '.social, .share, .sharing, .social-share, .share-buttons, .social-media, .follow, .social-icons, .network-icons',
     ).remove();
 
     // Remove comments sections
     $(
-      '.comments, .comment, .comment-section, #comments, #comment, [class*="comment"], [id*="comment"], [class*="disqus"], [id*="disqus"]'
+      '.comments, .comment, .comment-section, #comments, #comment, [class*="comment"], [id*="comment"], [class*="disqus"], [id*="disqus"]',
     ).remove();
 
     // Remove rating widgets and user interactions
     $(
-      '.rating, .ratings, .reviews, .review, .stars, .rmp-rating-widget, .rmp-widgets-container'
+      '.rating, .ratings, .reviews, .review, .stars, .rmp-rating-widget, .rmp-widgets-container',
     ).remove();
 
     // Remove newsletter signup forms and popups
     $(
-      '.newsletter, .subscribe, .subscription, .signup, .email-signup, .popup, .modal, .overlay, .push-modal, .push-subscribe'
+      '.newsletter, .subscribe, .subscription, .signup, .email-signup, .popup, .modal, .overlay, .push-modal, .push-subscribe',
     ).remove();
 
     // Remove breadcrumbs and metadata
     $(
-      '.breadcrumb, .breadcrumbs, .breadcrumb-container, .breadcrumbs-container'
+      '.breadcrumb, .breadcrumbs, .breadcrumb-container, .breadcrumbs-container',
     ).remove();
 
     // Remove author info boxes and bylines
@@ -239,7 +257,7 @@ export function cleanRecipeHTML(rawHtml: string): CleanedHTML {
 
     // Remove entry metadata and post metadata
     $(
-      '.entry-meta, .entry-metadata, .post-meta, .post-metadata, .entry-footer, .post-footer, .entry-date, .post-date'
+      '.entry-meta, .entry-metadata, .post-meta, .post-metadata, .entry-footer, .post-footer, .entry-date, .post-date',
     ).remove();
 
     // Remove WordPress plugin containers that aren't recipe-related
@@ -253,44 +271,46 @@ export function cleanRecipeHTML(rawHtml: string): CleanedHTML {
         ) {
           $element.remove();
         }
-      }
+      },
     );
 
     // Remove print buttons and utility controls
     $(
-      '.print, .print-btn, .print-recipe, .printable, .jump-to-recipe, .scroll-to-top, .floating-btn'
+      '.print, .print-btn, .print-recipe, .printable, .jump-to-recipe, .scroll-to-top, .floating-btn',
     ).remove();
 
     // Remove search boxes and site search
     $(
-      '.search, .search-box, .search-container, .search-form, .site-search, .search-bar'
+      '.search, .search-box, .search-container, .search-form, .site-search, .search-bar',
     ).remove();
 
     // Remove app banners and mobile prompts
     $(
-      '.app-banner, .mobile-banner, .mobile-sticky, .open-app, .app-link, .download-app'
+      '.app-banner, .mobile-banner, .mobile-sticky, .open-app, .app-link, .download-app',
     ).remove();
 
     // Remove theme toggles and accessibility controls
     $(
-      '.theme-toggle, .dark-mode, .light-mode, .toggle-switch, .color-mode, .font-size-control'
+      '.theme-toggle, .dark-mode, .light-mode, .toggle-switch, .color-mode, .font-size-control',
     ).remove();
 
     // Remove tooltips, hints, and UI helpers
     $(
-      '.tooltip, .tooltips, .hint, .hovercard, .dropdown-menu, .dropdown'
+      '.tooltip, .tooltips, .hint, .hovercard, .dropdown-menu, .dropdown',
     ).remove();
 
     // Remove related posts and recommendations
     $(
-      '.related, .related-posts, .recommendations, .you-may-like, .more-recipes, .thumb-grid'
+      '.related, .related-posts, .recommendations, .you-may-like, .more-recipes, .thumb-grid',
     ).remove();
 
     // Remove video containers and hero videos
     $('.hero-video-container, .video-container, .video-wrapper').remove();
 
     // Remove embedded social media content
-    $('lite-youtube, [class*="twitter"], [class*="instagram"], [class*="facebook"]').remove();
+    $(
+      'lite-youtube, [class*="twitter"], [class*="instagram"], [class*="facebook"]',
+    ).remove();
 
     // Remove Google Custom Search Engine elements
     $('gcse, [class*="gcse"]').remove();
@@ -299,10 +319,14 @@ export function cleanRecipeHTML(rawHtml: string): CleanedHTML {
     $('.screen-reader-text, .sr-only, .visually-hidden').remove();
 
     // Remove nutritional info boxes (not needed for parsing ingredients/instructions)
-    $('[class*="nutrition"], [id*="nutrition"], [class*="calorie"], [id*="calorie"]').remove();
+    $(
+      '[class*="nutrition"], [id*="nutrition"], [class*="calorie"], [id*="calorie"]',
+    ).remove();
 
     // Remove prep time, cook time, serving size boxes (keep text if in main content)
-    $('[class*="prep-time"], [class*="cook-time"], [class*="serving"], [class*="yield"], [class*="time"]').each((_, el) => {
+    $(
+      '[class*="prep-time"], [class*="cook-time"], [class*="serving"], [class*="yield"], [class*="time"]',
+    ).each((_, el) => {
       const $el = $(el);
       // Only remove if it's a standalone widget, not if it's part of recipe content
       if ($el.hasClass('widget') || $el.parent().hasClass('widget')) {
@@ -312,7 +336,7 @@ export function cleanRecipeHTML(rawHtml: string): CleanedHTML {
 
     // STEP 3: Build optimized HTML with prioritized recipe content
     // Start with a structured format that emphasizes ingredients and directions
-    
+
     let optimizedHtml = '';
 
     // Add JSON-LD scripts FIRST (critical for structured data extraction)
@@ -345,7 +369,10 @@ export function cleanRecipeHTML(rawHtml: string): CleanedHTML {
     }
     // Final fallback: get any content from the page
     if (!remainingContent || remainingContent.trim().length === 0) {
-      remainingContent = $('div[class*="content"], div[class*="post"], div[class*="entry"]').first().html() || '';
+      remainingContent =
+        $('div[class*="content"], div[class*="post"], div[class*="entry"]')
+          .first()
+          .html() || '';
     }
 
     // If we found ingredients/instructions, prioritize them and add remaining content
@@ -353,21 +380,21 @@ export function cleanRecipeHTML(rawHtml: string): CleanedHTML {
       // Clean up the remaining content to remove duplicates
       if (remainingContent) {
         const $remaining = cheerio.load(`<div>${remainingContent}</div>`);
-        
+
         // Remove sections we already extracted
         if (ingredientsHtml) {
-          ingredientSelectors.forEach(selector => {
+          ingredientSelectors.forEach((selector) => {
             $remaining(selector).remove();
           });
         }
         if (instructionsHtml) {
-          instructionSelectors.forEach(selector => {
+          instructionSelectors.forEach((selector) => {
             $remaining(selector).remove();
           });
         }
 
         const cleanedRemaining = $remaining('div').html() || '';
-        
+
         // Only add remaining content if it's substantial and different
         if (cleanedRemaining && cleanedRemaining.trim().length > 100) {
           optimizedHtml += `<section class="recipe-additional-content">\n${cleanedRemaining}\n</section>\n`;
@@ -384,8 +411,9 @@ export function cleanRecipeHTML(rawHtml: string): CleanedHTML {
       // Last resort: reload original HTML and do minimal cleaning
       const $fallback = cheerio.load(rawHtml);
       $fallback('script, style, noscript, nav, header, footer, aside').remove();
-      const fallbackContent = $fallback('body').html() || $fallback('main, article').html() || '';
-      
+      const fallbackContent =
+        $fallback('body').html() || $fallback('main, article').html() || '';
+
       if (fallbackContent && fallbackContent.trim().length > 0) {
         optimizedHtml = fallbackContent;
       } else {
@@ -408,7 +436,9 @@ export function cleanRecipeHTML(rawHtml: string): CleanedHTML {
     };
   } catch (error) {
     const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error during HTML cleaning';
+      error instanceof Error
+        ? error.message
+        : 'Unknown error during HTML cleaning';
     return {
       success: false,
       error: errorMessage,
@@ -419,7 +449,7 @@ export function cleanRecipeHTML(rawHtml: string): CleanedHTML {
 /**
  * Extract just the text content from HTML (for lightweight parsing)
  * This is useful when you need plain text without HTML structure
- * 
+ *
  * @param rawHtml - The raw HTML content
  * @returns Plain text content
  */
@@ -437,28 +467,3 @@ export function extractTextContent(rawHtml: string): string {
     return '';
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

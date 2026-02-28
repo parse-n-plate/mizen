@@ -3,8 +3,8 @@ import React, {
   createContext,
   useContext,
   useState,
-  ReactNode,
   useEffect,
+  ReactNode,
 } from 'react';
 import { updateRecipe as updateRecipeInStorage } from '@/lib/storage';
 
@@ -28,64 +28,72 @@ export interface RecipeStep {
 }
 
 export interface ParsedRecipe {
-  id?: string;                   // Recipe ID (for syncing with recent recipes)
+  id?: string; // Recipe ID (for syncing with recent recipes)
   title?: string;
-  description?: string;          // NEW: Recipe description
-  summary?: string;             // NEW: AI-generated recipe summary (1-2 sentences)
-  imageUrl?: string;              // NEW: Recipe image URL
-  imageData?: string;             // NEW: Base64 image data for uploaded images
-  imageFilename?: string;         // NEW: Original filename for uploaded images
-  author?: string;                // NEW: Recipe author/source
-  publishedDate?: string;         // NEW: Publication date
-  sourceUrl?: string;             // NEW: Source URL
-  cookTimeMinutes?: number;       // NEW: Cook time in minutes
-  prepTimeMinutes?: number;       // NEW: Prep time in minutes
-  totalTimeMinutes?: number;      // NEW: Total time in minutes
-  servings?: number;             // NEW: Number of servings
-  cuisine?: string[];            // NEW: Cuisine types/tags
+  description?: string; // NEW: Recipe description
+  summary?: string; // NEW: AI-generated recipe summary (1-2 sentences)
+  imageUrl?: string; // NEW: Recipe image URL
+  imageData?: string; // NEW: Base64 image data for uploaded images
+  imageFilename?: string; // NEW: Original filename for uploaded images
+  author?: string; // NEW: Recipe author/source
+  publishedDate?: string; // NEW: Publication date
+  sourceUrl?: string; // NEW: Source URL
+  cookTimeMinutes?: number; // NEW: Cook time in minutes
+  prepTimeMinutes?: number; // NEW: Prep time in minutes
+  totalTimeMinutes?: number; // NEW: Total time in minutes
+  servings?: number; // NEW: Number of servings
+  cuisine?: string[]; // NEW: Cuisine types/tags
   // Storage guidance - generated during initial parse (top-level for immediate access)
-  storageGuide?: string;         // Storage instructions from initial AI parse
+  storageGuide?: string; // Storage instructions from initial AI parse
   shelfLife?: {
-    fridge?: number | null;      // Days in fridge (null if not fridge-safe)
-    freezer?: number | null;     // Days in freezer (null if not freezer-friendly)
+    fridge?: number | null; // Days in fridge (null if not fridge-safe)
+    freezer?: number | null; // Days in freezer (null if not freezer-friendly)
   };
   // Plating/serving guidance - generated during initial parse (top-level for immediate access)
-  platingNotes?: string;         // Plating suggestions from initial AI parse
-  servingVessel?: string;        // Recommended serving vessel (e.g., "shallow bowl", "plate")
-  servingTemp?: string;          // Ideal serving temperature (e.g., "hot", "warm", "room temp", "chilled")
-  rating?: number;               // NEW: Recipe rating (1-5)
-  skills?: {                    // NEW: Required cooking skills
-    techniques?: string[];      // Cooking techniques needed
-    knifework?: string[];       // Knife skills needed
+  platingNotes?: string; // Plating suggestions from initial AI parse
+  servingVessel?: string; // Recommended serving vessel (e.g., "shallow bowl", "plate")
+  servingTemp?: string; // Ideal serving temperature (e.g., "hot", "warm", "room temp", "chilled")
+  rating?: number; // NEW: Recipe rating (1-5)
+  skills?: {
+    // NEW: Required cooking skills
+    techniques?: string[]; // Cooking techniques needed
+    knifework?: string[]; // Knife skills needed
   };
-  plate?: {                     // NEW: Plate stage data
+  plate?: {
+    // NEW: Plate stage data
     // Legacy single photo support (backward compatibility)
-    photoData?: string;         // Base64 user plate photo
-    photoFilename?: string;     // Original filename
-    capturedAt?: string;        // ISO timestamp of photo capture
+    photoData?: string; // Base64 user plate photo
+    photoFilename?: string; // Original filename
+    capturedAt?: string; // ISO timestamp of photo capture
     // New multi-photo support (up to 5 photos)
     photos?: Array<{
       data: string;
       filename: string;
       capturedAt: string;
-      rating?: number;        // 1-5 star rating
+      rating?: number; // 1-5 star rating
     }>;
     // AI-generated guidance
-    platingNotes?: string;      // AI-generated plating suggestions
-    servingVessel?: string;     // e.g., "shallow bowl", "plate"
-    servingTemp?: string;       // e.g., "hot", "room temp", "chilled"
-    storageGuide?: string;      // Storage instructions
+    platingNotes?: string; // AI-generated plating suggestions
+    servingVessel?: string; // e.g., "shallow bowl", "plate"
+    servingTemp?: string; // e.g., "hot", "room temp", "chilled"
+    storageGuide?: string; // Storage instructions
     shelfLife?: {
-      fridge?: number | null;   // days in refrigerator
-      freezer?: number | null;  // days in freezer
+      fridge?: number | null; // days in refrigerator
+      freezer?: number | null; // days in freezer
     };
-    storedAt?: string;          // ISO timestamp when stored
-    sharedAt?: string[];        // Array of share timestamps
-    shareCount?: number;        // Total shares
+    storedAt?: string; // ISO timestamp when stored
+    sharedAt?: string[]; // Array of share timestamps
+    shareCount?: number; // Total shares
   };
   ingredients: {
     groupName: string;
-    ingredients: { amount: string; units: string; ingredient: string }[];
+    ingredients: {
+      amount: string;
+      units: string;
+      ingredient: string;
+      description?: string;
+      substitutions?: string[];
+    }[];
   }[];
   // Instructions can be legacy strings or new objects with titles
   instructions: Array<string | InstructionStep>;
@@ -122,24 +130,26 @@ const normalizeInstructions = (
       // Handle object inputs (expected format)
       if (item && typeof item === 'object') {
         const title =
-          typeof (item as any).title === 'string'
-            ? cleanLeading((item as any).title.trim())
+          typeof item.title === 'string'
+            ? cleanLeading(item.title.trim())
             : `Step ${index + 1}`;
-        const detail =
-          typeof (item as any).detail === 'string'
-            ? cleanLeading((item as any).detail.trim())
-            : typeof (item as any).text === 'string'
-            ? cleanLeading((item as any).text.trim())
+        const legacyText =
+          'text' in item && typeof item.text === 'string'
+            ? cleanLeading(item.text.trim())
             : '';
-        
+        const detail =
+          typeof item.detail === 'string'
+            ? cleanLeading(item.detail.trim())
+            : legacyText;
+
         if (!detail) return null;
 
         return {
           title,
           detail,
-          timeMinutes: (item as any).timeMinutes,
-          ingredients: (item as any).ingredients,
-          tips: (item as any).tips,
+          timeMinutes: item.timeMinutes,
+          ingredients: item.ingredients,
+          tips: item.tips,
         } satisfies InstructionStep;
       }
 
@@ -152,17 +162,17 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
   const [parsedRecipe, setParsedRecipe] = useState<ParsedRecipe | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load from localStorage on mount
+  // Load recipe from localStorage after hydration to avoid SSR mismatch
   useEffect(() => {
     const saved = localStorage.getItem('parsedRecipe');
     if (saved) {
       try {
         const loaded = JSON.parse(saved) as ParsedRecipe;
-        const normalized = {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration-safe localStorage init
+        setParsedRecipe({
           ...loaded,
           instructions: normalizeInstructions(loaded.instructions),
-        };
-        setParsedRecipe(normalized);
+        });
       } catch (error) {
         console.error('Error loading recipe from localStorage:', error);
       }
@@ -172,16 +182,10 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
 
   const setParsedRecipeWithStorage = (recipe: ParsedRecipe | null) => {
     if (recipe) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RecipeContext.tsx:136',message:'setParsedRecipeWithStorage entry',data:{hasServings:'servings' in recipe,servings:recipe.servings,hasAuthor:'author' in recipe,author:recipe.author,keys:Object.keys(recipe)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       const normalizedRecipe: ParsedRecipe = {
         ...recipe,
         instructions: normalizeInstructions(recipe.instructions),
       };
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RecipeContext.tsx:142',message:'normalizedRecipe before storage',data:{hasServings:'servings' in normalizedRecipe,servings:normalizedRecipe.servings,keys:Object.keys(normalizedRecipe)},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       setParsedRecipe(normalizedRecipe);
       localStorage.setItem('parsedRecipe', JSON.stringify(normalizedRecipe));
 
@@ -193,16 +197,15 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
           hasPhotoData: !!normalizedRecipe.plate?.photoData,
           photoDataLength: normalizedRecipe.plate?.photoData?.length || 0,
         });
-        updateRecipeInStorage(normalizedRecipe.id, normalizedRecipe as any);
+        updateRecipeInStorage(
+          normalizedRecipe.id,
+          normalizedRecipe as Partial<ParsedRecipe>,
+        );
       } else {
-        console.warn('[RecipeContext] ⚠️ Recipe has no ID, cannot sync to recentRecipes');
+        console.warn(
+          '[RecipeContext] ⚠️ Recipe has no ID, cannot sync to recentRecipes',
+        );
       }
-
-      // #region agent log
-      const stored = localStorage.getItem('parsedRecipe');
-      const parsed = stored ? JSON.parse(stored) : null;
-      fetch('http://127.0.0.1:7242/ingest/211f35f0-b7c4-4493-a3d1-13dbeecaabb1',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RecipeContext.tsx:143',message:'After localStorage.setItem',data:{hasServings:parsed&&'servings' in parsed,servings:parsed?.servings,servingsType:typeof parsed?.servings,normalizedRecipeServings:normalizedRecipe.servings,normalizedRecipeServingsType:typeof normalizedRecipe.servings,storedKeys:parsed?Object.keys(parsed):[],normalizedKeys:Object.keys(normalizedRecipe)},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
     } else {
       setParsedRecipe(null);
       localStorage.removeItem('parsedRecipe');

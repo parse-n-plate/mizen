@@ -307,15 +307,20 @@ function filterAuthorNames(instructions: string[]): string[] {
       // Filter out patterns that look like author names or attribution
       // Common patterns: "By [Name]", "[Name]", "Recipe by [Name]", etc.
       const lowerInstruction = instruction.toLowerCase();
-      
+
       // Check if it's just a name (2-3 words, no verbs, no cooking terms)
       const wordCount = instruction.split(/\s+/).length;
-      const hasCookingTerms = /(heat|add|stir|mix|cook|bake|simmer|boil|fry|roast|season|taste|serve|preheat|chop|dice|slice|mince|pour|drain|whisk|beat|fold|knead|roll|cut|peel|grate|zest|squeeze|melt|saute|brown|caramelize|deglaze|reduce|thicken|thaw|marinate|brine|rub|glaze|garnish|top|sprinkle|drizzle|toss|coat|dredge|flour|bread|batter|crust|filling|topping|sauce|gravy|broth|stock|marinade|dressing|vinaigrette|seasoning|spice|herb|aromatic|flavor|taste|texture|tender|crispy|golden|browned|caramelized|caramel|syrup|honey|sugar|salt|pepper|garlic|onion|herbs|spices)/i.test(instruction);
-      
+      const hasCookingTerms =
+        /(heat|add|stir|mix|cook|bake|simmer|boil|fry|roast|season|taste|serve|preheat|chop|dice|slice|mince|pour|drain|whisk|beat|fold|knead|roll|cut|peel|grate|zest|squeeze|melt|saute|brown|caramelize|deglaze|reduce|thicken|thaw|marinate|brine|rub|glaze|garnish|top|sprinkle|drizzle|toss|coat|dredge|flour|bread|batter|crust|filling|topping|sauce|gravy|broth|stock|marinade|dressing|vinaigrette|seasoning|spice|herb|aromatic|flavor|taste|texture|tender|crispy|golden|browned|caramelized|caramel|syrup|honey|sugar|salt|pepper|garlic|onion|herbs|spices)/i.test(
+          instruction,
+        );
+
       // If it's 1-3 words and has no cooking terms, it's likely an author name
       if (wordCount <= 3 && !hasCookingTerms) {
         // Additional check: does it look like a name (capitalized words, no punctuation except periods)
-        const looksLikeName = /^[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2}\.?$/.test(instruction);
+        const looksLikeName = /^[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2}\.?$/.test(
+          instruction,
+        );
         if (looksLikeName) {
           return false;
         }
