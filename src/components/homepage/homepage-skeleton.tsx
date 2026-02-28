@@ -141,15 +141,3 @@ export default function HomepageSkeleton() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-

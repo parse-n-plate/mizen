@@ -10,15 +10,15 @@ interface FeaturedRecipesSectionProps {
 
 /**
  * FeaturedRecipesSection Component
- * 
+ *
  * Displays featured recipes organized by cuisine category.
  * Shows a category header with icon and recipe cards in a grid layout.
- * 
+ *
  * Responsive design:
  * - Mobile: Single column
  * - Tablet: 2 columns
  * - Desktop: 3 columns
- * 
+ *
  * @param selectedCuisine - Currently selected cuisine category (empty string for "all")
  */
 export default function FeaturedRecipesSection({
@@ -46,15 +46,15 @@ export default function FeaturedRecipesSection({
       {filteredRecipes.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredRecipes.map((recipe) => (
-            <RecipeCard 
-              key={recipe.id} 
+            <RecipeCard
+              key={recipe.id}
               recipe={{
                 id: recipe.id,
                 title: recipe.name,
                 author: recipe.author,
                 imageUrl: recipe.image,
-                cuisine: [recipe.category]
-              }} 
+                cuisine: [recipe.category],
+              }}
             />
           ))}
         </div>
@@ -69,4 +69,3 @@ export default function FeaturedRecipesSection({
     </div>
   );
 }
-

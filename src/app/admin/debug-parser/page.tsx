@@ -211,20 +211,25 @@ ABSOLUTE REQUIREMENTS:
 - If you don't find them, use empty arrays [] - NEVER null
 - The recipe data exists in the HTML - extract it carefully`;
 
-export default function DebugParserPage({
-  params,
-  searchParams,
-}: {
-  params?: Promise<Record<string, string | string[]>>;
-  searchParams?: Promise<Record<string, string | string[]>>;
-} = {} as { params?: Promise<Record<string, string | string[]>>; searchParams?: Promise<Record<string, string | string[]>> }) {
+export default function DebugParserPage(
+  {
+    params,
+    searchParams,
+  }: {
+    params?: Promise<Record<string, string | string[]>>;
+    searchParams?: Promise<Record<string, string | string[]>>;
+  } = {} as {
+    params?: Promise<Record<string, string | string[]>>;
+    searchParams?: Promise<Record<string, string | string[]>>;
+  },
+) {
   // For Next.js 15: Unwrap params/searchParams if provided to prevent enumeration warnings
   // This prevents React DevTools/error serialization from enumerating these props
-   
+
   if (params) use(params);
-   
+
   if (searchParams) use(searchParams);
-  
+
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [debugSteps, setDebugSteps] = useState<DebugStep[]>([]);
@@ -233,7 +238,7 @@ export default function DebugParserPage({
   const [customPrompt, setCustomPrompt] = useState(DEFAULT_PROMPT);
   const [showPromptEditor, setShowPromptEditor] = useState(false);
   const [useCustomPrompt, setUseCustomPrompt] = useState(false);
-  
+
   // Image mode state
   const [inputMode, setInputMode] = useState<'url' | 'image'>('url');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -264,7 +269,9 @@ export default function DebugParserPage({
         });
       } else {
         // GET request with default prompt
-        rawHtmlResponse = await fetch(`/api/admin/debug-parse?url=${encodeURIComponent(url)}`);
+        rawHtmlResponse = await fetch(
+          `/api/admin/debug-parse?url=${encodeURIComponent(url)}`,
+        );
       }
 
       const debugData = await rawHtmlResponse.json();
@@ -276,7 +283,7 @@ export default function DebugParserPage({
 
       // Display all debug steps
       setDebugSteps(debugData.steps);
-      
+
       // Store checkpoint summary if available
       if (debugData.checkpoints) {
         console.log('Checkpoint Summary:', debugData.checkpoints);
@@ -322,7 +329,7 @@ export default function DebugParserPage({
       setImagePreview(reader.result as string);
     };
     reader.readAsDataURL(file);
-    
+
     setError('');
   };
 
@@ -385,7 +392,10 @@ export default function DebugParserPage({
           {
             ...aiVisionStep,
             success: false,
-            data: { ...aiVisionData, error: result.error?.message || 'Parsing failed' },
+            data: {
+              ...aiVisionData,
+              error: result.error?.message || 'Parsing failed',
+            },
           },
         ]);
         return;
@@ -400,10 +410,12 @@ export default function DebugParserPage({
           ingredients: result.ingredients,
           instructions: result.instructions,
           method: 'ai_vision',
-          ingredientCount: result.ingredients?.reduce(
-            (sum: number, g: IngredientGroup) => sum + (g.ingredients?.length || 0),
-            0
-          ) || 0,
+          ingredientCount:
+            result.ingredients?.reduce(
+              (sum: number, g: IngredientGroup) =>
+                sum + (g.ingredients?.length || 0),
+              0,
+            ) || 0,
           instructionCount: result.instructions?.length || 0,
         },
         success: true,
@@ -427,7 +439,9 @@ export default function DebugParserPage({
   };
 
   const getStepColor = (success: boolean) => {
-    return success ? 'border-green-500 bg-green-50' : 'border-yellow-500 bg-yellow-50';
+    return success
+      ? 'border-green-500 bg-green-50'
+      : 'border-yellow-500 bg-yellow-50';
   };
 
   return (
@@ -602,8 +616,9 @@ export default function DebugParserPage({
             {showPromptEditor && (
               <div className="mt-3">
                 <p className="text-xs text-gray-500 mb-2">
-                  Edit the AI prompt below to test different extraction strategies. 
-                  When &quot;Use custom prompt&quot; is checked, your custom prompt will be used instead of the default.
+                  Edit the AI prompt below to test different extraction
+                  strategies. When &quot;Use custom prompt&quot; is checked,
+                  your custom prompt will be used instead of the default.
                 </p>
                 <textarea
                   value={customPrompt}
@@ -624,48 +639,83 @@ export default function DebugParserPage({
         {error && (
           <div className="bg-red-50 border border-red-500 rounded-lg p-4 mb-8">
             <h3 className="text-red-700 font-semibold mb-2">Error</h3>
-            <pre className="text-red-600 text-sm whitespace-pre-wrap">{error}</pre>
+            <pre className="text-red-600 text-sm whitespace-pre-wrap">
+              {error}
+            </pre>
           </div>
         )}
 
         {/* Checkpoint Summary */}
         {debugSteps.length > 0 && (
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg p-6 mb-8">
-            <h2 className="text-2xl font-bold mb-4 text-blue-900">Checkpoint Summary</h2>
+            <h2 className="text-2xl font-bold mb-4 text-blue-900">
+              Checkpoint Summary
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {debugSteps.find((s) => s.step === 'checkpoint_1') && (() => {
-                const cp1 = debugSteps.find((s) => s.step === 'checkpoint_1')!;
-                return (
-                  <div className={`p-4 rounded-lg border-2 ${cp1.success ? 'bg-green-50 border-green-400' : 'bg-red-50 border-red-400'}`}>
-                    <h3 className="font-bold mb-2 flex items-center gap-2">
-                      {cp1.success ? '✅' : '❌'} Checkpoint 1: URL Validator
-                    </h3>
-                    <p className="text-sm">{cp1.success ? 'Page contains recipe indicators' : 'Page missing recipe keywords/schema'}</p>
-                  </div>
-                );
-              })()}
-              {debugSteps.find((s) => s.step === 'checkpoint_2_jsonld' || s.step === 'json_ld') && (() => {
-                const cp2 = debugSteps.find((s) => s.step === 'checkpoint_2_jsonld' || s.step === 'json_ld')!;
-                return (
-                  <div className={`p-4 rounded-lg border-2 ${cp2.success ? 'bg-green-50 border-green-400' : 'bg-yellow-50 border-yellow-400'}`}>
-                    <h3 className="font-bold mb-2 flex items-center gap-2">
-                      {cp2.success ? '✅' : '⚠️'} Checkpoint 2: Recipe Parsing
-                    </h3>
-                    <p className="text-sm">{cp2.success ? 'JSON-LD found (fast path)' : 'Using AI parsing fallback'}</p>
-                  </div>
-                );
-              })()}
-              {debugSteps.find((s) => s.step === 'checkpoint_3') && (() => {
-                const cp3 = debugSteps.find((s) => s.step === 'checkpoint_3')!;
-                return (
-                  <div className={`p-4 rounded-lg border-2 ${cp3.success ? 'bg-green-50 border-green-400' : 'bg-red-50 border-red-400'}`}>
-                    <h3 className="font-bold mb-2 flex items-center gap-2">
-                      {cp3.success ? '✅' : '❌'} Checkpoint 3: Data Validation
-                    </h3>
-                    <p className="text-sm">{cp3.success ? 'All data validated successfully' : 'Missing required recipe data'}</p>
-                  </div>
-                );
-              })()}
+              {debugSteps.find((s) => s.step === 'checkpoint_1') &&
+                (() => {
+                  const cp1 = debugSteps.find(
+                    (s) => s.step === 'checkpoint_1',
+                  )!;
+                  return (
+                    <div
+                      className={`p-4 rounded-lg border-2 ${cp1.success ? 'bg-green-50 border-green-400' : 'bg-red-50 border-red-400'}`}
+                    >
+                      <h3 className="font-bold mb-2 flex items-center gap-2">
+                        {cp1.success ? '✅' : '❌'} Checkpoint 1: URL Validator
+                      </h3>
+                      <p className="text-sm">
+                        {cp1.success
+                          ? 'Page contains recipe indicators'
+                          : 'Page missing recipe keywords/schema'}
+                      </p>
+                    </div>
+                  );
+                })()}
+              {debugSteps.find(
+                (s) => s.step === 'checkpoint_2_jsonld' || s.step === 'json_ld',
+              ) &&
+                (() => {
+                  const cp2 = debugSteps.find(
+                    (s) =>
+                      s.step === 'checkpoint_2_jsonld' || s.step === 'json_ld',
+                  )!;
+                  return (
+                    <div
+                      className={`p-4 rounded-lg border-2 ${cp2.success ? 'bg-green-50 border-green-400' : 'bg-yellow-50 border-yellow-400'}`}
+                    >
+                      <h3 className="font-bold mb-2 flex items-center gap-2">
+                        {cp2.success ? '✅' : '⚠️'} Checkpoint 2: Recipe Parsing
+                      </h3>
+                      <p className="text-sm">
+                        {cp2.success
+                          ? 'JSON-LD found (fast path)'
+                          : 'Using AI parsing fallback'}
+                      </p>
+                    </div>
+                  );
+                })()}
+              {debugSteps.find((s) => s.step === 'checkpoint_3') &&
+                (() => {
+                  const cp3 = debugSteps.find(
+                    (s) => s.step === 'checkpoint_3',
+                  )!;
+                  return (
+                    <div
+                      className={`p-4 rounded-lg border-2 ${cp3.success ? 'bg-green-50 border-green-400' : 'bg-red-50 border-red-400'}`}
+                    >
+                      <h3 className="font-bold mb-2 flex items-center gap-2">
+                        {cp3.success ? '✅' : '❌'} Checkpoint 3: Data
+                        Validation
+                      </h3>
+                      <p className="text-sm">
+                        {cp3.success
+                          ? 'All data validated successfully'
+                          : 'Missing required recipe data'}
+                      </p>
+                    </div>
+                  );
+                })()}
             </div>
           </div>
         )}
@@ -695,10 +745,16 @@ export default function DebugParserPage({
                   {step.step === 'raw_html' && (
                     <div>
                       <p className="text-sm text-gray-600 mb-2">
-                        Raw HTML length: {typeof step.data === 'string' ? step.data.length.toLocaleString() : '0'} characters
+                        Raw HTML length:{' '}
+                        {typeof step.data === 'string'
+                          ? step.data.length.toLocaleString()
+                          : '0'}{' '}
+                        characters
                       </p>
                       <pre className="text-xs max-h-96 overflow-y-auto whitespace-pre-wrap break-words">
-                        {typeof step.data === 'string' ? step.data : String(step.data)}
+                        {typeof step.data === 'string'
+                          ? step.data
+                          : String(step.data)}
                       </pre>
                     </div>
                   )}
@@ -706,54 +762,101 @@ export default function DebugParserPage({
                   {step.step === 'cleaned_html' && (
                     <div>
                       <p className="text-sm text-gray-600 mb-2">
-                        Cleaned HTML length: {typeof step.data === 'string' ? step.data.length.toLocaleString() : '0'} characters
+                        Cleaned HTML length:{' '}
+                        {typeof step.data === 'string'
+                          ? step.data.length.toLocaleString()
+                          : '0'}{' '}
+                        characters
                         <br />
-                        {typeof step.data === 'string' && debugSteps[0] && typeof debugSteps[0].data === 'string' && (
-                          <span className="text-green-600">
-                            Reduced by {((1 - step.data.length / debugSteps[0].data.length) * 100).toFixed(1)}%
-                          </span>
-                        )}
+                        {typeof step.data === 'string' &&
+                          debugSteps[0] &&
+                          typeof debugSteps[0].data === 'string' && (
+                            <span className="text-green-600">
+                              Reduced by{' '}
+                              {(
+                                (1 -
+                                  step.data.length /
+                                    debugSteps[0].data.length) *
+                                100
+                              ).toFixed(1)}
+                              %
+                            </span>
+                          )}
                       </p>
                       <pre className="text-xs max-h-[600px] overflow-y-auto whitespace-pre-wrap break-words">
-                        {typeof step.data === 'string' ? step.data : String(step.data)}
+                        {typeof step.data === 'string'
+                          ? step.data
+                          : String(step.data)}
                       </pre>
                     </div>
                   )}
 
-                  {step.step === 'checkpoint_1' && (() => {
-                    const data = step.data as Record<string, unknown>;
-                    return (
-                      <div>
-                        <div className={`mb-3 p-3 rounded ${step.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-                          <p className={`text-sm font-semibold mb-2 ${step.success ? 'text-green-700' : 'text-red-700'}`}>
-                            {step.success ? '✅ PASSED' : '❌ FAILED'}
-                          </p>
-                          <div className="space-y-1 text-xs">
-                            <p><strong>Has Ingredients Keyword:</strong> {typeof data.hasIngredients === 'boolean' && data.hasIngredients ? '✅ Yes' : '❌ No'}</p>
-                            <p><strong>Has Instructions Keyword:</strong> {typeof data.hasInstructions === 'boolean' && data.hasInstructions ? '✅ Yes' : '❌ No'}</p>
-                            <p><strong>Has JSON-LD Schema:</strong> {typeof data.hasSchema === 'boolean' && data.hasSchema ? '✅ Yes' : '❌ No'}</p>
-                            <p><strong>Is Recipe Page:</strong> {typeof data.isRecipe === 'boolean' && data.isRecipe ? '✅ Yes' : '❌ No'}</p>
+                  {step.step === 'checkpoint_1' &&
+                    (() => {
+                      const data = step.data as Record<string, unknown>;
+                      return (
+                        <div>
+                          <div
+                            className={`mb-3 p-3 rounded ${step.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}
+                          >
+                            <p
+                              className={`text-sm font-semibold mb-2 ${step.success ? 'text-green-700' : 'text-red-700'}`}
+                            >
+                              {step.success ? '✅ PASSED' : '❌ FAILED'}
+                            </p>
+                            <div className="space-y-1 text-xs">
+                              <p>
+                                <strong>Has Ingredients Keyword:</strong>{' '}
+                                {typeof data.hasIngredients === 'boolean' &&
+                                data.hasIngredients
+                                  ? '✅ Yes'
+                                  : '❌ No'}
+                              </p>
+                              <p>
+                                <strong>Has Instructions Keyword:</strong>{' '}
+                                {typeof data.hasInstructions === 'boolean' &&
+                                data.hasInstructions
+                                  ? '✅ Yes'
+                                  : '❌ No'}
+                              </p>
+                              <p>
+                                <strong>Has JSON-LD Schema:</strong>{' '}
+                                {typeof data.hasSchema === 'boolean' &&
+                                data.hasSchema
+                                  ? '✅ Yes'
+                                  : '❌ No'}
+                              </p>
+                              <p>
+                                <strong>Is Recipe Page:</strong>{' '}
+                                {typeof data.isRecipe === 'boolean' &&
+                                data.isRecipe
+                                  ? '✅ Yes'
+                                  : '❌ No'}
+                              </p>
+                            </div>
+                            {(() => {
+                              const details = data.details;
+                              if (details && typeof details !== 'undefined') {
+                                return (
+                                  <div className="mt-3 pt-3 border-t border-gray-300">
+                                    <p className="text-xs font-semibold mb-1">
+                                      Details:
+                                    </p>
+                                    <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-48">
+                                      {formatData(details)}
+                                    </pre>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
                           </div>
-                          {(() => {
-                            const details = data.details;
-                            if (details && typeof details !== 'undefined') {
-                              return (
-                                <div className="mt-3 pt-3 border-t border-gray-300">
-                                  <p className="text-xs font-semibold mb-1">Details:</p>
-                                  <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-48">
-                                    {formatData(details)}
-                                  </pre>
-                                </div>
-                              );
-                            }
-                            return null;
-                          })()}
                         </div>
-                      </div>
-                    );
-                  })()}
+                      );
+                    })()}
 
-                  {(step.step === 'checkpoint_2_jsonld' || step.step === 'json_ld') && (
+                  {(step.step === 'checkpoint_2_jsonld' ||
+                    step.step === 'json_ld') && (
                     <div>
                       {step.success ? (
                         <>
@@ -772,70 +875,110 @@ export default function DebugParserPage({
                     </div>
                   )}
 
-                  {step.step === 'checkpoint_3' && (() => {
-                    const data = step.data as Record<string, unknown>;
-                    return (
-                      <div>
-                        <div className={`mb-3 p-3 rounded ${step.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
-                          <p className={`text-sm font-semibold mb-2 ${step.success ? 'text-green-700' : 'text-red-700'}`}>
-                            {step.success ? '✅ PASSED' : '❌ FAILED'}
-                          </p>
-                          <div className="space-y-1 text-xs">
-                            <p>
-                              <strong>Has Valid Title:</strong> {typeof data.hasTitle === 'boolean' && data.hasTitle ? '✅ Yes' : '❌ No'}
-                              {(() => {
-                                if (data.details && typeof data.details === 'object' && data.details !== null && 'title' in data.details) {
-                                  const title = (data.details as Record<string, unknown>).title;
-                                  if (typeof title === 'string') {
-                                    return ` (${title})`;
-                                  }
-                                }
-                                return '';
-                              })()}
+                  {step.step === 'checkpoint_3' &&
+                    (() => {
+                      const data = step.data as Record<string, unknown>;
+                      return (
+                        <div>
+                          <div
+                            className={`mb-3 p-3 rounded ${step.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}
+                          >
+                            <p
+                              className={`text-sm font-semibold mb-2 ${step.success ? 'text-green-700' : 'text-red-700'}`}
+                            >
+                              {step.success ? '✅ PASSED' : '❌ FAILED'}
                             </p>
-                            <p>
-                              <strong>Has Ingredients:</strong> {typeof data.hasIngredients === 'boolean' && data.hasIngredients ? '✅ Yes' : '❌ No'}
-                              {(() => {
-                                if (data.details && typeof data.details === 'object' && data.details !== null && 'totalIngredients' in data.details) {
-                                  const total = (data.details as Record<string, unknown>).totalIngredients;
-                                  if (typeof total === 'number') {
-                                    return ` (${total} total)`;
+                            <div className="space-y-1 text-xs">
+                              <p>
+                                <strong>Has Valid Title:</strong>{' '}
+                                {typeof data.hasTitle === 'boolean' &&
+                                data.hasTitle
+                                  ? '✅ Yes'
+                                  : '❌ No'}
+                                {(() => {
+                                  if (
+                                    data.details &&
+                                    typeof data.details === 'object' &&
+                                    data.details !== null &&
+                                    'title' in data.details
+                                  ) {
+                                    const title = (
+                                      data.details as Record<string, unknown>
+                                    ).title;
+                                    if (typeof title === 'string') {
+                                      return ` (${title})`;
+                                    }
                                   }
-                                }
-                                return '';
-                              })()}
-                            </p>
-                            <p>
-                              <strong>Has Instructions:</strong> {typeof data.hasInstructions === 'boolean' && data.hasInstructions ? '✅ Yes' : '❌ No'}
-                              {(() => {
-                                if (data.details && typeof data.details === 'object' && data.details !== null && 'instructionCount' in data.details) {
-                                  const count = (data.details as Record<string, unknown>).instructionCount;
-                                  if (typeof count === 'number') {
-                                    return ` (${count} steps)`;
+                                  return '';
+                                })()}
+                              </p>
+                              <p>
+                                <strong>Has Ingredients:</strong>{' '}
+                                {typeof data.hasIngredients === 'boolean' &&
+                                data.hasIngredients
+                                  ? '✅ Yes'
+                                  : '❌ No'}
+                                {(() => {
+                                  if (
+                                    data.details &&
+                                    typeof data.details === 'object' &&
+                                    data.details !== null &&
+                                    'totalIngredients' in data.details
+                                  ) {
+                                    const total = (
+                                      data.details as Record<string, unknown>
+                                    ).totalIngredients;
+                                    if (typeof total === 'number') {
+                                      return ` (${total} total)`;
+                                    }
                                   }
-                                }
-                                return '';
-                              })()}
-                            </p>
+                                  return '';
+                                })()}
+                              </p>
+                              <p>
+                                <strong>Has Instructions:</strong>{' '}
+                                {typeof data.hasInstructions === 'boolean' &&
+                                data.hasInstructions
+                                  ? '✅ Yes'
+                                  : '❌ No'}
+                                {(() => {
+                                  if (
+                                    data.details &&
+                                    typeof data.details === 'object' &&
+                                    data.details !== null &&
+                                    'instructionCount' in data.details
+                                  ) {
+                                    const count = (
+                                      data.details as Record<string, unknown>
+                                    ).instructionCount;
+                                    if (typeof count === 'number') {
+                                      return ` (${count} steps)`;
+                                    }
+                                  }
+                                  return '';
+                                })()}
+                              </p>
+                            </div>
+                            {(() => {
+                              const details = data.details;
+                              if (details && typeof details !== 'undefined') {
+                                return (
+                                  <div className="mt-3 pt-3 border-t border-gray-300">
+                                    <p className="text-xs font-semibold mb-1">
+                                      Validation Details:
+                                    </p>
+                                    <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-48">
+                                      {formatData(details)}
+                                    </pre>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            })()}
                           </div>
-                          {(() => {
-                            const details = data.details;
-                            if (details && typeof details !== 'undefined') {
-                              return (
-                                <div className="mt-3 pt-3 border-t border-gray-300">
-                                  <p className="text-xs font-semibold mb-1">Validation Details:</p>
-                                  <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-48">
-                                    {formatData(details)}
-                                  </pre>
-                                </div>
-                              );
-                            }
-                            return null;
-                          })()}
                         </div>
-                      </div>
-                    );
-                  })()}
+                      );
+                    })()}
 
                   {step.step === 'ai_prompt' && (
                     <div>
@@ -843,7 +986,9 @@ export default function DebugParserPage({
                         AI Prompt sent to Groq (llama-3.3-70b-versatile)
                       </p>
                       <pre className="text-xs max-h-96 overflow-y-auto whitespace-pre-wrap break-words">
-                        {typeof step.data === 'string' ? step.data : String(step.data)}
+                        {typeof step.data === 'string'
+                          ? step.data
+                          : String(step.data)}
                       </pre>
                     </div>
                   )}
@@ -870,178 +1015,315 @@ export default function DebugParserPage({
                     </div>
                   )}
 
-                  {step.step === 'image_upload' && (() => {
-                    const data = step.data as Record<string, unknown>;
-                    return (
-                      <div>
-                        <p className="text-sm text-gray-600 mb-2">
-                          Image file information
-                        </p>
-                        <div className="space-y-1 text-xs">
-                          <p><strong>File Name:</strong> {typeof data.name === 'string' ? data.name : 'Unknown'}</p>
-                          <p><strong>File Type:</strong> {typeof data.type === 'string' ? data.type : 'Unknown'}</p>
-                          <p><strong>File Size:</strong> {typeof data.sizeFormatted === 'string' ? data.sizeFormatted : 'Unknown'}</p>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {step.step === 'ai_vision' && (() => {
-                    const data = step.data as Record<string, unknown>;
-                    return (
-                      <div>
-                        <p className="text-sm text-gray-600 mb-2">
-                          AI Vision Model Processing
-                        </p>
-                        <div className="space-y-1 text-xs">
-                          <p><strong>Model:</strong> {typeof data.model === 'string' ? data.model : 'Unknown'}</p>
-                          <p><strong>Image Size (base64):</strong> {typeof data.imageSize === 'number' ? data.imageSize.toLocaleString() : 'Unknown'} characters</p>
-                          <p><strong>Status:</strong> {step.success ? '✅ Processing complete' : '❌ Processing failed'}</p>
-                          {typeof data.error === 'string' && data.error && (
-                            <p className="text-red-600"><strong>Error:</strong> {data.error}</p>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {step.step === 'final_result' && (() => {
-                    const data = step.data as Record<string, unknown>;
-                    return (
-                      <div>
-                        <p className="text-sm text-green-600 mb-2 font-semibold">
-                          ✅ Final Parsed Recipe
-                        </p>
-                        <div className="space-y-4">
-                          <div>
-                            <h4 className="font-semibold text-sm mb-1">Title:</h4>
-                            <p className="text-sm">{typeof data.title === 'string' ? data.title : ''}</p>
-                          </div>
-                          {typeof data.author === 'string' && data.author && (
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Author:</h4>
-                              <p className="text-sm">{data.author}</p>
-                            </div>
-                          )}
-                          {typeof data.sourceUrl === 'string' && data.sourceUrl && (
-                            <div>
-                              <h4 className="font-semibold text-sm mb-1">Source URL:</h4>
-                              <a
-                                href={data.sourceUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-blue-600 hover:text-blue-800 underline break-all"
-                              >
-                                {data.sourceUrl}
-                              </a>
-                            </div>
-                          )}
-                          <div>
-                            <h4 className="font-semibold text-sm mb-1">
-                              Ingredients ({typeof data.ingredientCount === 'number' ? data.ingredientCount : (Array.isArray(data.ingredients) ? (data.ingredients as IngredientGroup[]).reduce((sum: number, g: IngredientGroup) => sum + (g.ingredients?.length || 0), 0) : 0)} total):
-                            </h4>
-                            {Array.isArray(data.ingredients) && data.ingredients.length > 0 ? (
-                              (data.ingredients as IngredientGroup[]).map((group: IngredientGroup, gIdx: number) => (
-                              <div key={gIdx} className="ml-4 mb-2">
-                                <p className="font-medium text-sm">{group.groupName}</p>
-                                <ul className="list-disc ml-6 text-xs">
-                                  {group.ingredients?.map((ing: Ingredient, iIdx: number) => (
-                                    <li key={iIdx}>
-                                      {ing.amount} {ing.units} {ing.ingredient}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-sm text-gray-500">No ingredients found</p>
-                          )}
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-sm mb-1">
-                              Instructions ({typeof data.instructionCount === 'number' ? data.instructionCount : (Array.isArray(data.instructions) ? data.instructions.length : 0)} steps):
-                            </h4>
-                            {Array.isArray(data.instructions) && data.instructions.length > 0 ? (
-                              <ol className="list-decimal ml-6 text-xs space-y-3">
-                                {data.instructions.map((inst: string | { title?: string; detail?: string; text?: string; timeMinutes?: number; ingredients?: string[]; tips?: string }, idx: number) => {
-                                  // Handle both string and object instruction formats
-                                  if (typeof inst === 'string') {
-                                    // String format (from URL parsing - legacy)
-                                    return (
-                                      <li key={idx} className="mb-1">{inst}</li>
-                                    );
-                                  } else if (inst && typeof inst === 'object') {
-                                    // Object format - has title, detail, timeMinutes, ingredients, tips
-                                    const title = inst.title || `Step ${idx + 1}`;
-                                    const detail = inst.detail || inst.text || '';
-                                    return (
-                                      <li key={idx} className="mb-3">
-                                        <div className="font-semibold text-sm text-gray-900 mb-1">
-                                          {title}
-                                        </div>
-                                        {detail && (
-                                          <div className="text-gray-700 ml-0">
-                                            {detail}
-                                          </div>
-                                        )}
-                                        {(inst.timeMinutes && inst.timeMinutes > 0) && (
-                                          <div className="text-gray-500 text-xs mt-1">
-                                            ⏱️ {inst.timeMinutes} minutes
-                                          </div>
-                                        )}
-                                        {Array.isArray(inst.ingredients) && inst.ingredients.length > 0 && (
-                                          <div className="text-gray-600 text-xs mt-1">
-                                            🥘 Ingredients: {inst.ingredients.join(', ')}
-                                          </div>
-                                        )}
-                                        {inst.tips && (
-                                          <div className="text-blue-600 text-xs mt-1 italic">
-                                            💡 Tip: {inst.tips}
-                                          </div>
-                                        )}
-                                      </li>
-                                    );
-                                  } else {
-                                    // Fallback for unexpected formats
-                                    return (
-                                      <li key={idx} className="mb-1">{JSON.stringify(inst)}</li>
-                                    );
-                                  }
-                                })}
-                              </ol>
-                            ) : (
-                              <p className="text-sm text-gray-500">No instructions found</p>
-                            )}
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-sm mb-1">Method Used:</h4>
-                            <p className="text-sm">
-                              {data.method === 'json-ld' ? (
-                                <span className="text-green-600">JSON-LD (Fast, no AI tokens used)</span>
-                              ) : data.method === 'ai_vision' ? (
-                                <span className="text-purple-600">AI Vision (meta-llama/llama-4-scout-17b-16e-instruct)</span>
-                              ) : (
-                                <span className="text-blue-600">AI Parsing (Groq llama-3.3-70b-versatile)</span>
-                              )}
+                  {step.step === 'image_upload' &&
+                    (() => {
+                      const data = step.data as Record<string, unknown>;
+                      return (
+                        <div>
+                          <p className="text-sm text-gray-600 mb-2">
+                            Image file information
+                          </p>
+                          <div className="space-y-1 text-xs">
+                            <p>
+                              <strong>File Name:</strong>{' '}
+                              {typeof data.name === 'string'
+                                ? data.name
+                                : 'Unknown'}
+                            </p>
+                            <p>
+                              <strong>File Type:</strong>{' '}
+                              {typeof data.type === 'string'
+                                ? data.type
+                                : 'Unknown'}
+                            </p>
+                            <p>
+                              <strong>File Size:</strong>{' '}
+                              {typeof data.sizeFormatted === 'string'
+                                ? data.sizeFormatted
+                                : 'Unknown'}
                             </p>
                           </div>
-                          {/* Display any additional debugging data that might be present */}
-                          {Object.keys(data).some(key => !['title', 'ingredients', 'instructions', 'method', 'ingredientCount', 'instructionCount', 'validationPassed'].includes(key)) && (
-                            <div className="mt-4 pt-4 border-t border-gray-300">
-                              <h4 className="font-semibold text-sm mb-2">Additional Debug Data:</h4>
-                              <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-48 border border-gray-200">
-                                {formatData(Object.fromEntries(
-                                  Object.entries(data).filter(([key]) => 
-                                    !['title', 'ingredients', 'instructions', 'method', 'ingredientCount', 'instructionCount', 'validationPassed'].includes(key)
-                                  )
-                                ))}
-                              </pre>
-                            </div>
-                          )}
                         </div>
-                      </div>
-                    );
-                  })()}
+                      );
+                    })()}
+
+                  {step.step === 'ai_vision' &&
+                    (() => {
+                      const data = step.data as Record<string, unknown>;
+                      return (
+                        <div>
+                          <p className="text-sm text-gray-600 mb-2">
+                            AI Vision Model Processing
+                          </p>
+                          <div className="space-y-1 text-xs">
+                            <p>
+                              <strong>Model:</strong>{' '}
+                              {typeof data.model === 'string'
+                                ? data.model
+                                : 'Unknown'}
+                            </p>
+                            <p>
+                              <strong>Image Size (base64):</strong>{' '}
+                              {typeof data.imageSize === 'number'
+                                ? data.imageSize.toLocaleString()
+                                : 'Unknown'}{' '}
+                              characters
+                            </p>
+                            <p>
+                              <strong>Status:</strong>{' '}
+                              {step.success
+                                ? '✅ Processing complete'
+                                : '❌ Processing failed'}
+                            </p>
+                            {typeof data.error === 'string' && data.error && (
+                              <p className="text-red-600">
+                                <strong>Error:</strong> {data.error}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                  {step.step === 'final_result' &&
+                    (() => {
+                      const data = step.data as Record<string, unknown>;
+                      return (
+                        <div>
+                          <p className="text-sm text-green-600 mb-2 font-semibold">
+                            ✅ Final Parsed Recipe
+                          </p>
+                          <div className="space-y-4">
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">
+                                Title:
+                              </h4>
+                              <p className="text-sm">
+                                {typeof data.title === 'string'
+                                  ? data.title
+                                  : ''}
+                              </p>
+                            </div>
+                            {typeof data.author === 'string' && data.author && (
+                              <div>
+                                <h4 className="font-semibold text-sm mb-1">
+                                  Author:
+                                </h4>
+                                <p className="text-sm">{data.author}</p>
+                              </div>
+                            )}
+                            {typeof data.sourceUrl === 'string' &&
+                              data.sourceUrl && (
+                                <div>
+                                  <h4 className="font-semibold text-sm mb-1">
+                                    Source URL:
+                                  </h4>
+                                  <a
+                                    href={data.sourceUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-blue-600 hover:text-blue-800 underline break-all"
+                                  >
+                                    {data.sourceUrl}
+                                  </a>
+                                </div>
+                              )}
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">
+                                Ingredients (
+                                {typeof data.ingredientCount === 'number'
+                                  ? data.ingredientCount
+                                  : Array.isArray(data.ingredients)
+                                    ? (
+                                        data.ingredients as IngredientGroup[]
+                                      ).reduce(
+                                        (sum: number, g: IngredientGroup) =>
+                                          sum + (g.ingredients?.length || 0),
+                                        0,
+                                      )
+                                    : 0}{' '}
+                                total):
+                              </h4>
+                              {Array.isArray(data.ingredients) &&
+                              data.ingredients.length > 0 ? (
+                                (data.ingredients as IngredientGroup[]).map(
+                                  (group: IngredientGroup, gIdx: number) => (
+                                    <div key={gIdx} className="ml-4 mb-2">
+                                      <p className="font-medium text-sm">
+                                        {group.groupName}
+                                      </p>
+                                      <ul className="list-disc ml-6 text-xs">
+                                        {group.ingredients?.map(
+                                          (ing: Ingredient, iIdx: number) => (
+                                            <li key={iIdx}>
+                                              {ing.amount} {ing.units}{' '}
+                                              {ing.ingredient}
+                                            </li>
+                                          ),
+                                        )}
+                                      </ul>
+                                    </div>
+                                  ),
+                                )
+                              ) : (
+                                <p className="text-sm text-gray-500">
+                                  No ingredients found
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">
+                                Instructions (
+                                {typeof data.instructionCount === 'number'
+                                  ? data.instructionCount
+                                  : Array.isArray(data.instructions)
+                                    ? data.instructions.length
+                                    : 0}{' '}
+                                steps):
+                              </h4>
+                              {Array.isArray(data.instructions) &&
+                              data.instructions.length > 0 ? (
+                                <ol className="list-decimal ml-6 text-xs space-y-3">
+                                  {data.instructions.map(
+                                    (
+                                      inst:
+                                        | string
+                                        | {
+                                            title?: string;
+                                            detail?: string;
+                                            text?: string;
+                                            timeMinutes?: number;
+                                            ingredients?: string[];
+                                            tips?: string;
+                                          },
+                                      idx: number,
+                                    ) => {
+                                      // Handle both string and object instruction formats
+                                      if (typeof inst === 'string') {
+                                        // String format (from URL parsing - legacy)
+                                        return (
+                                          <li key={idx} className="mb-1">
+                                            {inst}
+                                          </li>
+                                        );
+                                      } else if (
+                                        inst &&
+                                        typeof inst === 'object'
+                                      ) {
+                                        // Object format - has title, detail, timeMinutes, ingredients, tips
+                                        const title =
+                                          inst.title || `Step ${idx + 1}`;
+                                        const detail =
+                                          inst.detail || inst.text || '';
+                                        return (
+                                          <li key={idx} className="mb-3">
+                                            <div className="font-semibold text-sm text-gray-900 mb-1">
+                                              {title}
+                                            </div>
+                                            {detail && (
+                                              <div className="text-gray-700 ml-0">
+                                                {detail}
+                                              </div>
+                                            )}
+                                            {inst.timeMinutes &&
+                                              inst.timeMinutes > 0 && (
+                                                <div className="text-gray-500 text-xs mt-1">
+                                                  ⏱️ {inst.timeMinutes} minutes
+                                                </div>
+                                              )}
+                                            {Array.isArray(inst.ingredients) &&
+                                              inst.ingredients.length > 0 && (
+                                                <div className="text-gray-600 text-xs mt-1">
+                                                  🥘 Ingredients:{' '}
+                                                  {inst.ingredients.join(', ')}
+                                                </div>
+                                              )}
+                                            {inst.tips && (
+                                              <div className="text-blue-600 text-xs mt-1 italic">
+                                                💡 Tip: {inst.tips}
+                                              </div>
+                                            )}
+                                          </li>
+                                        );
+                                      } else {
+                                        // Fallback for unexpected formats
+                                        return (
+                                          <li key={idx} className="mb-1">
+                                            {JSON.stringify(inst)}
+                                          </li>
+                                        );
+                                      }
+                                    },
+                                  )}
+                                </ol>
+                              ) : (
+                                <p className="text-sm text-gray-500">
+                                  No instructions found
+                                </p>
+                              )}
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-sm mb-1">
+                                Method Used:
+                              </h4>
+                              <p className="text-sm">
+                                {data.method === 'json-ld' ? (
+                                  <span className="text-green-600">
+                                    JSON-LD (Fast, no AI tokens used)
+                                  </span>
+                                ) : data.method === 'ai_vision' ? (
+                                  <span className="text-purple-600">
+                                    AI Vision
+                                    (meta-llama/llama-4-scout-17b-16e-instruct)
+                                  </span>
+                                ) : (
+                                  <span className="text-blue-600">
+                                    AI Parsing (Groq llama-3.3-70b-versatile)
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                            {/* Display any additional debugging data that might be present */}
+                            {Object.keys(data).some(
+                              (key) =>
+                                ![
+                                  'title',
+                                  'ingredients',
+                                  'instructions',
+                                  'method',
+                                  'ingredientCount',
+                                  'instructionCount',
+                                  'validationPassed',
+                                ].includes(key),
+                            ) && (
+                              <div className="mt-4 pt-4 border-t border-gray-300">
+                                <h4 className="font-semibold text-sm mb-2">
+                                  Additional Debug Data:
+                                </h4>
+                                <pre className="text-xs bg-white p-2 rounded overflow-auto max-h-48 border border-gray-200">
+                                  {formatData(
+                                    Object.fromEntries(
+                                      Object.entries(data).filter(
+                                        ([key]) =>
+                                          ![
+                                            'title',
+                                            'ingredients',
+                                            'instructions',
+                                            'method',
+                                            'ingredientCount',
+                                            'instructionCount',
+                                            'validationPassed',
+                                          ].includes(key),
+                                      ),
+                                    ),
+                                  )}
+                                </pre>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
                 </div>
               </div>
             ))}
@@ -1055,9 +1337,13 @@ export default function DebugParserPage({
             {inputMode === 'url' ? (
               <ol className="list-decimal ml-6 text-blue-600 space-y-1">
                 <li>Enter any recipe URL above</li>
-                <li>Click &quot;Debug Parse&quot; to see the full parsing flow</li>
+                <li>
+                  Click &quot;Debug Parse&quot; to see the full parsing flow
+                </li>
                 <li>Review each step to understand what happened</li>
-                <li>Check if JSON-LD was found (fast) or AI was used (fallback)</li>
+                <li>
+                  Check if JSON-LD was found (fast) or AI was used (fallback)
+                </li>
                 <li>See the cleaned HTML that was sent to the AI</li>
                 <li>View the AI&apos;s raw response and final parsed result</li>
               </ol>
@@ -1065,9 +1351,16 @@ export default function DebugParserPage({
               <ol className="list-decimal ml-6 text-blue-600 space-y-1">
                 <li>Click the upload area to select a recipe image</li>
                 <li>Supported formats: JPG, PNG, WEBP, GIF (max 10MB)</li>
-                <li>Click &quot;Debug Image Parse&quot; to see the parsing flow</li>
-                <li>Review the image upload, AI vision processing, and final result steps</li>
-                <li>See how the vision model extracts recipe data from the image</li>
+                <li>
+                  Click &quot;Debug Image Parse&quot; to see the parsing flow
+                </li>
+                <li>
+                  Review the image upload, AI vision processing, and final
+                  result steps
+                </li>
+                <li>
+                  See how the vision model extracts recipe data from the image
+                </li>
               </ol>
             )}
           </div>

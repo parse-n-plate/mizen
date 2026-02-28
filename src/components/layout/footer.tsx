@@ -118,7 +118,10 @@ export default function Footer() {
 
       {/* Fish Illustration - positioned absolutely, extends from bottom half and gets cut off */}
       {/* Note: This is positioned relative to the footer, not the content container */}
-      <div className="absolute right-0 w-[300px] sm:w-[400px] md:w-[500px] lg:w-[600px] h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] z-0 pointer-events-none" style={{ bottom: '-40%' }}>
+      <div
+        className="absolute right-0 w-[300px] sm:w-[400px] md:w-[500px] lg:w-[600px] h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] z-0 pointer-events-none"
+        style={{ bottom: '-40%' }}
+      >
         <div className="relative w-full h-full">
           <Image
             src="/assets/icons/Fish Logo.svg"

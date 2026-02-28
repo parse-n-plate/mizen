@@ -28,7 +28,7 @@ export function IngredientExpandedSidePanel({
   stepTitlesMap,
   onStepClick,
   isOpen,
-  onClose
+  onClose,
 }: IngredientExpandedSidePanelProps) {
   return (
     <AnimatePresence>
@@ -42,7 +42,7 @@ export function IngredientExpandedSidePanel({
             onClick={onClose}
             className="fixed inset-0 bg-black/20 backdrop-blur-[1px] z-[200]"
           />
-          
+
           {/* Side Panel */}
           <motion.div
             initial={{ x: '100%' }}
@@ -53,18 +53,24 @@ export function IngredientExpandedSidePanel({
           >
             <div className="p-8 border-b border-stone-100 flex items-start justify-between">
               <div className="space-y-1">
-                <span className="text-[10px] font-albert font-bold uppercase tracking-[0.2em] text-[#FFBA25]">Ingredient Details</span>
-                <h3 className="font-domine font-bold text-3xl text-stone-900 leading-tight">{ingredientName}</h3>
-                <p className="text-lg text-stone-400 font-albert">{ingredientAmount}</p>
+                <span className="text-[10px] font-albert font-bold uppercase tracking-[0.2em] text-[#FFBA25]">
+                  Ingredient Details
+                </span>
+                <h3 className="font-domine font-bold text-3xl text-stone-900 leading-tight">
+                  {ingredientName}
+                </h3>
+                <p className="text-lg text-stone-400 font-albert">
+                  {ingredientAmount}
+                </p>
               </div>
-              <button 
+              <button
                 onClick={onClose}
                 className="p-2 hover:bg-stone-50 rounded-full text-stone-300 hover:text-stone-900 transition-colors"
               >
                 <X className="h-6 w-6" />
               </button>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-6">
               <IngredientExpandedContent
                 ingredientName={ingredientName}

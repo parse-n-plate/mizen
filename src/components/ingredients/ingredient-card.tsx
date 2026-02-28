@@ -10,7 +10,7 @@ import { cn, convertTextFractionsToSymbols } from '@/lib/utils';
  */
 function toTitleCase(text: string): string {
   if (!text) return text;
-  
+
   // Split by word boundaries, preserving spaces and punctuation
   return text.replace(/\b\w+\b/g, (word) => {
     // Skip if it's a number or starts with a number/fraction symbol
@@ -24,24 +24,26 @@ function toTitleCase(text: string): string {
 
 /**
  * IngredientCard Component (Linear List Style)
- * 
+ *
  * Displays an ingredient in a linear list format matching the Figma design.
  * Shows ingredient name with amount/units, and a description field
  * (hidden when empty - not connected to backend yet).
- * 
+ *
  * @param ingredient - The ingredient object with amount, units, and ingredient name
  * @param description - Optional description/preparation notes (not yet connected to backend)
  * @param isLast - Whether this is the last item in the list (to hide bottom divider)
  */
 
 interface IngredientCardProps {
-  ingredient: string | {
-    amount?: string;
-    units?: string;
-    ingredient: string;
-    description?: string;
-    substitutions?: string[];
-  };
+  ingredient:
+    | string
+    | {
+        amount?: string;
+        units?: string;
+        ingredient: string;
+        description?: string;
+        substitutions?: string[];
+      };
   description?: string; // Future: will be populated from backend
   isLast?: boolean; // Hide divider if this is the last item
   /** Ingredient group name (e.g., "Main", "Sauce") */
@@ -69,47 +71,60 @@ export default function IngredientCard({
   const [internalChecked, setInternalChecked] = useState(false);
   const isChecked = checked !== undefined ? checked : internalChecked;
   const shouldReduceMotion = useReducedMotion();
-  
+
   // Use controlled expansion state if provided, otherwise fall back to internal state
   const [internalExpanded, setInternalExpanded] = useState(false);
-  const isExpanded = controlledIsExpanded !== undefined ? controlledIsExpanded : internalExpanded;
+  const isExpanded =
+    controlledIsExpanded !== undefined
+      ? controlledIsExpanded
+      : internalExpanded;
   // Helper function to parse amount/unit from ingredient string
-  const parseIngredientString = (ingredientStr: string): { amount: string; unit: string; name: string } => {
+  const parseIngredientString = (
+    ingredientStr: string,
+  ): { amount: string; unit: string; name: string } => {
     // Pattern 1: matches amount (can include fractions like 1½, 2½, ⅛) + unit + ingredient name
     // Examples: "1½ Tbsp soy sauce", "2½ cups dashi", "1 tsp sugar"
-    const match = ingredientStr.match(/^([\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+(?:\s*[–-]\s*[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)?)\s+([a-zA-Z]+)\s+(.+)$/);
+    const match = ingredientStr.match(
+      /^([\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+(?:\s*[–-]\s*[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)?)\s+([a-zA-Z]+)\s+(.+)$/,
+    );
     if (match) {
       return {
         amount: match[1].trim(),
         unit: match[2].trim(),
-        name: match[3].trim()
+        name: match[3].trim(),
       };
     }
     // Pattern 2: try simpler pattern without fractions (amount + unit + ingredient name)
-    const simpleMatch = ingredientStr.match(/^(\d+(?:\s*[–-]\s*\d+)?)\s+([a-zA-Z]+)\s+(.+)$/);
+    const simpleMatch = ingredientStr.match(
+      /^(\d+(?:\s*[–-]\s*\d+)?)\s+([a-zA-Z]+)\s+(.+)$/,
+    );
     if (simpleMatch) {
       return {
         amount: simpleMatch[1].trim(),
         unit: simpleMatch[2].trim(),
-        name: simpleMatch[3].trim()
+        name: simpleMatch[3].trim(),
       };
     }
     // Pattern 3: matches amount + ingredient name (no unit) - e.g., "3 eggs", "2 apples"
-    const noUnitMatch = ingredientStr.match(/^([\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+(?:\s*[–-]\s*[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)?)\s+(.+)$/);
+    const noUnitMatch = ingredientStr.match(
+      /^([\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+(?:\s*[–-]\s*[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)?)\s+(.+)$/,
+    );
     if (noUnitMatch) {
       return {
         amount: noUnitMatch[1].trim(),
         unit: '',
-        name: noUnitMatch[2].trim()
+        name: noUnitMatch[2].trim(),
       };
     }
     // Pattern 4: simpler pattern for amount + ingredient name without fractions
-    const simpleNoUnitMatch = ingredientStr.match(/^(\d+(?:\s*[–-]\s*\d+)?)\s+(.+)$/);
+    const simpleNoUnitMatch = ingredientStr.match(
+      /^(\d+(?:\s*[–-]\s*\d+)?)\s+(.+)$/,
+    );
     if (simpleNoUnitMatch) {
       return {
         amount: simpleNoUnitMatch[1].trim(),
         unit: '',
-        name: simpleNoUnitMatch[2].trim()
+        name: simpleNoUnitMatch[2].trim(),
       };
     }
     // No match found, return empty amount/unit
@@ -119,7 +134,7 @@ export default function IngredientCard({
   // Extract just the ingredient name for matching
   const ingredientNameOnly = useMemo(() => {
     if (typeof ingredient === 'string') return ingredient;
-    
+
     // If amount/units are empty, try to parse from ingredient string to get just the name
     if (!ingredient.amount && !ingredient.units && ingredient.ingredient) {
       const parsed = parseIngredientString(ingredient.ingredient);
@@ -127,7 +142,7 @@ export default function IngredientCard({
         return parsed.name; // Return just the name part (works with or without unit)
       }
     }
-    
+
     return ingredient.ingredient;
   }, [ingredient]);
 
@@ -142,23 +157,28 @@ export default function IngredientCard({
     // Handle object ingredients
     if (typeof ingredient === 'object' && ingredient !== null) {
       const parts: string[] = [];
-      
+
       // Add amount if it exists and is valid (convert fractions to symbols)
-      if (ingredient.amount && ingredient.amount.trim() && ingredient.amount !== 'as much as you like') {
+      if (
+        ingredient.amount &&
+        ingredient.amount.trim() &&
+        ingredient.amount !== 'as much as you like'
+      ) {
         parts.push(convertTextFractionsToSymbols(ingredient.amount.trim()));
       }
-      
+
       // Add units if they exist
       if (ingredient.units && ingredient.units.trim()) {
         parts.push(ingredient.units.trim());
       }
-      
+
       // Add ingredient name (convert fractions in case they appear in the name)
-      const ingredientName = ingredient.ingredient && ingredient.ingredient.trim();
+      const ingredientName =
+        ingredient.ingredient && ingredient.ingredient.trim();
       if (ingredientName) {
         parts.push(convertTextFractionsToSymbols(ingredientName));
       }
-      
+
       return parts.join(' ');
     }
 
@@ -167,7 +187,7 @@ export default function IngredientCard({
 
   const ingredientAmount = useMemo(() => {
     if (typeof ingredient === 'string') return '';
-    
+
     // If amount/units are empty, try to parse from ingredient string
     if (!ingredient.amount && !ingredient.units && ingredient.ingredient) {
       const parsed = parseIngredientString(ingredient.ingredient);
@@ -175,12 +195,15 @@ export default function IngredientCard({
         // Return amount with unit if unit exists, otherwise just amount
         // Convert fractions to symbols
         const amountWithSymbols = convertTextFractionsToSymbols(parsed.amount);
-        return parsed.unit ? `${amountWithSymbols} ${parsed.unit}` : amountWithSymbols;
+        return parsed.unit
+          ? `${amountWithSymbols} ${parsed.unit}`
+          : amountWithSymbols;
       }
     }
-    
+
     // Convert fractions to symbols in the computed amount
-    const computed = `${ingredient.amount || ''} ${ingredient.units || ''}`.trim();
+    const computed =
+      `${ingredient.amount || ''} ${ingredient.units || ''}`.trim();
     return convertTextFractionsToSymbols(computed);
   }, [ingredient]);
 
@@ -224,11 +247,14 @@ export default function IngredientCard({
             const parent = current.closest('.ingredient-group');
             if (!parent) return;
             const items = Array.from(
-              parent.querySelectorAll<HTMLElement>('.ingredient-list-item[tabindex="0"]')
+              parent.querySelectorAll<HTMLElement>(
+                '.ingredient-list-item[tabindex="0"]',
+              ),
             );
             const idx = items.indexOf(current);
             if (idx === -1) return;
-            const next = e.key === 'ArrowDown' ? items[idx + 1] : items[idx - 1];
+            const next =
+              e.key === 'ArrowDown' ? items[idx + 1] : items[idx - 1];
             if (next) next.focus();
           }
           // Home/End to jump to first/last ingredient in group
@@ -237,10 +263,13 @@ export default function IngredientCard({
             const parent = e.currentTarget.closest('.ingredient-group');
             if (!parent) return;
             const items = Array.from(
-              parent.querySelectorAll<HTMLElement>('.ingredient-list-item[tabindex="0"]')
+              parent.querySelectorAll<HTMLElement>(
+                '.ingredient-list-item[tabindex="0"]',
+              ),
             );
             if (items.length === 0) return;
-            const target = e.key === 'Home' ? items[0] : items[items.length - 1];
+            const target =
+              e.key === 'Home' ? items[0] : items[items.length - 1];
             target.focus();
           }
         }}
@@ -248,15 +277,15 @@ export default function IngredientCard({
         tabIndex={0}
         aria-expanded={isExpanded}
         className={cn(
-          "ingredient-list-item group cursor-pointer",
-          isChecked ? 'is-checked' : ''
+          'ingredient-list-item group cursor-pointer',
+          isChecked ? 'is-checked' : '',
         )}
       >
         {/* Divider line at the bottom (hidden for last item) */}
         {!isLast && (
           <div className="ingredient-list-divider group-hover:opacity-0" />
         )}
-        
+
         {/* Main content row */}
         <div className="ingredient-list-content">
           {/* Checkbox on the left */}
@@ -277,8 +306,8 @@ export default function IngredientCard({
             {/* Primary text: Ingredient name with amount/units - matching cook mode format */}
             <div
               className={cn(
-                "ingredient-list-primary flex items-baseline justify-between transition-opacity duration-[180ms] motion-reduce:transition-none",
-                isChecked ? "opacity-50" : "opacity-100"
+                'ingredient-list-primary flex items-baseline justify-between transition-opacity duration-[180ms] motion-reduce:transition-none',
+                isChecked ? 'opacity-50' : 'opacity-100',
               )}
             >
               {/* Format: ingredient name first (medium, stone-800, 16px), then amount/units (regular, stone-400, 14px) */}
@@ -288,47 +317,107 @@ export default function IngredientCard({
                   const parsed = parseIngredientString(ingredientText);
                   if (parsed.amount) {
                     // Has amount: show name first, then amount/unit
-                    const amountDisplay = parsed.unit ? `${parsed.amount} ${parsed.unit}` : parsed.amount;
+                    const amountDisplay = parsed.unit
+                      ? `${parsed.amount} ${parsed.unit}`
+                      : parsed.amount;
                     return (
                       <>
-                        <p className={cn("font-albert font-medium text-[14px] text-stone-800 group-hover:text-black", isChecked && "line-through")}>{toTitleCase(parsed.name)}</p>
-                        <p className="font-albert text-[13px] text-stone-400">{toTitleCase(amountDisplay)}</p>
+                        <p
+                          className={cn(
+                            'font-albert font-medium text-[14px] text-stone-800 group-hover:text-black',
+                            isChecked && 'line-through',
+                          )}
+                        >
+                          {toTitleCase(parsed.name)}
+                        </p>
+                        <p className="font-albert text-[13px] text-stone-400">
+                          {toTitleCase(amountDisplay)}
+                        </p>
                       </>
                     );
                   }
                   // No amount found: show full text as name (check for parentheses)
-                  const parenMatch = ingredientText.match(/^([^(]+?)\s*(\(.+\))$/);
+                  const parenMatch = ingredientText.match(
+                    /^([^(]+?)\s*(\(.+\))$/,
+                  );
                   if (parenMatch) {
                     return (
                       <>
-                        <p className={cn("font-albert font-medium text-[14px] text-stone-800 group-hover:text-black", isChecked && "line-through")}>{toTitleCase(parenMatch[1].trim())}</p>
-                        <p className="font-albert text-[13px] text-stone-400">{toTitleCase(parenMatch[2])}</p>
+                        <p
+                          className={cn(
+                            'font-albert font-medium text-[14px] text-stone-800 group-hover:text-black',
+                            isChecked && 'line-through',
+                          )}
+                        >
+                          {toTitleCase(parenMatch[1].trim())}
+                        </p>
+                        <p className="font-albert text-[13px] text-stone-400">
+                          {toTitleCase(parenMatch[2])}
+                        </p>
                       </>
                     );
                   }
-                  return <p className={cn("font-albert font-medium text-[14px] text-stone-800", isChecked && "line-through")}>{toTitleCase(ingredientText)}</p>;
+                  return (
+                    <p
+                      className={cn(
+                        'font-albert font-medium text-[14px] text-stone-800',
+                        isChecked && 'line-through',
+                      )}
+                    >
+                      {toTitleCase(ingredientText)}
+                    </p>
+                  );
                 })()
               ) : (
                 <>
                   {ingredientAmount ? (
                     // Has amount/unit: show name first, then amount/unit
                     <>
-                      <p className={cn("font-albert font-medium text-[14px] text-stone-800 group-hover:text-black", isChecked && "line-through")}>{toTitleCase(ingredientNameOnly)}</p>
-                      <p className="font-albert text-[13px] text-stone-400">{toTitleCase(ingredientAmount)}</p>
+                      <p
+                        className={cn(
+                          'font-albert font-medium text-[14px] text-stone-800 group-hover:text-black',
+                          isChecked && 'line-through',
+                        )}
+                      >
+                        {toTitleCase(ingredientNameOnly)}
+                      </p>
+                      <p className="font-albert text-[13px] text-stone-400">
+                        {toTitleCase(ingredientAmount)}
+                      </p>
                     </>
                   ) : (
                     // No amount/unit: show main name, check for parentheses
                     (() => {
-                      const parenMatch = ingredientText.match(/^([^(]+?)\s*(\(.+\))$/);
+                      const parenMatch = ingredientText.match(
+                        /^([^(]+?)\s*(\(.+\))$/,
+                      );
                       if (parenMatch) {
                         return (
                           <>
-                            <p className={cn("font-albert font-medium text-[14px] text-stone-800 group-hover:text-black", isChecked && "line-through")}>{toTitleCase(parenMatch[1].trim())}</p>
-                            <p className="font-albert text-[13px] text-stone-400">{toTitleCase(parenMatch[2])}</p>
+                            <p
+                              className={cn(
+                                'font-albert font-medium text-[14px] text-stone-800 group-hover:text-black',
+                                isChecked && 'line-through',
+                              )}
+                            >
+                              {toTitleCase(parenMatch[1].trim())}
+                            </p>
+                            <p className="font-albert text-[13px] text-stone-400">
+                              {toTitleCase(parenMatch[2])}
+                            </p>
                           </>
                         );
                       }
-                      return <p className={cn("font-albert font-medium text-[14px] text-stone-800 group-hover:text-black", isChecked && "line-through")}>{toTitleCase(ingredientText)}</p>;
+                      return (
+                        <p
+                          className={cn(
+                            'font-albert font-medium text-[14px] text-stone-800 group-hover:text-black',
+                            isChecked && 'line-through',
+                          )}
+                        >
+                          {toTitleCase(ingredientText)}
+                        </p>
+                      );
                     })()
                   )}
                 </>
@@ -338,8 +427,10 @@ export default function IngredientCard({
             {/* Secondary text: Description (hidden when empty) */}
             <div
               className={cn(
-                "grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none",
-                hasDescription ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                'grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none',
+                hasDescription
+                  ? 'grid-rows-[1fr] opacity-100'
+                  : 'grid-rows-[0fr] opacity-0',
               )}
             >
               <div className="overflow-hidden min-h-0 ingredient-list-secondary">
@@ -349,7 +440,6 @@ export default function IngredientCard({
           </div>
         </div>
       </div>
-
     </div>
   );
 }

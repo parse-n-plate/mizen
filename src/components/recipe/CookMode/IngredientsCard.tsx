@@ -7,7 +7,9 @@ interface IngredientsCardProps {
 export default function IngredientsCard({ ingredients }: IngredientsCardProps) {
   return (
     <div className="bg-white rounded-xl border border-stone-200 p-4 shadow-sm">
-      <h3 className="font-albert font-medium text-[#1e1e1e] mb-3">Ingredients</h3>
+      <h3 className="font-albert font-medium text-[#1e1e1e] mb-3">
+        Ingredients
+      </h3>
       <ul className="space-y-2">
         {ingredients.map((ingredient, index) => (
           <li key={index} className="flex items-start gap-2.5">
@@ -19,44 +21,3 @@ export default function IngredientsCard({ ingredients }: IngredientsCardProps) {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

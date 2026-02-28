@@ -16,7 +16,10 @@ interface ModalViewSwitcherProps {
   onModeChange: (mode: ModalViewMode) => void;
 }
 
-export function ModalViewSwitcher({ mode, onModeChange }: ModalViewSwitcherProps) {
+export function ModalViewSwitcher({
+  mode,
+  onModeChange,
+}: ModalViewSwitcherProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -38,7 +41,10 @@ export function ModalViewSwitcher({ mode, onModeChange }: ModalViewSwitcherProps
           checked={mode === 'side-peek'}
           onCheckedChange={() => onModeChange('side-peek')}
         >
-          <SidebarMinimalistic className="size-4 text-stone-400" aria-hidden="true" />
+          <SidebarMinimalistic
+            className="size-4 text-stone-400"
+            aria-hidden="true"
+          />
           <span className="font-albert text-sm text-stone-700">Side peek</span>
         </DropdownMenuCheckboxItem>
         <DropdownMenuCheckboxItem

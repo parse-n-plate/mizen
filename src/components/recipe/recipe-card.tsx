@@ -57,8 +57,11 @@ export default function RecipeCard({
   const isBookmarkedState = isBookmarked(recipe.id);
 
   // Get the first cuisine icon if available, otherwise use a default
-  const primaryCuisine = recipe.cuisine && recipe.cuisine.length > 0 ? recipe.cuisine[0] : null;
-  const cuisineIconPath = primaryCuisine ? CUISINE_ICON_MAP[primaryCuisine] : '/assets/Illustration Icons/Pan_Icon.png';
+  const primaryCuisine =
+    recipe.cuisine && recipe.cuisine.length > 0 ? recipe.cuisine[0] : null;
+  const cuisineIconPath = primaryCuisine
+    ? CUISINE_ICON_MAP[primaryCuisine]
+    : '/assets/Illustration Icons/Pan_Icon.png';
 
   // Handle bookmark toggle - shows confirmation dialog if currently bookmarked
   const handleBookmarkToggle = (e: React.MouseEvent) => {
@@ -68,7 +71,7 @@ export default function RecipeCard({
     // If recipe is currently bookmarked, show confirmation dialog
     if (isBookmarkedState) {
       const confirmed = window.confirm(
-        'Are you sure you want to remove this recipe from your Cookbook? You can add it back later.'
+        'Are you sure you want to remove this recipe from your Cookbook? You can add it back later.',
       );
 
       if (confirmed) {
@@ -92,22 +95,22 @@ export default function RecipeCard({
       onCopy();
       return;
     }
-    
+
     // Otherwise, implement default copy recipe functionality
     const fullRecipe = getRecipeById(recipe.id);
     if (!fullRecipe) {
       console.warn('Recipe not found for copying');
       return;
     }
-    
+
     // Format recipe as plain text (similar to ClassicSplitView)
     let text = '';
-    
+
     // Title
     if (fullRecipe.title) {
       text += `${fullRecipe.title}\n\n`;
     }
-    
+
     // Metadata
     if (fullRecipe.author) {
       text += `By ${fullRecipe.author}\n`;
@@ -115,13 +118,19 @@ export default function RecipeCard({
     if (fullRecipe.sourceUrl) {
       text += `Source: ${fullRecipe.sourceUrl}\n`;
     }
-    if (fullRecipe.prepTimeMinutes || fullRecipe.cookTimeMinutes || fullRecipe.servings) {
+    if (
+      fullRecipe.prepTimeMinutes ||
+      fullRecipe.cookTimeMinutes ||
+      fullRecipe.servings
+    ) {
       text += '\n';
-      if (fullRecipe.prepTimeMinutes) text += `Prep: ${fullRecipe.prepTimeMinutes} min\n`;
-      if (fullRecipe.cookTimeMinutes) text += `Cook: ${fullRecipe.cookTimeMinutes} min\n`;
+      if (fullRecipe.prepTimeMinutes)
+        text += `Prep: ${fullRecipe.prepTimeMinutes} min\n`;
+      if (fullRecipe.cookTimeMinutes)
+        text += `Cook: ${fullRecipe.cookTimeMinutes} min\n`;
       if (fullRecipe.servings) text += `Servings: ${fullRecipe.servings}\n`;
     }
-    
+
     // Ingredients
     if (fullRecipe.ingredients && fullRecipe.ingredients.length > 0) {
       text += '\n--- INGREDIENTS ---\n\n';
@@ -139,7 +148,7 @@ export default function RecipeCard({
         text += '\n';
       });
     }
-    
+
     // Instructions
     if (fullRecipe.instructions && fullRecipe.instructions.length > 0) {
       text += '--- INSTRUCTIONS ---\n\n';
@@ -154,7 +163,7 @@ export default function RecipeCard({
         }
       });
     }
-    
+
     try {
       await navigator.clipboard.writeText(text);
       setCopiedRecipe(true);
@@ -169,7 +178,7 @@ export default function RecipeCard({
     // If recipe is currently bookmarked, show confirmation dialog before unsaving
     if (isBookmarkedState) {
       const confirmed = window.confirm(
-        'Are you sure you want to remove this recipe from your Cookbook? You can add it back later.'
+        'Are you sure you want to remove this recipe from your Cookbook? You can add it back later.',
       );
 
       if (confirmed) {
@@ -207,14 +216,17 @@ export default function RecipeCard({
         onPointerUpCapture={(e) => e.stopPropagation()}
         onClick={handleBookmarkToggle}
         className="absolute top-4 right-12 z-20 p-1.5 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 bg-white/50 backdrop-blur-sm"
-        aria-label={isBookmarkedState ? 'Remove from Cookbook' : 'Add to Cookbook'}
+        aria-label={
+          isBookmarkedState ? 'Remove from Cookbook' : 'Add to Cookbook'
+        }
       >
         <Bookmark
           className={`
             w-5 h-5 transition-colors duration-200
-            ${isBookmarkedState 
-              ? 'fill-[#78716C] text-[#78716C]' 
-              : 'fill-[#D6D3D1] text-[#D6D3D1] hover:fill-[#A8A29E] hover:text-[#A8A29E]'
+            ${
+              isBookmarkedState
+                ? 'fill-[#78716C] text-[#78716C]'
+                : 'fill-[#D6D3D1] text-[#D6D3D1] hover:fill-[#A8A29E] hover:text-[#A8A29E]'
             }
           `}
         />
@@ -239,9 +251,14 @@ export default function RecipeCard({
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={handleCopyRecipe}>
             <span className={copiedRecipe ? 'text-green-600' : ''}>
-              {copiedRecipe ? 'Copied to Clipboard' : 'Copy Recipe to Clipboard'}
+              {copiedRecipe
+                ? 'Copied to Clipboard'
+                : 'Copy Recipe to Clipboard'}
             </span>
-            <ClipboardText weight="Bold" className={`w-4 h-4 ml-auto ${copiedRecipe ? 'text-green-600' : ''}`} />
+            <ClipboardText
+              weight="Bold"
+              className={`w-4 h-4 ml-auto ${copiedRecipe ? 'text-green-600' : ''}`}
+            />
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={handleUnsave}>
             <span>Remove from Cookbook</span>
@@ -296,7 +313,7 @@ export default function RecipeCard({
               <h3 className="font-domine leading-[1.2] text-[18px] md:text-[22px] text-black text-left line-clamp-2 break-words m-0">
                 {recipe.title}
               </h3>
-              
+
               {/* Only show author line if author exists and is not empty */}
               {recipe.author && recipe.author.trim() !== '' && (
                 <p className="font-albert leading-[1.4] text-[13px] md:text-[15px] text-stone-600 text-left m-0 line-clamp-1">
@@ -309,11 +326,12 @@ export default function RecipeCard({
             {/* Right Side: Time Pill - only show if time data is available */}
             {(() => {
               // Calculate display time: prefer total, else sum prep+cook, else show individual
-              const displayTime = recipe.totalTimeMinutes 
-                ?? (recipe.prepTimeMinutes && recipe.cookTimeMinutes 
-                  ? recipe.prepTimeMinutes + recipe.cookTimeMinutes 
-                  : recipe.prepTimeMinutes ?? recipe.cookTimeMinutes);
-              
+              const displayTime =
+                recipe.totalTimeMinutes ??
+                (recipe.prepTimeMinutes && recipe.cookTimeMinutes
+                  ? recipe.prepTimeMinutes + recipe.cookTimeMinutes
+                  : (recipe.prepTimeMinutes ?? recipe.cookTimeMinutes));
+
               // Only render the pill if there's actual time data
               return displayTime ? (
                 <div className="flex flex-col justify-end self-stretch">
@@ -326,7 +344,7 @@ export default function RecipeCard({
           </div>
         </button>
       </div>
-      
+
       {showDelete && (
         <button
           type="button"
@@ -346,4 +364,3 @@ export default function RecipeCard({
     </motion.div>
   );
 }
-

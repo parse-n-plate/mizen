@@ -1,17 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { formatError, ERROR_CODES } from '@/utils/formatError';
-import { parseRecipeFromImage, parseRecipeFromUrl } from '@/utils/aiRecipeParser';
+import {
+  parseRecipeFromImage,
+  parseRecipeFromUrl,
+} from '@/utils/aiRecipeParser';
 
 /**
  * API endpoint for recipe scraping - now uses unified AI-based parser
- * 
+ *
  * This endpoint maintains backward compatibility with the old API contract
  * but now uses the new scalable AI-based parsing system that works with any recipe website.
- * 
+ *
  * The new system uses:
  * 1. JSON-LD structured data extraction (fast, reliable when available)
  * 2. AI-based parsing of cleaned HTML (fallback for any website)
- * 
+ *
  * No more site-specific HTML selectors needed!
  */
 export async function POST(req: NextRequest): Promise<Response> {
@@ -27,10 +30,12 @@ export async function POST(req: NextRequest): Promise<Response> {
       const urlValue = formData.get('url');
       url = urlValue && typeof urlValue === 'string' ? urlValue : undefined;
       const image = formData.get('image') as File | null;
-      
+
       if (image && image.size > 0) {
         imageFile = image;
-        console.log(`[API /recipeScraperPython] Received image upload: ${image.name} (${image.size} bytes)`);
+        console.log(
+          `[API /recipeScraperPython] Received image upload: ${image.name} (${image.size} bytes)`,
+        );
       }
     } else {
       // Handle JSON request (without image, URL required)
@@ -52,10 +57,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     if (url) {
       if (typeof url !== 'string') {
         return NextResponse.json(
-          formatError(
-            ERROR_CODES.ERR_INVALID_URL,
-            'URL must be a string',
-          ),
+          formatError(ERROR_CODES.ERR_INVALID_URL, 'URL must be a string'),
         );
       }
 
@@ -69,7 +71,9 @@ export async function POST(req: NextRequest): Promise<Response> {
       }
     }
 
-    console.log(`[API /recipeScraperPython] Starting recipe parse${url ? ` for URL: ${url}` : ''}${imageFile ? ' with image' : ''}`);
+    console.log(
+      `[API /recipeScraperPython] Starting recipe parse${url ? ` for URL: ${url}` : ''}${imageFile ? ' with image' : ''}`,
+    );
 
     // Use the new unified parser with optional URL and image
     let result;
@@ -88,25 +92,40 @@ export async function POST(req: NextRequest): Promise<Response> {
     // Check if parsing failed
     if (!result.success || !result.data) {
       console.error('[API /recipeScraperPython] Parsing failed:', result.error);
-      
+
       // Determine appropriate error code
       let errorCode: string = ERROR_CODES.ERR_NO_RECIPE_FOUND;
       let errorMessage = 'Could not extract recipe from this page';
 
       if (result.error) {
-        if (result.error === 'ERR_RATE_LIMIT' || result.error.includes('rate limit') || result.error.includes('quota')) {
+        if (
+          result.error === 'ERR_RATE_LIMIT' ||
+          result.error.includes('rate limit') ||
+          result.error.includes('quota')
+        ) {
           errorCode = ERROR_CODES.ERR_RATE_LIMIT;
           errorMessage = 'Too many requests';
           // Pass through retry-after timestamp if available
           const retryAfter = result.retryAfter;
-          return NextResponse.json(formatError(errorCode, errorMessage, retryAfter));
-        } else if (result.error === 'ERR_API_UNAVAILABLE' || result.error.includes('service unavailable')) {
+          return NextResponse.json(
+            formatError(errorCode, errorMessage, retryAfter),
+          );
+        } else if (
+          result.error === 'ERR_API_UNAVAILABLE' ||
+          result.error.includes('service unavailable')
+        ) {
           errorCode = ERROR_CODES.ERR_API_UNAVAILABLE;
           errorMessage = 'Service temporarily unavailable';
-        } else if (result.error.includes('timeout') || result.error.includes('abort')) {
+        } else if (
+          result.error.includes('timeout') ||
+          result.error.includes('abort')
+        ) {
           errorCode = ERROR_CODES.ERR_TIMEOUT;
           errorMessage = 'Request timed out';
-        } else if (result.error.includes('fetch') || result.error.includes('Failed to fetch')) {
+        } else if (
+          result.error.includes('fetch') ||
+          result.error.includes('Failed to fetch')
+        ) {
           errorCode = ERROR_CODES.ERR_FETCH_FAILED;
           errorMessage = 'Could not connect to recipe site';
         }
@@ -130,8 +149,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       // Ensure at least one group has ingredients
       result.data.ingredients.some(
         (group) =>
-          Array.isArray(group.ingredients) &&
-          group.ingredients.length > 0
+          Array.isArray(group.ingredients) && group.ingredients.length > 0,
       );
 
     const hasInstructions =
@@ -148,10 +166,12 @@ export async function POST(req: NextRequest): Promise<Response> {
         ingredientsStructure: result.data.ingredients
           ? {
               length: result.data.ingredients.length,
-              groups: result.data.ingredients.map((g: { groupName?: string; ingredients?: unknown[] }) => ({
-                groupName: g?.groupName,
-                ingredientCount: g?.ingredients?.length || 0,
-              })),
+              groups: result.data.ingredients.map(
+                (g: { groupName?: string; ingredients?: unknown[] }) => ({
+                  groupName: g?.groupName,
+                  ingredientCount: g?.ingredients?.length || 0,
+                }),
+              ),
             }
           : 'missing',
         instructionsCount: result.data.instructions?.length || 0,
@@ -196,12 +216,14 @@ export async function POST(req: NextRequest): Promise<Response> {
       servingVessel: result.data.servingVessel, // Include serving vessel recommendation if available
       servingTemp: result.data.servingTemp, // Include serving temperature if available
       method: result.method, // Include which parsing method was used (json-ld+ai or ai)
-      ...(result.warnings && result.warnings.length > 0 && { warnings: result.warnings }),
+      ...(result.warnings &&
+        result.warnings.length > 0 && { warnings: result.warnings }),
     });
   } catch (error) {
     console.error('[API /recipeScraperPython] Unexpected error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
+
     // Check for timeout errors
     if (errorMessage.includes('timeout') || errorMessage.includes('abort')) {
       return NextResponse.json(
@@ -216,7 +238,10 @@ export async function POST(req: NextRequest): Promise<Response> {
       errorMessage.includes('fetch')
     ) {
       return NextResponse.json(
-        formatError(ERROR_CODES.ERR_FETCH_FAILED, 'Could not connect to recipe site'),
+        formatError(
+          ERROR_CODES.ERR_FETCH_FAILED,
+          'Could not connect to recipe site',
+        ),
       );
     }
 

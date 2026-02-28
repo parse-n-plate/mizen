@@ -1,6 +1,6 @@
 /**
  * Search History Storage
- * 
+ *
  * Manages URL search history separately from recipe history.
  * Tracks URLs that users have searched/parsed, allowing quick re-access.
  */
@@ -100,13 +100,3 @@ export function clearSearchHistory(): void {
 function generateId(): string {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
-
-
-
-
-
-
-
-
-
-

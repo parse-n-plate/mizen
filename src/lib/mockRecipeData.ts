@@ -42,7 +42,11 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
         },
       ],
       instructions: [
-        { title: 'Boil', detail: 'Place eggs in boiling water for 10 minutes. Transfer to ice bath.' },
+        {
+          title: 'Boil',
+          detail:
+            'Place eggs in boiling water for 10 minutes. Transfer to ice bath.',
+        },
       ],
     },
   },
@@ -50,12 +54,15 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
   // 2. Rich Recipe (All Fields)
   {
     label: 'Rich Recipe (All Fields)',
-    description: 'Every optional field populated including plate data and storage',
+    description:
+      'Every optional field populated including plate data and storage',
     tags: ['rich', 'all-fields', 'plate'],
     recipe: {
       title: 'Pan-Seared Duck Breast with Cherry Reduction',
-      summary: 'A richly detailed French-Mediterranean duck dish for testing all fields.',
-      description: 'An elegant pan-seared duck breast with a tart cherry reduction sauce, perfect for a special occasion dinner.',
+      summary:
+        'A richly detailed French-Mediterranean duck dish for testing all fields.',
+      description:
+        'An elegant pan-seared duck breast with a tart cherry reduction sauce, perfect for a special occasion dinner.',
       url: 'https://test-fixtures.dev/rich-recipe',
       author: 'Chef Jean-Pierre',
       sourceUrl: 'https://example.com/duck-breast',
@@ -65,10 +72,12 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
       totalTimeMinutes: 45,
       servings: 4,
       imageUrl: '/assets/images/beef-udon.jpg',
-      storageGuide: 'Store in airtight container. Slice before reheating for best results.',
+      storageGuide:
+        'Store in airtight container. Slice before reheating for best results.',
       shelfLife: { fridge: 3, freezer: 30 },
       plate: {
-        platingNotes: 'Fan slices across plate, drizzle cherry reduction. Garnish with microgreens and a sprig of thyme.',
+        platingNotes:
+          'Fan slices across plate, drizzle cherry reduction. Garnish with microgreens and a sprig of thyme.',
         servingVessel: 'wide rimmed plate',
         servingTemp: 'warm',
       },
@@ -100,11 +109,43 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
         },
       ],
       instructions: [
-        { title: 'Score the duck', detail: 'Score the skin of the duck breasts in a crosshatch pattern, being careful not to cut into the meat. Season generously with salt and pepper.', timeMinutes: 5, ingredients: ['duck breasts', 'sea salt', 'black pepper'], tips: 'Cold duck scores more cleanly — work straight from the fridge.' },
-        { title: 'Sear skin-side down', detail: 'Place duck breasts skin-side down in a cold pan. Turn heat to medium and render fat for 8-10 minutes until skin is deeply golden and crisp.', timeMinutes: 10, ingredients: ['duck breasts'], tips: 'Starting in a cold pan renders more fat and gives crispier skin.' },
-        { title: 'Flip and finish', detail: 'Flip breasts and cook 3-4 minutes for medium-rare. Rest for 5 minutes before slicing.', timeMinutes: 8, ingredients: ['duck breasts'] },
-        { title: 'Make the reduction', detail: 'In the same pan, add cherries, wine, honey, and balsamic. Simmer until thickened to a glossy sauce, about 5 minutes.', timeMinutes: 5, ingredients: ['cherries', 'red wine', 'honey', 'balsamic vinegar'] },
-        { title: 'Plate and serve', detail: 'Slice duck on the bias. Fan across plates, spoon cherry reduction over top. Garnish with microgreens and thyme sprigs.', ingredients: ['microgreens', 'thyme'], tips: 'Warm plates in the oven beforehand for restaurant-quality presentation.' },
+        {
+          title: 'Score the duck',
+          detail:
+            'Score the skin of the duck breasts in a crosshatch pattern, being careful not to cut into the meat. Season generously with salt and pepper.',
+          timeMinutes: 5,
+          ingredients: ['duck breasts', 'sea salt', 'black pepper'],
+          tips: 'Cold duck scores more cleanly — work straight from the fridge.',
+        },
+        {
+          title: 'Sear skin-side down',
+          detail:
+            'Place duck breasts skin-side down in a cold pan. Turn heat to medium and render fat for 8-10 minutes until skin is deeply golden and crisp.',
+          timeMinutes: 10,
+          ingredients: ['duck breasts'],
+          tips: 'Starting in a cold pan renders more fat and gives crispier skin.',
+        },
+        {
+          title: 'Flip and finish',
+          detail:
+            'Flip breasts and cook 3-4 minutes for medium-rare. Rest for 5 minutes before slicing.',
+          timeMinutes: 8,
+          ingredients: ['duck breasts'],
+        },
+        {
+          title: 'Make the reduction',
+          detail:
+            'In the same pan, add cherries, wine, honey, and balsamic. Simmer until thickened to a glossy sauce, about 5 minutes.',
+          timeMinutes: 5,
+          ingredients: ['cherries', 'red wine', 'honey', 'balsamic vinegar'],
+        },
+        {
+          title: 'Plate and serve',
+          detail:
+            'Slice duck on the bias. Fan across plates, spoon cherry reduction over top. Garnish with microgreens and thyme sprigs.',
+          ingredients: ['microgreens', 'thyme'],
+          tips: 'Warm plates in the oven beforehand for restaurant-quality presentation.',
+        },
       ],
     },
   },
@@ -112,11 +153,13 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
   // 3. Long Recipe (20+ Steps)
   {
     label: 'Long Recipe (20+ Steps)',
-    description: '22 instruction steps and 4 ingredient groups — tests scrolling and step nav',
+    description:
+      '22 instruction steps and 4 ingredient groups — tests scrolling and step nav',
     tags: ['long', 'many-steps', 'Italian'],
     recipe: {
       title: 'Handmade Four-Layer Lasagna',
-      summary: 'A complex Italian lasagna with handmade pasta, bolognese, bechamel, and assembly.',
+      summary:
+        'A complex Italian lasagna with handmade pasta, bolognese, bechamel, and assembly.',
       url: 'https://test-fixtures.dev/long-recipe',
       author: 'Nonna Rosa',
       cuisine: ['Italian'],
@@ -144,7 +187,11 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
             { amount: '2', units: '', ingredient: 'carrots, diced' },
             { amount: '2', units: 'stalks', ingredient: 'celery, diced' },
             { amount: '4', units: 'cloves', ingredient: 'garlic, minced' },
-            { amount: '1', units: 'can (28 oz)', ingredient: 'San Marzano tomatoes' },
+            {
+              amount: '1',
+              units: 'can (28 oz)',
+              ingredient: 'San Marzano tomatoes',
+            },
             { amount: '1/2', units: 'cup', ingredient: 'red wine' },
             { amount: '2', units: 'tbsp', ingredient: 'tomato paste' },
           ],
@@ -161,35 +208,143 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
         {
           groupName: 'Assembly & Topping',
           ingredients: [
-            { amount: '2', units: 'cups', ingredient: 'fresh mozzarella, torn' },
-            { amount: '1', units: 'cup', ingredient: 'Parmigiano-Reggiano, grated' },
+            {
+              amount: '2',
+              units: 'cups',
+              ingredient: 'fresh mozzarella, torn',
+            },
+            {
+              amount: '1',
+              units: 'cup',
+              ingredient: 'Parmigiano-Reggiano, grated',
+            },
             { amount: '1/4', units: 'cup', ingredient: 'fresh basil leaves' },
           ],
         },
       ],
       instructions: [
-        { title: 'Make the dough', detail: 'Mound flour on a clean surface. Create a well in the center and crack in eggs. Add olive oil and salt.' },
-        { title: 'Knead the dough', detail: 'Using a fork, gradually incorporate flour into the eggs. Knead by hand for 8-10 minutes until smooth and elastic.', timeMinutes: 10 },
-        { title: 'Rest the dough', detail: 'Wrap dough in plastic wrap and rest at room temperature for 30 minutes.', timeMinutes: 30 },
-        { title: 'Roll pasta sheets', detail: 'Divide dough into 4 pieces. Roll each through a pasta machine, starting at widest setting and working down to second-thinnest.' },
-        { title: 'Cut pasta to size', detail: 'Cut pasta sheets to fit your baking dish. Dust with flour and set aside on parchment paper.' },
-        { title: 'Brown the meat', detail: 'Heat olive oil in a large Dutch oven over medium-high heat. Brown beef and pork, breaking into small pieces. Remove and set aside.', timeMinutes: 8 },
-        { title: 'Cook soffritto', detail: 'In the same pot, add onion, carrots, and celery. Cook until softened, about 5 minutes.', timeMinutes: 5 },
-        { title: 'Add garlic', detail: 'Add minced garlic and cook until fragrant, about 1 minute.', timeMinutes: 1 },
-        { title: 'Deglaze with wine', detail: 'Pour in red wine and scrape up any browned bits. Simmer until reduced by half.', timeMinutes: 3 },
-        { title: 'Add tomatoes', detail: 'Add tomato paste and stir for 1 minute. Add crushed San Marzano tomatoes.', timeMinutes: 1 },
-        { title: 'Return the meat', detail: 'Return the browned meat to the pot. Stir to combine with the tomato mixture.' },
-        { title: 'Simmer bolognese', detail: 'Bring to a simmer, then reduce heat to low. Cook uncovered for 45 minutes, stirring occasionally.', timeMinutes: 45, tips: 'Low and slow develops richer flavor.' },
-        { title: 'Start bechamel', detail: 'Melt butter in a saucepan over medium heat. Add flour and whisk for 2 minutes to cook the roux.', timeMinutes: 2 },
-        { title: 'Add milk gradually', detail: 'Pour in milk a little at a time, whisking constantly to prevent lumps.' },
-        { title: 'Thicken bechamel', detail: 'Continue whisking over medium heat until sauce thickens and coats the back of a spoon, about 5 minutes. Season with nutmeg, salt, and pepper.', timeMinutes: 5 },
-        { title: 'Blanch pasta sheets', detail: 'Bring a large pot of salted water to a boil. Cook pasta sheets for 1 minute, then transfer to an ice bath. Lay flat on towels.', timeMinutes: 3 },
-        { title: 'Preheat oven', detail: 'Preheat oven to 375\u00b0F (190\u00b0C). Grease a 9x13 baking dish.' },
-        { title: 'Layer 1', detail: 'Spread a thin layer of bolognese on the bottom. Top with pasta sheets, more bolognese, bechamel, and mozzarella.' },
-        { title: 'Layer 2', detail: 'Add another layer of pasta, bolognese, bechamel, and mozzarella.' },
-        { title: 'Layer 3', detail: 'Repeat: pasta, bolognese, bechamel, mozzarella.' },
-        { title: 'Final layer', detail: 'Top with remaining pasta sheets, bechamel, and a generous coating of Parmigiano-Reggiano.' },
-        { title: 'Bake the lasagna', detail: 'Cover with foil and bake for 25 minutes. Remove foil and bake another 20 minutes until golden and bubbling. Rest 15 minutes before serving.', timeMinutes: 60, tips: 'Resting is essential — it lets the layers set so slices hold together.' },
+        {
+          title: 'Make the dough',
+          detail:
+            'Mound flour on a clean surface. Create a well in the center and crack in eggs. Add olive oil and salt.',
+        },
+        {
+          title: 'Knead the dough',
+          detail:
+            'Using a fork, gradually incorporate flour into the eggs. Knead by hand for 8-10 minutes until smooth and elastic.',
+          timeMinutes: 10,
+        },
+        {
+          title: 'Rest the dough',
+          detail:
+            'Wrap dough in plastic wrap and rest at room temperature for 30 minutes.',
+          timeMinutes: 30,
+        },
+        {
+          title: 'Roll pasta sheets',
+          detail:
+            'Divide dough into 4 pieces. Roll each through a pasta machine, starting at widest setting and working down to second-thinnest.',
+        },
+        {
+          title: 'Cut pasta to size',
+          detail:
+            'Cut pasta sheets to fit your baking dish. Dust with flour and set aside on parchment paper.',
+        },
+        {
+          title: 'Brown the meat',
+          detail:
+            'Heat olive oil in a large Dutch oven over medium-high heat. Brown beef and pork, breaking into small pieces. Remove and set aside.',
+          timeMinutes: 8,
+        },
+        {
+          title: 'Cook soffritto',
+          detail:
+            'In the same pot, add onion, carrots, and celery. Cook until softened, about 5 minutes.',
+          timeMinutes: 5,
+        },
+        {
+          title: 'Add garlic',
+          detail: 'Add minced garlic and cook until fragrant, about 1 minute.',
+          timeMinutes: 1,
+        },
+        {
+          title: 'Deglaze with wine',
+          detail:
+            'Pour in red wine and scrape up any browned bits. Simmer until reduced by half.',
+          timeMinutes: 3,
+        },
+        {
+          title: 'Add tomatoes',
+          detail:
+            'Add tomato paste and stir for 1 minute. Add crushed San Marzano tomatoes.',
+          timeMinutes: 1,
+        },
+        {
+          title: 'Return the meat',
+          detail:
+            'Return the browned meat to the pot. Stir to combine with the tomato mixture.',
+        },
+        {
+          title: 'Simmer bolognese',
+          detail:
+            'Bring to a simmer, then reduce heat to low. Cook uncovered for 45 minutes, stirring occasionally.',
+          timeMinutes: 45,
+          tips: 'Low and slow develops richer flavor.',
+        },
+        {
+          title: 'Start bechamel',
+          detail:
+            'Melt butter in a saucepan over medium heat. Add flour and whisk for 2 minutes to cook the roux.',
+          timeMinutes: 2,
+        },
+        {
+          title: 'Add milk gradually',
+          detail:
+            'Pour in milk a little at a time, whisking constantly to prevent lumps.',
+        },
+        {
+          title: 'Thicken bechamel',
+          detail:
+            'Continue whisking over medium heat until sauce thickens and coats the back of a spoon, about 5 minutes. Season with nutmeg, salt, and pepper.',
+          timeMinutes: 5,
+        },
+        {
+          title: 'Blanch pasta sheets',
+          detail:
+            'Bring a large pot of salted water to a boil. Cook pasta sheets for 1 minute, then transfer to an ice bath. Lay flat on towels.',
+          timeMinutes: 3,
+        },
+        {
+          title: 'Preheat oven',
+          detail:
+            'Preheat oven to 375\u00b0F (190\u00b0C). Grease a 9x13 baking dish.',
+        },
+        {
+          title: 'Layer 1',
+          detail:
+            'Spread a thin layer of bolognese on the bottom. Top with pasta sheets, more bolognese, bechamel, and mozzarella.',
+        },
+        {
+          title: 'Layer 2',
+          detail:
+            'Add another layer of pasta, bolognese, bechamel, and mozzarella.',
+        },
+        {
+          title: 'Layer 3',
+          detail: 'Repeat: pasta, bolognese, bechamel, mozzarella.',
+        },
+        {
+          title: 'Final layer',
+          detail:
+            'Top with remaining pasta sheets, bechamel, and a generous coating of Parmigiano-Reggiano.',
+        },
+        {
+          title: 'Bake the lasagna',
+          detail:
+            'Cover with foil and bake for 25 minutes. Remove foil and bake another 20 minutes until golden and bubbling. Rest 15 minutes before serving.',
+          timeMinutes: 60,
+          tips: 'Resting is essential — it lets the layers set so slices hold together.',
+        },
       ],
     },
   },
@@ -197,7 +352,8 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
   // 4. Short Recipe (2 Steps)
   {
     label: 'Short Recipe (2 Steps)',
-    description: 'Just 2 instructions and 1 ingredient group — tests compact layouts',
+    description:
+      'Just 2 instructions and 1 ingredient group — tests compact layouts',
     tags: ['short', 'quick', 'Hawaiian'],
     recipe: {
       title: 'Hawaiian Poke Bowl',
@@ -211,7 +367,11 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
           groupName: 'Bowl',
           ingredients: [
             { amount: '1', units: 'cup', ingredient: 'sushi rice, cooked' },
-            { amount: '6', units: 'oz', ingredient: 'sushi-grade ahi tuna, cubed' },
+            {
+              amount: '6',
+              units: 'oz',
+              ingredient: 'sushi-grade ahi tuna, cubed',
+            },
             { amount: '2', units: 'tbsp', ingredient: 'soy sauce' },
             { amount: '1', units: 'tsp', ingredient: 'sesame oil' },
             { amount: '2', units: '', ingredient: 'green onions, sliced' },
@@ -219,8 +379,17 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
         },
       ],
       instructions: [
-        { title: 'Marinate fish', detail: 'Toss cubed tuna with soy sauce and sesame oil. Let sit 5 minutes.', timeMinutes: 5 },
-        { title: 'Assemble bowl', detail: 'Place rice in a bowl. Top with marinated tuna and sliced green onions.' },
+        {
+          title: 'Marinate fish',
+          detail:
+            'Toss cubed tuna with soy sauce and sesame oil. Let sit 5 minutes.',
+          timeMinutes: 5,
+        },
+        {
+          title: 'Assemble bowl',
+          detail:
+            'Place rice in a bowl. Top with marinated tuna and sliced green onions.',
+        },
       ],
     },
   },
@@ -243,17 +412,41 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
           ingredients: [
             { amount: '3', units: '', ingredient: 'ripe avocados' },
             { amount: '1', units: '', ingredient: 'lime, juiced' },
-            { amount: '1/4', units: 'cup', ingredient: 'white onion, finely diced' },
-            { amount: '2', units: 'tbsp', ingredient: 'fresh cilantro, chopped' },
-            { amount: '1', units: '', ingredient: 'jalapeno, seeded and minced' },
+            {
+              amount: '1/4',
+              units: 'cup',
+              ingredient: 'white onion, finely diced',
+            },
+            {
+              amount: '2',
+              units: 'tbsp',
+              ingredient: 'fresh cilantro, chopped',
+            },
+            {
+              amount: '1',
+              units: '',
+              ingredient: 'jalapeno, seeded and minced',
+            },
             { amount: '1/2', units: 'tsp', ingredient: 'salt' },
           ],
         },
       ],
       instructions: [
-        { title: 'Mash avocados', detail: 'Halve avocados and scoop into a bowl. Mash with a fork to desired consistency.' },
-        { title: 'Season', detail: 'Squeeze in lime juice. Add onion, cilantro, jalapeno, and salt. Stir gently to combine.' },
-        { title: 'Serve', detail: 'Taste and adjust seasoning. Serve immediately with tortilla chips.' },
+        {
+          title: 'Mash avocados',
+          detail:
+            'Halve avocados and scoop into a bowl. Mash with a fork to desired consistency.',
+        },
+        {
+          title: 'Season',
+          detail:
+            'Squeeze in lime juice. Add onion, cilantro, jalapeno, and salt. Stir gently to combine.',
+        },
+        {
+          title: 'Serve',
+          detail:
+            'Taste and adjust seasoning. Serve immediately with tortilla chips.',
+        },
       ],
     },
   },
@@ -261,7 +454,8 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
   // 6. No Image
   {
     label: 'No Image',
-    description: 'No imageUrl or imageData — tests placeholder/fallback rendering',
+    description:
+      'No imageUrl or imageData — tests placeholder/fallback rendering',
     tags: ['no-image', 'Indian'],
     recipe: {
       title: 'Chicken Tikka Masala',
@@ -277,7 +471,11 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
         {
           groupName: 'Marinade',
           ingredients: [
-            { amount: '2', units: 'lbs', ingredient: 'boneless chicken thighs' },
+            {
+              amount: '2',
+              units: 'lbs',
+              ingredient: 'boneless chicken thighs',
+            },
             { amount: '1', units: 'cup', ingredient: 'yogurt' },
             { amount: '2', units: 'tbsp', ingredient: 'lemon juice' },
             { amount: '2', units: 'tsp', ingredient: 'garam masala' },
@@ -290,7 +488,11 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
             { amount: '2', units: 'tbsp', ingredient: 'butter' },
             { amount: '1', units: '', ingredient: 'onion, diced' },
             { amount: '3', units: 'cloves', ingredient: 'garlic, minced' },
-            { amount: '1', units: 'can (14 oz)', ingredient: 'crushed tomatoes' },
+            {
+              amount: '1',
+              units: 'can (14 oz)',
+              ingredient: 'crushed tomatoes',
+            },
             { amount: '1', units: 'cup', ingredient: 'heavy cream' },
             { amount: '2', units: 'tsp', ingredient: 'garam masala' },
             { amount: '1', units: 'tsp', ingredient: 'smoked paprika' },
@@ -298,11 +500,36 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
         },
       ],
       instructions: [
-        { title: 'Marinate chicken', detail: 'Combine chicken with yogurt, lemon juice, garam masala, and turmeric. Refrigerate for at least 1 hour.', timeMinutes: 60 },
-        { title: 'Grill chicken', detail: 'Thread chicken onto skewers and grill or broil until charred, about 5 minutes per side.', timeMinutes: 10 },
-        { title: 'Make sauce base', detail: 'Melt butter in a large pan. Saute onion until soft, add garlic and cook 1 minute more.', timeMinutes: 6 },
-        { title: 'Simmer sauce', detail: 'Add crushed tomatoes, garam masala, and paprika. Simmer 15 minutes. Stir in heavy cream.', timeMinutes: 15 },
-        { title: 'Combine and serve', detail: 'Add grilled chicken to the sauce. Simmer 10 minutes. Serve over basmati rice with naan.', timeMinutes: 10 },
+        {
+          title: 'Marinate chicken',
+          detail:
+            'Combine chicken with yogurt, lemon juice, garam masala, and turmeric. Refrigerate for at least 1 hour.',
+          timeMinutes: 60,
+        },
+        {
+          title: 'Grill chicken',
+          detail:
+            'Thread chicken onto skewers and grill or broil until charred, about 5 minutes per side.',
+          timeMinutes: 10,
+        },
+        {
+          title: 'Make sauce base',
+          detail:
+            'Melt butter in a large pan. Saute onion until soft, add garlic and cook 1 minute more.',
+          timeMinutes: 6,
+        },
+        {
+          title: 'Simmer sauce',
+          detail:
+            'Add crushed tomatoes, garam masala, and paprika. Simmer 15 minutes. Stir in heavy cream.',
+          timeMinutes: 15,
+        },
+        {
+          title: 'Combine and serve',
+          detail:
+            'Add grilled chicken to the sauce. Simmer 10 minutes. Serve over basmati rice with naan.',
+          timeMinutes: 10,
+        },
       ],
     },
   },
@@ -310,11 +537,13 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
   // 7. Unicode Title
   {
     label: 'Unicode Title',
-    description: 'Accents, CJK characters, and em-dashes in title — tests text rendering',
+    description:
+      'Accents, CJK characters, and em-dashes in title — tests text rendering',
     tags: ['unicode', 'special-chars', 'Korean'],
     recipe: {
-      title: "Bibimbap \ube44\ube54\ubc25 \u2014 Rice & Veggies",
-      summary: 'Korean mixed rice bowl with a Unicode-rich title for text rendering tests.',
+      title: 'Bibimbap \ube44\ube54\ubc25 \u2014 Rice & Veggies',
+      summary:
+        'Korean mixed rice bowl with a Unicode-rich title for text rendering tests.',
       url: 'https://test-fixtures.dev/unicode-title',
       cuisine: ['Korean'],
       prepTimeMinutes: 30,
@@ -324,7 +553,11 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
         {
           groupName: 'Rice & Protein',
           ingredients: [
-            { amount: '2', units: 'cups', ingredient: 'short-grain rice, cooked' },
+            {
+              amount: '2',
+              units: 'cups',
+              ingredient: 'short-grain rice, cooked',
+            },
             { amount: '1/2', units: 'lb', ingredient: 'ground beef' },
             { amount: '2', units: 'tbsp', ingredient: 'soy sauce' },
             { amount: '1', units: 'tsp', ingredient: 'sesame oil' },
@@ -342,10 +575,28 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
         },
       ],
       instructions: [
-        { title: 'Season beef', detail: 'Combine ground beef with soy sauce and sesame oil. Cook in a skillet until browned.', timeMinutes: 5 },
-        { title: 'Saute vegetables', detail: 'Saute each vegetable separately with a drizzle of sesame oil. Season lightly with salt.', timeMinutes: 10 },
-        { title: 'Fry eggs', detail: 'Fry eggs sunny-side up in a non-stick pan.', timeMinutes: 3 },
-        { title: 'Assemble bowls', detail: 'Divide rice between bowls. Arrange beef, vegetables, and egg on top. Serve with gochujang on the side.' },
+        {
+          title: 'Season beef',
+          detail:
+            'Combine ground beef with soy sauce and sesame oil. Cook in a skillet until browned.',
+          timeMinutes: 5,
+        },
+        {
+          title: 'Saute vegetables',
+          detail:
+            'Saute each vegetable separately with a drizzle of sesame oil. Season lightly with salt.',
+          timeMinutes: 10,
+        },
+        {
+          title: 'Fry eggs',
+          detail: 'Fry eggs sunny-side up in a non-stick pan.',
+          timeMinutes: 3,
+        },
+        {
+          title: 'Assemble bowls',
+          detail:
+            'Divide rice between bowls. Arrange beef, vegetables, and egg on top. Serve with gochujang on the side.',
+        },
       ],
     },
   },
@@ -353,11 +604,14 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
   // 8. Long Title (Truncation Test)
   {
     label: 'Long Title (Truncation)',
-    description: 'Extremely long recipe title — tests truncation in sidebar, cards, and headers',
+    description:
+      'Extremely long recipe title — tests truncation in sidebar, cards, and headers',
     tags: ['long-title', 'truncation', 'Chinese'],
     recipe: {
-      title: "Grandma Wong's Traditional Hand-Pulled Lanzhou Beef Noodle Soup with Slow-Braised Five-Spice Broth and House-Made Chili Oil",
-      summary: 'An absurdly long title to test truncation across the entire UI.',
+      title:
+        "Grandma Wong's Traditional Hand-Pulled Lanzhou Beef Noodle Soup with Slow-Braised Five-Spice Broth and House-Made Chili Oil",
+      summary:
+        'An absurdly long title to test truncation across the entire UI.',
       url: 'https://test-fixtures.dev/long-title',
       cuisine: ['Chinese'],
       cookTimeMinutes: 180,
@@ -384,10 +638,30 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
         },
       ],
       instructions: [
-        { title: 'Blanch bones', detail: 'Blanch beef bones in boiling water for 5 minutes. Drain and rinse to remove impurities.', timeMinutes: 5 },
-        { title: 'Simmer broth', detail: 'Combine blanched bones, beef shank, water, and spices. Bring to a boil, then reduce to a gentle simmer for 3 hours.', timeMinutes: 180, tips: 'Skim scum regularly for a clear broth.' },
-        { title: 'Cook noodles', detail: 'Pull or boil noodles according to their type. Cook until chewy, about 2 minutes for fresh noodles.', timeMinutes: 2 },
-        { title: 'Assemble and serve', detail: 'Place noodles in bowls. Ladle hot broth over top. Garnish with sliced beef, green onions, cilantro, and chili oil.' },
+        {
+          title: 'Blanch bones',
+          detail:
+            'Blanch beef bones in boiling water for 5 minutes. Drain and rinse to remove impurities.',
+          timeMinutes: 5,
+        },
+        {
+          title: 'Simmer broth',
+          detail:
+            'Combine blanched bones, beef shank, water, and spices. Bring to a boil, then reduce to a gentle simmer for 3 hours.',
+          timeMinutes: 180,
+          tips: 'Skim scum regularly for a clear broth.',
+        },
+        {
+          title: 'Cook noodles',
+          detail:
+            'Pull or boil noodles according to their type. Cook until chewy, about 2 minutes for fresh noodles.',
+          timeMinutes: 2,
+        },
+        {
+          title: 'Assemble and serve',
+          detail:
+            'Place noodles in bowls. Ladle hot broth over top. Garnish with sliced beef, green onions, cilantro, and chili oil.',
+        },
       ],
     },
   },
@@ -395,11 +669,13 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
   // 9. Large Ingredient List (30+)
   {
     label: 'Large Ingredient List (30+)',
-    description: '33 ingredients across 5 groups — tests ingredient list scrolling and scaling',
+    description:
+      '33 ingredients across 5 groups — tests ingredient list scrolling and scaling',
     tags: ['many-ingredients', 'Japanese'],
     recipe: {
       title: 'Elaborate Sushi Platter',
-      summary: 'A sushi platter with an extensive ingredient list for UI stress testing.',
+      summary:
+        'A sushi platter with an extensive ingredient list for UI stress testing.',
       url: 'https://test-fixtures.dev/large-ingredients',
       author: 'Chef Tanaka',
       cuisine: ['Japanese'],
@@ -411,7 +687,11 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
         {
           groupName: 'Sushi Rice',
           ingredients: [
-            { amount: '3', units: 'cups', ingredient: 'Japanese short-grain rice' },
+            {
+              amount: '3',
+              units: 'cups',
+              ingredient: 'Japanese short-grain rice',
+            },
             { amount: '3', units: 'cups', ingredient: 'water' },
             { amount: '1/3', units: 'cup', ingredient: 'rice vinegar' },
             { amount: '2', units: 'tbsp', ingredient: 'sugar' },
@@ -458,7 +738,11 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
           groupName: 'Garnishes',
           ingredients: [
             { amount: '2', units: 'oz', ingredient: 'pickled ginger (gari)' },
-            { amount: '1', units: 'tbsp', ingredient: 'tobiko (flying fish roe)' },
+            {
+              amount: '1',
+              units: 'tbsp',
+              ingredient: 'tobiko (flying fish roe)',
+            },
             { amount: '1', units: '', ingredient: 'shiso leaf' },
             { amount: '1', units: '', ingredient: 'daikon radish, shredded' },
             { amount: '1', units: 'tbsp', ingredient: 'microgreens' },
@@ -468,12 +752,37 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
         },
       ],
       instructions: [
-        { title: 'Prepare sushi rice', detail: 'Rinse rice until water runs clear. Cook with kombu. Season with vinegar mixture while still warm. Fan to cool.', timeMinutes: 30 },
-        { title: 'Slice fish', detail: 'Slice each fish into uniform pieces at a slight angle. Keep covered and chilled until ready to use.' },
-        { title: 'Prepare roll fillings', detail: 'Julienne cucumber, slice avocado and mango. Cut cream cheese into strips.' },
-        { title: 'Form nigiri', detail: 'Wet hands. Shape small mounds of rice. Add a tiny dab of wasabi and drape fish slices over each piece.' },
-        { title: 'Roll maki', detail: 'Place nori on a bamboo mat, spread rice, add fillings. Roll tightly, seal with water. Slice into 6-8 pieces.' },
-        { title: 'Plate the platter', detail: 'Arrange nigiri, maki, and sashimi on a large wooden board. Garnish with ginger, shiso, tobiko, and microgreens. Serve with soy sauce and wasabi on the side.' },
+        {
+          title: 'Prepare sushi rice',
+          detail:
+            'Rinse rice until water runs clear. Cook with kombu. Season with vinegar mixture while still warm. Fan to cool.',
+          timeMinutes: 30,
+        },
+        {
+          title: 'Slice fish',
+          detail:
+            'Slice each fish into uniform pieces at a slight angle. Keep covered and chilled until ready to use.',
+        },
+        {
+          title: 'Prepare roll fillings',
+          detail:
+            'Julienne cucumber, slice avocado and mango. Cut cream cheese into strips.',
+        },
+        {
+          title: 'Form nigiri',
+          detail:
+            'Wet hands. Shape small mounds of rice. Add a tiny dab of wasabi and drape fish slices over each piece.',
+        },
+        {
+          title: 'Roll maki',
+          detail:
+            'Place nori on a bamboo mat, spread rice, add fillings. Roll tightly, seal with water. Slice into 6-8 pieces.',
+        },
+        {
+          title: 'Plate the platter',
+          detail:
+            'Arrange nigiri, maki, and sashimi on a large wooden board. Garnish with ginger, shiso, tobiko, and microgreens. Serve with soy sauce and wasabi on the side.',
+        },
       ],
     },
   },
@@ -481,11 +790,13 @@ export const TEST_FIXTURE_RECIPES: TestFixture[] = [
   // 10. Legacy String Instructions
   {
     label: 'Legacy String Instructions',
-    description: 'Instructions as plain strings (not InstructionStep objects) — tests normalization',
+    description:
+      'Instructions as plain strings (not InstructionStep objects) — tests normalization',
     tags: ['legacy', 'string-format', 'French'],
     recipe: {
       title: 'French Omelette',
-      summary: 'A classic French omelette with legacy string-format instructions.',
+      summary:
+        'A classic French omelette with legacy string-format instructions.',
       url: 'https://test-fixtures.dev/legacy-instructions',
       cuisine: ['French'],
       prepTimeMinutes: 5,
@@ -522,80 +833,91 @@ export interface MockRecipe {
 
 // Detailed Mock Parsed Recipe for Design Lab Testing
 export const MOCK_PARSED_RECIPE: ParsedRecipe = {
-  title: "Classic Beef Udon",
-  description: "A comforting Japanese noodle soup with tender beef and savory broth.",
-  author: "Namiko Hirasawa Chen",
+  title: 'Classic Beef Udon',
+  description:
+    'A comforting Japanese noodle soup with tender beef and savory broth.',
+  author: 'Namiko Hirasawa Chen',
   cookTimeMinutes: 15,
   prepTimeMinutes: 15,
   totalTimeMinutes: 30,
   servings: 2,
-  imageUrl: "/assets/images/beef-udon.jpg",
-  sourceUrl: "https://example.com/beef-udon",
+  imageUrl: '/assets/images/beef-udon.jpg',
+  sourceUrl: 'https://example.com/beef-udon',
   ingredients: [
     {
-      groupName: "Soup Base",
+      groupName: 'Soup Base',
       ingredients: [
-        { amount: "4", units: "cups", ingredient: "dashi stock" },
-        { amount: "2", units: "tbsp", ingredient: "soy sauce" },
-        { amount: "2", units: "tbsp", ingredient: "mirin" },
-        { amount: "1", units: "tsp", ingredient: "sugar" },
-        { amount: "1", units: "pinch", ingredient: "salt" }
-      ]
+        { amount: '4', units: 'cups', ingredient: 'dashi stock' },
+        { amount: '2', units: 'tbsp', ingredient: 'soy sauce' },
+        { amount: '2', units: 'tbsp', ingredient: 'mirin' },
+        { amount: '1', units: 'tsp', ingredient: 'sugar' },
+        { amount: '1', units: 'pinch', ingredient: 'salt' },
+      ],
     },
     {
-      groupName: "Beef Topping",
+      groupName: 'Beef Topping',
       ingredients: [
-        { amount: "1/2", units: "lb", ingredient: "thinly sliced beef chuck" },
-        { amount: "1", units: "tbsp", ingredient: "sugar" },
-        { amount: "1", units: "tbsp", ingredient: "soy sauce" },
-        { amount: "1", units: "tbsp", ingredient: "sake" }
-      ]
+        { amount: '1/2', units: 'lb', ingredient: 'thinly sliced beef chuck' },
+        { amount: '1', units: 'tbsp', ingredient: 'sugar' },
+        { amount: '1', units: 'tbsp', ingredient: 'soy sauce' },
+        { amount: '1', units: 'tbsp', ingredient: 'sake' },
+      ],
     },
     {
-      groupName: "Noodles & Garnish",
+      groupName: 'Noodles & Garnish',
       ingredients: [
-        { amount: "2", units: "packs", ingredient: "udon noodles" },
-        { amount: "2", units: "stalks", ingredient: "green onions" },
-        { amount: "2", units: "slices", ingredient: "narutomaki (fish cake)" },
-        { amount: "1", units: "tsp", ingredient: "shichimi togarashi" }
-      ]
-    }
+        { amount: '2', units: 'packs', ingredient: 'udon noodles' },
+        { amount: '2', units: 'stalks', ingredient: 'green onions' },
+        { amount: '2', units: 'slices', ingredient: 'narutomaki (fish cake)' },
+        { amount: '1', units: 'tsp', ingredient: 'shichimi togarashi' },
+      ],
+    },
   ],
   instructions: [
     {
-      title: "Simmer Broth",
-      detail: "In a pot, combine dashi stock, 2 tbsp soy sauce, 2 tbsp mirin, 1 tsp sugar, and a pinch of salt. Bring to a gentle boil, then reduce heat to low to keep warm.",
-      ingredients: ["dashi stock", "soy sauce", "mirin", "sugar", "salt"],
+      title: 'Simmer Broth',
+      detail:
+        'In a pot, combine dashi stock, 2 tbsp soy sauce, 2 tbsp mirin, 1 tsp sugar, and a pinch of salt. Bring to a gentle boil, then reduce heat to low to keep warm.',
+      ingredients: ['dashi stock', 'soy sauce', 'mirin', 'sugar', 'salt'],
       timeMinutes: 5,
-      tips: "Keep the broth at a gentle simmer."
+      tips: 'Keep the broth at a gentle simmer.',
     },
     {
-      title: "Brown Beef",
-      detail: "Heat a frying pan over medium-high heat. Add the sliced beef and cook until browned.",
-      ingredients: ["thinly sliced beef chuck"]
+      title: 'Brown Beef',
+      detail:
+        'Heat a frying pan over medium-high heat. Add the sliced beef and cook until browned.',
+      ingredients: ['thinly sliced beef chuck'],
     },
     {
-      title: "Glaze Beef",
-      detail: "Add 1 tbsp sugar, 1 tbsp soy sauce, and 1 tbsp sake to the beef. Cook for another 2-3 minutes until the sauce glazes the meat.",
-      ingredients: ["sugar", "soy sauce", "sake"],
-      timeMinutes: 3
+      title: 'Glaze Beef',
+      detail:
+        'Add 1 tbsp sugar, 1 tbsp soy sauce, and 1 tbsp sake to the beef. Cook for another 2-3 minutes until the sauce glazes the meat.',
+      ingredients: ['sugar', 'soy sauce', 'sake'],
+      timeMinutes: 3,
     },
     {
-      title: "Boil Noodles",
-      detail: "In a separate large pot of boiling water, cook the udon noodles according to package instructions (usually 1-2 minutes for frozen/fresh udon). Drain well.",
-      ingredients: ["udon noodles"],
-      timeMinutes: 2
+      title: 'Boil Noodles',
+      detail:
+        'In a separate large pot of boiling water, cook the udon noodles according to package instructions (usually 1-2 minutes for frozen/fresh udon). Drain well.',
+      ingredients: ['udon noodles'],
+      timeMinutes: 2,
     },
     {
-      title: "Assemble Bowls",
-      detail: "Divide the drained noodles into serving bowls. Pour the hot soup broth over the noodles."
+      title: 'Assemble Bowls',
+      detail:
+        'Divide the drained noodles into serving bowls. Pour the hot soup broth over the noodles.',
     },
     {
-      title: "Finish and Serve",
-      detail: "Top with the seasoned beef, sliced green onions, and narutomaki. Sprinkle with shichimi togarashi if desired. Serve immediately.",
-      ingredients: ["green onions", "narutomaki (fish cake)", "shichimi togarashi"]
-    }
-  ]
+      title: 'Finish and Serve',
+      detail:
+        'Top with the seasoned beef, sliced green onions, and narutomaki. Sprinkle with shichimi togarashi if desired. Serve immediately.',
+      ingredients: [
+        'green onions',
+        'narutomaki (fish cake)',
+        'shichimi togarashi',
+      ],
+    },
+  ],
 };
 
 // Cuisine categories available for filtering

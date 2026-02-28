@@ -40,7 +40,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  
+
   // Temporarily disabled CSP headers to fix asset loading issues
   // async headers() {
   //   return [

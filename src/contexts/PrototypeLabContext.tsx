@@ -1,6 +1,13 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  type ReactNode,
+} from 'react';
 
 interface PrototypeLabContextType {
   isOpen: boolean;
@@ -9,7 +16,9 @@ interface PrototypeLabContextType {
   toggleLab: () => void;
 }
 
-const PrototypeLabContext = createContext<PrototypeLabContextType | undefined>(undefined);
+const PrototypeLabContext = createContext<PrototypeLabContextType | undefined>(
+  undefined,
+);
 
 export function PrototypeLabProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,7 +30,11 @@ export function PrototypeLabProvider({ children }: { children: ReactNode }) {
   // Global keyboard shortcut: Cmd/Ctrl + Shift + P
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key === 'P') {
+      if (
+        (event.metaKey || event.ctrlKey) &&
+        event.shiftKey &&
+        event.key === 'P'
+      ) {
         event.preventDefault();
         toggleLab();
       }
@@ -32,7 +45,9 @@ export function PrototypeLabProvider({ children }: { children: ReactNode }) {
   }, [toggleLab]);
 
   return (
-    <PrototypeLabContext.Provider value={{ isOpen, openLab, closeLab, toggleLab }}>
+    <PrototypeLabContext.Provider
+      value={{ isOpen, openLab, closeLab, toggleLab }}
+    >
       {children}
     </PrototypeLabContext.Provider>
   );
@@ -41,7 +56,9 @@ export function PrototypeLabProvider({ children }: { children: ReactNode }) {
 export function usePrototypeLab() {
   const context = useContext(PrototypeLabContext);
   if (context === undefined) {
-    throw new Error('usePrototypeLab must be used within a PrototypeLabProvider');
+    throw new Error(
+      'usePrototypeLab must be used within a PrototypeLabProvider',
+    );
   }
   return context;
 }

@@ -24,22 +24,22 @@ type EmptyStateConfig = {
 const emptyStateConfig: Record<EmptyStateVariant, EmptyStateConfig> = {
   'no-input': {
     icon: LinkIcon,
-    heading: "Enter a recipe URL to get started",
+    heading: 'Enter a recipe URL to get started',
     description: "Paste any recipe link and we'll parse it for you",
     showAction: false,
   },
   'no-results': {
     icon: SearchX,
-    heading: "No recipes found",
-    description: "Try searching with different keywords",
+    heading: 'No recipes found',
+    description: 'Try searching with different keywords',
     showAction: false,
   },
   'no-recent': {
     icon: ChefHat,
-    heading: "No recent recipes yet",
-    description: "Parse your first recipe to see it here",
+    heading: 'No recent recipes yet',
+    description: 'Parse your first recipe to see it here',
     showAction: true,
-    actionLabel: "Get Started",
+    actionLabel: 'Get Started',
   },
 };
 
@@ -57,7 +57,7 @@ export default function EmptyState({
       <div
         className={cn(
           'flex flex-col items-center justify-center py-8 px-4 text-center',
-          className
+          className,
         )}
       >
         <Icon className="w-8 h-8 text-stone-400 mb-3" />
@@ -85,7 +85,7 @@ export default function EmptyState({
     <div
       className={cn(
         'flex flex-col items-center justify-center py-12 px-6 text-center',
-        className
+        className,
       )}
     >
       <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mb-4">
@@ -110,12 +110,3 @@ export default function EmptyState({
     </div>
   );
 }
-
-
-
-
-
-
-
-
-

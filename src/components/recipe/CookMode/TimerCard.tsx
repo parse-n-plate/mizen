@@ -14,7 +14,7 @@ export default function TimerCard({ time }: TimerCardProps) {
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       className="bg-white border border-stone-200 rounded-[20px] p-6 flex flex-col gap-6 shadow-sm"
@@ -43,8 +43,8 @@ export default function TimerCard({ time }: TimerCardProps) {
               {time} minutes
             </p>
           </div>
-          <motion.button 
-            whileHover={{ scale: 1.05, backgroundColor: "#0269d1" }}
+          <motion.button
+            whileHover={{ scale: 1.05, backgroundColor: '#0269d1' }}
             whileTap={{ scale: 0.95 }}
             className="bg-[#027df4] px-5 py-2.5 rounded-[12px] shadow-sm shadow-blue-200/50 transition-colors flex items-center gap-2"
           >
@@ -58,10 +58,3 @@ export default function TimerCard({ time }: TimerCardProps) {
     </motion.div>
   );
 }
-
-
-
-
-
-
-

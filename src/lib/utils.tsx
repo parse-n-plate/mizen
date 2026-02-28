@@ -1,8 +1,16 @@
 import React, { useState } from 'react';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { findIngredientsInText, IngredientInfo, IngredientMatch } from '@/utils/ingredientMatcher';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  findIngredientsInText,
+  IngredientInfo,
+  IngredientMatch,
+} from '@/utils/ingredientMatcher';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -11,7 +19,7 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Calculates the scrollbar width by creating a temporary element and measuring it.
  * This is more reliable than comparing window.innerWidth vs clientWidth.
- * 
+ *
  * @returns The width of the scrollbar in pixels, or 0 if no scrollbar exists
  */
 export function getScrollbarWidth(): number {
@@ -21,14 +29,16 @@ export function getScrollbarWidth(): number {
   }
 
   // Check if page is actually scrollable first
-  const isScrollable = document.documentElement.scrollHeight > window.innerHeight;
+  const isScrollable =
+    document.documentElement.scrollHeight > window.innerHeight;
   if (!isScrollable) {
     return 0;
   }
 
   // Method 1: Compare window width vs document width (most reliable)
-  const scrollbarWidth1 = window.innerWidth - document.documentElement.clientWidth;
-  
+  const scrollbarWidth1 =
+    window.innerWidth - document.documentElement.clientWidth;
+
   // Method 2: Create temporary element (backup method)
   const outer = document.createElement('div');
   outer.style.visibility = 'hidden';
@@ -52,22 +62,22 @@ export function getScrollbarWidth(): number {
   // This prevents incorrect calculations from causing layout issues
   const calculatedWidth = Math.max(scrollbarWidth1, scrollbarWidth2, 0);
   const MAX_SCROLLBAR_WIDTH = 25; // Reasonable maximum for scrollbar width
-  
+
   // Return 0 if calculation seems incorrect (negative or too large)
   if (calculatedWidth <= 0 || calculatedWidth > MAX_SCROLLBAR_WIDTH) {
     return 0;
   }
-  
+
   return calculatedWidth;
 }
 
 /**
  * Converts text fractions like "1/2" to Unicode fraction symbols like "½"
  * Handles common cooking fractions and mixed numbers like "1 1/2"
- * 
+ *
  * @param text - The text containing fractions to convert
  * @returns The text with fractions replaced by Unicode symbols
- * 
+ *
  * @example
  * convertTextFractionsToSymbols("1/2 cup") // returns "½ cup"
  * convertTextFractionsToSymbols("1 1/2 cups") // returns "1½ cups"
@@ -75,7 +85,7 @@ export function getScrollbarWidth(): number {
  */
 export function convertTextFractionsToSymbols(text: string): string {
   if (!text) return text;
-  
+
   // Map of common fractions to their Unicode symbols
   const fractionMap: Record<string, string> = {
     '1/2': '½',
@@ -99,23 +109,29 @@ export function convertTextFractionsToSymbols(text: string): string {
   // Pattern matches optional number followed by space and fraction, or just fraction
   // Examples: "1 1/2", "1/2", "3/4"
   let result = text;
-  
+
   // First pass: Convert standalone fractions (not preceded by a digit without space)
   // This handles cases like "1/2 cup" or "at 350°F for 1/2 hour"
   Object.entries(fractionMap).forEach(([fraction, symbol]) => {
     // Match fraction that's either at start, after space/non-digit, or after punctuation
     // But not after a digit without space (to preserve mixed numbers for next pass)
-    const standalonePattern = new RegExp(`(?<=^|\\s|[^\\d])${fraction.replace('/', '\\/')}(?=\\s|$|[^\\d\\/])`, 'g');
+    const standalonePattern = new RegExp(
+      `(?<=^|\\s|[^\\d])${fraction.replace('/', '\\/')}(?=\\s|$|[^\\d\\/])`,
+      'g',
+    );
     result = result.replace(standalonePattern, symbol);
   });
-  
+
   // Second pass: Convert mixed numbers like "1 1/2" to "1½"
   // This removes the space between the whole number and the fraction
   Object.entries(fractionMap).forEach(([fraction, symbol]) => {
-    const mixedNumberPattern = new RegExp(`(\\d+)\\s+${fraction.replace('/', '\\/')}`, 'g');
+    const mixedNumberPattern = new RegExp(
+      `(\\d+)\\s+${fraction.replace('/', '\\/')}`,
+      'g',
+    );
     result = result.replace(mixedNumberPattern, `$1${symbol}`);
   });
-  
+
   return result;
 }
 
@@ -161,48 +177,49 @@ export function formatRelativeTime(dateString: string): string {
  * Highlights quantities and measurements in recipe text
  * Finds patterns like "250g", "1 pinch", "2 tbsp", "1/2 cup", etc.
  * Returns JSX with quantities wrapped in spans for styling
- * 
+ *
  * Matches common cooking measurements and units to highlight them in lighter gray
  */
 export function highlightQuantities(text: string): React.ReactElement {
   // Pattern to match quantities: numbers (including fractions) followed by units
   // Matches: "250g", "1 pinch", "2 tbsp", "1/2 cup", "1 1/2 cups", etc.
   // Common units: g, kg, oz, lb, cup, tbsp, tsp, ml, l, pinch, etc.
-  const quantityPattern = /(\d+(?:\s+\d+\/\d+|\/\d+)?)\s*(?:of\s+)?(pinch|pinches|tbsp|tbsps|tablespoon|tablespoons|tsp|tsps|teaspoon|teaspoons|cup|cups|g|gram|grams|kg|kilogram|kilograms|oz|ounce|ounces|lb|lbs|pound|pounds|ml|milliliter|milliliters|l|liter|liters|fl\s*oz|fluid\s*ounce|fluid\s*ounces|piece|pieces|slice|slices|stalk|stalks|clove|cloves|head|heads|bunch|bunches|can|cans|package|packages|pack|packs|bottle|bottles|jar|jars|box|boxes|bag|bags|sheet|sheets|strip|strips|fillet|fillets|serving|servings|portion|portions|dash|dashes|drop|drops|splash|splashes|handful|handfuls|sprig|sprigs|leaf|leaves|bulb|bulbs|pod|pods)/gi;
-  
+  const quantityPattern =
+    /(\d+(?:\s+\d+\/\d+|\/\d+)?)\s*(?:of\s+)?(pinch|pinches|tbsp|tbsps|tablespoon|tablespoons|tsp|tsps|teaspoon|teaspoons|cup|cups|g|gram|grams|kg|kilogram|kilograms|oz|ounce|ounces|lb|lbs|pound|pounds|ml|milliliter|milliliters|l|liter|liters|fl\s*oz|fluid\s*ounce|fluid\s*ounces|piece|pieces|slice|slices|stalk|stalks|clove|cloves|head|heads|bunch|bunches|can|cans|package|packages|pack|packs|bottle|bottles|jar|jars|box|boxes|bag|bags|sheet|sheets|strip|strips|fillet|fillets|serving|servings|portion|portions|dash|dashes|drop|drops|splash|splashes|handful|handfuls|sprig|sprigs|leaf|leaves|bulb|bulbs|pod|pods)/gi;
+
   const parts: (string | React.ReactElement)[] = [];
   let lastIndex = 0;
   let match;
   let keyCounter = 0;
-  
+
   // Find all matches and create parts array
   while ((match = quantityPattern.exec(text)) !== null) {
     // Add text before the match
     if (match.index > lastIndex) {
       parts.push(text.substring(lastIndex, match.index));
     }
-    
+
     // Add the matched quantity as a highlighted span
     // Using lighter gray color (stone-400) to match the design
     parts.push(
       <span key={`qty-${keyCounter++}`} className="text-stone-400 font-medium">
         {match[0]}
-      </span>
+      </span>,
     );
-    
+
     lastIndex = match.index + match[0].length;
   }
-  
+
   // Add remaining text after the last match
   if (lastIndex < text.length) {
     parts.push(text.substring(lastIndex));
   }
-  
+
   // If no matches found, return the original text wrapped in a fragment
   if (parts.length === 0) {
     return <>{text}</>;
   }
-  
+
   // Return all parts wrapped in a fragment
   return <>{parts}</>;
 }
@@ -218,39 +235,39 @@ function IngredientTooltipWrapper({
   highlightClassName: string;
 }) {
   const [open, setOpen] = useState(false);
-  
+
   return (
-    <Tooltip 
-      open={open}
-      onOpenChange={setOpen}
-    >
+    <Tooltip open={open} onOpenChange={setOpen}>
       <TooltipTrigger asChild>
-        <span 
+        <span
           className={highlightClassName}
-          style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+          style={{
+            touchAction: 'manipulation',
+            WebkitTapHighlightColor: 'transparent',
+          }}
           onClick={(e) => {
             // Stop event propagation to prevent triggering parent click handlers
             // (e.g., step navigation in ListView)
-            e.stopPropagation()
+            e.stopPropagation();
             // Toggle tooltip on tap (mobile)
-            setOpen(!open)
+            setOpen(!open);
           }}
           onPointerDown={(e) => {
             // Also stop pointer events from bubbling
-            e.stopPropagation()
+            e.stopPropagation();
           }}
         >
           {text}
         </span>
       </TooltipTrigger>
-          <TooltipContent
-            side="top"
-            className="max-w-xs"
-            onPointerDownOutside={() => {
-              // Close tooltip when tapping outside
-              setOpen(false)
-            }}
-          >
+      <TooltipContent
+        side="top"
+        className="max-w-xs"
+        onPointerDownOutside={() => {
+          // Close tooltip when tapping outside
+          setOpen(false);
+        }}
+      >
         <p className="text-sm font-medium">{tooltipContent}</p>
       </TooltipContent>
     </Tooltip>
@@ -260,17 +277,17 @@ function IngredientTooltipWrapper({
 /**
  * Highlights quantities, measurements, ingredient names, and times in recipe text
  * Uses consistent styling across ListView and CardView (StepDisplay)
- * 
+ *
  * Highlights:
  * - Quantities and measurements (250g, 1 cup, 2 tbsp, etc.)
  * - Ingredient names found in the ingredient list (including plural forms)
  * - Time expressions (5 minutes, 10 min, 30 seconds, etc.)
- * 
+ *
  * Style: Bold, underline, with hover color change (matching CardView)
  */
 export function highlightQuantitiesAndIngredients(
-  text: string, 
-  allIngredients: IngredientInfo[] = []
+  text: string,
+  allIngredients: IngredientInfo[] = [],
 ): React.ReactElement {
   if (!text) {
     return <>{text}</>;
@@ -283,14 +300,16 @@ export function highlightQuantitiesAndIngredients(
   // Matches: "2 cups", "2.5 cups", "2 to 2.5 cups", "about 1 to 2 tablespoons", "2-3 cups", etc.
   // Includes ranges with "to", hyphens, or en dashes, and optional "about" prefix
   // Note: Put plural forms FIRST in alternation to match them before singular forms (e.g., "cups" before "cup")
-  const quantityPattern = /(?:about\s+)?(\d+(?:\.\d+)?(?:\s+\d+\/\d+|\/\d+)?(?:\s*(?:to|–|-)\s*\d+(?:\.\d+)?(?:\s+\d+\/\d+|\/\d+)?)?)\s*(?:of\s+)?(pinches|pinch|tbsps|tbsp|tablespoons|tablespoon|tsps|tsp|teaspoons|teaspoon|cups|cup|grams|gram|kilograms|kilogram|ounces|ounce|pounds|pound|milliliters|milliliter|liters|liter|fluid\s*ounces|fluid\s*ounce|pieces|piece|slices|slice|stalks|stalk|cloves|clove|heads|head|bunches|bunch|cans|can|packages|package|packs|pack|bottles|bottle|jars|jar|boxes|box|bags|bag|sheets|sheet|strips|strip|fillets|fillet|servings|serving|portions|portion|dashes|dash|drops|drop|splashes|splash|handfuls|handful|sprigs|sprig|leaves|leaf|bulbs|bulb|pods|pod|g|kg|oz|lb|ml|l|fl\s*oz)/gi;
+  const quantityPattern =
+    /(?:about\s+)?(\d+(?:\.\d+)?(?:\s+\d+\/\d+|\/\d+)?(?:\s*(?:to|–|-)\s*\d+(?:\.\d+)?(?:\s+\d+\/\d+|\/\d+)?)?)\s*(?:of\s+)?(pinches|pinch|tbsps|tbsp|tablespoons|tablespoon|tsps|tsp|teaspoons|teaspoon|cups|cup|grams|gram|kilograms|kilogram|ounces|ounce|pounds|pound|milliliters|milliliter|liters|liter|fluid\s*ounces|fluid\s*ounce|pieces|piece|slices|slice|stalks|stalk|cloves|clove|heads|head|bunches|bunch|cans|can|packages|package|packs|pack|bottles|bottle|jars|jar|boxes|box|bags|bag|sheets|sheet|strips|strip|fillets|fillet|servings|serving|portions|portion|dashes|dash|drops|drop|splashes|splash|handfuls|handful|sprigs|sprig|leaves|leaf|bulbs|bulb|pods|pod|g|kg|oz|lb|ml|l|fl\s*oz)/gi;
 
   // Pattern to match time expressions: numbers (including ranges, decimals, and "to" connectors) followed by time units
   // Matches: "5 minutes", "10 min", "30 seconds", "2-3 minutes", "2–3 minutes" (en dash), "5 to 7 minutes", "about 5 to 7 minutes", "2.5 minutes", "2 to 2.5 minutes", etc.
   // Also handles modifiers like "more", "additional", "extra" (e.g., "15 more minutes")
   // Includes ranges with "to", hyphens, or en dashes, and optional "about" prefix
   // Note: Put plural forms FIRST in alternation to match them before singular forms
-  const timePattern = /(?:about\s+)?(\d+(?:\.\d+)?(?:\s+\d+\/\d+|\/\d+)?(?:\s*(?:to|–|-)\s*\d+(?:\.\d+)?(?:\s+\d+\/\d+|\/\d+)?)?)\s*(?:more\s+|additional\s+|extra\s+)?(minutes|minute|mins|min|seconds|second|secs|sec|hours|hour|hrs|hr|h)/gi;
+  const timePattern =
+    /(?:about\s+)?(\d+(?:\.\d+)?(?:\s+\d+\/\d+|\/\d+)?(?:\s*(?:to|–|-)\s*\d+(?:\.\d+)?(?:\s+\d+\/\d+|\/\d+)?)?)\s*(?:more\s+|additional\s+|extra\s+)?(minutes|minute|mins|min|seconds|second|secs|sec|hours|hour|hrs|hr|h)/gi;
 
   // Find all ingredient matches in the text
   const matchedIngredients = findIngredientsInText(text, allIngredients);
@@ -308,18 +327,21 @@ export function highlightQuantitiesAndIngredients(
 
   // Find all quantity matches
   let match;
-  const quantityRegex = new RegExp(quantityPattern.source, quantityPattern.flags);
+  const quantityRegex = new RegExp(
+    quantityPattern.source,
+    quantityPattern.flags,
+  );
   while ((match = quantityRegex.exec(text)) !== null) {
     // Check if match starts with "about " and exclude it from the highlighted text
     let matchText = match[0];
     let matchStart = match.index;
-    
+
     // If the match text starts with "about ", remove it and adjust the start position
     if (matchText.toLowerCase().startsWith('about ')) {
       matchText = matchText.substring(6); // Remove "about " (6 characters)
       matchStart = match.index + 6; // Adjust start position
     }
-    
+
     matches.push({
       start: matchStart,
       end: matchStart + matchText.length,
@@ -334,13 +356,13 @@ export function highlightQuantitiesAndIngredients(
     // Check if match starts with "about " and exclude it from the highlighted text
     let matchText = match[0];
     let matchStart = match.index;
-    
+
     // If the match text starts with "about ", remove it and adjust the start position
     if (matchText.toLowerCase().startsWith('about ')) {
       matchText = matchText.substring(6); // Remove "about " (6 characters)
       matchStart = match.index + 6; // Adjust start position
     }
-    
+
     matches.push({
       start: matchStart,
       end: matchStart + matchText.length,
@@ -356,15 +378,23 @@ export function highlightQuantitiesAndIngredients(
   // Helper function to check if a position is a word boundary
   const isWordBoundary = (pos: number, length: number): boolean => {
     const beforeChar = pos > 0 ? lowerText[pos - 1] : ' ';
-    const afterChar = pos + length < lowerText.length ? lowerText[pos + length] : ' ';
+    const afterChar =
+      pos + length < lowerText.length ? lowerText[pos + length] : ' ';
     // Word boundary: before and after are not letters
     return !/[a-z]/.test(beforeChar) && !/[a-z]/.test(afterChar);
   };
 
   // Helper function to add match if it's a whole word and not duplicate
-  const addMatchIfValid = (start: number, end: number, ingredientInfo: IngredientInfo) => {
+  const addMatchIfValid = (
+    start: number,
+    end: number,
+    ingredientInfo: IngredientInfo,
+  ) => {
     const matchKey = `${start}-${end}`;
-    if (!ingredientMatches.has(matchKey) && isWordBoundary(start, end - start)) {
+    if (
+      !ingredientMatches.has(matchKey) &&
+      isWordBoundary(start, end - start)
+    ) {
       ingredientMatches.add(matchKey);
       const actualText = text.substring(start, end);
       matches.push({
@@ -409,7 +439,11 @@ export function highlightQuantitiesAndIngredients(
       if (current.start < existing.end && current.end > existing.start) {
         // There's an overlap - determine which one to keep
         // Priority: time > quantity > ingredient
-        const typePriority: Record<string, number> = { time: 3, quantity: 2, ingredient: 1 };
+        const typePriority: Record<string, number> = {
+          time: 3,
+          quantity: 2,
+          ingredient: 1,
+        };
         const currentPriority = typePriority[current.type] || 0;
         const existingPriority = typePriority[existing.type] || 0;
 
@@ -451,7 +485,8 @@ export function highlightQuantitiesAndIngredients(
   let keyCounter = 0;
 
   // CardView styling: bold, underline, hover color change
-  const highlightClassName = 'font-bold underline decoration-stone-200 underline-offset-4 transition-colors cursor-help hover:text-[#0072ff]';
+  const highlightClassName =
+    'font-bold underline decoration-stone-200 underline-offset-4 transition-colors cursor-help hover:text-[#0072ff]';
 
   nonOverlappingMatches.forEach((match) => {
     // Add text before the match
@@ -465,7 +500,11 @@ export function highlightQuantitiesAndIngredients(
       const ingredient = match.ingredientInfo;
       // Format tooltip content: amount + unit + name
       const tooltipParts: string[] = [];
-      if (ingredient.amount && ingredient.amount.trim() && ingredient.amount !== 'as needed') {
+      if (
+        ingredient.amount &&
+        ingredient.amount.trim() &&
+        ingredient.amount !== 'as needed'
+      ) {
         tooltipParts.push(ingredient.amount.trim());
       }
       if (ingredient.units && ingredient.units.trim()) {
@@ -473,24 +512,21 @@ export function highlightQuantitiesAndIngredients(
       }
       tooltipParts.push(ingredient.name);
       const tooltipContent = tooltipParts.join(' ');
-      
+
       parts.push(
         <IngredientTooltipWrapper
           key={`highlight-${keyCounter++}`}
           text={match.text}
           tooltipContent={tooltipContent}
           highlightClassName={highlightClassName}
-        />
+        />,
       );
     } else {
       // For non-ingredient matches (quantities, times), use regular span
       parts.push(
-        <span
-          key={`highlight-${keyCounter++}`}
-          className={highlightClassName}
-        >
+        <span key={`highlight-${keyCounter++}`} className={highlightClassName}>
           {match.text}
-        </span>
+        </span>,
       );
     }
 

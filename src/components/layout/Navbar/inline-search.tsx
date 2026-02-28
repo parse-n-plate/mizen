@@ -23,7 +23,9 @@ export default function InlineSearch() {
   const [query, setQuery] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [detectedCuisine, setDetectedCuisine] = useState<string[] | undefined>(undefined);
+  const [detectedCuisine, setDetectedCuisine] = useState<string[] | undefined>(
+    undefined,
+  );
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -35,7 +37,10 @@ export default function InlineSearch() {
   const router = useRouter();
 
   // Derive recent and filtered recipes from context (no effect needed)
-  const recentRecipes = useMemo(() => contextRecipes.slice(0, 10), [contextRecipes]);
+  const recentRecipes = useMemo(
+    () => contextRecipes.slice(0, 10),
+    [contextRecipes],
+  );
 
   const filteredRecipes = useMemo(() => {
     if (!query.trim() || isUrl(query)) {
@@ -162,9 +167,15 @@ export default function InlineSearch() {
         }
 
         if (response.warnings?.includes('AI_NOT_CONFIGURED')) {
-          showWarning('AI enrichment unavailable', 'GROQ_API_KEY is not configured. Plating, storage, and summary data will be missing.');
+          showWarning(
+            'AI enrichment unavailable',
+            'GROQ_API_KEY is not configured. Plating, storage, and summary data will be missing.',
+          );
         } else if (response.warnings?.includes('AI_ENRICHMENT_FAILED')) {
-          showWarning('Partial recipe data', 'AI enrichment failed for this recipe. Plating, storage, and summary data may be missing.');
+          showWarning(
+            'Partial recipe data',
+            'AI enrichment failed for this recipe. Plating, storage, and summary data may be missing.',
+          );
         }
 
         // Store detected cuisine for reveal
@@ -193,11 +204,21 @@ export default function InlineSearch() {
           ...(response.totalTimeMinutes !== undefined && {
             totalTimeMinutes: response.totalTimeMinutes,
           }), // Include total time if available
-          ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
-          ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
-          ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
-          ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
-          ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
+          ...(response.storageGuide !== undefined && {
+            storageGuide: response.storageGuide,
+          }),
+          ...(response.shelfLife !== undefined && {
+            shelfLife: response.shelfLife,
+          }),
+          ...(response.platingNotes !== undefined && {
+            platingNotes: response.platingNotes,
+          }),
+          ...(response.servingVessel !== undefined && {
+            servingVessel: response.servingVessel,
+          }),
+          ...(response.servingTemp !== undefined && {
+            servingTemp: response.servingTemp,
+          }),
         };
 
         setParsedRecipe(recipeToStore);
@@ -236,18 +257,32 @@ export default function InlineSearch() {
           ...(response.totalTimeMinutes !== undefined && {
             totalTimeMinutes: response.totalTimeMinutes,
           }), // Include total time if available
-          ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
-          ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
-          ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
-          ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
-          ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
+          ...(response.storageGuide !== undefined && {
+            storageGuide: response.storageGuide,
+          }),
+          ...(response.shelfLife !== undefined && {
+            shelfLife: response.shelfLife,
+          }),
+          ...(response.platingNotes !== undefined && {
+            platingNotes: response.platingNotes,
+          }),
+          ...(response.servingVessel !== undefined && {
+            servingVessel: response.servingVessel,
+          }),
+          ...(response.servingTemp !== undefined && {
+            servingTemp: response.servingTemp,
+          }),
         });
 
         // Add to search history
         addToSearchHistory(normalizedUrl, response.title);
 
         // Show success toast
-        showSuccess('Recipe parsed successfully!', 'Navigating to recipe page...', normalizedUrl);
+        showSuccess(
+          'Recipe parsed successfully!',
+          'Navigating to recipe page...',
+          normalizedUrl,
+        );
 
         // Navigate to recipe page with delay for reveal
         setTimeout(() => {
@@ -272,7 +307,15 @@ export default function InlineSearch() {
         // setLoading(false) handled in success/error paths
       }
     },
-    [setParsedRecipe, addRecipe, showError, showSuccess, showInfo, showWarning, router],
+    [
+      setParsedRecipe,
+      addRecipe,
+      showError,
+      showSuccess,
+      showInfo,
+      showWarning,
+      router,
+    ],
   );
 
   // Handle recipe selection

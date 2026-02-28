@@ -8,10 +8,10 @@ import { ProgressPie } from '@/components/shared/progress-pie';
 
 /**
  * IngredientGroup Component
- * 
+ *
  * Displays a collapsible group of ingredients with a progress indicator.
  * Shows the group title, progress pie (checked/total), and wraps the ingredient list.
- * 
+ *
  * @param title - The name of the ingredient group (e.g., "Main", "Sauce")
  * @param totalCount - Total number of ingredients in this group
  * @param checkedCount - Number of checked/completed ingredients
@@ -41,7 +41,7 @@ export function IngredientGroup({
   onToggle,
   pieLayout = 'inline',
   children,
-  onToggleAll
+  onToggleAll,
 }: IngredientGroupProps) {
   const shouldReduceMotion = useReducedMotion();
 
@@ -54,9 +54,8 @@ export function IngredientGroup({
   }, [isInitialExpanded]);
 
   // Calculate progress percentage
-  const progressPercentage = totalCount > 0 
-    ? Math.round((checkedCount / totalCount) * 100) 
-    : 0;
+  const progressPercentage =
+    totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
 
   // Handle toggle
   const handleToggle = () => {
@@ -93,7 +92,10 @@ export function IngredientGroup({
                   initial={shouldReduceMotion ? false : { opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={shouldReduceMotion ? undefined : { opacity: 0 }}
-                  transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: 'easeOut' }}
+                  transition={{
+                    duration: shouldReduceMotion ? 0 : 0.2,
+                    ease: 'easeOut',
+                  }}
                   className="flex items-center gap-2 flex-shrink-0 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent triggering the expand/collapse button
@@ -146,7 +148,10 @@ export function IngredientGroup({
               initial={shouldReduceMotion ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={shouldReduceMotion ? undefined : { opacity: 0 }}
-              transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: 'easeOut' }}
+              transition={{
+                duration: shouldReduceMotion ? 0 : 0.2,
+                ease: 'easeOut',
+              }}
               className="flex items-center gap-2 px-8 pb-2 cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
@@ -168,9 +173,9 @@ export function IngredientGroup({
               aria-label={`${checkedCount === totalCount ? 'Uncheck' : 'Check'} all ingredients in ${title}`}
               title={`${checkedCount === totalCount ? 'Uncheck' : 'Check'} all ingredients in ${title}`}
             >
-              <ProgressPie 
-                percentage={progressPercentage} 
-                size={18} 
+              <ProgressPie
+                percentage={progressPercentage}
+                size={18}
                 strokeWidth={1.5}
                 color="#0C0A09"
               />
@@ -182,15 +187,12 @@ export function IngredientGroup({
       {/* Collapsible Content - Ingredient List */}
       <div
         className={cn(
-          "grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none",
-          isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+          'grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none',
+          isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]',
         )}
       >
-        <div className="overflow-hidden">
-          {children}
-        </div>
+        <div className="overflow-hidden">{children}</div>
       </div>
     </div>
   );
 }
-

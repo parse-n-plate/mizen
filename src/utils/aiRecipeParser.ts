@@ -77,10 +77,10 @@ const normalizeInstructionSteps = (
           typeof obj.detail === 'string'
             ? obj.detail
             : typeof obj.text === 'string'
-            ? obj.text
-            : typeof obj.name === 'string'
-            ? obj.name
-            : '';
+              ? obj.text
+              : typeof obj.name === 'string'
+                ? obj.name
+                : '';
 
         if (!rawDetail.trim()) return null;
 
@@ -123,8 +123,8 @@ export interface Ingredient {
   amount: string;
   units: string;
   ingredient: string;
-  description?: string;      // One sentence explaining flavor/texture contribution (max 80 chars)
-  substitutions?: string[];  // Array of 1-3 realistic alternatives (empty array if none)
+  description?: string; // One sentence explaining flavor/texture contribution (max 80 chars)
+  substitutions?: string[]; // Array of 1-3 realistic alternatives (empty array if none)
 }
 
 /**
@@ -165,7 +165,7 @@ export interface ParsedRecipe {
   // Storage guidance - generated during initial parse
   storageGuide?: string; // Storage instructions (e.g., "Store in airtight container in fridge")
   shelfLife?: {
-    fridge?: number | null;  // Days in fridge (null if not fridge-safe)
+    fridge?: number | null; // Days in fridge (null if not fridge-safe)
     freezer?: number | null; // Days in freezer (null if not freezer-friendly)
   };
   // Plating/serving guidance - generated during initial parse
@@ -198,16 +198,16 @@ export interface ParserResult {
  */
 function parseISODuration(duration: string): number | undefined {
   if (!duration || typeof duration !== 'string') return undefined;
-  
+
   // ISO 8601 duration format: PT[hours]H[minutes]M
   // Examples: "PT30M" (30 minutes), "PT1H30M" (1 hour 30 minutes), "PT2H" (2 hours)
   const match = duration.match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
   if (!match) return undefined;
-  
+
   const hours = parseInt(match[1] || '0', 10);
   const minutes = parseInt(match[2] || '0', 10);
   const totalMinutes = hours * 60 + minutes;
-  
+
   // Return undefined if total is 0 (invalid duration)
   return totalMinutes > 0 ? totalMinutes : undefined;
 }
@@ -220,8 +220,12 @@ function decodeHtmlEntities(text: string): string {
   if (!text) return text;
 
   return text
-    .replace(/&#(\d+);/g, (_, dec: string) => String.fromCodePoint(parseInt(dec, 10)))
-    .replace(/&#x([0-9a-f]+);/gi, (_, hex: string) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec: string) =>
+      String.fromCodePoint(parseInt(dec, 10)),
+    )
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex: string) =>
+      String.fromCodePoint(parseInt(hex, 16)),
+    )
     .replace(/&apos;/g, "'")
     .replace(/&quot;/g, '"')
     .replace(/&amp;/g, '&')
@@ -253,7 +257,8 @@ function normalizeCuisineField(raw: unknown): string[] | undefined {
   // Collect raw values into an array
   let candidates: string[] = [];
   if (Array.isArray(raw)) {
-    candidates = raw.filter((c): c is string => typeof c === 'string' && c.trim().length > 0)
+    candidates = raw
+      .filter((c): c is string => typeof c === 'string' && c.trim().length > 0)
       .map((c) => c.trim());
   } else if (typeof raw === 'string' && raw.trim().length > 0) {
     candidates = [raw.trim()];
@@ -301,10 +306,10 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
         for (const item of items) {
           // Check if @type is Recipe (handle both string and array formats)
           const itemType = item['@type'];
-          const isRecipeType = 
+          const isRecipeType =
             itemType === 'Recipe' ||
             (Array.isArray(itemType) && itemType.includes('Recipe'));
-          
+
           // Look for Recipe type or items with recipe data
           if (
             isRecipeType ||
@@ -312,7 +317,10 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
               Array.isArray(item['@graph']) &&
               item['@graph'].some((g: Record<string, unknown>) => {
                 const gType = g['@type'];
-                return gType === 'Recipe' || (Array.isArray(gType) && gType.includes('Recipe'));
+                return (
+                  gType === 'Recipe' ||
+                  (Array.isArray(gType) && gType.includes('Recipe'))
+                );
               }))
           ) {
             // If it's in @graph, find the Recipe object
@@ -320,7 +328,10 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
               ? item
               : item['@graph'].find((g: Record<string, unknown>) => {
                   const gType = g['@type'];
-                  return gType === 'Recipe' || (Array.isArray(gType) && gType.includes('Recipe'));
+                  return (
+                    gType === 'Recipe' ||
+                    (Array.isArray(gType) && gType.includes('Recipe'))
+                  );
                 });
 
             if (!recipe) continue;
@@ -334,10 +345,10 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
 
             // Extract ingredients as simple strings first
             const ingredientStrings: string[] = Array.isArray(
-              recipe.recipeIngredient
+              recipe.recipeIngredient,
             )
               ? recipe.recipeIngredient.filter(
-                  (ing: unknown) => typeof ing === 'string' && ing.trim()
+                  (ing: unknown) => typeof ing === 'string' && ing.trim(),
                 )
               : [];
 
@@ -373,7 +384,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
               const wordCount = text.split(/\s+/).length;
               const hasCookingTerms =
                 /(heat|add|stir|mix|cook|bake|simmer|boil|fry|roast|season|taste|serve|preheat|chop|dice|slice|mince|pour|drain|whisk|beat|fold|knead|roll|cut|peel|grate|zest|squeeze|melt|saute|brown|caramelize|deglaze|reduce|thicken|thaw|marinate|brine|rub|glaze|garnish|top|sprinkle|drizzle|toss|coat|dredge|flour|bread|batter|crust|filling|topping|sauce|gravy|broth|stock|marinade|dressing|vinaigrette|seasoning|spice|herb|aromatic|flavor|taste|texture|tender|crispy|golden|browned|caramelized|caramel|syrup|honey|sugar|salt|pepper|garlic|onion|herbs|spices)/i.test(
-                  text
+                  text,
                 );
 
               // If it's 1-3 words and has no cooking terms, it's likely an author name
@@ -391,7 +402,9 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
 
             // Handle different instruction formats
             const normalizeInstructionText = (text: string): string =>
-              normalizeDoubleParens(decodeHtmlEntities(text).replace(/\s+/g, ' ').trim());
+              normalizeDoubleParens(
+                decodeHtmlEntities(text).replace(/\s+/g, ' ').trim(),
+              );
 
             const extractInstructionTexts = (node: unknown): string[] => {
               // String format
@@ -407,7 +420,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
                 // HowToSection or nested list: preserve each sub-step as its own instruction.
                 if (Array.isArray(obj.itemListElement)) {
                   return obj.itemListElement.flatMap((item: unknown) =>
-                    extractInstructionTexts(item)
+                    extractInstructionTexts(item),
                   );
                 }
 
@@ -428,11 +441,13 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             if (Array.isArray(recipe.recipeInstructions)) {
               instructions = recipe.recipeInstructions
                 .flatMap((inst: string | Record<string, unknown>) =>
-                  extractInstructionTexts(inst)
+                  extractInstructionTexts(inst),
                 )
                 // FIXME: The 10-char minimum silently drops short but valid steps
                 // (e.g., "Serve hot.", "Rest 5 min."). Consider lowering or removing.
-                .filter((text: string) => text.length > 10 && !isAuthorName(text));
+                .filter(
+                  (text: string) => text.length > 10 && !isAuthorName(text),
+                );
             } else if (
               typeof recipe.recipeInstructions === 'string' &&
               recipe.recipeInstructions.trim()
@@ -447,48 +462,73 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
 
             // Extract author if available - handle various formats
             let author: string | undefined = undefined;
-            
+
             // Try different author field formats
             if (recipe.author) {
               if (typeof recipe.author === 'string') {
                 author = decodeHtmlEntities(recipe.author);
-              } else if (typeof recipe.author === 'object' && recipe.author !== null) {
+              } else if (
+                typeof recipe.author === 'object' &&
+                recipe.author !== null
+              ) {
                 // Handle author as object (e.g., {"@type": "Person", "name": "John Doe"})
-                if (recipe.author.name && typeof recipe.author.name === 'string') {
+                if (
+                  recipe.author.name &&
+                  typeof recipe.author.name === 'string'
+                ) {
                   author = decodeHtmlEntities(recipe.author.name);
                 }
               }
             }
-            
+
             // Try publisher as fallback
             if (!author && recipe.publisher) {
               if (typeof recipe.publisher === 'string') {
                 author = decodeHtmlEntities(recipe.publisher);
-              } else if (typeof recipe.publisher === 'object' && recipe.publisher !== null) {
-                if (recipe.publisher.name && typeof recipe.publisher.name === 'string') {
+              } else if (
+                typeof recipe.publisher === 'object' &&
+                recipe.publisher !== null
+              ) {
+                if (
+                  recipe.publisher.name &&
+                  typeof recipe.publisher.name === 'string'
+                ) {
                   author = decodeHtmlEntities(recipe.publisher.name);
                 }
               }
             }
-            
+
             // Try creator as another fallback
             if (!author && recipe.creator) {
               if (typeof recipe.creator === 'string') {
                 author = decodeHtmlEntities(recipe.creator);
-              } else if (Array.isArray(recipe.creator) && recipe.creator.length > 0) {
+              } else if (
+                Array.isArray(recipe.creator) &&
+                recipe.creator.length > 0
+              ) {
                 const firstCreator = recipe.creator[0];
                 if (typeof firstCreator === 'string') {
                   author = decodeHtmlEntities(firstCreator);
-                } else if (typeof firstCreator === 'object' && firstCreator !== null && firstCreator.name) {
+                } else if (
+                  typeof firstCreator === 'object' &&
+                  firstCreator !== null &&
+                  firstCreator.name
+                ) {
                   author = decodeHtmlEntities(firstCreator.name);
                 }
-              } else if (typeof recipe.creator === 'object' && recipe.creator !== null) {
-                if (recipe.creator.name && typeof recipe.creator.name === 'string') {
+              } else if (
+                typeof recipe.creator === 'object' &&
+                recipe.creator !== null
+              ) {
+                if (
+                  recipe.creator.name &&
+                  typeof recipe.creator.name === 'string'
+                ) {
                   author = decodeHtmlEntities(recipe.creator.name);
                 }
               }
             }
-            
+
             // Only set author if it's a non-empty string
             if (author && author.length === 0) {
               author = undefined;
@@ -499,7 +539,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             let servings: number | undefined = undefined;
             if (recipe.yield || recipe.recipeYield) {
               const yieldValue = recipe.yield || recipe.recipeYield;
-              
+
               // Handle string format like "4 servings" or "4"
               if (typeof yieldValue === 'string') {
                 // Extract number from string (e.g., "4 servings" -> 4, "Serves 6" -> 6)
@@ -507,7 +547,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
                 if (numberMatch) {
                   servings = parseInt(numberMatch[0], 10);
                 }
-              } 
+              }
               // Handle number format
               else if (typeof yieldValue === 'number') {
                 servings = yieldValue;
@@ -524,7 +564,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
                   servings = firstValue;
                 }
               }
-              
+
               // Validate servings is a positive number
               if (servings && (isNaN(servings) || servings <= 0)) {
                 servings = undefined;
@@ -536,29 +576,39 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             let prepTimeMinutes: number | undefined = undefined;
             let cookTimeMinutes: number | undefined = undefined;
             let totalTimeMinutes: number | undefined = undefined;
-            
+
             // Extract prepTime (prepTime or prepTimeMinutes)
             if (recipe.prepTime) {
               prepTimeMinutes = parseISODuration(recipe.prepTime);
-            } else if (typeof recipe.prepTimeMinutes === 'number' && recipe.prepTimeMinutes > 0) {
+            } else if (
+              typeof recipe.prepTimeMinutes === 'number' &&
+              recipe.prepTimeMinutes > 0
+            ) {
               prepTimeMinutes = recipe.prepTimeMinutes;
             }
-            
+
             // Extract cookTime (cookTime or cookTimeMinutes)
             if (recipe.cookTime) {
               cookTimeMinutes = parseISODuration(recipe.cookTime);
-            } else if (typeof recipe.cookTimeMinutes === 'number' && recipe.cookTimeMinutes > 0) {
+            } else if (
+              typeof recipe.cookTimeMinutes === 'number' &&
+              recipe.cookTimeMinutes > 0
+            ) {
               cookTimeMinutes = recipe.cookTimeMinutes;
             }
-            
+
             // Extract totalTime (totalTime or totalTimeMinutes)
             if (recipe.totalTime) {
               totalTimeMinutes = parseISODuration(recipe.totalTime);
-            } else if (typeof recipe.totalTimeMinutes === 'number' && recipe.totalTimeMinutes > 0) {
+            } else if (
+              typeof recipe.totalTimeMinutes === 'number' &&
+              recipe.totalTimeMinutes > 0
+            ) {
               totalTimeMinutes = recipe.totalTimeMinutes;
             }
 
-            const normalizedInstructions = normalizeInstructionSteps(instructions);
+            const normalizedInstructions =
+              normalizeInstructionSteps(instructions);
 
             // Validate we have complete data
             if (
@@ -568,17 +618,17 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
               normalizedInstructions.length > 0
             ) {
               console.log(
-                `[JSON-LD] Found recipe: "${title}" with ${ingredients[0].ingredients.length} ingredients and ${normalizedInstructions.length} instructions${author ? `, author: "${author}"` : ''}${servings ? `, servings: ${servings}` : ''}${prepTimeMinutes ? `, prepTime: ${prepTimeMinutes}min` : ''}${cookTimeMinutes ? `, cookTime: ${cookTimeMinutes}min` : ''}${totalTimeMinutes ? `, totalTime: ${totalTimeMinutes}min` : ''}`
+                `[JSON-LD] Found recipe: "${title}" with ${ingredients[0].ingredients.length} ingredients and ${normalizedInstructions.length} instructions${author ? `, author: "${author}"` : ''}${servings ? `, servings: ${servings}` : ''}${prepTimeMinutes ? `, prepTime: ${prepTimeMinutes}min` : ''}${cookTimeMinutes ? `, cookTime: ${cookTimeMinutes}min` : ''}${totalTimeMinutes ? `, totalTime: ${totalTimeMinutes}min` : ''}`,
               );
-              return { 
-                title, 
-                ingredients, 
-                instructions: normalizedInstructions, 
+              return {
+                title,
+                ingredients,
+                instructions: normalizedInstructions,
                 author,
                 ...(servings && { servings }),
                 ...(prepTimeMinutes && { prepTimeMinutes }),
                 ...(cookTimeMinutes && { cookTimeMinutes }),
-                ...(totalTimeMinutes && { totalTimeMinutes })
+                ...(totalTimeMinutes && { totalTimeMinutes }),
               };
             }
           }
@@ -1292,7 +1342,6 @@ ABSOLUTE REQUIREMENTS:
       Array.isArray(parsedData.ingredients) &&
       Array.isArray(parsedData.instructions)
     ) {
-
       // Ensure ingredients have the correct structure
       const validIngredients = parsedData.ingredients.every(
         (group: Record<string, unknown>) =>
@@ -1302,19 +1351,23 @@ ABSOLUTE REQUIREMENTS:
             (ing: Record<string, unknown>) =>
               typeof ing.amount === 'string' &&
               typeof ing.units === 'string' &&
-              typeof ing.ingredient === 'string'
-          )
+              typeof ing.ingredient === 'string',
+          ),
       );
 
       // Validate that AI returned objects, not strings
       const hasStringInstructions = parsedData.instructions.some(
-        (inst: unknown) => typeof inst === 'string'
+        (inst: unknown) => typeof inst === 'string',
       );
-      
+
       if (hasStringInstructions) {
-        console.warn('[AI Parser] ⚠️ AI returned instructions as strings instead of objects. Prompt may need adjustment.');
+        console.warn(
+          '[AI Parser] ⚠️ AI returned instructions as strings instead of objects. Prompt may need adjustment.',
+        );
       } else {
-        console.log('[AI Parser] ✅ AI correctly returned instructions as objects with title/detail');
+        console.log(
+          '[AI Parser] ✅ AI correctly returned instructions as objects with title/detail',
+        );
       }
 
       const normalizedInstructions = normalizeInstructionSteps(
@@ -1323,7 +1376,7 @@ ABSOLUTE REQUIREMENTS:
 
       if (validIngredients && normalizedInstructions.length > 0) {
         console.log(
-          `[AI Parser] Successfully parsed recipe: "${parsedData.title}" with ${parsedData.ingredients.reduce((sum: number, g: Record<string, unknown>) => sum + (Array.isArray(g.ingredients) ? g.ingredients.length : 0), 0)} ingredients and ${normalizedInstructions.length} instructions`
+          `[AI Parser] Successfully parsed recipe: "${parsedData.title}" with ${parsedData.ingredients.reduce((sum: number, g: Record<string, unknown>) => sum + (Array.isArray(g.ingredients) ? g.ingredients.length : 0), 0)} ingredients and ${normalizedInstructions.length} instructions`,
         );
         // Return recipe with author, servings, and cuisine if available
         const recipe: ParsedRecipe = {
@@ -1331,13 +1384,16 @@ ABSOLUTE REQUIREMENTS:
           ingredients: parsedData.ingredients,
           instructions: normalizedInstructions,
         };
-        if (typeof parsedData.summary === 'string' && parsedData.summary.trim()) {
+        if (
+          typeof parsedData.summary === 'string' &&
+          parsedData.summary.trim()
+        ) {
           recipe.summary = parsedData.summary.trim();
         }
         if (parsedData.author && typeof parsedData.author === 'string') {
           recipe.author = parsedData.author;
         }
-        
+
         // Extract servings if provided by AI
         if (parsedData.servings !== undefined && parsedData.servings !== null) {
           // Handle both number and string formats
@@ -1357,7 +1413,7 @@ ABSOLUTE REQUIREMENTS:
             }
           }
         }
-        
+
         // -- Extract optional AI-generated metadata ----------------------------
         // These fields are entirely AI-generated (not from the source HTML).
         // NOTE: No validation against ground truth — values are best-effort.
@@ -1367,8 +1423,14 @@ ABSOLUTE REQUIREMENTS:
         }
         if (parsedData.shelfLife && typeof parsedData.shelfLife === 'object') {
           recipe.shelfLife = {
-            fridge: typeof parsedData.shelfLife.fridge === 'number' ? parsedData.shelfLife.fridge : null,
-            freezer: typeof parsedData.shelfLife.freezer === 'number' ? parsedData.shelfLife.freezer : null,
+            fridge:
+              typeof parsedData.shelfLife.fridge === 'number'
+                ? parsedData.shelfLife.fridge
+                : null,
+            freezer:
+              typeof parsedData.shelfLife.freezer === 'number'
+                ? parsedData.shelfLife.freezer
+                : null,
           };
         }
         if (typeof parsedData.platingNotes === 'string') {
@@ -1389,12 +1451,15 @@ ABSOLUTE REQUIREMENTS:
           hasStorage: !!recipe.storageGuide,
           hasPlating: !!recipe.platingNotes,
         });
-        
+
         // -- Cuisine normalization -----------------------------------------------
         // The AI returns cuisine as string | string[] | undefined.
         // We normalize to a string[] of SUPPORTED_CUISINES values (case-insensitive match).
         recipe.cuisine = normalizeCuisineField(parsedData.cuisine);
-        console.log('[AI Parser] Cuisine:', recipe.cuisine?.length ? recipe.cuisine.join(', ') : 'none');
+        console.log(
+          '[AI Parser] Cuisine:',
+          recipe.cuisine?.length ? recipe.cuisine.join(', ') : 'none',
+        );
         return recipe;
       }
     }
@@ -1403,13 +1468,20 @@ ABSOLUTE REQUIREMENTS:
     return null;
   } catch (error: unknown) {
     console.error('[AI Parser] Error:', error);
-    const err = error as { status?: number; message?: string; headers?: Record<string, string>; response?: { status?: number; headers?: Record<string, string> } };
+    const err = error as {
+      status?: number;
+      message?: string;
+      headers?: Record<string, string>;
+      response?: { status?: number; headers?: Record<string, string> };
+    };
 
     // Check for rate limit errors
-    if (err?.status === 429 ||
-        err?.message?.includes('rate limit') ||
-        err?.message?.includes('quota') ||
-        err?.response?.status === 429) {
+    if (
+      err?.status === 429 ||
+      err?.message?.includes('rate limit') ||
+      err?.message?.includes('quota') ||
+      err?.response?.status === 429
+    ) {
       console.error('[AI Parser] Rate limit detected');
 
       // Extract retry-after header if available
@@ -1431,7 +1503,9 @@ ABSOLUTE REQUIREMENTS:
       }
 
       // Create error with retry-after information
-      const rateLimitError = new Error('ERR_RATE_LIMIT') as Error & { retryAfter?: number };
+      const rateLimitError = new Error('ERR_RATE_LIMIT') as Error & {
+        retryAfter?: number;
+      };
       if (retryAfter) {
         rateLimitError.retryAfter = retryAfter;
       }
@@ -1439,14 +1513,16 @@ ABSOLUTE REQUIREMENTS:
     }
 
     // Check for service unavailable
-    if (err?.status === 503 ||
-        err?.status === 502 ||
-        err?.message?.includes('service unavailable') ||
-        err?.message?.includes('temporarily unavailable')) {
+    if (
+      err?.status === 503 ||
+      err?.status === 502 ||
+      err?.message?.includes('service unavailable') ||
+      err?.message?.includes('temporarily unavailable')
+    ) {
       console.error('[AI Parser] Service unavailable');
       throw new Error('ERR_API_UNAVAILABLE');
     }
-    
+
     return null;
   }
 }
@@ -1502,11 +1578,14 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
       // TODO: Both sub-cases duplicate the merge logic below. Consider
       // extracting a mergeJsonLdWithAi() helper to reduce duplication.
 
-      const hasOnlyMainGroup = jsonLdResult.ingredients.length === 1 &&
-                                jsonLdResult.ingredients[0].groupName === 'Main';
+      const hasOnlyMainGroup =
+        jsonLdResult.ingredients.length === 1 &&
+        jsonLdResult.ingredients[0].groupName === 'Main';
 
       // Always call AI — needed for cuisine, storage, plating, descriptions
-      console.log(`[Recipe Parser] JSON-LD found. Calling AI for enrichment (mainGroupOnly=${hasOnlyMainGroup})...`);
+      console.log(
+        `[Recipe Parser] JSON-LD found. Calling AI for enrichment (mainGroupOnly=${hasOnlyMainGroup})...`,
+      );
       const warnings: string[] = [];
       let aiResult: ParsedRecipe | null = null;
       if (!process.env.GROQ_API_KEY) {
@@ -1527,28 +1606,49 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
       // Merge: JSON-LD fields take priority for ground-truth data (title, author,
       // servings, times). AI provides enrichment (cuisine, storage, plating).
       // If JSON-LD had only "Main" group and AI has better groupings, use AI's.
-      const useBetterAiGroupings = hasOnlyMainGroup && aiResult &&
+      const useBetterAiGroupings =
+        hasOnlyMainGroup &&
+        aiResult &&
         aiResult.ingredients.length > 0 &&
         (aiResult.ingredients.length > 1 ||
-         aiResult.ingredients[0].groupName !== 'Main');
+          aiResult.ingredients[0].groupName !== 'Main');
 
       const mergedRecipe: ParsedRecipe = {
         ...jsonLdResult,
         // Use AI ingredient groupings when JSON-LD only had "Main"
         ...(useBetterAiGroupings && { ingredients: aiResult!.ingredients }),
         // AI-only fields
-        ...(aiResult?.cuisine && aiResult.cuisine.length > 0 && { cuisine: aiResult.cuisine }),
+        ...(aiResult?.cuisine &&
+          aiResult.cuisine.length > 0 && { cuisine: aiResult.cuisine }),
         ...(aiResult?.storageGuide && { storageGuide: aiResult.storageGuide }),
         ...(aiResult?.shelfLife && { shelfLife: aiResult.shelfLife }),
         ...(aiResult?.platingNotes && { platingNotes: aiResult.platingNotes }),
-        ...(aiResult?.servingVessel && { servingVessel: aiResult.servingVessel }),
+        ...(aiResult?.servingVessel && {
+          servingVessel: aiResult.servingVessel,
+        }),
         ...(aiResult?.servingTemp && { servingTemp: aiResult.servingTemp }),
         ...(aiResult?.summary && { summary: aiResult.summary }),
         // JSON-LD takes priority for these; fall back to AI if missing
-        ...(jsonLdResult.servings ? { servings: jsonLdResult.servings } : (aiResult?.servings ? { servings: aiResult.servings } : {})),
-        ...(jsonLdResult.prepTimeMinutes ? { prepTimeMinutes: jsonLdResult.prepTimeMinutes } : (aiResult?.prepTimeMinutes ? { prepTimeMinutes: aiResult.prepTimeMinutes } : {})),
-        ...(jsonLdResult.cookTimeMinutes ? { cookTimeMinutes: jsonLdResult.cookTimeMinutes } : (aiResult?.cookTimeMinutes ? { cookTimeMinutes: aiResult.cookTimeMinutes } : {})),
-        ...(jsonLdResult.totalTimeMinutes ? { totalTimeMinutes: jsonLdResult.totalTimeMinutes } : (aiResult?.totalTimeMinutes ? { totalTimeMinutes: aiResult.totalTimeMinutes } : {})),
+        ...(jsonLdResult.servings
+          ? { servings: jsonLdResult.servings }
+          : aiResult?.servings
+            ? { servings: aiResult.servings }
+            : {}),
+        ...(jsonLdResult.prepTimeMinutes
+          ? { prepTimeMinutes: jsonLdResult.prepTimeMinutes }
+          : aiResult?.prepTimeMinutes
+            ? { prepTimeMinutes: aiResult.prepTimeMinutes }
+            : {}),
+        ...(jsonLdResult.cookTimeMinutes
+          ? { cookTimeMinutes: jsonLdResult.cookTimeMinutes }
+          : aiResult?.cookTimeMinutes
+            ? { cookTimeMinutes: aiResult.cookTimeMinutes }
+            : {}),
+        ...(jsonLdResult.totalTimeMinutes
+          ? { totalTimeMinutes: jsonLdResult.totalTimeMinutes }
+          : aiResult?.totalTimeMinutes
+            ? { totalTimeMinutes: aiResult.totalTimeMinutes }
+            : {}),
       };
 
       console.log('[Recipe Parser] Merged (json-ld+ai):', {
@@ -1568,7 +1668,9 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
     }
 
     // -- Layer 2: Full AI parse (no JSON-LD available) ---------------------
-    console.log('[Recipe Parser] No JSON-LD found, falling back to AI parsing...');
+    console.log(
+      '[Recipe Parser] No JSON-LD found, falling back to AI parsing...',
+    );
 
     const aiResult = await parseWithAI(cleaned.html);
     if (aiResult) {
@@ -1596,13 +1698,19 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error during parsing';
     console.error('[Recipe Parser] Error:', errorMessage);
-    const err = error as { status?: number; message?: string; retryAfter?: number };
+    const err = error as {
+      status?: number;
+      message?: string;
+      retryAfter?: number;
+    };
 
     // Check for rate limit errors
-    if (errorMessage === 'ERR_RATE_LIMIT' ||
-        err?.status === 429 ||
-        err?.message?.includes('rate limit') ||
-        err?.message?.includes('quota')) {
+    if (
+      errorMessage === 'ERR_RATE_LIMIT' ||
+      err?.status === 429 ||
+      err?.message?.includes('rate limit') ||
+      err?.message?.includes('quota')
+    ) {
       // Pass through retry-after timestamp if available
       const retryAfter = err?.retryAfter;
       return {
@@ -1614,10 +1722,12 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
     }
 
     // Check for service unavailable
-    if (errorMessage === 'ERR_API_UNAVAILABLE' ||
-        err?.status === 503 ||
-        err?.status === 502 ||
-        err?.message?.includes('service unavailable')) {
+    if (
+      errorMessage === 'ERR_API_UNAVAILABLE' ||
+      err?.status === 503 ||
+      err?.status === 502 ||
+      err?.message?.includes('service unavailable')
+    ) {
       return {
         success: false,
         error: 'ERR_API_UNAVAILABLE',
@@ -1664,10 +1774,14 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
     });
 
     clearTimeout(timeoutId);
-    console.log(`[Recipe Parser] Fetch response: ${response.status} ${response.statusText}, ok: ${response.ok}`);
+    console.log(
+      `[Recipe Parser] Fetch response: ${response.status} ${response.statusText}, ok: ${response.ok}`,
+    );
 
     if (!response.ok) {
-      console.error(`[Recipe Parser] Response not ok: ${response.status} ${response.statusText}`);
+      console.error(
+        `[Recipe Parser] Response not ok: ${response.status} ${response.statusText}`,
+      );
       return {
         success: false,
         error: `Failed to fetch URL: ${response.status} ${response.statusText}`,
@@ -1689,18 +1803,18 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
 
     // Parse the fetched HTML
     const result = await parseRecipe(html);
-    
+
     // Add sourceUrl to the result if parsing was successful
     if (result.success && result.data) {
       result.data.sourceUrl = url;
     }
-    
+
     return result;
   } catch (error) {
     console.error('[Recipe Parser] Error caught:', error);
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error fetching URL';
-    
+
     // Check for timeout
     if (errorMessage.includes('abort')) {
       console.error('[Recipe Parser] Timeout error detected');
@@ -1736,7 +1850,9 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
  *
  * @param imageBase64 - Base64-encoded image data (with data URL prefix)
  */
-export async function parseRecipeFromImage(imageBase64: string): Promise<ParserResult> {
+export async function parseRecipeFromImage(
+  imageBase64: string,
+): Promise<ParserResult> {
   try {
     console.log('[Recipe Parser] Starting recipe parsing from image...');
 
@@ -1754,13 +1870,15 @@ export async function parseRecipeFromImage(imageBase64: string): Promise<ParserR
       apiKey: process.env.GROQ_API_KEY,
     });
 
-    console.log('[Image Parser] Sending image to AI vision model for parsing...');
+    console.log(
+      '[Image Parser] Sending image to AI vision model for parsing...',
+    );
 
     // Use Groq's vision model to analyze the image
     // Using meta-llama/llama-4-scout-17b-16e-instruct (vision-capable model)
     const modelToUse = 'meta-llama/llama-4-scout-17b-16e-instruct';
     console.log('[Image Parser] Using model:', modelToUse);
-    
+
     const response = await groq.chat.completions.create({
       model: modelToUse,
       messages: [
@@ -1822,11 +1940,17 @@ Start your response with { and end with }`,
     const result = response.choices[0]?.message?.content;
 
     console.log('[Image Parser] Raw AI response length:', result?.length);
-    console.log('[Image Parser] Raw AI response (first 1000 chars):', result?.substring(0, 1000));
+    console.log(
+      '[Image Parser] Raw AI response (first 1000 chars):',
+      result?.substring(0, 1000),
+    );
 
     if (!result || result.trim().length === 0) {
       console.error('[Image Parser] No response from AI service');
-      console.error('[Image Parser] Full response object:', JSON.stringify(response, null, 2));
+      console.error(
+        '[Image Parser] Full response object:',
+        JSON.stringify(response, null, 2),
+      );
       return {
         success: false,
         error: 'No response from AI vision model',
@@ -1838,7 +1962,10 @@ Start your response with { and end with }`,
     const jsonMatch = result.match(/\{[\s\S]*\}/);
     const jsonString = jsonMatch ? jsonMatch[0] : result;
 
-    console.log('[Image Parser] Extracted JSON string (first 500 chars):', jsonString.substring(0, 500));
+    console.log(
+      '[Image Parser] Extracted JSON string (first 500 chars):',
+      jsonString.substring(0, 500),
+    );
 
     // Parse the JSON response
     let parsedData;
@@ -1846,8 +1973,14 @@ Start your response with { and end with }`,
       parsedData = JSON.parse(jsonString);
       console.log('[Image Parser] Successfully parsed JSON');
       console.log('[Image Parser] Parsed title:', parsedData.title);
-      console.log('[Image Parser] Ingredients array length:', parsedData.ingredients?.length);
-      console.log('[Image Parser] Instructions array length:', parsedData.instructions?.length);
+      console.log(
+        '[Image Parser] Ingredients array length:',
+        parsedData.ingredients?.length,
+      );
+      console.log(
+        '[Image Parser] Instructions array length:',
+        parsedData.instructions?.length,
+      );
     } catch (parseError) {
       console.error('[Image Parser] Failed to parse JSON:', parseError);
       console.error('[Image Parser] JSON string that failed:', jsonString);
@@ -1859,7 +1992,10 @@ Start your response with { and end with }`,
     }
 
     // Check if AI explicitly says no recipe found AFTER parsing
-    if (parsedData.title && parsedData.title.toLowerCase().includes('no recipe found')) {
+    if (
+      parsedData.title &&
+      parsedData.title.toLowerCase().includes('no recipe found')
+    ) {
       console.log('[Image Parser] AI determined no recipe in image');
       console.log('[Image Parser] Full AI response for debugging:', result);
       return {
@@ -1884,8 +2020,8 @@ Start your response with { and end with }`,
             (ing: Record<string, unknown>) =>
               typeof ing.amount === 'string' &&
               typeof ing.units === 'string' &&
-              typeof ing.ingredient === 'string'
-          )
+              typeof ing.ingredient === 'string',
+          ),
       );
 
       const normalizedInstructions = normalizeInstructionSteps(
@@ -1894,13 +2030,16 @@ Start your response with { and end with }`,
 
       if (validIngredients && normalizedInstructions.length > 0) {
         console.log(
-          `[Image Parser] Successfully parsed recipe: "${parsedData.title}" with ${parsedData.ingredients.reduce((sum: number, g: Record<string, unknown>) => sum + (Array.isArray(g.ingredients) ? g.ingredients.length : 0), 0)} ingredients and ${normalizedInstructions.length} instructions`
+          `[Image Parser] Successfully parsed recipe: "${parsedData.title}" with ${parsedData.ingredients.reduce((sum: number, g: Record<string, unknown>) => sum + (Array.isArray(g.ingredients) ? g.ingredients.length : 0), 0)} ingredients and ${normalizedInstructions.length} instructions`,
         );
         const recipe: ParsedRecipe = {
           ...parsedData,
           instructions: normalizedInstructions,
         };
-        if (typeof parsedData.summary === 'string' && parsedData.summary.trim()) {
+        if (
+          typeof parsedData.summary === 'string' &&
+          parsedData.summary.trim()
+        ) {
           recipe.summary = parsedData.summary.trim();
         }
         return {
@@ -1911,7 +2050,10 @@ Start your response with { and end with }`,
       }
     }
 
-    console.error('[Image Parser] Invalid recipe structure from AI:', parsedData);
+    console.error(
+      '[Image Parser] Invalid recipe structure from AI:',
+      parsedData,
+    );
     return {
       success: false,
       error: 'Could not extract valid recipe structure from image',
@@ -1919,21 +2061,34 @@ Start your response with { and end with }`,
     };
   } catch (error: unknown) {
     const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error during image parsing';
+      error instanceof Error
+        ? error.message
+        : 'Unknown error during image parsing';
     console.error('[Image Parser] Error:', errorMessage);
     console.error('[Image Parser] Full error object:', error);
-    const err = error as { status?: number; message?: string; headers?: Record<string, string>; response?: { status?: number; headers?: Record<string, string> }; retryAfter?: number };
+    const err = error as {
+      status?: number;
+      message?: string;
+      headers?: Record<string, string>;
+      response?: { status?: number; headers?: Record<string, string> };
+      retryAfter?: number;
+    };
 
     // If it's a Groq API error, include more details
     if (error && typeof error === 'object' && 'response' in error) {
-      console.error('[Image Parser] API error response:', JSON.stringify(err.response, null, 2));
+      console.error(
+        '[Image Parser] API error response:',
+        JSON.stringify(err.response, null, 2),
+      );
     }
 
     // Check for rate limit errors
-    if (err?.status === 429 ||
-        err?.message?.includes('rate limit') ||
-        err?.message?.includes('quota') ||
-        err?.response?.status === 429) {
+    if (
+      err?.status === 429 ||
+      err?.message?.includes('rate limit') ||
+      err?.message?.includes('quota') ||
+      err?.response?.status === 429
+    ) {
       // Extract retry-after header if available
       const retryAfterHeader =
         err?.headers?.['retry-after'] ||
@@ -1960,10 +2115,12 @@ Start your response with { and end with }`,
     }
 
     // Check for service unavailable
-    if (err?.status === 503 ||
-        err?.status === 502 ||
-        err?.message?.includes('service unavailable') ||
-        err?.message?.includes('temporarily unavailable')) {
+    if (
+      err?.status === 503 ||
+      err?.status === 502 ||
+      err?.message?.includes('service unavailable') ||
+      err?.message?.includes('temporarily unavailable')
+    ) {
       return {
         success: false,
         error: 'ERR_API_UNAVAILABLE',

@@ -15,7 +15,14 @@ interface CardViewProps {
   allIngredients: IngredientInfo[];
 }
 
-export default function CardView({ steps, currentStep, onNext, onPrev, onBackToList, allIngredients }: CardViewProps) {
+export default function CardView({
+  steps,
+  currentStep,
+  onNext,
+  onPrev,
+  onBackToList,
+  allIngredients,
+}: CardViewProps) {
   // Safety check: ensure we have valid steps and currentStep is in bounds
   if (!steps || steps.length === 0) {
     return (
@@ -37,7 +44,7 @@ export default function CardView({ steps, currentStep, onNext, onPrev, onBackToL
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="flex flex-col h-full bg-white max-w-6xl mx-auto px-4 md:px-8"

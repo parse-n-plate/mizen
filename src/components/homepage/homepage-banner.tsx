@@ -57,12 +57,12 @@ export default function HomepageBanner() {
         <div className="flex items-center justify-center gap-3 py-3 md:py-4 bg-blue-100 rounded-b-lg relative">
           {/* Chef Hat Icon with Heart - using filled Solar icon */}
           {/* Icon size responsive: smaller on mobile, larger on desktop */}
-          <ChefHatHeartBold 
+          <ChefHatHeartBold
             weight="Bold"
-            className="w-5 h-5 md:w-6 md:h-6 text-blue-600 flex-shrink-0" 
+            className="w-5 h-5 md:w-6 md:h-6 text-blue-600 flex-shrink-0"
             aria-hidden="true"
           />
-          
+
           {/* Banner Text - responsive font sizes */}
           <p className="font-albert text-[14px] md:text-[15px] text-blue-600 font-medium">
             This website is still being cooked up
@@ -81,4 +81,3 @@ export default function HomepageBanner() {
     </div>
   );
 }
-

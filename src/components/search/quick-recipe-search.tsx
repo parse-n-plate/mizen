@@ -19,7 +19,7 @@ import LoadingAnimation from '@/components/shared/loading-animation';
 
 /**
  * HomepageSearch Component
- * 
+ *
  * Modern pill-shaped search bar for the homepage with integrated URL and image parsing.
  * Features:
  * - Clean, minimal design matching Figma specifications
@@ -35,7 +35,9 @@ export default function HomepageSearch() {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
-  const [loadingPhase, setLoadingPhase] = useState<'gathering' | 'reading' | 'plating' | 'done' | undefined>(undefined);
+  const [loadingPhase, setLoadingPhase] = useState<
+    'gathering' | 'reading' | 'plating' | 'done' | undefined
+  >(undefined);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -61,7 +63,10 @@ export default function HomepageSearch() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // If ESC is pressed and the search input is focused, blur it
-      if (e.key === 'Escape' && document.activeElement === searchInputRef.current) {
+      if (
+        e.key === 'Escape' &&
+        document.activeElement === searchInputRef.current
+      ) {
         e.preventDefault();
         searchInputRef.current?.blur();
         setIsSearchFocused(false);
@@ -89,7 +94,11 @@ export default function HomepageSearch() {
   const handleFileSelect = (file: File) => {
     // Validate file type - only allow images
     if (!file.type.startsWith('image/')) {
-      errorLogger.log(ERROR_CODES.ERR_INVALID_FILE_TYPE, 'Invalid file type', file.name);
+      errorLogger.log(
+        ERROR_CODES.ERR_INVALID_FILE_TYPE,
+        'Invalid file type',
+        file.name,
+      );
       showError({
         code: ERROR_CODES.ERR_INVALID_FILE_TYPE,
       });
@@ -99,7 +108,11 @@ export default function HomepageSearch() {
     // Validate file size - max 10MB
     const maxSize = 10 * 1024 * 1024; // 10MB in bytes
     if (file.size > maxSize) {
-      errorLogger.log(ERROR_CODES.ERR_FILE_TOO_LARGE, 'File too large', file.name);
+      errorLogger.log(
+        ERROR_CODES.ERR_FILE_TOO_LARGE,
+        'File too large',
+        file.name,
+      );
       showError({
         code: ERROR_CODES.ERR_FILE_TOO_LARGE,
       });
@@ -137,7 +150,10 @@ export default function HomepageSearch() {
       setLoadingProgress(10);
       setLoadingPhase('gathering');
 
-      console.log('[HomepageSearch] Parsing recipe from image:', selectedImage.name);
+      console.log(
+        '[HomepageSearch] Parsing recipe from image:',
+        selectedImage.name,
+      );
 
       // Convert image to base64 for storage
       // This allows us to display the image preview later
@@ -159,7 +175,11 @@ export default function HomepageSearch() {
       // Check if parsing failed
       if (!response.success || response.error) {
         const errorCode = response.error?.code || 'ERR_NO_RECIPE_FOUND';
-        errorLogger.log(errorCode, response.error?.message || 'Image parsing failed', selectedImage.name);
+        errorLogger.log(
+          errorCode,
+          response.error?.message || 'Image parsing failed',
+          selectedImage.name,
+        );
         showError({
           code: errorCode,
           message: response.error?.message,
@@ -171,8 +191,13 @@ export default function HomepageSearch() {
         return;
       }
 
-      console.log('[HomepageSearch] Successfully parsed recipe from image:', response.title);
-      console.log(`[HomepageSearch] Parser used: ${response.method === 'ai' ? 'AI parser only' : response.method === 'json-ld+ai' ? 'JSON-LD + AI enrichment' : response.method || 'unknown'}`);
+      console.log(
+        '[HomepageSearch] Successfully parsed recipe from image:',
+        response.title,
+      );
+      console.log(
+        `[HomepageSearch] Parser used: ${response.method === 'ai' ? 'AI parser only' : response.method === 'json-ld+ai' ? 'JSON-LD + AI enrichment' : response.method || 'unknown'}`,
+      );
 
       setLoadingProgress(85);
 
@@ -189,14 +214,30 @@ export default function HomepageSearch() {
         summary: response.summary,
         cuisine: response.cuisine,
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
-        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
-        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
-        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
-        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
-        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
-        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
-        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
-        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
+        ...(response.prepTimeMinutes !== undefined && {
+          prepTimeMinutes: response.prepTimeMinutes,
+        }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && {
+          cookTimeMinutes: response.cookTimeMinutes,
+        }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && {
+          totalTimeMinutes: response.totalTimeMinutes,
+        }), // Include total time if available
+        ...(response.storageGuide !== undefined && {
+          storageGuide: response.storageGuide,
+        }),
+        ...(response.shelfLife !== undefined && {
+          shelfLife: response.shelfLife,
+        }),
+        ...(response.platingNotes !== undefined && {
+          platingNotes: response.platingNotes,
+        }),
+        ...(response.servingVessel !== undefined && {
+          servingVessel: response.servingVessel,
+        }),
+        ...(response.servingTemp !== undefined && {
+          servingTemp: response.servingTemp,
+        }),
         imageData: imageData, // Store base64 image data for preview
         imageFilename: selectedImage.name, // Store original filename
       };
@@ -211,7 +252,9 @@ export default function HomepageSearch() {
       // Add to recent recipes
       const recipeSummary = Array.isArray(response.instructions)
         ? response.instructions
-            .map((inst: string | { detail?: string }) => (typeof inst === 'string' ? inst : inst.detail))
+            .map((inst: string | { detail?: string }) =>
+              typeof inst === 'string' ? inst : inst.detail,
+            )
             .join(' ')
             .slice(0, 140)
         : response.instructions.slice(0, 140);
@@ -227,14 +270,30 @@ export default function HomepageSearch() {
         sourceUrl: response.sourceUrl || `image:${selectedImage.name}`,
         cuisine: response.cuisine,
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
-        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
-        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
-        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
-        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
-        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
-        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
-        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
-        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
+        ...(response.prepTimeMinutes !== undefined && {
+          prepTimeMinutes: response.prepTimeMinutes,
+        }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && {
+          cookTimeMinutes: response.cookTimeMinutes,
+        }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && {
+          totalTimeMinutes: response.totalTimeMinutes,
+        }), // Include total time if available
+        ...(response.storageGuide !== undefined && {
+          storageGuide: response.storageGuide,
+        }),
+        ...(response.shelfLife !== undefined && {
+          shelfLife: response.shelfLife,
+        }),
+        ...(response.platingNotes !== undefined && {
+          platingNotes: response.platingNotes,
+        }),
+        ...(response.servingVessel !== undefined && {
+          servingVessel: response.servingVessel,
+        }),
+        ...(response.servingTemp !== undefined && {
+          servingTemp: response.servingTemp,
+        }),
         imageData: imageData, // Store base64 image data for preview
         imageFilename: selectedImage.name, // Store original filename
       });
@@ -253,7 +312,11 @@ export default function HomepageSearch() {
       }, 500);
     } catch (err) {
       console.error('[HomepageSearch] Image parse error:', err);
-      errorLogger.log('ERR_UNKNOWN', 'An unexpected error occurred during image parsing', selectedImage.name);
+      errorLogger.log(
+        'ERR_UNKNOWN',
+        'An unexpected error occurred during image parsing',
+        selectedImage.name,
+      );
       showError({
         code: 'ERR_UNKNOWN',
         message: 'An unexpected error occurred. Please try again.',
@@ -266,178 +329,234 @@ export default function HomepageSearch() {
 
   // Handle URL parsing
   const handleParse = async (url: string) => {
-      if (!url.trim()) return;
+    if (!url.trim()) return;
 
-      try {
-        setLoading(true);
-        setLoadingProgress(0);
-        setLoadingPhase('gathering');
+    try {
+      setLoading(true);
+      setLoadingProgress(0);
+      setLoadingPhase('gathering');
 
-        // Step 0: Check if input looks like a URL (early validation)
-        if (!isUrl(url)) {
-          errorLogger.log('ERR_NOT_A_URL', 'Input is not a URL', url);
-          showInfo({
-            code: 'ERR_NOT_A_URL',
-          });
-          setLoading(false);
-          setLoadingProgress(0);
-          setLoadingPhase(undefined);
-          return;
-        }
-
-        // Normalize the URL by adding protocol/www if missing
-        // This enables users to type "allrecipes.com/recipe" instead of full URL
-        const normalizedUrl = normalizeUrl(url);
-
-        setLoadingProgress(10);
-
-        // Step 1: Validate URL format and check if it's a recipe page
-        const validUrlResponse = await validateRecipeUrl(normalizedUrl);
-
-        setLoadingProgress(20);
-
-        if (!validUrlResponse.success) {
-          errorLogger.log(
-            validUrlResponse.error.code,
-            validUrlResponse.error.message,
-            normalizedUrl,
-          );
-          showError({
-            code: validUrlResponse.error.code,
-            message: validUrlResponse.error.message,
-            sourceUrl: normalizedUrl,
-          });
-          setLoading(false);
-          setLoadingProgress(0);
-          setLoadingPhase(undefined);
-          return;
-        }
-
-        if (!validUrlResponse.isRecipe) {
-          errorLogger.log('ERR_NO_RECIPE_FOUND', 'No recipe found on this page', normalizedUrl);
-          showError({
-            code: 'ERR_NO_RECIPE_FOUND',
-            sourceUrl: normalizedUrl,
-          });
-          setLoading(false);
-          setLoadingProgress(0);
-          setLoadingPhase(undefined);
-          return;
-        }
-
-        setLoadingProgress(30);
-        setLoadingPhase('reading');
-
-        // Step 2: Parse recipe using unified AI-based parser
-        const response = await recipeScrape(normalizedUrl);
-
-        setLoadingProgress(85);
-
-        if (!response.success || response.error) {
-          const errorCode = response.error?.code || 'ERR_NO_RECIPE_FOUND';
-          errorLogger.log(errorCode, response.error?.message || 'Parsing failed', normalizedUrl);
-          showError({
-            code: errorCode,
-            message: response.error?.message,
-            retryAfter: response.error?.retryAfter, // Pass through retry-after timestamp
-            sourceUrl: normalizedUrl,
-          });
-          setLoading(false);
-          setLoadingProgress(0);
-          setLoadingPhase(undefined);
-          return;
-        }
-
-        setLoadingProgress(90);
-        setLoadingPhase('plating');
-
-        if (response.warnings?.includes('AI_NOT_CONFIGURED')) {
-          showWarning('AI enrichment unavailable', 'GROQ_API_KEY is not configured. Plating, storage, and summary data will be missing.');
-        } else if (response.warnings?.includes('AI_ENRICHMENT_FAILED')) {
-          showWarning('Partial recipe data', 'AI enrichment failed for this recipe. Plating, storage, and summary data may be missing.');
-        }
-
-        // Store parsed recipe
-        const recipeToStore = {
-          title: response.title,
-          ingredients: response.ingredients,
-          instructions: response.instructions,
-          author: response.author,
-          sourceUrl: response.sourceUrl || normalizedUrl,
-          summary: response.summary,
-          cuisine: response.cuisine,
-          ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
-          ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
-          ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
-          ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
-          ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }), // Include storage instructions if available
-          ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }), // Include shelf life info if available
-          ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }), // Include plating suggestions if available
-          ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }), // Include serving vessel recommendation if available
-          ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }), // Include serving temperature if available
-        };
-
-        setParsedRecipe(recipeToStore);
-
-        await new Promise((resolve) => setTimeout(resolve, 0));
-
-        // Add to recent recipes
-        const recipeSummary = Array.isArray(response.instructions)
-          ? response.instructions
-              .map((inst: string | { detail?: string }) => (typeof inst === 'string' ? inst : inst.detail))
-              .join(' ')
-              .slice(0, 140)
-          : response.instructions.slice(0, 140);
-
-        addRecipe({
-          title: response.title,
-          summary: recipeSummary,
-          description: response.summary,
-          url: normalizedUrl,
-          ingredients: response.ingredients,
-          instructions: response.instructions,
-          author: response.author,
-          sourceUrl: response.sourceUrl || normalizedUrl,
-          cuisine: response.cuisine,
-          ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
-          ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
-          ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
-          ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
-          ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
-          ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
-          ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
-          ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
-          ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
-        });
-
-        // Add to search history
-        addToSearchHistory(normalizedUrl, response.title);
-
-        setLoadingProgress(100);
-        setLoadingPhase('done');
-
-        // Show success toast
-        showSuccess('Recipe parsed successfully!', 'Navigating to recipe page...', normalizedUrl);
-
-        // Brief pause for the loading animation to flash completion before navigating
-        setTimeout(() => {
-          setLoading(false);
-          setLoadingProgress(0);
-          setLoadingPhase(undefined);
-          router.push('/parsed-recipe-page');
-          setSearchValue('');
-        }, 500);
-      } catch (err) {
-        console.error('[HomepageSearch] Parse error:', err);
-        errorLogger.log('ERR_UNKNOWN', 'An unexpected error occurred', url.trim());
-        showError({
-          code: 'ERR_UNKNOWN',
-          message: 'An unexpected error occurred. Please try again.',
+      // Step 0: Check if input looks like a URL (early validation)
+      if (!isUrl(url)) {
+        errorLogger.log('ERR_NOT_A_URL', 'Input is not a URL', url);
+        showInfo({
+          code: 'ERR_NOT_A_URL',
         });
         setLoading(false);
         setLoadingProgress(0);
         setLoadingPhase(undefined);
+        return;
       }
+
+      // Normalize the URL by adding protocol/www if missing
+      // This enables users to type "allrecipes.com/recipe" instead of full URL
+      const normalizedUrl = normalizeUrl(url);
+
+      setLoadingProgress(10);
+
+      // Step 1: Validate URL format and check if it's a recipe page
+      const validUrlResponse = await validateRecipeUrl(normalizedUrl);
+
+      setLoadingProgress(20);
+
+      if (!validUrlResponse.success) {
+        errorLogger.log(
+          validUrlResponse.error.code,
+          validUrlResponse.error.message,
+          normalizedUrl,
+        );
+        showError({
+          code: validUrlResponse.error.code,
+          message: validUrlResponse.error.message,
+          sourceUrl: normalizedUrl,
+        });
+        setLoading(false);
+        setLoadingProgress(0);
+        setLoadingPhase(undefined);
+        return;
+      }
+
+      if (!validUrlResponse.isRecipe) {
+        errorLogger.log(
+          'ERR_NO_RECIPE_FOUND',
+          'No recipe found on this page',
+          normalizedUrl,
+        );
+        showError({
+          code: 'ERR_NO_RECIPE_FOUND',
+          sourceUrl: normalizedUrl,
+        });
+        setLoading(false);
+        setLoadingProgress(0);
+        setLoadingPhase(undefined);
+        return;
+      }
+
+      setLoadingProgress(30);
+      setLoadingPhase('reading');
+
+      // Step 2: Parse recipe using unified AI-based parser
+      const response = await recipeScrape(normalizedUrl);
+
+      setLoadingProgress(85);
+
+      if (!response.success || response.error) {
+        const errorCode = response.error?.code || 'ERR_NO_RECIPE_FOUND';
+        errorLogger.log(
+          errorCode,
+          response.error?.message || 'Parsing failed',
+          normalizedUrl,
+        );
+        showError({
+          code: errorCode,
+          message: response.error?.message,
+          retryAfter: response.error?.retryAfter, // Pass through retry-after timestamp
+          sourceUrl: normalizedUrl,
+        });
+        setLoading(false);
+        setLoadingProgress(0);
+        setLoadingPhase(undefined);
+        return;
+      }
+
+      setLoadingProgress(90);
+      setLoadingPhase('plating');
+
+      if (response.warnings?.includes('AI_NOT_CONFIGURED')) {
+        showWarning(
+          'AI enrichment unavailable',
+          'GROQ_API_KEY is not configured. Plating, storage, and summary data will be missing.',
+        );
+      } else if (response.warnings?.includes('AI_ENRICHMENT_FAILED')) {
+        showWarning(
+          'Partial recipe data',
+          'AI enrichment failed for this recipe. Plating, storage, and summary data may be missing.',
+        );
+      }
+
+      // Store parsed recipe
+      const recipeToStore = {
+        title: response.title,
+        ingredients: response.ingredients,
+        instructions: response.instructions,
+        author: response.author,
+        sourceUrl: response.sourceUrl || normalizedUrl,
+        summary: response.summary,
+        cuisine: response.cuisine,
+        ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+        ...(response.prepTimeMinutes !== undefined && {
+          prepTimeMinutes: response.prepTimeMinutes,
+        }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && {
+          cookTimeMinutes: response.cookTimeMinutes,
+        }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && {
+          totalTimeMinutes: response.totalTimeMinutes,
+        }), // Include total time if available
+        ...(response.storageGuide !== undefined && {
+          storageGuide: response.storageGuide,
+        }), // Include storage instructions if available
+        ...(response.shelfLife !== undefined && {
+          shelfLife: response.shelfLife,
+        }), // Include shelf life info if available
+        ...(response.platingNotes !== undefined && {
+          platingNotes: response.platingNotes,
+        }), // Include plating suggestions if available
+        ...(response.servingVessel !== undefined && {
+          servingVessel: response.servingVessel,
+        }), // Include serving vessel recommendation if available
+        ...(response.servingTemp !== undefined && {
+          servingTemp: response.servingTemp,
+        }), // Include serving temperature if available
+      };
+
+      setParsedRecipe(recipeToStore);
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Add to recent recipes
+      const recipeSummary = Array.isArray(response.instructions)
+        ? response.instructions
+            .map((inst: string | { detail?: string }) =>
+              typeof inst === 'string' ? inst : inst.detail,
+            )
+            .join(' ')
+            .slice(0, 140)
+        : response.instructions.slice(0, 140);
+
+      addRecipe({
+        title: response.title,
+        summary: recipeSummary,
+        description: response.summary,
+        url: normalizedUrl,
+        ingredients: response.ingredients,
+        instructions: response.instructions,
+        author: response.author,
+        sourceUrl: response.sourceUrl || normalizedUrl,
+        cuisine: response.cuisine,
+        ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
+        ...(response.prepTimeMinutes !== undefined && {
+          prepTimeMinutes: response.prepTimeMinutes,
+        }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && {
+          cookTimeMinutes: response.cookTimeMinutes,
+        }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && {
+          totalTimeMinutes: response.totalTimeMinutes,
+        }), // Include total time if available
+        ...(response.storageGuide !== undefined && {
+          storageGuide: response.storageGuide,
+        }),
+        ...(response.shelfLife !== undefined && {
+          shelfLife: response.shelfLife,
+        }),
+        ...(response.platingNotes !== undefined && {
+          platingNotes: response.platingNotes,
+        }),
+        ...(response.servingVessel !== undefined && {
+          servingVessel: response.servingVessel,
+        }),
+        ...(response.servingTemp !== undefined && {
+          servingTemp: response.servingTemp,
+        }),
+      });
+
+      // Add to search history
+      addToSearchHistory(normalizedUrl, response.title);
+
+      setLoadingProgress(100);
+      setLoadingPhase('done');
+
+      // Show success toast
+      showSuccess(
+        'Recipe parsed successfully!',
+        'Navigating to recipe page...',
+        normalizedUrl,
+      );
+
+      // Brief pause for the loading animation to flash completion before navigating
+      setTimeout(() => {
+        setLoading(false);
+        setLoadingProgress(0);
+        setLoadingPhase(undefined);
+        router.push('/parsed-recipe-page');
+        setSearchValue('');
+      }, 500);
+    } catch (err) {
+      console.error('[HomepageSearch] Parse error:', err);
+      errorLogger.log(
+        'ERR_UNKNOWN',
+        'An unexpected error occurred',
+        url.trim(),
+      );
+      showError({
+        code: 'ERR_UNKNOWN',
+        message: 'An unexpected error occurred. Please try again.',
+      });
+      setLoading(false);
+      setLoadingProgress(0);
+      setLoadingPhase(undefined);
+    }
   };
 
   // Handle query params from SearchCommandModal (e.g. ?action=upload-image or ?url=...)
@@ -462,13 +581,13 @@ export default function HomepageSearch() {
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Prioritize image if selected
     if (selectedImage) {
       handleImageParse();
       return;
     }
-    
+
     // Otherwise check for URL input
     if (searchValue.trim()) {
       handleParse(searchValue);
@@ -490,28 +609,37 @@ export default function HomepageSearch() {
 
   return (
     <>
-      <LoadingAnimation isVisible={loading} progress={loadingProgress} phase={loadingPhase} onCancel={handleCancelLoading} />
+      <LoadingAnimation
+        isVisible={loading}
+        progress={loadingProgress}
+        phase={loadingPhase}
+        onCancel={handleCancelLoading}
+      />
       <div className="w-full max-w-2xl mx-auto">
         <form onSubmit={handleSubmit} className="w-full">
-          <div 
+          <div
             className={`bg-[#fafaf9] content-stretch flex min-h-[77px] items-center px-[24px] py-[12px] relative rounded-[24px] shrink-0 w-full transition-all group ${
-              isSearchFocused ? 'bg-white shadow-[0_0_0_3px_rgba(0,114,251,0.15)]' : ''
+              isSearchFocused
+                ? 'bg-white shadow-[0_0_0_3px_rgba(0,114,251,0.15)]'
+                : ''
             }`}
           >
             {/* Border overlay - changes color on focus */}
-            <div 
-              aria-hidden="true" 
+            <div
+              aria-hidden="true"
               className={`absolute border-2 border-solid inset-0 pointer-events-none rounded-[24px] transition-all ${
                 isSearchFocused ? 'border-[#0072fb]' : 'border-[#e7e5e4]'
-              }`} 
+              }`}
             />
-            
+
             {/* Main Content Area */}
             <div className="content-stretch flex gap-[12px] items-center relative shrink-0 flex-1">
               {/* URL Icon Indicator - Hide when image is selected */}
               {!selectedImage && (
                 <div className="shrink-0">
-                  <Link className={`size-[24px] transition-colors ${isSearchFocused ? 'text-[#0072fb]' : 'text-[#78716c]'}`} />
+                  <Link
+                    className={`size-[24px] transition-colors ${isSearchFocused ? 'text-[#0072fb]' : 'text-[#78716c]'}`}
+                  />
                 </div>
               )}
 
@@ -521,15 +649,19 @@ export default function HomepageSearch() {
                 {selectedImage && (
                   <div className="flex items-center gap-1.5 bg-[#ebf3ff] rounded-full pl-2 pr-3 py-1.5 border border-[#0072fb]/20 animate-in fade-in slide-in-from-left-2 duration-200">
                     {imagePreviewUrl && (
-                      <img 
-                        src={imagePreviewUrl} 
+                      <img
+                        src={imagePreviewUrl}
                         alt={selectedImage.name}
                         className="size-[28px] rounded object-cover flex-shrink-0"
                         draggable="false"
                       />
                     )}
-                    <span className="font-albert font-medium text-[#0c0a09] text-[13px]">{selectedImage.name}</span>
-                    <span className="font-albert font-normal text-[#78716c] text-[12px]">({(selectedImage.size / 1024).toFixed(1)} KB)</span>
+                    <span className="font-albert font-medium text-[#0c0a09] text-[13px]">
+                      {selectedImage.name}
+                    </span>
+                    <span className="font-albert font-normal text-[#78716c] text-[12px]">
+                      ({(selectedImage.size / 1024).toFixed(1)} KB)
+                    </span>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -539,13 +671,23 @@ export default function HomepageSearch() {
                       className="hover:bg-[#0072fb]/10 rounded-full p-0.5 transition-colors flex-shrink-0"
                       title="Remove image"
                     >
-                      <svg className="size-[12px]" fill="none" viewBox="0 0 24 24">
-                        <path stroke="#78716C" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        className="size-[12px]"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke="#78716C"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2.5"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                     </button>
                   </div>
                 )}
-                
+
                 {/* URL Input - Only shown when no image is selected */}
                 {!selectedImage && (
                   <input
@@ -609,14 +751,23 @@ export default function HomepageSearch() {
                       title="Process recipe"
                       disabled={loading}
                     >
-                      <svg className="size-[20px]" fill="none" viewBox="0 0 24 24">
-                        <path stroke="white" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 12h14m-7-7l7 7-7 7" />
+                      <svg
+                        className="size-[20px]"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke="white"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M5 12h14m-7-7l7 7-7 7"
+                        />
                       </svg>
                     </button>
                   )}
                 </div>
               )}
-
             </div>
           </div>
         </form>

@@ -1,19 +1,19 @@
-"use client"
+'use client';
 
-import * as React from "react"
-import { useState, useRef, useEffect } from "react"
-import User from "@solar-icons/react/csr/users/User"
-import Magnifer from "@solar-icons/react/csr/search/Magnifer"
-import { ChevronDown, MoreHorizontal, X } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import * as React from 'react';
+import { useState, useRef, useEffect } from 'react';
+import User from '@solar-icons/react/csr/users/User';
+import Magnifer from '@solar-icons/react/csr/search/Magnifer';
+import { ChevronDown, MoreHorizontal, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import type { UnitSystem } from "@/utils/unitConverter"
+} from '@/components/ui/dropdown-menu';
+import type { UnitSystem } from '@/utils/unitConverter';
 
 interface IngredientsHeaderProps {
   unitSystem: UnitSystem;
@@ -44,28 +44,28 @@ export function IngredientsHeader({
   const lastDragValueRef = useRef<number | null>(null);
   const prevServingsRef = useRef<number | undefined>(servings);
   const [, startTransition] = React.useTransition();
-  
+
   // State for servings input
   const [servingsInputValue, setServingsInputValue] = useState<string>('');
   const servingsInputRef = useRef<HTMLInputElement>(null);
   const canAdjustServings = Boolean(onServingsChange);
-  
+
   // Determine mode: multiplier mode when originalServings is undefined
   const isMultiplierMode = originalServings === undefined;
-  
+
   // Slider configuration - dual mode based on whether originalServings is defined
   const minServings = 1;
   const maxAllowedServings = 99;
-  
+
   // Calculate slider range based on mode
   let sliderMin: number;
   let sliderMax: number;
   let currentValue: number;
-  
+
   if (isMultiplierMode) {
     // Multiplier Mode: x0.5 to x4 range
-    sliderMin = 0.5;  // x0.5
-    sliderMax = 4;    // x4
+    sliderMin = 0.5; // x0.5
+    sliderMax = 4; // x4
     currentValue = servings ?? 1; // Default to x1 if undefined
   } else {
     // Servings Mode: fixed offset +/- 5 from original
@@ -74,27 +74,34 @@ export function IngredientsHeader({
     sliderMax = originalServings + offset;
     currentValue = servings ?? originalServings;
   }
-  
-  const formatSliderValue = React.useCallback((value: number) => {
-    if (isMultiplierMode) {
-      return value % 1 === 0 ? value.toString() : value.toFixed(1);
-    }
-    return Math.round(value).toString();
-  }, [isMultiplierMode]);
+
+  const formatSliderValue = React.useCallback(
+    (value: number) => {
+      if (isMultiplierMode) {
+        return value % 1 === 0 ? value.toString() : value.toFixed(1);
+      }
+      return Math.round(value).toString();
+    },
+    [isMultiplierMode],
+  );
 
   const displayedValue = dragValue ?? currentValue;
 
   // Calculate slider percentage based on current value in range
   const sliderRange = sliderMax - sliderMin;
-  const percentage = sliderRange > 0 
-    ? Math.max(0, Math.min(100, ((displayedValue - sliderMin) / sliderRange) * 100))
-    : 50; // Fallback to center if range is invalid
-  
+  const percentage =
+    sliderRange > 0
+      ? Math.max(
+          0,
+          Math.min(100, ((displayedValue - sliderMin) / sliderRange) * 100),
+        )
+      : 50; // Fallback to center if range is invalid
+
   // Format display text based on mode
-  const servingsDisplay = isMultiplierMode 
+  const servingsDisplay = isMultiplierMode
     ? `x${displayedValue % 1 === 0 ? displayedValue : displayedValue.toFixed(1)}` // Show decimals for 0.5
     : Math.round(displayedValue);
-  
+
   // Sync input value with servings/multiplier
   useEffect(() => {
     if (isDragging) return;
@@ -116,20 +123,27 @@ export function IngredientsHeader({
 
     prevServingsRef.current = servings;
   }, [servings, isMultiplierMode, isDragging, formatSliderValue]);
-  
+
   // Handle servings input change
-  const handleServingsInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleServingsInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     if (!canAdjustServings) return;
 
     const value = e.target.value;
-    
+
     if (isMultiplierMode) {
       // Multiplier mode: allow decimals (e.g., 0.5, 1.5, 2.0)
       // Pattern: allows numbers with optional decimal point and one decimal place
       if (value === '' || /^\d*\.?\d*$/.test(value)) {
         const numValue = parseFloat(value);
         // Allow empty, or values between 0.5 and 4 (or up to maxAllowedServings for flexibility)
-        if (value === '' || (!isNaN(numValue) && numValue >= sliderMin && numValue <= Math.max(sliderMax, maxAllowedServings))) {
+        if (
+          value === '' ||
+          (!isNaN(numValue) &&
+            numValue >= sliderMin &&
+            numValue <= Math.max(sliderMax, maxAllowedServings))
+        ) {
           setServingsInputValue(value);
           if (!isNaN(numValue) && numValue >= sliderMin && onServingsChange) {
             onServingsChange(numValue);
@@ -141,7 +155,10 @@ export function IngredientsHeader({
       if (value === '' || /^\d+$/.test(value)) {
         const numValue = parseInt(value, 10);
         // Only update if within valid range or empty
-        if (value === '' || (numValue >= minServings && numValue <= maxAllowedServings)) {
+        if (
+          value === '' ||
+          (numValue >= minServings && numValue <= maxAllowedServings)
+        ) {
           setServingsInputValue(value);
           if (!isNaN(numValue) && numValue >= minServings && onServingsChange) {
             onServingsChange(numValue);
@@ -150,7 +167,7 @@ export function IngredientsHeader({
       }
     }
   };
-  
+
   // Handle servings input blur - validate and set value
   const handleServingsInputBlur = () => {
     if (!canAdjustServings) return;
@@ -163,10 +180,17 @@ export function IngredientsHeader({
       } else if (onServingsChange) {
         // Round to nearest 0.5 increment, then clamp to valid range
         const roundedValue = Math.round(numValue * 2) / 2;
-        const clampedValue = Math.max(sliderMin, Math.min(sliderMax, roundedValue));
+        const clampedValue = Math.max(
+          sliderMin,
+          Math.min(sliderMax, roundedValue),
+        );
         onServingsChange(clampedValue);
         // Update input to show the rounded value
-        setServingsInputValue(clampedValue % 1 === 0 ? clampedValue.toString() : clampedValue.toFixed(1));
+        setServingsInputValue(
+          clampedValue % 1 === 0
+            ? clampedValue.toString()
+            : clampedValue.toFixed(1),
+        );
       }
     } else {
       const numValue = parseInt(servingsInputValue, 10);
@@ -178,12 +202,13 @@ export function IngredientsHeader({
       }
     }
   };
-  
+
   // Check if value has been changed from original/default (based on displayed value for immediate UI feedback)
   const hasChanged = isMultiplierMode
     ? Math.abs(displayedValue - 1) > 0.001
-    : (originalServings !== undefined && Math.round(displayedValue) !== originalServings);
-  
+    : originalServings !== undefined &&
+      Math.round(displayedValue) !== originalServings;
+
   // Handle reset to original/default value
   const handleResetServings = () => {
     if (!canAdjustServings) return;
@@ -202,35 +227,46 @@ export function IngredientsHeader({
   };
 
   // Handle slider interaction - converts slider position to servings/multiplier
-  const updateServingsFromPosition = React.useCallback((clientX: number) => {
-    if (!sliderRef.current || !canAdjustServings) return;
+  const updateServingsFromPosition = React.useCallback(
+    (clientX: number) => {
+      if (!sliderRef.current || !canAdjustServings) return;
 
-    const rect = sliderRef.current.getBoundingClientRect();
-    const x = clientX - rect.left;
-    const percent = Math.max(0, Math.min(100, (x / rect.width) * 100));
+      const rect = sliderRef.current.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const percent = Math.max(0, Math.min(100, (x / rect.width) * 100));
 
-    // Convert percentage to value using the calculated slider range
-    const range = sliderMax - sliderMin;
-    let newValue: number;
+      // Convert percentage to value using the calculated slider range
+      const range = sliderMax - sliderMin;
+      let newValue: number;
 
-    if (isMultiplierMode) {
-      newValue = sliderMin + (percent / 100) * range;
-      newValue = Math.round(newValue * 2) / 2;
-    } else {
-      newValue = Math.round(sliderMin + (percent / 100) * range);
-    }
+      if (isMultiplierMode) {
+        newValue = sliderMin + (percent / 100) * range;
+        newValue = Math.round(newValue * 2) / 2;
+      } else {
+        newValue = Math.round(sliderMin + (percent / 100) * range);
+      }
 
-    const clampedValue = Math.max(sliderMin, Math.min(sliderMax, newValue));
-    if (lastDragValueRef.current === clampedValue) return;
+      const clampedValue = Math.max(sliderMin, Math.min(sliderMax, newValue));
+      if (lastDragValueRef.current === clampedValue) return;
 
-    lastDragValueRef.current = clampedValue;
-    setDragValue(clampedValue);
-    setServingsInputValue(formatSliderValue(clampedValue));
+      lastDragValueRef.current = clampedValue;
+      setDragValue(clampedValue);
+      setServingsInputValue(formatSliderValue(clampedValue));
 
-    startTransition(() => {
-      onServingsChange?.(clampedValue);
-    });
-  }, [canAdjustServings, onServingsChange, sliderMin, sliderMax, isMultiplierMode, formatSliderValue, startTransition]);
+      startTransition(() => {
+        onServingsChange?.(clampedValue);
+      });
+    },
+    [
+      canAdjustServings,
+      onServingsChange,
+      sliderMin,
+      sliderMax,
+      isMultiplierMode,
+      formatSliderValue,
+      startTransition,
+    ],
+  );
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!canAdjustServings) return;
@@ -296,7 +332,7 @@ export function IngredientsHeader({
           <button
             onClick={() => setIsSliderOpen(!isSliderOpen)}
             className="ingredients-header-servings-btn"
-            aria-label={isMultiplierMode ? "Adjust scale" : "Adjust servings"}
+            aria-label={isMultiplierMode ? 'Adjust scale' : 'Adjust servings'}
             aria-expanded={isSliderOpen}
           >
             <ChevronDown
@@ -308,7 +344,9 @@ export function IngredientsHeader({
               </span>
             )}
             <span className="ingredients-header-servings-text">
-              {isMultiplierMode ? `Scale ${servingsDisplay}` : `Serves ${servingsDisplay}`}
+              {isMultiplierMode
+                ? `Scale ${servingsDisplay}`
+                : `Serves ${servingsDisplay}`}
             </span>
           </button>
         </div>
@@ -324,10 +362,19 @@ export function IngredientsHeader({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[180px]">
-            <DropdownMenuRadioGroup value={unitSystem} onValueChange={(value) => onUnitSystemChange(value as UnitSystem)}>
-              <DropdownMenuRadioItem value="original">Original</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="metric">Metric</DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="imperial">Imperial</DropdownMenuRadioItem>
+            <DropdownMenuRadioGroup
+              value={unitSystem}
+              onValueChange={(value) => onUnitSystemChange(value as UnitSystem)}
+            >
+              <DropdownMenuRadioItem value="original">
+                Original
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="metric">
+                Metric
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="imperial">
+                Imperial
+              </DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -341,16 +388,18 @@ export function IngredientsHeader({
             animate={{ opacity: 1, y: 0, height: 'auto' }}
             exit={{ opacity: 0, y: -10, height: 0 }}
             transition={{
-              type: "spring",
+              type: 'spring',
               damping: 25,
               stiffness: 350,
-              opacity: { duration: 0.2 }
+              opacity: { duration: 0.2 },
             }}
             style={{ overflow: 'visible' }}
           >
             <div className="servings-slider-card">
-              <p className="servings-slider-label">{isMultiplierMode ? 'Scale' : 'Servings'}</p>
-              
+              <p className="servings-slider-label">
+                {isMultiplierMode ? 'Scale' : 'Servings'}
+              </p>
+
               <div className="servings-slider-row">
                 {/* Current servings/scale indicator - editable input */}
                 <div className="servings-indicator">
@@ -371,7 +420,11 @@ export function IngredientsHeader({
                       onChange={handleServingsInputChange}
                       onBlur={handleServingsInputBlur}
                       className="servings-indicator-input"
-                      aria-label={isMultiplierMode ? "Multiplier value" : "Number of servings"}
+                      aria-label={
+                        isMultiplierMode
+                          ? 'Multiplier value'
+                          : 'Number of servings'
+                      }
                       min={minServings}
                       max={maxAllowedServings}
                     />
@@ -385,10 +438,14 @@ export function IngredientsHeader({
                         initial={{ opacity: 0, scale: 0.5 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.5 }}
-                        transition={{ duration: 0.15, ease: "easeOut" }}
+                        transition={{ duration: 0.15, ease: 'easeOut' }}
                         onClick={handleResetServings}
                         className="servings-reset-btn servings-reset-btn-inline"
-                        aria-label={isMultiplierMode ? "Reset to x1" : "Reset to original servings"}
+                        aria-label={
+                          isMultiplierMode
+                            ? 'Reset to x1'
+                            : 'Reset to original servings'
+                        }
                         type="button"
                       >
                         <X className="w-4 h-4" />
@@ -396,9 +453,9 @@ export function IngredientsHeader({
                     )}
                   </AnimatePresence>
                 </div>
-                
+
                 {/* Slider track */}
-                <div 
+                <div
                   ref={sliderRef}
                   className="servings-slider-track-container"
                   aria-disabled={!canAdjustServings}
@@ -406,19 +463,32 @@ export function IngredientsHeader({
                   onTouchStart={handleTouchStart}
                 >
                   <div className="servings-slider-track">
-                    <div 
-                      className="servings-slider-fill" 
-                      style={{ width: `${percentage}%`, transition: isDragging ? 'none' : undefined }}
+                    <div
+                      className="servings-slider-fill"
+                      style={{
+                        width: `${percentage}%`,
+                        transition: isDragging ? 'none' : undefined,
+                      }}
                     />
                   </div>
                   {/* Slider handle */}
-                  <div 
+                  <div
                     className="servings-slider-handle"
-                    style={{ left: `${percentage}%`, transition: isDragging ? 'none' : undefined }}
+                    style={{
+                      left: `${percentage}%`,
+                      transition: isDragging ? 'none' : undefined,
+                    }}
                   >
                     <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
                       <circle cx="18" cy="18" r="14" fill="#0088ff" />
-                      <circle cx="18" cy="18" r="12" fill="#0088ff" stroke="white" strokeWidth="2" />
+                      <circle
+                        cx="18"
+                        cy="18"
+                        r="12"
+                        fill="#0088ff"
+                        stroke="white"
+                        strokeWidth="2"
+                      />
                     </svg>
                   </div>
                 </div>
@@ -456,5 +526,5 @@ export function IngredientsHeader({
         </div>
       )}
     </div>
-  )
+  );
 }

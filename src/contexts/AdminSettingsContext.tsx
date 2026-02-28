@@ -42,9 +42,9 @@ const defaultSettings: AdminSettingsState = {
   enableErrorStateTesting: false,
 };
 
-const AdminSettingsContext = createContext<AdminSettingsContextType | undefined>(
-  undefined,
-);
+const AdminSettingsContext = createContext<
+  AdminSettingsContextType | undefined
+>(undefined);
 
 export function AdminSettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<AdminSettingsState>(defaultSettings);
@@ -58,13 +58,17 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(stored) as Partial<AdminSettingsState>;
         setSettings({
           showRecentRecipeImages:
-            parsed.showRecentRecipeImages ?? defaultSettings.showRecentRecipeImages,
+            parsed.showRecentRecipeImages ??
+            defaultSettings.showRecentRecipeImages,
           showIngredientStepTags:
-            parsed.showIngredientStepTags ?? defaultSettings.showIngredientStepTags,
+            parsed.showIngredientStepTags ??
+            defaultSettings.showIngredientStepTags,
           showIngredientsForStepList:
-            parsed.showIngredientsForStepList ?? defaultSettings.showIngredientsForStepList,
+            parsed.showIngredientsForStepList ??
+            defaultSettings.showIngredientsForStepList,
           enableErrorStateTesting:
-            parsed.enableErrorStateTesting ?? defaultSettings.enableErrorStateTesting,
+            parsed.enableErrorStateTesting ??
+            defaultSettings.enableErrorStateTesting,
         });
       }
     } catch (error) {
@@ -155,22 +159,9 @@ export function AdminSettingsProvider({ children }: { children: ReactNode }) {
 export function useAdminSettings() {
   const context = useContext(AdminSettingsContext);
   if (!context) {
-    throw new Error('useAdminSettings must be used within an AdminSettingsProvider');
+    throw new Error(
+      'useAdminSettings must be used within an AdminSettingsProvider',
+    );
   }
   return context;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

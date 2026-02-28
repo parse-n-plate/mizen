@@ -36,7 +36,7 @@ export function useSidebarResize({
         setWidth(parsed);
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [isDragging, setIsDragging] = useState(false);

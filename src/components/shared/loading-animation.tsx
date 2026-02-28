@@ -27,7 +27,13 @@ interface LoadingStep {
   status: StepStatus;
 }
 
-export default function LoadingAnimation({ isVisible, cuisine, progress: externalProgress, phase, onCancel }: LoadingAnimationProps) {
+export default function LoadingAnimation({
+  isVisible,
+  cuisine,
+  progress: externalProgress,
+  phase,
+  onCancel,
+}: LoadingAnimationProps) {
   const [_currentStepIdx, setCurrentStepIdx] = useState(0);
   const [progress, setProgress] = useState(0);
   const [hasCuisine, setHasCuisine] = useState(false);
@@ -61,7 +67,6 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
 
     rafRef.current = requestAnimationFrame(tick);
   }, []);
-
 
   // Define the 3 steps
   const initialSteps: LoadingStep[] = [
@@ -119,10 +124,13 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
       return;
     }
 
-    const hasExternal = typeof externalProgress === 'number' || typeof phase === 'string';
+    const hasExternal =
+      typeof externalProgress === 'number' || typeof phase === 'string';
     if (hasExternal) {
       const nextProgress =
-        typeof externalProgress === 'number' ? externalProgress : progressRef.current;
+        typeof externalProgress === 'number'
+          ? externalProgress
+          : progressRef.current;
       progressRef.current = nextProgress;
       animateProgressTo(nextProgress, 450);
 
@@ -157,11 +165,13 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
     timerRef.current = setTimeout(() => {
       setCurrentStepIdx(1);
       animateProgressTo(45, 700);
-      setSteps(prev => prev.map((s, i) => {
-        if (i === 0) return { ...s, status: 'completed' };
-        if (i === 1) return { ...s, status: 'in_progress' };
-        return s;
-      }));
+      setSteps((prev) =>
+        prev.map((s, i) => {
+          if (i === 0) return { ...s, status: 'completed' };
+          if (i === 1) return { ...s, status: 'in_progress' };
+          return s;
+        }),
+      );
     }, 1500);
 
     return () => {
@@ -206,7 +216,7 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
     // Clean up any running timers or animations
     if (timerRef.current) clearTimeout(timerRef.current);
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    
+
     // Call the onCancel callback if provided
     if (onCancel) {
       onCancel();
@@ -220,7 +230,10 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
         initial={shouldReduceMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+        transition={{
+          duration: shouldReduceMotion ? 0 : 0.2,
+          ease: [0.25, 0.46, 0.45, 0.94],
+        }}
         className="fixed inset-0 bg-white/60 backdrop-blur-sm pointer-events-none"
         aria-hidden="true"
       />
@@ -234,7 +247,11 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
             aria-label="Cancel loading"
             initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: shouldReduceMotion ? 0 : 0.15, duration: shouldReduceMotion ? 0 : 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+            transition={{
+              delay: shouldReduceMotion ? 0 : 0.15,
+              duration: shouldReduceMotion ? 0 : 0.2,
+              ease: [0.25, 0.46, 0.45, 0.94],
+            }}
             whileHover={shouldReduceMotion ? {} : { scale: 1.1 }}
             whileTap={shouldReduceMotion ? {} : { scale: 0.95 }}
           >
@@ -244,98 +261,129 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
         <div className="p-6 sm:p-8">
           <div className="w-full space-y-12">
             {/* Header Section */}
-        <motion.div
-          initial={shouldReduceMotion ? false : { opacity: 0, y: -12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: shouldReduceMotion ? 0 : 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="text-center space-y-3"
-        >
-          <h1 className="font-domine text-[32px] md:text-[40px] text-[#0C0A09] font-bold tracking-tight">
-            Recipe in Progress
-          </h1>
-          <p className="font-albert text-[16px] md:text-[18px] text-stone-500 font-medium">
-            Follow along as we prepare your request
-          </p>
-        </motion.div>
-
-        {/* Step Card Section */}
-        <motion.div
-          initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: shouldReduceMotion ? 0 : 0.1, duration: shouldReduceMotion ? 0 : 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="loading-step-card space-y-2"
-        >
-          {steps.map((step, idx) => (
             <motion.div
-              key={step.title}
-              initial={shouldReduceMotion ? false : { opacity: 0, x: -8 }}
-              animate={{
-                opacity: step.status === 'pending' ? 0.3 : 1,
-                x: 0
+              initial={shouldReduceMotion ? false : { opacity: 0, y: -12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: shouldReduceMotion ? 0 : 0.25,
+                ease: [0.25, 0.46, 0.45, 0.94],
               }}
-              transition={{ delay: shouldReduceMotion ? 0 : 0.15 + (idx * 0.05), duration: shouldReduceMotion ? 0 : 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="step-row"
+              className="text-center space-y-3"
             >
-              <div className="step-icon-container">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={step.icon}
-                    initial={shouldReduceMotion ? false : { scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={shouldReduceMotion ? { opacity: 0 } : { scale: 0.9, opacity: 0 }}
-                    transition={{ duration: shouldReduceMotion ? 0 : 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
-                    className="relative w-10 h-10"
-                  >
-                    <Image
-                      src={step.icon}
-                      alt={step.title}
-                      fill
-                      className="object-contain"
-                      priority
-                    />
-                  </motion.div>
-                </AnimatePresence>
+              <h1 className="font-domine text-[32px] md:text-[40px] text-[#0C0A09] font-bold tracking-tight">
+                Recipe in Progress
+              </h1>
+              <p className="font-albert text-[16px] md:text-[18px] text-stone-500 font-medium">
+                Follow along as we prepare your request
+              </p>
+            </motion.div>
+
+            {/* Step Card Section */}
+            <motion.div
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                delay: shouldReduceMotion ? 0 : 0.1,
+                duration: shouldReduceMotion ? 0 : 0.3,
+                ease: [0.25, 0.46, 0.45, 0.94],
+              }}
+              className="loading-step-card space-y-2"
+            >
+              {steps.map((step, idx) => (
+                <motion.div
+                  key={step.title}
+                  initial={shouldReduceMotion ? false : { opacity: 0, x: -8 }}
+                  animate={{
+                    opacity: step.status === 'pending' ? 0.3 : 1,
+                    x: 0,
+                  }}
+                  transition={{
+                    delay: shouldReduceMotion ? 0 : 0.15 + idx * 0.05,
+                    duration: shouldReduceMotion ? 0 : 0.2,
+                    ease: [0.25, 0.46, 0.45, 0.94],
+                  }}
+                  className="step-row"
+                >
+                  <div className="step-icon-container">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={step.icon}
+                        initial={
+                          shouldReduceMotion
+                            ? false
+                            : { scale: 0.9, opacity: 0 }
+                        }
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={
+                          shouldReduceMotion
+                            ? { opacity: 0 }
+                            : { scale: 0.9, opacity: 0 }
+                        }
+                        transition={{
+                          duration: shouldReduceMotion ? 0 : 0.2,
+                          ease: [0.25, 0.46, 0.45, 0.94],
+                        }}
+                        className="relative w-10 h-10"
+                      >
+                        <Image
+                          src={step.icon}
+                          alt={step.title}
+                          fill
+                          className="object-contain"
+                          priority
+                        />
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+                  <div className="step-text">
+                    <span
+                      className={`step-title font-albert ${step.status === 'in_progress' || step.status === 'completed' ? 'text-black font-semibold' : 'text-stone-500'}`}
+                    >
+                      {step.title}
+                    </span>
+                    <span className="step-subtitle font-albert text-stone-400">
+                      {step.subtitle}
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            {/* Progress Bar Section */}
+            <motion.div
+              initial={shouldReduceMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                delay: shouldReduceMotion ? 0 : 0.2,
+                duration: shouldReduceMotion ? 0 : 0.25,
+                ease: [0.25, 0.46, 0.45, 0.94],
+              }}
+              className="space-y-4"
+            >
+              <div className="flex justify-between items-end">
+                <span className="font-albert text-[14px] text-stone-500 font-semibold tracking-wide uppercase">
+                  Progress
+                </span>
+                <span className="font-albert text-[14px] text-stone-500 font-medium tabular-nums">
+                  {Math.round(progress)}%
+                </span>
               </div>
-              <div className="step-text">
-                <span className={`step-title font-albert ${step.status === 'in_progress' || step.status === 'completed' ? 'text-black font-semibold' : 'text-stone-500'}`}>
-                  {step.title}
-                </span>
-                <span className="step-subtitle font-albert text-stone-400">
-                  {step.subtitle}
-                </span>
+              <div className="loading-progress-container">
+                <motion.div
+                  className="loading-progress-bar"
+                  initial={{ width: '0%' }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{
+                    duration: shouldReduceMotion ? 0 : 0.4,
+                    ease: [0.075, 0.82, 0.165, 1],
+                  }}
+                />
               </div>
             </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Progress Bar Section */}
-        <motion.div
-          initial={shouldReduceMotion ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: shouldReduceMotion ? 0 : 0.2, duration: shouldReduceMotion ? 0 : 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="space-y-4"
-        >
-          <div className="flex justify-between items-end">
-            <span className="font-albert text-[14px] text-stone-500 font-semibold tracking-wide uppercase">
-              Progress
-            </span>
-            <span className="font-albert text-[14px] text-stone-500 font-medium tabular-nums">
-              {Math.round(progress)}%
-            </span>
           </div>
-          <div className="loading-progress-container">
-            <motion.div
-              className="loading-progress-bar"
-              initial={{ width: "0%" }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: shouldReduceMotion ? 0 : 0.4, ease: [0.075, 0.82, 0.165, 1] }}
-            />
-          </div>
-        </motion.div>
-          </div>  
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

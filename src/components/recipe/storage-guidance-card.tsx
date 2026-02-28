@@ -1,7 +1,14 @@
 'use client';
 
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { Calendar, Refrigerator, Snowflake, Clock, RotateCcw, Edit2 } from 'lucide-react';
+import {
+  Calendar,
+  Refrigerator,
+  Snowflake,
+  Clock,
+  RotateCcw,
+  Edit2,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface StorageGuidanceCardProps {
@@ -23,7 +30,9 @@ export default function StorageGuidanceCard({
   onResetStorage,
 }: StorageGuidanceCardProps) {
   // Use AI-generated storage guide, or minimal fallback for legacy recipes without storage data
-  const defaultStorageText = storageGuide || "Storage guidance not available. Refrigerate leftovers promptly.";
+  const defaultStorageText =
+    storageGuide ||
+    'Storage guidance not available. Refrigerate leftovers promptly.';
 
   // State for storage text editing
   const [storageText, setStorageText] = useState<string>(defaultStorageText);
@@ -33,7 +42,10 @@ export default function StorageGuidanceCard({
   // Update storage text when storageGuide prop changes (e.g., when AI generates new guidance)
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- sync editable state from prop
-    setStorageText(storageGuide || "Storage guidance not available. Refrigerate leftovers promptly.");
+    setStorageText(
+      storageGuide ||
+        'Storage guidance not available. Refrigerate leftovers promptly.',
+    );
   }, [storageGuide]);
 
   // Auto-focus textarea when editing starts
@@ -91,7 +103,9 @@ export default function StorageGuidanceCard({
 
     const stored = new Date(storedAt);
     const now = new Date();
-    const daysPassed = Math.floor((now.getTime() - stored.getTime()) / (1000 * 60 * 60 * 24));
+    const daysPassed = Math.floor(
+      (now.getTime() - stored.getTime()) / (1000 * 60 * 60 * 24),
+    );
     const remaining = shelfLife.fridge - daysPassed;
 
     return Math.max(0, remaining);
@@ -101,7 +115,10 @@ export default function StorageGuidanceCard({
   const percentageUsed = useMemo(() => {
     if (!storedAt || !shelfLife?.fridge || daysRemaining === null) return 0;
 
-    return Math.min(100, ((shelfLife.fridge - daysRemaining) / shelfLife.fridge) * 100);
+    return Math.min(
+      100,
+      ((shelfLife.fridge - daysRemaining) / shelfLife.fridge) * 100,
+    );
   }, [storedAt, shelfLife, daysRemaining]);
 
   // Determine warning state
@@ -140,11 +157,11 @@ export default function StorageGuidanceCard({
             onKeyDown={handleKeyDown}
             placeholder="Add storage instructions"
             className={cn(
-              "w-full min-h-[60px] p-3 bg-white rounded-lg border border-stone-300",
-              "font-albert text-[16px] text-[#57534e] leading-[1.6]",
-              "focus:outline-none focus:ring-2 focus:ring-stone-400 focus:border-transparent",
-              "resize-none transition-all duration-200",
-              "placeholder:text-stone-400"
+              'w-full min-h-[60px] p-3 bg-white rounded-lg border border-stone-300',
+              'font-albert text-[16px] text-[#57534e] leading-[1.6]',
+              'focus:outline-none focus:ring-2 focus:ring-stone-400 focus:border-transparent',
+              'resize-none transition-all duration-200',
+              'placeholder:text-stone-400',
             )}
             rows={2}
           />
@@ -152,15 +169,13 @@ export default function StorageGuidanceCard({
           <div
             onClick={handleClick}
             className={cn(
-              "min-h-[60px] p-3 bg-white/50 rounded-lg border border-dashed border-stone-200",
-              "font-albert text-[16px] text-[#57534e] leading-[1.6] cursor-text transition-all duration-200",
-              "hover:bg-white hover:border-stone-300",
-              "relative"
+              'min-h-[60px] p-3 bg-white/50 rounded-lg border border-dashed border-stone-200',
+              'font-albert text-[16px] text-[#57534e] leading-[1.6] cursor-text transition-all duration-200',
+              'hover:bg-white hover:border-stone-300',
+              'relative',
             )}
           >
-            <div className="whitespace-pre-wrap break-words">
-              {storageText}
-            </div>
+            <div className="whitespace-pre-wrap break-words">{storageText}</div>
             {/* Edit icon hint on hover */}
             <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
               <Edit2 className="h-3.5 w-3.5 text-stone-400" />
@@ -228,8 +243,8 @@ export default function StorageGuidanceCard({
                 isExpired
                   ? 'text-red-600'
                   : isNearExpiration
-                  ? 'text-orange-600'
-                  : 'text-stone-700'
+                    ? 'text-orange-600'
+                    : 'text-stone-700'
               }`}
             >
               {daysRemaining}/{shelfLife?.fridge || 0}
@@ -243,8 +258,8 @@ export default function StorageGuidanceCard({
                 isExpired
                   ? 'bg-red-500'
                   : isNearExpiration
-                  ? 'bg-orange-500'
-                  : 'bg-[#0088ff]'
+                    ? 'bg-orange-500'
+                    : 'bg-[#0088ff]'
               }`}
               style={{ width: `${percentageUsed}%` }}
             />
@@ -254,10 +269,11 @@ export default function StorageGuidanceCard({
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-stone-400" />
             <p className="font-albert text-[12px] text-stone-500">
-              Stored on {new Date(storedAt).toLocaleDateString('en-US', {
+              Stored on{' '}
+              {new Date(storedAt).toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric',
-                year: 'numeric'
+                year: 'numeric',
               })}
             </p>
           </div>

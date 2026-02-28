@@ -54,7 +54,16 @@ export default function RecipeContextMenu({
   onRecipeClick,
   onDialogOpenChange,
 }: RecipeContextMenuProps) {
-  const { isBookmarked, toggleBookmark, removeRecipe, restoreRecipe, getRecipeById, isPinned, togglePin, updateRecipe } = useParsedRecipes();
+  const {
+    isBookmarked,
+    toggleBookmark,
+    removeRecipe,
+    restoreRecipe,
+    getRecipeById,
+    isPinned,
+    togglePin,
+    updateRecipe,
+  } = useParsedRecipes();
   const { parsedRecipe, setParsedRecipe } = useRecipe();
   const { showSuccess, showInfo } = useToast();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -79,7 +88,7 @@ export default function RecipeContextMenu({
       bookmarked ? 'Removed from Cookbook' : 'Added to Cookbook',
       bookmarked
         ? `"${recipe.title}" was removed from your Cookbook.`
-        : `"${recipe.title}" was added to your Cookbook.`
+        : `"${recipe.title}" was added to your Cookbook.`,
     );
   };
 
@@ -89,7 +98,7 @@ export default function RecipeContextMenu({
       pinned ? 'Unpinned' : 'Pinned',
       pinned
         ? `"${recipe.title}" was unpinned.`
-        : `"${recipe.title}" was pinned to the top.`
+        : `"${recipe.title}" was pinned to the top.`,
     );
   };
 
@@ -122,11 +131,17 @@ export default function RecipeContextMenu({
   };
 
   const handleReport = () => {
-    showInfo('Coming soon', 'Reporting recipes will be available in a future update.');
+    showInfo(
+      'Coming soon',
+      'Reporting recipes will be available in a future update.',
+    );
   };
 
   const handleArchive = () => {
-    showInfo('Coming soon', 'Archiving recipes will be available in a future update.');
+    showInfo(
+      'Coming soon',
+      'Archiving recipes will be available in a future update.',
+    );
   };
 
   const handleCopyLink = async () => {
@@ -170,9 +185,11 @@ export default function RecipeContextMenu({
               <DropdownMenuTrigger asChild>
                 <button
                   className={cn(
-                    "absolute right-1 top-1/2 -translate-y-1/2 z-10 p-1 rounded-full transition-opacity",
-                    "text-stone-400 hover:text-stone-600",
-                    dropdownOpen ? "opacity-100" : "opacity-0 group-hover/item:opacity-100",
+                    'absolute right-1 top-1/2 -translate-y-1/2 z-10 p-1 rounded-full transition-opacity',
+                    'text-stone-400 hover:text-stone-600',
+                    dropdownOpen
+                      ? 'opacity-100'
+                      : 'opacity-0 group-hover/item:opacity-100',
                   )}
                   aria-label="Recipe actions"
                   onClick={(e) => e.stopPropagation()}
@@ -181,7 +198,10 @@ export default function RecipeContextMenu({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" side="right" className="w-56">
-                <DropdownMenuItem onSelect={handleOpenNewTab} disabled={!sourceUrl}>
+                <DropdownMenuItem
+                  onSelect={handleOpenNewTab}
+                  disabled={!sourceUrl}
+                >
                   <span>Open in new tab</span>
                   <ExternalLink className="w-4 h-4 ml-auto" />
                 </DropdownMenuItem>
@@ -189,12 +209,19 @@ export default function RecipeContextMenu({
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem onSelect={handleToggleBookmark}>
-                  <span>{bookmarked ? 'Remove from Cookbook' : 'Add to Cookbook'}</span>
+                  <span>
+                    {bookmarked ? 'Remove from Cookbook' : 'Add to Cookbook'}
+                  </span>
                   <Bookmark className="w-4 h-4 ml-auto" />
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={handlePin}>
                   <span>{pinned ? 'Unpin' : 'Pin'}</span>
-                  <Pin className={cn("w-4 h-4 ml-auto", pinned && "text-stone-600")} />
+                  <Pin
+                    className={cn(
+                      'w-4 h-4 ml-auto',
+                      pinned && 'text-stone-600',
+                    )}
+                  />
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={handleRename}>
                   <span>Rename</span>
@@ -211,7 +238,10 @@ export default function RecipeContextMenu({
                   <span>Archive</span>
                   <Archive className="w-4 h-4 ml-auto" />
                 </DropdownMenuItem>
-                <DropdownMenuItem onSelect={handleCopyLink} disabled={!sourceUrl}>
+                <DropdownMenuItem
+                  onSelect={handleCopyLink}
+                  disabled={!sourceUrl}
+                >
                   <span>Copy link</span>
                   <Link className="w-4 h-4 ml-auto" />
                 </DropdownMenuItem>
@@ -238,12 +268,16 @@ export default function RecipeContextMenu({
           <ContextMenuSeparator />
 
           <ContextMenuItem onSelect={handleToggleBookmark}>
-            <span>{bookmarked ? 'Remove from Cookbook' : 'Add to Cookbook'}</span>
+            <span>
+              {bookmarked ? 'Remove from Cookbook' : 'Add to Cookbook'}
+            </span>
             <Bookmark className="w-4 h-4 ml-auto" />
           </ContextMenuItem>
           <ContextMenuItem onSelect={handlePin}>
             <span>{pinned ? 'Unpin' : 'Pin'}</span>
-            <Pin className={cn("w-4 h-4 ml-auto", pinned && "text-stone-600")} />
+            <Pin
+              className={cn('w-4 h-4 ml-auto', pinned && 'text-stone-600')}
+            />
           </ContextMenuItem>
           <ContextMenuItem onSelect={handleRename}>
             <span>Rename</span>
@@ -267,10 +301,7 @@ export default function RecipeContextMenu({
 
           <ContextMenuSeparator />
 
-          <ContextMenuItem
-            variant="destructive"
-            onSelect={handleDelete}
-          >
+          <ContextMenuItem variant="destructive" onSelect={handleDelete}>
             <span>Delete</span>
             <Trash2 className="w-4 h-4 ml-auto" />
           </ContextMenuItem>
@@ -284,12 +315,18 @@ export default function RecipeContextMenu({
           onDialogOpenChange?.(open);
         }}
       >
-        <DialogContent className="max-w-sm p-0 gap-0 overflow-hidden" showCloseButton={false}>
+        <DialogContent
+          className="max-w-sm p-0 gap-0 overflow-hidden"
+          showCloseButton={false}
+        >
           <div className="px-6 pt-6 pb-4">
             <DialogHeader className="mb-4">
               <DialogTitle>Rename Recipe</DialogTitle>
             </DialogHeader>
-            <label htmlFor="rename-sidebar-input" className="block font-albert text-[13px] font-medium text-stone-500 mb-1.5">
+            <label
+              htmlFor="rename-sidebar-input"
+              className="block font-albert text-[13px] font-medium text-stone-500 mb-1.5"
+            >
               Recipe title
             </label>
             <Input

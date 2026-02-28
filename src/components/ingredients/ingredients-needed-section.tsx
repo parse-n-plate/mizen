@@ -8,10 +8,10 @@ interface IngredientsNeededSectionProps {
   variant?: 'compact' | 'spacious' | 'minimal';
 }
 
-export function IngredientsNeededSection({ 
-  ingredientNames, 
-  allIngredients, 
-  variant = 'compact' 
+export function IngredientsNeededSection({
+  ingredientNames,
+  allIngredients,
+  variant = 'compact',
 }: IngredientsNeededSectionProps) {
   if (!ingredientNames || ingredientNames.length === 0) return null;
 
@@ -21,12 +21,14 @@ export function IngredientsNeededSection({
 
     for (const group of allIngredients) {
       for (const ing of group.ingredients) {
-        if (ing.ingredient.toLowerCase().includes(name.toLowerCase()) || 
-            name.toLowerCase().includes(ing.ingredient.toLowerCase())) {
-          return { 
-            name: ing.ingredient, 
-            amount: ing.amount, 
-            units: ing.units 
+        if (
+          ing.ingredient.toLowerCase().includes(name.toLowerCase()) ||
+          name.toLowerCase().includes(ing.ingredient.toLowerCase())
+        ) {
+          return {
+            name: ing.ingredient,
+            amount: ing.amount,
+            units: ing.units,
           };
         }
       }
@@ -34,14 +36,22 @@ export function IngredientsNeededSection({
     return { name, amount: '', units: '' };
   };
 
-  const ingredients = ingredientNames.map(name => getIngredientDetails(name));
+  const ingredients = ingredientNames.map((name) => getIngredientDetails(name));
 
   if (variant === 'compact') {
     return (
       <div className="flex flex-wrap gap-1.5 mt-2">
         {ingredients.map((ing, i) => (
-          <Badge key={i} variant="secondary" className="text-xs font-normal bg-stone-100 text-stone-700 border-stone-200">
-            {ing.amount && <span className="font-semibold mr-1">{ing.amount} {ing.units}</span>}
+          <Badge
+            key={i}
+            variant="secondary"
+            className="text-xs font-normal bg-stone-100 text-stone-700 border-stone-200"
+          >
+            {ing.amount && (
+              <span className="font-semibold mr-1">
+                {ing.amount} {ing.units}
+              </span>
+            )}
             {ing.name}
           </Badge>
         ))}
@@ -56,7 +66,10 @@ export function IngredientsNeededSection({
       </h4>
       <div className="grid grid-cols-1 gap-2">
         {ingredients.map((ing, i) => (
-          <div key={i} className="flex items-center gap-2 text-sm text-stone-800 bg-stone-50 p-2 rounded-md border border-stone-100">
+          <div
+            key={i}
+            className="flex items-center gap-2 text-sm text-stone-800 bg-stone-50 p-2 rounded-md border border-stone-100"
+          >
             <div className="h-1.5 w-1.5 rounded-full bg-orange-400 flex-shrink-0" />
             <span className="font-medium">
               {ing.amount} {ing.units}
@@ -68,4 +81,3 @@ export function IngredientsNeededSection({
     </div>
   );
 }
-

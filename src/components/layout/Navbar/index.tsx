@@ -24,12 +24,16 @@ export default function Navbar() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setUser(user);
     };
     getUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 
@@ -46,7 +50,10 @@ export default function Navbar() {
     <div className="bg-white px-4 md:px-6 py-3 md:py-4 sticky top-0 z-[10000] border-b border-stone-200">
       <div className="max-w-6xl mx-auto flex items-center gap-4 md:gap-6">
         <div className="flex items-center flex-shrink-0">
-          <Link href="/" className="group transition-all duration-300 ease-in-out">
+          <Link
+            href="/"
+            className="group transition-all duration-300 ease-in-out"
+          >
             <PPLogo />
           </Link>
         </div>
@@ -61,9 +68,7 @@ export default function Navbar() {
             <Link
               href="/cookbook"
               className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 border border-stone-200 ${
-                isOnSavedRecipesPage
-                  ? 'bg-stone-200'
-                  : 'hover:bg-stone-100'
+                isOnSavedRecipesPage ? 'bg-stone-200' : 'hover:bg-stone-100'
               }`}
               aria-label="View Cookbook"
               aria-current={isOnSavedRecipesPage ? 'page' : undefined}
@@ -73,17 +78,19 @@ export default function Navbar() {
                   isOnSavedRecipesPage
                     ? 'fill-[#0C0A09] text-[#0C0A09]'
                     : hasSavedRecipes
-                    ? 'fill-[#78716C] text-[#78716C]'
-                    : 'fill-[#A8A29E] text-[#A8A29E]'
+                      ? 'fill-[#78716C] text-[#78716C]'
+                      : 'fill-[#A8A29E] text-[#A8A29E]'
                 }`}
               />
-              <span className={`font-albert text-sm font-medium transition-colors ${
-                isOnSavedRecipesPage
-                  ? 'text-stone-900'
-                  : hasSavedRecipes
-                  ? 'text-stone-600'
-                  : 'text-stone-400'
-              }`}>
+              <span
+                className={`font-albert text-sm font-medium transition-colors ${
+                  isOnSavedRecipesPage
+                    ? 'text-stone-900'
+                    : hasSavedRecipes
+                      ? 'text-stone-600'
+                      : 'text-stone-400'
+                }`}
+              >
                 Cookbook
               </span>
             </Link>
@@ -109,7 +116,8 @@ export default function Navbar() {
                     />
                   ) : (
                     <span className="font-albert text-xs font-bold text-stone-600">
-                      {user.user_metadata?.full_name?.split(' ')[0]?.[0] || user.email?.[0].toUpperCase()}
+                      {user.user_metadata?.full_name?.split(' ')[0]?.[0] ||
+                        user.email?.[0].toUpperCase()}
                     </span>
                   )}
                 </div>

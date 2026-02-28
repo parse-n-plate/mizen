@@ -28,60 +28,62 @@ export interface RecipeStep {
 }
 
 export interface ParsedRecipe {
-  id?: string;                   // Recipe ID (for syncing with recent recipes)
+  id?: string; // Recipe ID (for syncing with recent recipes)
   title?: string;
-  description?: string;          // NEW: Recipe description
-  summary?: string;             // NEW: AI-generated recipe summary (1-2 sentences)
-  imageUrl?: string;              // NEW: Recipe image URL
-  imageData?: string;             // NEW: Base64 image data for uploaded images
-  imageFilename?: string;         // NEW: Original filename for uploaded images
-  author?: string;                // NEW: Recipe author/source
-  publishedDate?: string;         // NEW: Publication date
-  sourceUrl?: string;             // NEW: Source URL
-  cookTimeMinutes?: number;       // NEW: Cook time in minutes
-  prepTimeMinutes?: number;       // NEW: Prep time in minutes
-  totalTimeMinutes?: number;      // NEW: Total time in minutes
-  servings?: number;             // NEW: Number of servings
-  cuisine?: string[];            // NEW: Cuisine types/tags
+  description?: string; // NEW: Recipe description
+  summary?: string; // NEW: AI-generated recipe summary (1-2 sentences)
+  imageUrl?: string; // NEW: Recipe image URL
+  imageData?: string; // NEW: Base64 image data for uploaded images
+  imageFilename?: string; // NEW: Original filename for uploaded images
+  author?: string; // NEW: Recipe author/source
+  publishedDate?: string; // NEW: Publication date
+  sourceUrl?: string; // NEW: Source URL
+  cookTimeMinutes?: number; // NEW: Cook time in minutes
+  prepTimeMinutes?: number; // NEW: Prep time in minutes
+  totalTimeMinutes?: number; // NEW: Total time in minutes
+  servings?: number; // NEW: Number of servings
+  cuisine?: string[]; // NEW: Cuisine types/tags
   // Storage guidance - generated during initial parse (top-level for immediate access)
-  storageGuide?: string;         // Storage instructions from initial AI parse
+  storageGuide?: string; // Storage instructions from initial AI parse
   shelfLife?: {
-    fridge?: number | null;      // Days in fridge (null if not fridge-safe)
-    freezer?: number | null;     // Days in freezer (null if not freezer-friendly)
+    fridge?: number | null; // Days in fridge (null if not fridge-safe)
+    freezer?: number | null; // Days in freezer (null if not freezer-friendly)
   };
   // Plating/serving guidance - generated during initial parse (top-level for immediate access)
-  platingNotes?: string;         // Plating suggestions from initial AI parse
-  servingVessel?: string;        // Recommended serving vessel (e.g., "shallow bowl", "plate")
-  servingTemp?: string;          // Ideal serving temperature (e.g., "hot", "warm", "room temp", "chilled")
-  rating?: number;               // NEW: Recipe rating (1-5)
-  skills?: {                    // NEW: Required cooking skills
-    techniques?: string[];      // Cooking techniques needed
-    knifework?: string[];       // Knife skills needed
+  platingNotes?: string; // Plating suggestions from initial AI parse
+  servingVessel?: string; // Recommended serving vessel (e.g., "shallow bowl", "plate")
+  servingTemp?: string; // Ideal serving temperature (e.g., "hot", "warm", "room temp", "chilled")
+  rating?: number; // NEW: Recipe rating (1-5)
+  skills?: {
+    // NEW: Required cooking skills
+    techniques?: string[]; // Cooking techniques needed
+    knifework?: string[]; // Knife skills needed
   };
-  plate?: {                     // NEW: Plate stage data
+  plate?: {
+    // NEW: Plate stage data
     // Legacy single photo support (backward compatibility)
-    photoData?: string;         // Base64 user plate photo
-    photoFilename?: string;     // Original filename
-    capturedAt?: string;        // ISO timestamp of photo capture
+    photoData?: string; // Base64 user plate photo
+    photoFilename?: string; // Original filename
+    capturedAt?: string; // ISO timestamp of photo capture
     // New multi-photo support (up to 5 photos)
     photos?: Array<{
       data: string;
       filename: string;
       capturedAt: string;
-      rating?: number;        // 1-5 star rating
+      rating?: number; // 1-5 star rating
     }>;
     // AI-generated guidance
-    platingNotes?: string;      // AI-generated plating suggestions
-    servingVessel?: string;     // e.g., "shallow bowl", "plate"
-    servingTemp?: string;       // e.g., "hot", "room temp", "chilled"
-    storageGuide?: string;      // Storage instructions
+    platingNotes?: string; // AI-generated plating suggestions
+    servingVessel?: string; // e.g., "shallow bowl", "plate"
+    servingTemp?: string; // e.g., "hot", "room temp", "chilled"
+    storageGuide?: string; // Storage instructions
     shelfLife?: {
-      fridge?: number | null;   // days in refrigerator
-      freezer?: number | null;  // days in freezer
+      fridge?: number | null; // days in refrigerator
+      freezer?: number | null; // days in freezer
     };
-    storedAt?: string;          // ISO timestamp when stored
-    sharedAt?: string[];        // Array of share timestamps
-    shareCount?: number;        // Total shares
+    storedAt?: string; // ISO timestamp when stored
+    sharedAt?: string[]; // Array of share timestamps
+    shareCount?: number; // Total shares
   };
   ingredients: {
     groupName: string;
@@ -195,9 +197,14 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
           hasPhotoData: !!normalizedRecipe.plate?.photoData,
           photoDataLength: normalizedRecipe.plate?.photoData?.length || 0,
         });
-        updateRecipeInStorage(normalizedRecipe.id, normalizedRecipe as Partial<ParsedRecipe>);
+        updateRecipeInStorage(
+          normalizedRecipe.id,
+          normalizedRecipe as Partial<ParsedRecipe>,
+        );
       } else {
-        console.warn('[RecipeContext] ⚠️ Recipe has no ID, cannot sync to recentRecipes');
+        console.warn(
+          '[RecipeContext] ⚠️ Recipe has no ID, cannot sync to recentRecipes',
+        );
       }
     } else {
       setParsedRecipe(null);

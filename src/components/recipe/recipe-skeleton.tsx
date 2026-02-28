@@ -225,15 +225,3 @@ export default function RecipeSkeleton() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-

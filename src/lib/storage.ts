@@ -143,9 +143,7 @@ function normalizeInstructions(
             ? cleanLeading(obj.title.trim())
             : `Step ${index + 1}`;
         const detail =
-          typeof obj.detail === 'string'
-            ? cleanLeading(obj.detail.trim())
-            : '';
+          typeof obj.detail === 'string' ? cleanLeading(obj.detail.trim()) : '';
 
         // If there is no usable detail, drop the step
         if (!detail) return null;
@@ -316,18 +314,27 @@ export function removeRecentRecipe(id: string): void {
  * @param recipe - The full recipe object to restore
  * @param wasBookmarked - Whether the recipe was bookmarked before deletion
  */
-export function restoreRecentRecipe(recipe: ParsedRecipe, wasBookmarked: boolean): void {
+export function restoreRecentRecipe(
+  recipe: ParsedRecipe,
+  wasBookmarked: boolean,
+): void {
   try {
     const recentRecipes = getRecentRecipes();
     // Avoid duplicates
     if (!recentRecipes.some((r) => r.id === recipe.id)) {
-      localStorage.setItem(RECENT_RECIPES_KEY, JSON.stringify([recipe, ...recentRecipes]));
+      localStorage.setItem(
+        RECENT_RECIPES_KEY,
+        JSON.stringify([recipe, ...recentRecipes]),
+      );
     }
 
     if (wasBookmarked) {
       const bookmarks = getBookmarkedRecipes();
       if (!bookmarks.some((r) => r.id === recipe.id)) {
-        localStorage.setItem(BOOKMARKED_RECIPES_KEY, JSON.stringify([...bookmarks, recipe]));
+        localStorage.setItem(
+          BOOKMARKED_RECIPES_KEY,
+          JSON.stringify([...bookmarks, recipe]),
+        );
       }
     }
   } catch (error) {

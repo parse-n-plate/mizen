@@ -4,9 +4,9 @@ import Image from 'next/image';
 
 /**
  * PotIcon Component
- * 
+ *
  * Displays the cooking pot icon used in the hero section and category headers.
- * 
+ *
  * If you have a pot icon SVG in /assets/icons/pot-icon.svg, it will use that.
  * Otherwise, it falls back to an emoji placeholder.
  */
@@ -34,8 +34,3 @@ export default function PotIcon({ className = '' }: { className?: string }) {
     </div>
   );
 }
-
-
-
-
-

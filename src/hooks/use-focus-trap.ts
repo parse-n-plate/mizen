@@ -39,8 +39,9 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>({
 
   const getFocusableElements = useCallback((): HTMLElement[] => {
     if (!containerRef.current) return [];
-    return Array.from(containerRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR))
-      .filter((el) => el.offsetParent !== null); // visible only
+    return Array.from(
+      containerRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+    ).filter((el) => el.offsetParent !== null); // visible only
   }, []);
 
   // Capture previously focused element before activation

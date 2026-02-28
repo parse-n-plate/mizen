@@ -46,10 +46,8 @@ export function UISettingsProvider({ children }: { children: ReactNode }) {
       if (stored) {
         const parsed = JSON.parse(stored) as Partial<UISettingsState>;
         setSettings({
-          stepSizing:
-            parsed.stepSizing ?? defaultSettings.stepSizing,
-          fontFamily:
-            parsed.fontFamily ?? defaultSettings.fontFamily,
+          stepSizing: parsed.stepSizing ?? defaultSettings.stepSizing,
+          fontFamily: parsed.fontFamily ?? defaultSettings.fontFamily,
         });
       }
     } catch (error) {
@@ -102,4 +100,3 @@ export function useUISettings() {
   }
   return context;
 }
-

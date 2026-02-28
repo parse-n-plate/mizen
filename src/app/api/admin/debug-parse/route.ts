@@ -1,6 +1,6 @@
 /**
  * Admin Debug API Endpoint
- * 
+ *
  * This endpoint provides detailed step-by-step information about the parsing process
  * for debugging and monitoring purposes.
  */
@@ -57,13 +57,13 @@ interface DebugStep {
 /**
  * GET /api/admin/debug-parse?url=<recipe_url>&customPrompt=<prompt>
  * POST /api/admin/debug-parse (body: { url: string, customPrompt?: string })
- * 
+ *
  * Returns detailed debug information about each step of the parsing process
  * Supports custom AI prompts for testing different extraction strategies
  */
 export async function GET(req: NextRequest): Promise<Response> {
   const steps: DebugStep[] = [];
-  
+
   try {
     const url = req.nextUrl.searchParams.get('url');
     const customPrompt = req.nextUrl.searchParams.get('customPrompt');
@@ -94,7 +94,13 @@ export async function GET(req: NextRequest): Promise<Response> {
       hasInstructions: false,
       hasSchema: false,
       isRecipe: false,
-      details: { title: '', titleLength: 0, ingredientGroups: 0, totalIngredients: 0, instructionCount: 0 },
+      details: {
+        title: '',
+        titleLength: 0,
+        ingredientGroups: 0,
+        totalIngredients: 0,
+        instructionCount: 0,
+      },
     };
 
     // Step 1: Fetch raw HTML
@@ -134,7 +140,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     // Step 2: Clean HTML
     console.log('[Debug API] Step 2: Cleaning HTML...');
     const cleaned = cleanRecipeHTML(rawHtml);
-    
+
     if (!cleaned.success || !cleaned.html) {
       return NextResponse.json({
         success: false,
@@ -152,7 +158,9 @@ export async function GET(req: NextRequest): Promise<Response> {
     });
 
     // CHECKPOINT 2: Recipe Parsing - Try JSON-LD extraction first
-    console.log('[Debug API] CHECKPOINT 2: Recipe Parsing - Attempting JSON-LD extraction...');
+    console.log(
+      '[Debug API] CHECKPOINT 2: Recipe Parsing - Attempting JSON-LD extraction...',
+    );
     const $ = cheerio.load(cleaned.html);
     let jsonLdResult = null;
 
@@ -170,14 +178,23 @@ export async function GET(req: NextRequest): Promise<Response> {
             item['@type'] === 'Recipe' ||
             (item['@graph'] &&
               Array.isArray(item['@graph']) &&
-              item['@graph'].some((g: JsonLdGraphItem) => g['@type'] === 'Recipe'))
+              item['@graph'].some(
+                (g: JsonLdGraphItem) => g['@type'] === 'Recipe',
+              ))
           ) {
             const recipe =
               item['@type'] === 'Recipe'
                 ? item
-                : item['@graph'].find((g: JsonLdGraphItem) => g['@type'] === 'Recipe');
+                : item['@graph'].find(
+                    (g: JsonLdGraphItem) => g['@type'] === 'Recipe',
+                  );
 
-            if (recipe && recipe.name && recipe.recipeIngredient && recipe.recipeInstructions) {
+            if (
+              recipe &&
+              recipe.name &&
+              recipe.recipeIngredient &&
+              recipe.recipeInstructions
+            ) {
               jsonLdResult = recipe;
               break;
             }
@@ -203,7 +220,7 @@ export async function GET(req: NextRequest): Promise<Response> {
       const ingredientStrings = Array.isArray(jsonLdResult.recipeIngredient)
         ? jsonLdResult.recipeIngredient
         : [];
-      
+
       const ingredients = [
         {
           groupName: 'Main',
@@ -222,7 +239,8 @@ export async function GET(req: NextRequest): Promise<Response> {
             if (typeof inst === 'string') return inst.trim();
             if (typeof inst === 'object' && inst !== null) {
               if (inst.text) return inst.text.trim();
-              if (inst['@type'] === 'HowToStep' && inst.name) return inst.name.trim();
+              if (inst['@type'] === 'HowToStep' && inst.name)
+                return inst.name.trim();
             }
             return '';
           })
@@ -230,14 +248,24 @@ export async function GET(req: NextRequest): Promise<Response> {
       }
 
       // Extract author if available
-      const author = jsonLdResult.author?.name || jsonLdResult.author || jsonLdResult.publisher?.name || undefined;
+      const author =
+        jsonLdResult.author?.name ||
+        jsonLdResult.author ||
+        jsonLdResult.publisher?.name ||
+        undefined;
 
       // CHECKPOINT 3: Data Validation
       const validationResult: ValidationResult = {
         hasTitle: false,
         hasIngredients: false,
         hasInstructions: false,
-        details: { title: '', titleLength: 0, ingredientGroups: 0, totalIngredients: 0, instructionCount: 0 },
+        details: {
+          title: '',
+          titleLength: 0,
+          ingredientGroups: 0,
+          totalIngredients: 0,
+          instructionCount: 0,
+        },
       };
 
       validationResult.hasTitle =
@@ -252,7 +280,7 @@ export async function GET(req: NextRequest): Promise<Response> {
           (group: IngredientGroup) =>
             group.ingredients &&
             Array.isArray(group.ingredients) &&
-            group.ingredients.length > 0
+            group.ingredients.length > 0,
         );
 
       validationResult.hasInstructions = instructions.length > 0;
@@ -261,7 +289,11 @@ export async function GET(req: NextRequest): Promise<Response> {
         title: title || 'missing',
         titleLength: title?.length || 0,
         ingredientGroups: ingredients.length,
-        totalIngredients: ingredients.reduce((sum: number, g: IngredientGroup) => sum + (g.ingredients?.length || 0), 0),
+        totalIngredients: ingredients.reduce(
+          (sum: number, g: IngredientGroup) =>
+            sum + (g.ingredients?.length || 0),
+          0,
+        ),
         instructionCount: instructions.length,
       };
 
@@ -291,7 +323,15 @@ export async function GET(req: NextRequest): Promise<Response> {
       steps.push({
         step: 'final_result',
         title: 'Final Parsed Recipe (via JSON-LD)',
-        data: { title, ingredients, instructions, method: 'json-ld', validationPassed, author, sourceUrl: url },
+        data: {
+          title,
+          ingredients,
+          instructions,
+          method: 'json-ld',
+          validationPassed,
+          author,
+          sourceUrl: url,
+        },
         success: validationPassed,
         timestamp: Date.now(),
       });
@@ -316,8 +356,10 @@ export async function GET(req: NextRequest): Promise<Response> {
     }
 
     // CHECKPOINT 2 (continued): AI Parsing fallback
-    console.log('[Debug API] CHECKPOINT 2: Recipe Parsing - Using AI fallback...');
-    
+    console.log(
+      '[Debug API] CHECKPOINT 2: Recipe Parsing - Using AI fallback...',
+    );
+
     if (!process.env.GROQ_API_KEY) {
       return NextResponse.json({
         success: false,
@@ -331,7 +373,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     });
 
     const limitedHtml = cleaned.html.slice(0, 15000);
-    
+
     // Use custom prompt if provided, otherwise use default
     const defaultPrompt = `========================================
 CRITICAL OUTPUT FORMAT
@@ -520,11 +562,14 @@ ABSOLUTE REQUIREMENTS:
 - The recipe data exists in the HTML - extract it carefully`;
 
     // Use custom prompt if provided (from query param or request body)
-    const aiPrompt = customPrompt && customPrompt.trim() ? customPrompt.trim() : defaultPrompt;
+    const aiPrompt =
+      customPrompt && customPrompt.trim() ? customPrompt.trim() : defaultPrompt;
 
     steps.push({
       step: 'ai_prompt',
-      title: customPrompt ? 'AI Prompt Sent (Custom)' : 'AI Prompt Sent (Default)',
+      title: customPrompt
+        ? 'AI Prompt Sent (Custom)'
+        : 'AI Prompt Sent (Default)',
       data: aiPrompt,
       success: true,
       timestamp: Date.now(),
@@ -593,8 +638,12 @@ ABSOLUTE REQUIREMENTS:
     // Convert null values to empty arrays to prevent UI errors
     const normalizedData = {
       title: parsedData.title || 'No title found',
-      ingredients: Array.isArray(parsedData.ingredients) ? parsedData.ingredients : [],
-      instructions: Array.isArray(parsedData.instructions) ? parsedData.instructions : [],
+      ingredients: Array.isArray(parsedData.ingredients)
+        ? parsedData.ingredients
+        : [],
+      instructions: Array.isArray(parsedData.instructions)
+        ? parsedData.instructions
+        : [],
       method: 'ai',
       author: parsedData.author || undefined,
       sourceUrl: url,
@@ -602,7 +651,12 @@ ABSOLUTE REQUIREMENTS:
 
     // Log warning if null values were found
     if (parsedData.ingredients === null || parsedData.instructions === null) {
-      console.warn('[Debug API] AI returned null values. Ingredients:', parsedData.ingredients, 'Instructions:', parsedData.instructions);
+      console.warn(
+        '[Debug API] AI returned null values. Ingredients:',
+        parsedData.ingredients,
+        'Instructions:',
+        parsedData.instructions,
+      );
       steps.push({
         step: 'warning',
         title: '⚠️ Warning: AI returned null values',
@@ -617,7 +671,13 @@ ABSOLUTE REQUIREMENTS:
       hasTitle: false,
       hasIngredients: false,
       hasInstructions: false,
-      details: { title: '', titleLength: 0, ingredientGroups: 0, totalIngredients: 0, instructionCount: 0 },
+      details: {
+        title: '',
+        titleLength: 0,
+        ingredientGroups: 0,
+        totalIngredients: 0,
+        instructionCount: 0,
+      },
     };
 
     validationResult.hasTitle =
@@ -633,7 +693,7 @@ ABSOLUTE REQUIREMENTS:
         (group: IngredientGroup) =>
           group.ingredients &&
           Array.isArray(group.ingredients) &&
-          group.ingredients.length > 0
+          group.ingredients.length > 0,
       );
 
     validationResult.hasInstructions = normalizedData.instructions.length > 0;
@@ -642,7 +702,10 @@ ABSOLUTE REQUIREMENTS:
       title: normalizedData.title || 'missing',
       titleLength: normalizedData.title?.length || 0,
       ingredientGroups: normalizedData.ingredients.length,
-      totalIngredients: normalizedData.ingredients.reduce((sum: number, g: IngredientGroup) => sum + (g.ingredients?.length || 0), 0),
+      totalIngredients: normalizedData.ingredients.reduce(
+        (sum: number, g: IngredientGroup) => sum + (g.ingredients?.length || 0),
+        0,
+      ),
       instructionCount: normalizedData.instructions.length,
     };
 
@@ -688,7 +751,8 @@ ABSOLUTE REQUIREMENTS:
     });
   } catch (error) {
     console.error('[Debug API] Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
 
     return NextResponse.json({
       success: false,
@@ -700,13 +764,13 @@ ABSOLUTE REQUIREMENTS:
 
 /**
  * POST /api/admin/debug-parse
- * 
+ *
  * Same as GET but accepts URL and customPrompt in request body
  * Useful for sending large custom prompts that exceed URL length limits
  */
 export async function POST(req: NextRequest): Promise<Response> {
   const steps: DebugStep[] = [];
-  
+
   try {
     const body = await req.json();
     const { url, customPrompt } = body;
@@ -728,7 +792,9 @@ export async function POST(req: NextRequest): Promise<Response> {
       });
     }
 
-    console.log(`[Debug API] Starting debug parse for: ${url}${customPrompt ? ' (with custom prompt)' : ''}`);
+    console.log(
+      `[Debug API] Starting debug parse for: ${url}${customPrompt ? ' (with custom prompt)' : ''}`,
+    );
 
     // Reuse the same logic as GET handler, but use customPrompt from body
     // Step 1: Fetch raw HTML
@@ -768,7 +834,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     // Step 2: Clean HTML
     console.log('[Debug API] Step 2: Cleaning HTML...');
     const cleaned = cleanRecipeHTML(rawHtml);
-    
+
     if (!cleaned.success || !cleaned.html) {
       return NextResponse.json({
         success: false,
@@ -804,14 +870,23 @@ export async function POST(req: NextRequest): Promise<Response> {
             item['@type'] === 'Recipe' ||
             (item['@graph'] &&
               Array.isArray(item['@graph']) &&
-              item['@graph'].some((g: JsonLdGraphItem) => g['@type'] === 'Recipe'))
+              item['@graph'].some(
+                (g: JsonLdGraphItem) => g['@type'] === 'Recipe',
+              ))
           ) {
             const recipe =
               item['@type'] === 'Recipe'
                 ? item
-                : item['@graph'].find((g: JsonLdGraphItem) => g['@type'] === 'Recipe');
+                : item['@graph'].find(
+                    (g: JsonLdGraphItem) => g['@type'] === 'Recipe',
+                  );
 
-            if (recipe && recipe.name && recipe.recipeIngredient && recipe.recipeInstructions) {
+            if (
+              recipe &&
+              recipe.name &&
+              recipe.recipeIngredient &&
+              recipe.recipeInstructions
+            ) {
               jsonLdResult = recipe;
               break;
             }
@@ -837,7 +912,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       const ingredientStrings = Array.isArray(jsonLdResult.recipeIngredient)
         ? jsonLdResult.recipeIngredient
         : [];
-      
+
       const ingredients = [
         {
           groupName: 'Main',
@@ -856,7 +931,8 @@ export async function POST(req: NextRequest): Promise<Response> {
             if (typeof inst === 'string') return inst.trim();
             if (typeof inst === 'object' && inst !== null) {
               if (inst.text) return inst.text.trim();
-              if (inst['@type'] === 'HowToStep' && inst.name) return inst.name.trim();
+              if (inst['@type'] === 'HowToStep' && inst.name)
+                return inst.name.trim();
             }
             return '';
           })
@@ -864,12 +940,23 @@ export async function POST(req: NextRequest): Promise<Response> {
       }
 
       // Extract author if available
-      const author = jsonLdResult.author?.name || jsonLdResult.author || jsonLdResult.publisher?.name || undefined;
+      const author =
+        jsonLdResult.author?.name ||
+        jsonLdResult.author ||
+        jsonLdResult.publisher?.name ||
+        undefined;
 
       steps.push({
         step: 'final_result',
         title: 'Final Parsed Recipe (via JSON-LD)',
-        data: { title, ingredients, instructions, method: 'json-ld', author, sourceUrl: url },
+        data: {
+          title,
+          ingredients,
+          instructions,
+          method: 'json-ld',
+          author,
+          sourceUrl: url,
+        },
         success: true,
         timestamp: Date.now(),
       });
@@ -890,7 +977,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     // Step 4: AI Parsing with custom prompt support
     console.log('[Debug API] Step 4: Using AI to parse...');
-    
+
     if (!process.env.GROQ_API_KEY) {
       return NextResponse.json({
         success: false,
@@ -904,7 +991,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     });
 
     const limitedHtml = cleaned.html.slice(0, 15000);
-    
+
     // Use custom prompt if provided, otherwise use default
     const defaultPrompt = `========================================
 CRITICAL OUTPUT FORMAT
@@ -1093,11 +1180,14 @@ ABSOLUTE REQUIREMENTS:
 - The recipe data exists in the HTML - extract it carefully`;
 
     // Use custom prompt if provided
-    const aiPrompt = customPrompt && customPrompt.trim() ? customPrompt.trim() : defaultPrompt;
+    const aiPrompt =
+      customPrompt && customPrompt.trim() ? customPrompt.trim() : defaultPrompt;
 
     steps.push({
       step: 'ai_prompt',
-      title: customPrompt ? 'AI Prompt Sent (Custom)' : 'AI Prompt Sent (Default)',
+      title: customPrompt
+        ? 'AI Prompt Sent (Custom)'
+        : 'AI Prompt Sent (Default)',
       data: aiPrompt,
       success: true,
       timestamp: Date.now(),
@@ -1166,8 +1256,12 @@ ABSOLUTE REQUIREMENTS:
     // Convert null values to empty arrays to prevent UI errors
     const normalizedData = {
       title: parsedData.title || 'No title found',
-      ingredients: Array.isArray(parsedData.ingredients) ? parsedData.ingredients : [],
-      instructions: Array.isArray(parsedData.instructions) ? parsedData.instructions : [],
+      ingredients: Array.isArray(parsedData.ingredients)
+        ? parsedData.ingredients
+        : [],
+      instructions: Array.isArray(parsedData.instructions)
+        ? parsedData.instructions
+        : [],
       method: 'ai',
       author: parsedData.author || undefined,
       sourceUrl: url,
@@ -1175,7 +1269,12 @@ ABSOLUTE REQUIREMENTS:
 
     // Log warning if null values were found
     if (parsedData.ingredients === null || parsedData.instructions === null) {
-      console.warn('[Debug API] AI returned null values. Ingredients:', parsedData.ingredients, 'Instructions:', parsedData.instructions);
+      console.warn(
+        '[Debug API] AI returned null values. Ingredients:',
+        parsedData.ingredients,
+        'Instructions:',
+        parsedData.instructions,
+      );
       steps.push({
         step: 'warning',
         title: '⚠️ Warning: AI returned null values',
@@ -1199,7 +1298,8 @@ ABSOLUTE REQUIREMENTS:
     });
   } catch (error) {
     console.error('[Debug API] POST Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
 
     return NextResponse.json({
       success: false,
@@ -1208,5 +1308,3 @@ ABSOLUTE REQUIREMENTS:
     });
   }
 }
-
-

@@ -16,14 +16,16 @@ export function AdminPrototypingPanel() {
   const { addRecipe, clearRecipes, recentRecipes } = useParsedRecipes();
   const [showLoadingAnimation, setShowLoadingAnimation] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [loadingPhase, setLoadingPhase] = useState<'gathering' | 'reading' | 'plating' | 'done' | undefined>(undefined);
+  const [loadingPhase, setLoadingPhase] = useState<
+    'gathering' | 'reading' | 'plating' | 'done' | undefined
+  >(undefined);
   const [selectedFixtures, setSelectedFixtures] = useState<Set<number>>(
     () => new Set(TEST_FIXTURE_RECIPES.map((_, i) => i)),
   );
   const [isSeeding, setIsSeeding] = useState(false);
 
   const toggleFixture = (index: number) => {
-    setSelectedFixtures(prev => {
+    setSelectedFixtures((prev) => {
       const next = new Set(prev);
       if (next.has(index)) next.delete(index);
       else next.add(index);
@@ -85,12 +87,14 @@ export function AdminPrototypingPanel() {
     setIsSeeding(true);
     try {
       clearRecipes();
-      const recipesToSeed = TEST_FIXTURE_RECIPES.filter((_, i) => selectedFixtures.has(i));
+      const recipesToSeed = TEST_FIXTURE_RECIPES.filter((_, i) =>
+        selectedFixtures.has(i),
+      );
       for (const fixture of recipesToSeed) {
         addRecipe(fixture.recipe as Parameters<typeof addRecipe>[0]);
       }
       toast.success(`Seeded ${recipesToSeed.length} test recipes`, {
-        description: recipesToSeed.map(f => f.label).join(', '),
+        description: recipesToSeed.map((f) => f.label).join(', '),
       });
     } catch {
       toast.error('Failed to seed recipes');
@@ -110,9 +114,9 @@ export function AdminPrototypingPanel() {
       {isOpen && (
         <div
           className={cn(
-            "fixed inset-0 z-[100]",
-            "bg-black/40 backdrop-blur-sm",
-            "animate-in fade-in duration-200"
+            'fixed inset-0 z-[100]',
+            'bg-black/40 backdrop-blur-sm',
+            'animate-in fade-in duration-200',
           )}
           onClick={closeLab}
           aria-hidden="true"
@@ -123,13 +127,13 @@ export function AdminPrototypingPanel() {
       {isOpen && (
         <div
           className={cn(
-            "fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[101]",
-            "bg-white border border-[#E0E0E0]",
-            "shadow-2xl",
-            "rounded-xl",
-            "w-[90vw] max-w-md",
-            "max-h-[85vh] overflow-y-auto",
-            "animate-in fade-in zoom-in-95 duration-200"
+            'fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[101]',
+            'bg-white border border-[#E0E0E0]',
+            'shadow-2xl',
+            'rounded-xl',
+            'w-[90vw] max-w-md',
+            'max-h-[85vh] overflow-y-auto',
+            'animate-in fade-in zoom-in-95 duration-200',
           )}
           onClick={(e) => e.stopPropagation()}
         >
@@ -138,16 +142,18 @@ export function AdminPrototypingPanel() {
             <div className="flex items-center justify-between pb-4">
               <div className="flex items-center gap-2">
                 <MousePointer2 className="h-4 w-4 text-[#FFBA25]" />
-                <h2 className="font-domine font-bold text-stone-900">Prototype Lab</h2>
+                <h2 className="font-domine font-bold text-stone-900">
+                  Prototype Lab
+                </h2>
               </div>
               <button
                 onClick={closeLab}
                 className={cn(
-                  "w-6 h-6 rounded-full",
-                  "flex items-center justify-center",
-                  "text-stone-400 hover:text-stone-900",
-                  "hover:bg-stone-100",
-                  "transition-colors"
+                  'w-6 h-6 rounded-full',
+                  'flex items-center justify-center',
+                  'text-stone-400 hover:text-stone-900',
+                  'hover:bg-stone-100',
+                  'transition-colors',
                 )}
                 aria-label="Close Prototype Lab"
                 title="Close (Esc)"
@@ -185,7 +191,9 @@ export function AdminPrototypingPanel() {
                   onClick={toggleAll}
                   className="text-[10px] font-albert font-medium text-stone-500 hover:text-stone-900 transition-colors whitespace-nowrap ml-2"
                 >
-                  {selectedFixtures.size === TEST_FIXTURE_RECIPES.length ? 'Deselect all' : 'Select all'}
+                  {selectedFixtures.size === TEST_FIXTURE_RECIPES.length
+                    ? 'Deselect all'
+                    : 'Select all'}
                 </button>
               </div>
 
@@ -198,17 +206,17 @@ export function AdminPrototypingPanel() {
                       key={fixture.label}
                       onClick={() => toggleFixture(index)}
                       className={cn(
-                        "w-full flex items-center gap-2.5 p-2 rounded-lg transition-colors text-left",
-                        "hover:bg-stone-50",
-                        checked ? "opacity-100" : "opacity-50"
+                        'w-full flex items-center gap-2.5 p-2 rounded-lg transition-colors text-left',
+                        'hover:bg-stone-50',
+                        checked ? 'opacity-100' : 'opacity-50',
                       )}
                     >
                       <div
                         className={cn(
-                          "w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-colors",
+                          'w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-colors',
                           checked
-                            ? "bg-stone-900 border-stone-900"
-                            : "border-stone-300 bg-white"
+                            ? 'bg-stone-900 border-stone-900'
+                            : 'border-stone-300 bg-white',
                         )}
                       >
                         {checked && <Check className="w-3 h-3 text-white" />}
@@ -217,7 +225,7 @@ export function AdminPrototypingPanel() {
                         {fixture.label}
                       </span>
                       <div className="flex gap-1 flex-shrink-0 ml-auto">
-                        {fixture.tags.slice(0, 2).map(tag => (
+                        {fixture.tags.slice(0, 2).map((tag) => (
                           <span
                             key={tag}
                             className="text-[9px] font-albert px-1.5 py-0.5 rounded-full bg-stone-100 text-stone-500"
@@ -239,7 +247,9 @@ export function AdminPrototypingPanel() {
                   className="flex-1 bg-stone-900 hover:bg-stone-800 text-white text-xs font-albert font-medium py-2"
                 >
                   <Database className="h-3 w-3 mr-2" />
-                  {isSeeding ? 'Seeding...' : `Seed ${selectedFixtures.size} Recipe${selectedFixtures.size !== 1 ? 's' : ''}`}
+                  {isSeeding
+                    ? 'Seeding...'
+                    : `Seed ${selectedFixtures.size} Recipe${selectedFixtures.size !== 1 ? 's' : ''}`}
                 </Button>
                 <Button
                   onClick={handleClearRecipes}
@@ -254,7 +264,8 @@ export function AdminPrototypingPanel() {
 
               {/* Current storage indicator */}
               <p className="text-[10px] font-albert text-stone-400 text-center">
-                {recentRecipes.length} recipe{recentRecipes.length !== 1 ? 's' : ''} currently in storage
+                {recentRecipes.length} recipe
+                {recentRecipes.length !== 1 ? 's' : ''} currently in storage
               </p>
             </Tabs.Content>
 

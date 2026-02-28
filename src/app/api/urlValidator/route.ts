@@ -41,10 +41,7 @@ export async function POST(req: Request) {
     // Validate that we received HTML content
     if (!html || typeof html !== 'string' || html.trim().length === 0) {
       return Response.json(
-        formatError(
-          ERROR_CODES.ERR_NO_RECIPE_FOUND,
-          'Page content is empty',
-        ),
+        formatError(ERROR_CODES.ERR_NO_RECIPE_FOUND, 'Page content is empty'),
       );
     }
 

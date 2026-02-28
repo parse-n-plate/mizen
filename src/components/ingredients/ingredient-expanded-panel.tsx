@@ -25,16 +25,16 @@ export function IngredientExpandedThings3({
   linkedSteps,
   stepTitlesMap,
   onStepClick,
-  isOpen
+  isOpen,
 }: IngredientExpandedThings3Props) {
   return (
     <motion.div
       initial={false}
-      animate={{ 
-        height: isOpen ? 'auto' : 0, 
+      animate={{
+        height: isOpen ? 'auto' : 0,
         opacity: isOpen ? 1 : 0,
         marginTop: isOpen ? 12 : 0,
-        marginBottom: isOpen ? 12 : 0
+        marginBottom: isOpen ? 12 : 0,
       }}
       transition={{ type: 'spring', damping: 25, stiffness: 200 }}
       className="overflow-hidden"

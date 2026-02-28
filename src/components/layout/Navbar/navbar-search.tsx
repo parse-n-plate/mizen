@@ -7,10 +7,7 @@ import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { useRecipe } from '@/contexts/RecipeContext';
 import { ParsedRecipe } from '@/lib/storage';
-import {
-  recipeScrape,
-  validateRecipeUrl,
-} from '@/utils/recipe-parse';
+import { recipeScrape, validateRecipeUrl } from '@/utils/recipe-parse';
 import { errorLogger } from '@/utils/errorLogger';
 // Note: Command+K handling is now done globally via CommandKContext
 import { isUrl, normalizeUrl } from '@/utils/searchUtils';
@@ -23,7 +20,9 @@ export default function NavbarSearch() {
   const [isFocused, setIsFocused] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [detectedCuisine, setDetectedCuisine] = useState<string[] | undefined>(undefined);
+  const [detectedCuisine, setDetectedCuisine] = useState<string[] | undefined>(
+    undefined,
+  );
   const { recentRecipes, addRecipe } = useParsedRecipes();
   const { parsedRecipe, setParsedRecipe } = useRecipe();
   const { showError, showSuccess, showInfo, showWarning } = useToast();
@@ -85,7 +84,12 @@ export default function NavbarSearch() {
 
   // Handle click on the search container - focus input when showing URL
   const handleContainerClick = () => {
-    if (isOnParsedRecipePage && parsedRecipe?.sourceUrl && !isFocused && !query) {
+    if (
+      isOnParsedRecipePage &&
+      parsedRecipe?.sourceUrl &&
+      !isFocused &&
+      !query
+    ) {
       setIsFocused(true);
       setTimeout(() => {
         inputRef.current?.focus();
@@ -99,7 +103,6 @@ export default function NavbarSearch() {
   const handleBlur = () => {
     setTimeout(() => {
       setIsFocused(false);
-  
     }, 200);
   };
 
@@ -194,7 +197,11 @@ export default function NavbarSearch() {
       if (!response.success || response.error) {
         setLoading(false);
         const errorCode = response.error?.code || 'ERR_NO_RECIPE_FOUND';
-        errorLogger.log(errorCode, response.error?.message || 'Parsing failed', normalizedUrl);
+        errorLogger.log(
+          errorCode,
+          response.error?.message || 'Parsing failed',
+          normalizedUrl,
+        );
         showError({
           code: errorCode,
           message: response.error?.message,
@@ -205,12 +212,20 @@ export default function NavbarSearch() {
       }
 
       console.log('[Navbar] Successfully parsed recipe:', response.title);
-      console.log(`[Navbar] Parser used: ${response.method === 'ai' ? 'AI parser only' : response.method === 'json-ld+ai' ? 'JSON-LD + AI enrichment' : response.method || 'unknown'}`);
+      console.log(
+        `[Navbar] Parser used: ${response.method === 'ai' ? 'AI parser only' : response.method === 'json-ld+ai' ? 'JSON-LD + AI enrichment' : response.method || 'unknown'}`,
+      );
 
       if (response.warnings?.includes('AI_NOT_CONFIGURED')) {
-        showWarning('AI enrichment unavailable', 'GROQ_API_KEY is not configured. Plating, storage, and summary data will be missing.');
+        showWarning(
+          'AI enrichment unavailable',
+          'GROQ_API_KEY is not configured. Plating, storage, and summary data will be missing.',
+        );
       } else if (response.warnings?.includes('AI_ENRICHMENT_FAILED')) {
-        showWarning('Partial recipe data', 'AI enrichment failed for this recipe. Plating, storage, and summary data may be missing.');
+        showWarning(
+          'Partial recipe data',
+          'AI enrichment failed for this recipe. Plating, storage, and summary data may be missing.',
+        );
       }
 
       // Store detected cuisine for reveal
@@ -228,25 +243,43 @@ export default function NavbarSearch() {
         summary: response.summary, // Include AI-generated summary if available
         cuisine: response.cuisine, // Include cuisine tags if available
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
-        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
-        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
-        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
-        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
-        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
-        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
-        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
-        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
+        ...(response.prepTimeMinutes !== undefined && {
+          prepTimeMinutes: response.prepTimeMinutes,
+        }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && {
+          cookTimeMinutes: response.cookTimeMinutes,
+        }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && {
+          totalTimeMinutes: response.totalTimeMinutes,
+        }), // Include total time if available
+        ...(response.storageGuide !== undefined && {
+          storageGuide: response.storageGuide,
+        }),
+        ...(response.shelfLife !== undefined && {
+          shelfLife: response.shelfLife,
+        }),
+        ...(response.platingNotes !== undefined && {
+          platingNotes: response.platingNotes,
+        }),
+        ...(response.servingVessel !== undefined && {
+          servingVessel: response.servingVessel,
+        }),
+        ...(response.servingTemp !== undefined && {
+          servingTemp: response.servingTemp,
+        }),
       };
 
       setParsedRecipe(recipeToStore);
-      
+
       // Ensure localStorage write completes before navigation
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       // Step 4: Add to recent recipes
       const recipeSummary = Array.isArray(response.instructions)
         ? response.instructions
-            .map((inst: string | { detail?: string }) => (typeof inst === 'string' ? inst : inst.detail))
+            .map((inst: string | { detail?: string }) =>
+              typeof inst === 'string' ? inst : inst.detail,
+            )
             .join(' ')
             .slice(0, 140)
         : response.instructions.slice(0, 140);
@@ -262,18 +295,38 @@ export default function NavbarSearch() {
         sourceUrl: response.sourceUrl || normalizedUrl, // Include source URL if available
         cuisine: response.cuisine, // Include cuisine tags if available
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
-        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
-        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
-        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
-        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
-        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
-        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
-        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
-        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
+        ...(response.prepTimeMinutes !== undefined && {
+          prepTimeMinutes: response.prepTimeMinutes,
+        }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && {
+          cookTimeMinutes: response.cookTimeMinutes,
+        }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && {
+          totalTimeMinutes: response.totalTimeMinutes,
+        }), // Include total time if available
+        ...(response.storageGuide !== undefined && {
+          storageGuide: response.storageGuide,
+        }),
+        ...(response.shelfLife !== undefined && {
+          shelfLife: response.shelfLife,
+        }),
+        ...(response.platingNotes !== undefined && {
+          platingNotes: response.platingNotes,
+        }),
+        ...(response.servingVessel !== undefined && {
+          servingVessel: response.servingVessel,
+        }),
+        ...(response.servingTemp !== undefined && {
+          servingTemp: response.servingTemp,
+        }),
       });
 
       // Show success toast
-      showSuccess('Recipe parsed successfully!', 'Navigating to recipe page...', normalizedUrl);
+      showSuccess(
+        'Recipe parsed successfully!',
+        'Navigating to recipe page...',
+        normalizedUrl,
+      );
 
       // Step 5: Navigate to the parsed recipe page with delay for reveal
       setTimeout(() => {
@@ -281,7 +334,6 @@ export default function NavbarSearch() {
         router.push('/parsed-recipe-page');
         setQuery('');
         setIsFocused(false);
-    
       }, 1500);
     } catch (err) {
       console.error('[Navbar] Parse error:', err);
@@ -319,7 +371,6 @@ export default function NavbarSearch() {
 
     setQuery('');
     setIsFocused(false);
-
   };
 
   // Handle keyboard events (Enter to submit, ESC to blur)
@@ -354,156 +405,165 @@ export default function NavbarSearch() {
 
   return (
     <>
-      <LoadingAnimation isVisible={loading} cuisine={detectedCuisine} onCancel={handleCancelLoading} />
+      <LoadingAnimation
+        isVisible={loading}
+        cuisine={detectedCuisine}
+        onCancel={handleCancelLoading}
+      />
       <div className="relative w-full">
         <form onSubmit={handleSubmit}>
-        <div
-          className={`
+          <div
+            className={`
             rounded-lg border transition-all duration-200 ease-in-out
             ${isFocused ? 'bg-white border-stone-200 shadow-[0_1px_2px_rgba(0,0,0,0.02)]' : 'bg-[#f5f5f4] border-transparent'}
           `}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          onClick={handleContainerClick}
-        >
-          <div className="flex items-center gap-3 px-4 py-3 relative">
-            {/* Search Icon */}
-            <Search className="w-[18px] h-[18px] text-stone-400 flex-shrink-0" />
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            onClick={handleContainerClick}
+          >
+            <div className="flex items-center gap-3 px-4 py-3 relative">
+              {/* Search Icon */}
+              <Search className="w-[18px] h-[18px] text-stone-400 flex-shrink-0" />
 
-            {/* Input */}
-            <div className="flex-1 relative flex items-center">
-              {/* Show URL display when on parsed recipe page and not focused/editing */}
-              {isOnParsedRecipePage && parsedRecipe?.sourceUrl && !isFocused && !query ? (
-                <div className="w-full font-albert text-[15px] truncate flex-1 min-w-0 cursor-text flex items-center">
-                  <AnimatePresence mode="wait">
-                    {isHovered ? (
-                      <motion.span
-                        key="placeholder"
-                        initial={{ opacity: 0, y: -5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 5 }}
-                        transition={{ duration: 0.2 }}
-                        className="text-stone-400 block"
-                      >
-                        Enter URL
-                      </motion.span>
-                    ) : (
-                      <motion.div
-                        key="url"
-                        initial={{ opacity: 0, y: -5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 5 }}
-                        transition={{ duration: 0.2 }}
-                        className="truncate"
-                      >
-                        <span className="font-medium text-stone-800">
-                          {getDomainFromUrl(parsedRecipe.sourceUrl)}
-                        </span>
-                        <span className="text-stone-400">
-                          {getPathFromUrl(parsedRecipe.sourceUrl)}
-                        </span>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ) : (
-                <input
-                  ref={inputRef}
-                  data-search-input="navbar"
-                  type="text"
-                  placeholder={isFocused ? "Enter URL" : "Enter recipe URL"}
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                  onPaste={(e) => {
-                    // Handle paste - the value will be set automatically by the input
-                    // but we ensure focus is maintained
-                    setTimeout(() => {
-                      const pastedText = e.clipboardData.getData('text');
-                      if (pastedText) {
-                        setQuery(pastedText);
-                      }
-                    }, 0);
-                  }}
-                  className="w-full bg-transparent font-albert text-[15px] text-stone-800 placeholder:text-stone-400 focus:outline-none border-none"
-                />
+              {/* Input */}
+              <div className="flex-1 relative flex items-center">
+                {/* Show URL display when on parsed recipe page and not focused/editing */}
+                {isOnParsedRecipePage &&
+                parsedRecipe?.sourceUrl &&
+                !isFocused &&
+                !query ? (
+                  <div className="w-full font-albert text-[15px] truncate flex-1 min-w-0 cursor-text flex items-center">
+                    <AnimatePresence mode="wait">
+                      {isHovered ? (
+                        <motion.span
+                          key="placeholder"
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 5 }}
+                          transition={{ duration: 0.2 }}
+                          className="text-stone-400 block"
+                        >
+                          Enter URL
+                        </motion.span>
+                      ) : (
+                        <motion.div
+                          key="url"
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 5 }}
+                          transition={{ duration: 0.2 }}
+                          className="truncate"
+                        >
+                          <span className="font-medium text-stone-800">
+                            {getDomainFromUrl(parsedRecipe.sourceUrl)}
+                          </span>
+                          <span className="text-stone-400">
+                            {getPathFromUrl(parsedRecipe.sourceUrl)}
+                          </span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <input
+                    ref={inputRef}
+                    data-search-input="navbar"
+                    type="text"
+                    placeholder={isFocused ? 'Enter URL' : 'Enter recipe URL'}
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                    onPaste={(e) => {
+                      // Handle paste - the value will be set automatically by the input
+                      // but we ensure focus is maintained
+                      setTimeout(() => {
+                        const pastedText = e.clipboardData.getData('text');
+                        if (pastedText) {
+                          setQuery(pastedText);
+                        }
+                      }, 0);
+                    }}
+                    className="w-full bg-transparent font-albert text-[15px] text-stone-800 placeholder:text-stone-400 focus:outline-none border-none"
+                  />
+                )}
+              </div>
+
+              {/* Keyboard Shortcut Indicator (⌘+K) - shown when not focused or no query, but not on mobile or parsed recipe page showing URL */}
+              {/* Note: Command+K now focuses this search box directly via CommandKContext */}
+              {!isFocused &&
+                !query &&
+                !(isOnParsedRecipePage && parsedRecipe?.sourceUrl) && (
+                  <div className="hidden md:flex ml-2 items-center gap-1 flex-shrink-0">
+                    <kbd className="inline-flex items-center px-2 py-1 text-[10px] font-albert text-stone-500 bg-white border border-[#d9d9d9] rounded">
+                      ⌘K
+                    </kbd>
+                  </div>
+                )}
+
+              {/* Clear Button */}
+              {query && (
+                <button
+                  type="button"
+                  onClick={clearInput}
+                  className="ml-1 md:ml-2 p-1 hover:bg-stone-200 rounded-full transition-all duration-200 flex-shrink-0"
+                >
+                  <X className="w-3.5 h-3.5 md:w-4 md:h-4 text-stone-600" />
+                </button>
+              )}
+
+              {/* Parse Button (for URLs) */}
+              {query && isUrl(query) && (
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="ml-1 md:ml-2 bg-stone-900 hover:bg-stone-800 text-stone-50 font-albert font-medium text-[11px] md:text-[14px] leading-[1.4] px-2.5 md:px-5 py-1.5 md:py-2 rounded-full transition-colors duration-200 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="md:hidden">Parse</span>
+                  <span className="hidden md:inline">Parse Recipe</span>
+                </button>
               )}
             </div>
-
-            {/* Keyboard Shortcut Indicator (⌘+K) - shown when not focused or no query, but not on mobile or parsed recipe page showing URL */}
-            {/* Note: Command+K now focuses this search box directly via CommandKContext */}
-            {!isFocused && !query && !(isOnParsedRecipePage && parsedRecipe?.sourceUrl) && (
-              <div className="hidden md:flex ml-2 items-center gap-1 flex-shrink-0">
-                <kbd className="inline-flex items-center px-2 py-1 text-[10px] font-albert text-stone-500 bg-white border border-[#d9d9d9] rounded">
-                  ⌘K
-                </kbd>
-              </div>
-            )}
-
-            {/* Clear Button */}
-            {query && (
-              <button
-                type="button"
-                onClick={clearInput}
-                className="ml-1 md:ml-2 p-1 hover:bg-stone-200 rounded-full transition-all duration-200 flex-shrink-0"
-              >
-                <X className="w-3.5 h-3.5 md:w-4 md:h-4 text-stone-600" />
-              </button>
-            )}
-
-            {/* Parse Button (for URLs) */}
-            {query && isUrl(query) && (
-              <button
-                type="submit"
-                disabled={loading}
-                className="ml-1 md:ml-2 bg-stone-900 hover:bg-stone-800 text-stone-50 font-albert font-medium text-[11px] md:text-[14px] leading-[1.4] px-2.5 md:px-5 py-1.5 md:py-2 rounded-full transition-colors duration-200 flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span className="md:hidden">Parse</span>
-                <span className="hidden md:inline">Parse Recipe</span>
-              </button>
-            )}
           </div>
-        </div>
-      </form>
+        </form>
 
-      {/* Search Results Dropdown */}
-      {showDropdown && (
-        <div
-          ref={dropdownRef}
-          className="absolute top-full left-0 right-0 mt-2 bg-white border border-[#d9d9d9] rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto"
-        >
-          {searchResults.length > 0 ? (
-            <div className="p-2">
-              <div className="text-xs font-albert font-medium text-stone-500 px-3 py-2 border-b border-stone-200">
-                Recent Recipes ({searchResults.length})
+        {/* Search Results Dropdown */}
+        {showDropdown && (
+          <div
+            ref={dropdownRef}
+            className="absolute top-full left-0 right-0 mt-2 bg-white border border-[#d9d9d9] rounded-lg shadow-lg z-50 max-h-80 overflow-y-auto"
+          >
+            {searchResults.length > 0 ? (
+              <div className="p-2">
+                <div className="text-xs font-albert font-medium text-stone-500 px-3 py-2 border-b border-stone-200">
+                  Recent Recipes ({searchResults.length})
+                </div>
+                {searchResults.map((recipe) => (
+                  <button
+                    key={recipe.id}
+                    onClick={() => handleRecipeSelect(recipe)}
+                    className="w-full text-left p-3 hover:bg-stone-50 transition-colors duration-200 border-b border-stone-100 last:border-b-0"
+                  >
+                    <div className="font-albert font-medium text-[14px] text-stone-800 truncate">
+                      {recipe.title}
+                    </div>
+                    <div className="font-albert text-[12px] text-stone-500 mt-1 line-clamp-2">
+                      {recipe.summary}
+                    </div>
+                    <div className="font-albert text-[10px] text-stone-400 mt-1">
+                      {new Date(recipe.parsedAt).toLocaleDateString()}
+                    </div>
+                  </button>
+                ))}
               </div>
-              {searchResults.map((recipe) => (
-                <button
-                  key={recipe.id}
-                  onClick={() => handleRecipeSelect(recipe)}
-                  className="w-full text-left p-3 hover:bg-stone-50 transition-colors duration-200 border-b border-stone-100 last:border-b-0"
-                >
-                  <div className="font-albert font-medium text-[14px] text-stone-800 truncate">
-                    {recipe.title}
-                  </div>
-                  <div className="font-albert text-[12px] text-stone-500 mt-1 line-clamp-2">
-                    {recipe.summary}
-                  </div>
-                  <div className="font-albert text-[10px] text-stone-400 mt-1">
-                    {new Date(recipe.parsedAt).toLocaleDateString()}
-                  </div>
-                </button>
-              ))}
-            </div>
-          ) : query.trim() && !isUrl(query) ? (
-            <EmptyState variant="no-results" compact />
-          ) : recentRecipes.length === 0 ? (
-            <EmptyState variant="no-recent" compact />
-          ) : null}
-        </div>
-      )}
+            ) : query.trim() && !isUrl(query) ? (
+              <EmptyState variant="no-results" compact />
+            ) : recentRecipes.length === 0 ? (
+              <EmptyState variant="no-recent" compact />
+            ) : null}
+          </div>
+        )}
       </div>
     </>
   );

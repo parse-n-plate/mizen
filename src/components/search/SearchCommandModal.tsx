@@ -40,11 +40,8 @@ export default function SearchCommandModal({
   open,
   onOpenChange,
 }: SearchCommandModalProps) {
-  const {
-    recentRecipes,
-    getRecipeById,
-    getBookmarkedRecipes,
-  } = useParsedRecipes();
+  const { recentRecipes, getRecipeById, getBookmarkedRecipes } =
+    useParsedRecipes();
   const { setParsedRecipe } = useRecipe();
   const router = useRouter();
   const isMobile = useIsMobile();
@@ -199,21 +196,26 @@ export default function SearchCommandModal({
         </span>
       </div>
       <div className="hidden group-data-[selected=true]:flex items-center gap-1.5 text-stone-400 flex-shrink-0 ml-2">
-        <UndoLeftRound size={20} className="!size-5 text-stone-400" aria-hidden="true" />
+        <UndoLeftRound
+          size={20}
+          className="!size-5 text-stone-400"
+          aria-hidden="true"
+        />
         <span className="text-sm font-albert">Jump to</span>
       </div>
     </CommandItem>
   );
 
-  const searchInputSuffix = search.length > 0 ? (
-    <button
-      onClick={() => setSearch('')}
-      className="flex items-center justify-center size-6 rounded-full text-stone-400 hover:text-stone-600 transition-colors flex-shrink-0"
-      aria-label="Clear search"
-    >
-      <X className="size-3.5" />
-    </button>
-  ) : null;
+  const searchInputSuffix =
+    search.length > 0 ? (
+      <button
+        onClick={() => setSearch('')}
+        className="flex items-center justify-center size-6 rounded-full text-stone-400 hover:text-stone-600 transition-colors flex-shrink-0"
+        aria-label="Clear search"
+      >
+        <X className="size-3.5" />
+      </button>
+    ) : null;
 
   const commandListContent = (
     <>
@@ -229,7 +231,10 @@ export default function SearchCommandModal({
             onSelect={handleParseDetectedUrl}
             className="flex items-center gap-3 px-3 py-3 rounded-xl font-albert cursor-pointer data-[selected=true]:bg-stone-100/80 data-[selected=true]:text-stone-900"
           >
-            <Link className="w-6 h-6 text-stone-400 flex-shrink-0" aria-hidden="true" />
+            <Link
+              className="w-6 h-6 text-stone-400 flex-shrink-0"
+              aria-hidden="true"
+            />
             <div className="flex-1 min-w-0">
               <span className="text-sm text-stone-900 font-medium truncate block">
                 Parse recipe from URL
@@ -248,7 +253,10 @@ export default function SearchCommandModal({
             onSelect={handleAddViaUrl}
             className="flex items-center gap-3 px-3 py-3 rounded-xl font-albert cursor-pointer data-[selected=true]:bg-stone-100/80 data-[selected=true]:text-stone-900"
           >
-            <Link className="w-6 h-6 text-stone-400 flex-shrink-0" aria-hidden="true" />
+            <Link
+              className="w-6 h-6 text-stone-400 flex-shrink-0"
+              aria-hidden="true"
+            />
             <div className="flex-1 min-w-0">
               <span className="text-sm text-stone-900 font-medium">
                 Add via URL
@@ -263,7 +271,10 @@ export default function SearchCommandModal({
             onSelect={handleAddViaImage}
             className="flex items-center gap-3 px-3 py-3 rounded-xl font-albert cursor-pointer data-[selected=true]:bg-stone-100/80 data-[selected=true]:text-stone-900"
           >
-            <Upload className="w-6 h-6 text-stone-400 flex-shrink-0" aria-hidden="true" />
+            <Upload
+              className="w-6 h-6 text-stone-400 flex-shrink-0"
+              aria-hidden="true"
+            />
             <div className="flex-1 min-w-0">
               <span className="text-sm text-stone-900 font-medium">
                 Add via Image
@@ -284,11 +295,12 @@ export default function SearchCommandModal({
             disabled
             className="flex items-center gap-3 px-3 py-3 rounded-xl font-albert cursor-pointer data-[selected=true]:bg-stone-100/80 data-[selected=true]:text-stone-900"
           >
-            <ClockCircle className="w-6 h-6 text-stone-400 flex-shrink-0" aria-hidden="true" />
+            <ClockCircle
+              className="w-6 h-6 text-stone-400 flex-shrink-0"
+              aria-hidden="true"
+            />
             <div className="flex-1 min-w-0">
-              <span className="text-sm text-stone-900 font-medium">
-                Timers
-              </span>
+              <span className="text-sm text-stone-900 font-medium">Timers</span>
               <span className="text-sm text-stone-400 block mt-1">
                 Coming soon
               </span>
@@ -302,7 +314,10 @@ export default function SearchCommandModal({
             disabled
             className="flex items-center gap-3 px-3 py-3 rounded-xl font-albert cursor-pointer data-[selected=true]:bg-stone-100/80 data-[selected=true]:text-stone-900"
           >
-            <BookBookmarkIcon className="w-6 h-6 text-stone-400 flex-shrink-0" aria-hidden="true" />
+            <BookBookmarkIcon
+              className="w-6 h-6 text-stone-400 flex-shrink-0"
+              aria-hidden="true"
+            />
             <div className="flex-1 min-w-0">
               <span className="text-sm text-stone-900 font-medium">
                 Cookbook
@@ -326,7 +341,10 @@ export default function SearchCommandModal({
             disabled
             className="flex items-center gap-3 px-3 py-3 rounded-xl font-albert cursor-pointer data-[selected=true]:bg-stone-100/80 data-[selected=true]:text-stone-900"
           >
-            <SettingsIcon className="w-6 h-6 text-stone-400 flex-shrink-0" aria-hidden="true" />
+            <SettingsIcon
+              className="w-6 h-6 text-stone-400 flex-shrink-0"
+              aria-hidden="true"
+            />
             <div className="flex-1 min-w-0">
               <span className="text-sm text-stone-900 font-medium">
                 Settings
@@ -345,7 +363,10 @@ export default function SearchCommandModal({
             onSelect={() => setFeedbackExpanded((prev) => !prev)}
             className="flex items-center gap-3 px-3 py-3 rounded-xl font-albert cursor-pointer data-[selected=true]:bg-stone-100/80 data-[selected=true]:text-stone-900"
           >
-            <ChatRoundLine className="w-6 h-6 text-stone-400 flex-shrink-0" aria-hidden="true" />
+            <ChatRoundLine
+              className="w-6 h-6 text-stone-400 flex-shrink-0"
+              aria-hidden="true"
+            />
             <div className="flex-1 min-w-0">
               <span className="text-sm text-stone-900 font-medium">
                 Feedback
@@ -370,7 +391,10 @@ export default function SearchCommandModal({
                 onSelect={() => handleSelectFeedbackType(type)}
                 className="flex items-center gap-3 px-3 py-3 pl-9 rounded-xl font-albert cursor-pointer data-[selected=true]:bg-stone-100/80 data-[selected=true]:text-stone-900"
               >
-                <Icon className="w-5 h-5 text-stone-400 flex-shrink-0" aria-hidden="true" />
+                <Icon
+                  className="w-5 h-5 text-stone-400 flex-shrink-0"
+                  aria-hidden="true"
+                />
                 <div className="flex-1 min-w-0">
                   <span className="text-sm text-stone-900 font-medium">
                     {type}
@@ -397,9 +421,7 @@ export default function SearchCommandModal({
       {/* Empty state when no recipes exist */}
       {allRecipes.length === 0 && !search && (
         <div className="px-4 py-10 text-center">
-          <p className="font-albert text-sm text-stone-400">
-            No recipes yet
-          </p>
+          <p className="font-albert text-sm text-stone-400">No recipes yet</p>
           <p className="font-albert text-sm text-stone-300 mt-1">
             Add your first recipe via URL or image
           </p>
@@ -412,15 +434,10 @@ export default function SearchCommandModal({
     <>
       {isMobile ? (
         // ── Mobile: Vaul bottom-sheet drawer ──
-        <Drawer.Root
-          open={open}
-          onOpenChange={handleOpenChange}
-        >
+        <Drawer.Root open={open} onOpenChange={handleOpenChange}>
           <Drawer.Portal>
             <Drawer.Overlay className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50" />
-            <Drawer.Content
-              className="fixed inset-x-0 bottom-0 z-50 flex flex-col bg-white rounded-t-[32px] shadow-2xl h-[85dvh] outline-none"
-            >
+            <Drawer.Content className="fixed inset-x-0 bottom-0 z-50 flex flex-col bg-white rounded-t-[32px] shadow-2xl h-[85dvh] outline-none">
               <Drawer.Handle className="mt-3 mb-2 !w-12 !h-1 !bg-stone-200" />
 
               <div className="flex items-center justify-between px-5 pb-1 flex-shrink-0">

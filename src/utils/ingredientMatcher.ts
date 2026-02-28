@@ -25,29 +25,138 @@ export interface IngredientMatch extends IngredientInfo {
  */
 const INGREDIENT_SYNONYMS: Record<string, string[]> = {
   // Generic "meat" matches any meat ingredient
-  'meat': ['pork', 'beef', 'chicken', 'lamb', 'turkey', 'duck', 'veal', 'bacon', 'sausage', 'ham', 'prosciutto', 'chorizo', 'pancetta'],
+  meat: [
+    'pork',
+    'beef',
+    'chicken',
+    'lamb',
+    'turkey',
+    'duck',
+    'veal',
+    'bacon',
+    'sausage',
+    'ham',
+    'prosciutto',
+    'chorizo',
+    'pancetta',
+  ],
   // Pork-related synonyms
-  'pork': ['pork belly', 'pork shoulder', 'pork chop', 'pork loin', 'pork tenderloin', 'bacon', 'ham', 'prosciutto', 'pancetta', 'sausage'],
+  pork: [
+    'pork belly',
+    'pork shoulder',
+    'pork chop',
+    'pork loin',
+    'pork tenderloin',
+    'bacon',
+    'ham',
+    'prosciutto',
+    'pancetta',
+    'sausage',
+  ],
   // Beef-related synonyms
-  'beef': ['beef chuck', 'ground beef', 'steak', 'brisket', 'ribeye', 'sirloin', 'tenderloin', 'short ribs', 'beef stew'],
+  beef: [
+    'beef chuck',
+    'ground beef',
+    'steak',
+    'brisket',
+    'ribeye',
+    'sirloin',
+    'tenderloin',
+    'short ribs',
+    'beef stew',
+  ],
   // Chicken-related synonyms
-  'chicken': ['chicken breast', 'chicken thigh', 'chicken wing', 'chicken drumstick', 'ground chicken'],
+  chicken: [
+    'chicken breast',
+    'chicken thigh',
+    'chicken wing',
+    'chicken drumstick',
+    'ground chicken',
+  ],
   // Fish/seafood synonyms
-  'fish': ['salmon', 'tuna', 'cod', 'halibut', 'tilapia', 'mackerel', 'sardine', 'anchovy', 'trout'],
-  'seafood': ['shrimp', 'prawn', 'crab', 'lobster', 'scallop', 'mussel', 'clam', 'oyster', 'squid', 'octopus'],
+  fish: [
+    'salmon',
+    'tuna',
+    'cod',
+    'halibut',
+    'tilapia',
+    'mackerel',
+    'sardine',
+    'anchovy',
+    'trout',
+  ],
+  seafood: [
+    'shrimp',
+    'prawn',
+    'crab',
+    'lobster',
+    'scallop',
+    'mussel',
+    'clam',
+    'oyster',
+    'squid',
+    'octopus',
+  ],
   // Vegetable synonyms
-  'onion': ['yellow onion', 'red onion', 'white onion', 'green onion', 'scallion', 'shallot', 'leek'],
-  'pepper': ['bell pepper', 'red pepper', 'green pepper', 'yellow pepper', 'chili pepper', 'jalapeño', 'serrano'],
-  'tomato': ['cherry tomato', 'roma tomato', 'plum tomato', 'grape tomato', 'tomato paste', 'tomato sauce'],
+  onion: [
+    'yellow onion',
+    'red onion',
+    'white onion',
+    'green onion',
+    'scallion',
+    'shallot',
+    'leek',
+  ],
+  pepper: [
+    'bell pepper',
+    'red pepper',
+    'green pepper',
+    'yellow pepper',
+    'chili pepper',
+    'jalapeño',
+    'serrano',
+  ],
+  tomato: [
+    'cherry tomato',
+    'roma tomato',
+    'plum tomato',
+    'grape tomato',
+    'tomato paste',
+    'tomato sauce',
+  ],
   // Dairy synonyms
-  'cheese': ['cheddar', 'mozzarella', 'parmesan', 'feta', 'goat cheese', 'cream cheese', 'ricotta', 'gorgonzola'],
-  'butter': ['unsalted butter', 'salted butter', 'clarified butter', 'ghee'],
+  cheese: [
+    'cheddar',
+    'mozzarella',
+    'parmesan',
+    'feta',
+    'goat cheese',
+    'cream cheese',
+    'ricotta',
+    'gorgonzola',
+  ],
+  butter: ['unsalted butter', 'salted butter', 'clarified butter', 'ghee'],
   // Herbs/spices synonyms
-  'garlic': ['garlic clove', 'garlic powder', 'minced garlic'],
-  'ginger': ['fresh ginger', 'ginger root', 'ground ginger'],
+  garlic: ['garlic clove', 'garlic powder', 'minced garlic'],
+  ginger: ['fresh ginger', 'ginger root', 'ground ginger'],
   // Grain/starch synonyms
-  'rice': ['white rice', 'brown rice', 'jasmine rice', 'basmati rice', 'arborio rice', 'sushi rice'],
-  'pasta': ['spaghetti', 'penne', 'fettuccine', 'linguine', 'rigatoni', 'macaroni', 'fusilli'],
+  rice: [
+    'white rice',
+    'brown rice',
+    'jasmine rice',
+    'basmati rice',
+    'arborio rice',
+    'sushi rice',
+  ],
+  pasta: [
+    'spaghetti',
+    'penne',
+    'fettuccine',
+    'linguine',
+    'rigatoni',
+    'macaroni',
+    'fusilli',
+  ],
 };
 
 /**
@@ -55,7 +164,10 @@ const INGREDIENT_SYNONYMS: Record<string, string[]> = {
  * Uses a simple case-insensitive substring match, including synonym matching.
  * Returns ingredients with the actual terms that matched in the text.
  */
-export function findIngredientsInText(text: string, ingredients: IngredientInfo[]): IngredientMatch[] {
+export function findIngredientsInText(
+  text: string,
+  ingredients: IngredientInfo[],
+): IngredientMatch[] {
   if (!text || !ingredients || ingredients.length === 0) return [];
 
   const foundIngredients: IngredientMatch[] = [];
@@ -127,7 +239,9 @@ export function findIngredientsInText(text: string, ingredients: IngredientInfo[
     // Stage 4: Check for synonym matches
     // If text contains a synonym term (e.g., "meat"), check if ingredient matches that category
     if (!isMatched) {
-      for (const [synonymTerm, relatedTerms] of Object.entries(INGREDIENT_SYNONYMS)) {
+      for (const [synonymTerm, relatedTerms] of Object.entries(
+        INGREDIENT_SYNONYMS,
+      )) {
         // Check if text contains the synonym term (as a whole word to avoid false matches)
         // Find ALL occurrences of the synonym term
         const synonymRegex = new RegExp(`\\b${synonymTerm}\\b`, 'gi');
@@ -164,7 +278,9 @@ export function findIngredientsInText(text: string, ingredients: IngredientInfo[
     const existing = deduped.get(item.name);
     if (existing) {
       // Merge matched terms
-      existing.matchedTerms = [...new Set([...existing.matchedTerms, ...item.matchedTerms])];
+      existing.matchedTerms = [
+        ...new Set([...existing.matchedTerms, ...item.matchedTerms]),
+      ];
     } else {
       deduped.set(item.name, item);
     }
@@ -176,7 +292,10 @@ export function findIngredientsInText(text: string, ingredients: IngredientInfo[
  * Identifies which steps use a specific ingredient.
  * Returns an array of step numbers (1-indexed).
  */
-export function findStepsForIngredient(ingredientName: string, steps: { instruction: string }[]): number[] {
+export function findStepsForIngredient(
+  ingredientName: string,
+  steps: { instruction: string }[],
+): number[] {
   if (!ingredientName || !steps) return [];
 
   const stepNumbers: number[] = [];
@@ -188,10 +307,15 @@ export function findStepsForIngredient(ingredientName: string, steps: { instruct
       stepNumbers.push(index + 1);
     } else {
       // Basic singular/plural check
-      const singular = lowerName.endsWith('s') ? lowerName.slice(0, -1) : lowerName;
+      const singular = lowerName.endsWith('s')
+        ? lowerName.slice(0, -1)
+        : lowerName;
       const plural = lowerName.endsWith('s') ? lowerName : lowerName + 's';
-      
-      if (lowerInstruction.includes(singular) || lowerInstruction.includes(plural)) {
+
+      if (
+        lowerInstruction.includes(singular) ||
+        lowerInstruction.includes(plural)
+      ) {
         stepNumbers.push(index + 1);
       }
     }
@@ -199,4 +323,3 @@ export function findStepsForIngredient(ingredientName: string, steps: { instruct
 
   return stepNumbers;
 }
-

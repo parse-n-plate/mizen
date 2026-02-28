@@ -4,10 +4,10 @@ import { motion } from 'framer-motion';
 
 /**
  * AnimatedFish Component
- * 
+ *
  * Main animated fish component that wraps the eye group with motion.g
  * and applies blinking animation using scaleY.
- * 
+ *
  * Props:
  * - blinkEnabled: Whether blinking animation is enabled
  * - blinkSpeed: Speed multiplier for blink animation (0.1x to 3x)
@@ -42,7 +42,7 @@ function getEasing(easingType: string): [number, number, number, number] {
 // TODO: Copy actual FishBody component from WholeFish.tsx
 function FishBody({ blinkEnabled, blinkSpeed, easingType }: AnimatedFishProps) {
   const easing = getEasing(easingType);
-  
+
   return (
     <svg
       width="200"
@@ -59,7 +59,7 @@ function FishBody({ blinkEnabled, blinkSpeed, easingType }: AnimatedFishProps) {
         stroke="#154DF6"
         strokeWidth="2"
       />
-      
+
       {/* Eye group wrapped with motion.g for animation */}
       <motion.g
         id="Eye"
@@ -89,7 +89,7 @@ function FishBody({ blinkEnabled, blinkSpeed, easingType }: AnimatedFishProps) {
         <circle cx="120" cy="90" r="8" fill="#0C0A09" />
         <circle cx="120" cy="90" r="4" fill="#FFFFFF" />
       </motion.g>
-      
+
       {/* Other fish body elements */}
       {/* TODO: Copy remaining fish body elements from WholeFish.tsx */}
     </svg>
@@ -134,7 +134,7 @@ export default function AnimatedFish({
           blinkSpeed={blinkSpeed}
           easingType={easingType}
         />
-        
+
         {/* Render Hat */}
         <Hat />
       </svg>

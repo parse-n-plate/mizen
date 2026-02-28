@@ -26,10 +26,7 @@ export function IngredientExpandedContent({
   variant = 'things3',
 }: IngredientExpandedContentProps) {
   return (
-    <div className={cn(
-      "space-y-2",
-      variant === 'things3' ? "p-4" : "p-2"
-    )}>
+    <div className={cn('space-y-2', variant === 'things3' ? 'p-4' : 'p-2')}>
       {/* Related Steps Section */}
       <div className="flex flex-wrap items-center gap-2">
         {linkedSteps.length > 0 ? (
@@ -38,7 +35,8 @@ export function IngredientExpandedContent({
             const stepTitle = stepTitlesMap?.[stepNum];
             // Check if stepTitle is meaningful (not just "Step X" repeated)
             // If stepTitle exists and is different from just the step number, include it
-            const hasMeaningfulTitle = stepTitle &&
+            const hasMeaningfulTitle =
+              stepTitle &&
               stepTitle.trim() !== `Step ${stepNum}` &&
               stepTitle.trim() !== `step ${stepNum}`;
             // Format button text: "Step 3: Cook Beans and Meats" or just "Step 3" if no meaningful title
@@ -59,7 +57,9 @@ export function IngredientExpandedContent({
             );
           })
         ) : (
-          <span className="text-xs font-albert text-stone-400 italic">No specific steps mentioned.</span>
+          <span className="text-xs font-albert text-stone-400 italic">
+            No specific steps mentioned.
+          </span>
         )}
       </div>
 

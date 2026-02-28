@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
       console.error('GROQ_API_KEY is not configured');
       return NextResponse.json(
         { error: 'AI service is not configured' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     if (!recipeTitle) {
       return NextResponse.json(
         { error: 'Recipe title is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -30,15 +30,36 @@ export async function POST(request: NextRequest) {
     const recipeContext = `
 Recipe: ${recipeTitle}
 
-${ingredients ? `Ingredients:\n${ingredients.map((g: { groupName: string; ingredients: { amount?: string; units?: string; ingredient: string }[] }) =>
-  `${g.groupName !== 'Main' ? `${g.groupName}:\n` : ''}${g.ingredients.map((i) =>
-    `- ${i.amount} ${i.units} ${i.ingredient}`
-  ).join('\n')}`
-).join('\n\n')}` : ''}
+${
+  ingredients
+    ? `Ingredients:\n${ingredients
+        .map(
+          (g: {
+            groupName: string;
+            ingredients: {
+              amount?: string;
+              units?: string;
+              ingredient: string;
+            }[];
+          }) =>
+            `${g.groupName !== 'Main' ? `${g.groupName}:\n` : ''}${g.ingredients
+              .map((i) => `- ${i.amount} ${i.units} ${i.ingredient}`)
+              .join('\n')}`,
+        )
+        .join('\n\n')}`
+    : ''
+}
 
-${instructions ? `Instructions:\n${instructions.map((step: string | { detail: string }, i: number) =>
-  `${i + 1}. ${typeof step === 'string' ? step : step.detail}`
-).join('\n')}`  : ''}
+${
+  instructions
+    ? `Instructions:\n${instructions
+        .map(
+          (step: string | { detail: string }, i: number) =>
+            `${i + 1}. ${typeof step === 'string' ? step : step.detail}`,
+        )
+        .join('\n')}`
+    : ''
+}
     `.trim();
 
     // Call Groq API for plating guidance
@@ -47,7 +68,8 @@ ${instructions ? `Instructions:\n${instructions.map((step: string | { detail: st
       messages: [
         {
           role: 'system',
-          content: 'You are a professional chef and food stylist. Analyze recipes and provide plating guidance in JSON format. Always respond with valid JSON only, no other text.',
+          content:
+            'You are a professional chef and food stylist. Analyze recipes and provide plating guidance in JSON format. Always respond with valid JSON only, no other text.',
         },
         {
           role: 'user',
@@ -101,7 +123,7 @@ Keep it practical and concise. Only respond with the JSON object, no other text.
         error: 'Failed to generate plating guidance',
         details: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

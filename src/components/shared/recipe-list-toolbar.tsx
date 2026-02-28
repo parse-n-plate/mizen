@@ -17,7 +17,12 @@ import {
   DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
 
-export type SortOption = 'date-newest' | 'date-oldest' | 'name-asc' | 'name-desc' | 'cuisine';
+export type SortOption =
+  | 'date-newest'
+  | 'date-oldest'
+  | 'name-asc'
+  | 'name-desc'
+  | 'cuisine';
 export type ViewMode = 'grid' | 'list';
 
 interface SavedRecipesHeaderProps {
@@ -129,7 +134,10 @@ export function SavedRecipesHeader({
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>Sort By</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuRadioGroup value={sortOption} onValueChange={(value) => onSortChange(value as SortOption)}>
+            <DropdownMenuRadioGroup
+              value={sortOption}
+              onValueChange={(value) => onSortChange(value as SortOption)}
+            >
               <DropdownMenuRadioItem value="date-newest">
                 Date (Newest)
               </DropdownMenuRadioItem>
@@ -149,7 +157,10 @@ export function SavedRecipesHeader({
             <DropdownMenuSeparator />
             <DropdownMenuLabel>View</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuRadioGroup value={viewMode} onValueChange={(value) => onViewModeChange(value as ViewMode)}>
+            <DropdownMenuRadioGroup
+              value={viewMode}
+              onValueChange={(value) => onViewModeChange(value as ViewMode)}
+            >
               <DropdownMenuRadioItem value="grid">
                 Grid View
               </DropdownMenuRadioItem>

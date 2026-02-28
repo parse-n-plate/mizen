@@ -7,7 +7,11 @@ import { IngredientInfo } from '@/utils/ingredientMatcher';
 import { motion, AnimatePresence } from 'framer-motion';
 import { highlightQuantitiesAndIngredients } from '@/lib/utils';
 import { useUISettings } from '@/contexts/UISettingsContext';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface StepViewerProps {
   step: RecipeStep;
@@ -19,7 +23,15 @@ interface StepViewerProps {
   allIngredients: IngredientInfo[];
 }
 
-export default function StepViewer({ step, currentStep, totalSteps, onNext, onPrev, onBackToList: _onBackToList, allIngredients }: StepViewerProps) {
+export default function StepViewer({
+  step,
+  currentStep,
+  totalSteps,
+  onNext,
+  onPrev,
+  onBackToList: _onBackToList,
+  allIngredients,
+}: StepViewerProps) {
   const { settings } = useUISettings();
   const { stepSizing } = settings;
 
@@ -28,9 +40,9 @@ export default function StepViewer({ step, currentStep, totalSteps, onNext, onPr
     const handleKeyDown = (event: KeyboardEvent) => {
       // Don't handle arrow keys if user is typing in an input, textarea, or contenteditable element
       const target = event.target as HTMLElement;
-      const isInputElement = 
-        target.tagName === 'INPUT' || 
-        target.tagName === 'TEXTAREA' || 
+      const isInputElement =
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
         target.isContentEditable;
 
       if (isInputElement) {
@@ -44,7 +56,7 @@ export default function StepViewer({ step, currentStep, totalSteps, onNext, onPr
           onPrev();
         }
       }
-      
+
       // Handle right arrow key: go to next step
       if (event.key === 'ArrowRight') {
         event.preventDefault();
@@ -56,7 +68,7 @@ export default function StepViewer({ step, currentStep, totalSteps, onNext, onPr
 
     // Add event listener when component mounts
     window.addEventListener('keydown', handleKeyDown);
-    
+
     // Clean up: remove event listener when component unmounts
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
@@ -89,23 +101,30 @@ export default function StepViewer({ step, currentStep, totalSteps, onNext, onPr
   };
 
   return (
-    <div id={`step-${currentStep}`} className={`shrink-0 bg-white relative overflow-hidden transition-all duration-300 ${paddingMap[stepSizing]}`}>
+    <div
+      id={`step-${currentStep}`}
+      className={`shrink-0 bg-white relative overflow-hidden transition-all duration-300 ${paddingMap[stepSizing]}`}
+    >
       <div className={`flex flex-col ${gapMap[stepSizing]}`}>
         {/* Step Content */}
         <AnimatePresence mode="wait">
-          <motion.div 
+          <motion.div
             key={currentStep}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
             className="flex flex-col gap-4"
           >
-            <h2 className={`font-domine text-[#0C0A09] leading-tight font-bold transition-all duration-300 ${titleSizeMap[stepSizing]}`}>
+            <h2
+              className={`font-domine text-[#0C0A09] leading-tight font-bold transition-all duration-300 ${titleSizeMap[stepSizing]}`}
+            >
               {step.step}
             </h2>
             <div className="flex flex-col gap-6">
-              <p className={`${settings.fontFamily === 'serif' ? 'font-domine' : 'font-albert'} text-[#0C0A09]/80 leading-relaxed max-w-2xl transition-all duration-300 ${detailSizeMap[stepSizing]}`}>
+              <p
+                className={`${settings.fontFamily === 'serif' ? 'font-domine' : 'font-albert'} text-[#0C0A09]/80 leading-relaxed max-w-2xl transition-all duration-300 ${detailSizeMap[stepSizing]}`}
+              >
                 {highlightQuantitiesAndIngredients(step.detail, allIngredients)}
               </p>
             </div>
@@ -125,7 +144,7 @@ export default function StepViewer({ step, currentStep, totalSteps, onNext, onPr
             >
               <ChevronLeft className="w-5 h-5" />
             </motion.button>
-            
+
             {/* Step indicator with tooltip showing keyboard shortcut */}
             <Tooltip>
               <TooltipTrigger asChild>

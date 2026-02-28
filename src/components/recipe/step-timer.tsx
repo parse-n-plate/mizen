@@ -13,11 +13,11 @@ interface StepTimerProps {
   variant?: 'compact' | 'spacious' | 'minimal';
 }
 
-export function StepTimer({ 
-  durationMinutes, 
-  label, 
-  stepNumber, 
-  variant = 'compact' 
+export function StepTimer({
+  durationMinutes,
+  label,
+  stepNumber,
+  variant = 'compact',
 }: StepTimerProps) {
   const { startTimer, pauseTimer, resetTimer, getTimerForStep } = useTimer();
   const activeTimer = getTimerForStep(stepNumber);
@@ -40,14 +40,16 @@ export function StepTimer({
     }
 
     const interval = setInterval(() => {
-      const elapsedSeconds = Math.floor((Date.now() - activeTimer.startTime) / 1000);
-      const remaining = (activeTimer.durationMinutes * 60) - elapsedSeconds;
-      
+      const elapsedSeconds = Math.floor(
+        (Date.now() - activeTimer.startTime) / 1000,
+      );
+      const remaining = activeTimer.durationMinutes * 60 - elapsedSeconds;
+
       if (remaining <= 0) {
         setTimeLeft(0);
         setIsComplete(true);
         clearInterval(interval);
-        
+
         // Play notification if supported
         if (Notification.permission === 'granted') {
           new Notification('Timer Complete!', {
@@ -85,9 +87,9 @@ export function StepTimer({
   if (variant === 'compact') {
     if (isComplete) {
       return (
-        <Button 
-          size="sm" 
-          variant="outline" 
+        <Button
+          size="sm"
+          variant="outline"
           className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 h-7 px-2 text-xs"
           onClick={handleReset}
         >
@@ -103,9 +105,9 @@ export function StepTimer({
           <span className="font-mono text-sm font-medium w-[3.5ch] text-stone-700">
             {formatTime(timeLeft)}
           </span>
-          <Button 
-            size="icon" 
-            variant="ghost" 
+          <Button
+            size="icon"
+            variant="ghost"
             className="h-6 w-6 rounded-full"
             onClick={handlePause}
           >
@@ -116,9 +118,9 @@ export function StepTimer({
     }
 
     return (
-      <Button 
-        size="sm" 
-        variant="outline" 
+      <Button
+        size="sm"
+        variant="outline"
         className="h-7 px-2 text-xs border-dashed border-stone-300 text-stone-500 hover:text-stone-700"
         onClick={handleStart}
       >
@@ -130,44 +132,70 @@ export function StepTimer({
 
   // Spacious & Minimal Layouts
   return (
-    <div className={cn(
-      "flex items-center gap-3 p-3 rounded-lg transition-colors",
-      isComplete ? "bg-green-50 border border-green-100" : 
-      activeTimer ? "bg-purple-50 border border-purple-100" : 
-      "bg-stone-50 border border-stone-100"
-    )}>
-      <div className={cn(
-        "flex-1 flex flex-col",
-        variant === 'minimal' ? "items-center text-center" : ""
-      )}>
+    <div
+      className={cn(
+        'flex items-center gap-3 p-3 rounded-lg transition-colors',
+        isComplete
+          ? 'bg-green-50 border border-green-100'
+          : activeTimer
+            ? 'bg-purple-50 border border-purple-100'
+            : 'bg-stone-50 border border-stone-100',
+      )}
+    >
+      <div
+        className={cn(
+          'flex-1 flex flex-col',
+          variant === 'minimal' ? 'items-center text-center' : '',
+        )}
+      >
         <span className="text-xs uppercase tracking-wider font-semibold text-stone-500 mb-0.5">
           {label || 'Timer'}
         </span>
-        <span className={cn(
-          "font-mono font-bold text-stone-800",
-          variant === 'minimal' ? "text-3xl" : "text-xl",
-          isComplete && "text-green-600"
-        )}>
-          {isComplete ? "Done!" : formatTime(timeLeft)}
+        <span
+          className={cn(
+            'font-mono font-bold text-stone-800',
+            variant === 'minimal' ? 'text-3xl' : 'text-xl',
+            isComplete && 'text-green-600',
+          )}
+        >
+          {isComplete ? 'Done!' : formatTime(timeLeft)}
         </span>
       </div>
-      
+
       <div className="flex items-center gap-1">
         {isComplete ? (
-          <Button onClick={handleReset} variant="outline" size="sm" className="border-green-200 text-green-700 hover:bg-green-100">
+          <Button
+            onClick={handleReset}
+            variant="outline"
+            size="sm"
+            className="border-green-200 text-green-700 hover:bg-green-100"
+          >
             Dismiss
           </Button>
         ) : activeTimer ? (
           <>
-            <Button onClick={handlePause} size="icon" variant="secondary" className="h-8 w-8 rounded-full bg-white shadow-sm">
+            <Button
+              onClick={handlePause}
+              size="icon"
+              variant="secondary"
+              className="h-8 w-8 rounded-full bg-white shadow-sm"
+            >
               <Pause className="h-4 w-4" />
             </Button>
-            <Button onClick={handleReset} size="icon" variant="ghost" className="h-8 w-8 rounded-full hover:bg-red-50 hover:text-red-500">
+            <Button
+              onClick={handleReset}
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 rounded-full hover:bg-red-50 hover:text-red-500"
+            >
               <RotateCcw className="h-4 w-4" />
             </Button>
           </>
         ) : (
-          <Button onClick={handleStart} className="bg-stone-800 text-white hover:bg-stone-700">
+          <Button
+            onClick={handleStart}
+            className="bg-stone-800 text-white hover:bg-stone-700"
+          >
             <Play className="h-4 w-4 mr-2" />
             Start {durationMinutes}m
           </Button>

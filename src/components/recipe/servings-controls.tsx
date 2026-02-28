@@ -4,17 +4,17 @@ import { Plus, Minus } from 'lucide-react';
 
 /**
  * ServingsControls Component - Improved UX & Visual Design
- * 
+ *
  * A beautifully designed component for adjusting recipe servings
  * and selecting multipliers for scaling ingredients.
- * 
+ *
  * Design improvements:
  * - Clear visual hierarchy with prominent values
  * - Subtle labels that don't compete with actions
  * - Smooth micro-interactions and hover states
  * - Polished, modern appearance with refined shadows
  * - Better touch targets for mobile usability
- * 
+ *
  * @param servings - Current number of servings (1-10)
  * @param onServingsChange - Callback function when servings change
  * @param multiplier - Current multiplier value ('1x', '2x', or '3x')
@@ -53,7 +53,7 @@ export function ServingsControls({
       onServingsChange(servings - 1);
     }
   };
-  
+
   // If servings are unknown, show "Unknown" instead of a number
   const displayServings = servings !== undefined ? servings : null;
 
@@ -63,7 +63,7 @@ export function ServingsControls({
       <div className="yield-section">
         {/* Small subtle label above the control */}
         <span className="yield-section-label">Yield</span>
-        
+
         {/* Main servings control card with stepper */}
         <div className="yield-stepper-card">
           {/* Decrement button */}
@@ -75,14 +75,22 @@ export function ServingsControls({
           >
             <Minus className="yield-stepper-icon" strokeWidth={2.5} />
           </button>
-          
+
           {/* Central value display - clickable to reset to original */}
           <button
             onClick={onResetServings}
-            disabled={!onResetServings || originalServings === undefined || (servings === originalServings && multiplier === '1x')}
+            disabled={
+              !onResetServings ||
+              originalServings === undefined ||
+              (servings === originalServings && multiplier === '1x')
+            }
             className="yield-value-display cursor-pointer hover:opacity-80 transition-opacity disabled:cursor-default disabled:opacity-100"
             aria-label={`Reset to original ${originalServings} servings`}
-            title={originalServings !== undefined ? `Reset to ${originalServings} servings` : undefined}
+            title={
+              originalServings !== undefined
+                ? `Reset to ${originalServings} servings`
+                : undefined
+            }
           >
             {displayServings !== null ? (
               <>
@@ -91,12 +99,26 @@ export function ServingsControls({
               </>
             ) : (
               <>
-                <span className="yield-value-number" style={{ fontSize: '0.875rem', opacity: 0.5, fontStyle: 'italic' }}>Unknown</span>
-                <span className="yield-value-unit" style={{ fontSize: '0.75rem', opacity: 0.5 }}>yield</span>
+                <span
+                  className="yield-value-number"
+                  style={{
+                    fontSize: '0.875rem',
+                    opacity: 0.5,
+                    fontStyle: 'italic',
+                  }}
+                >
+                  Unknown
+                </span>
+                <span
+                  className="yield-value-unit"
+                  style={{ fontSize: '0.75rem', opacity: 0.5 }}
+                >
+                  yield
+                </span>
               </>
             )}
           </button>
-          
+
           {/* Increment button */}
           <button
             onClick={handleIncrementServings}
@@ -115,7 +137,7 @@ export function ServingsControls({
       {/* ── SCALE Section ── */}
       <div className="yield-section">
         <span className="yield-section-label">Scale</span>
-        
+
         {/* Multiplier pill group */}
         <div className="yield-multiplier-group">
           {['1x', '2x', '3x'].map((mult) => (

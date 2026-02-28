@@ -21,7 +21,9 @@ export function ToastErrorDetails({
             {suggestions.map((suggestion, index) => (
               <li key={index} className="toast-error-suggestion-item">
                 <span className="toast-error-bullet">•</span>
-                <span className="toast-error-suggestion-text">{suggestion}</span>
+                <span className="toast-error-suggestion-text">
+                  {suggestion}
+                </span>
               </li>
             ))}
           </ul>
@@ -30,4 +32,3 @@ export function ToastErrorDetails({
     </div>
   );
 }
-

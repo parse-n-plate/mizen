@@ -25,14 +25,16 @@ export function IngredientDrawerContent({
   substitutions,
   linkedSteps,
   stepTitlesMap,
-  onStepClick
+  onStepClick,
 }: IngredientDrawerContentProps) {
   const { parsedRecipe } = useRecipe();
   const activeRequestIdRef = useRef(0);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // AI substitution state
-  const [aiSubstitutions, setAiSubstitutions] = useState<AiSubstitution[] | null>(null);
+  const [aiSubstitutions, setAiSubstitutions] = useState<
+    AiSubstitution[] | null
+  >(null);
   const [isLoadingAi, setIsLoadingAi] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
@@ -85,12 +87,18 @@ export function IngredientDrawerContent({
       }
 
       const { data } = await response.json();
-      if (abortController.signal.aborted || activeRequestIdRef.current !== requestId) {
+      if (
+        abortController.signal.aborted ||
+        activeRequestIdRef.current !== requestId
+      ) {
         return;
       }
       setAiSubstitutions(data.substitutions);
     } catch (error) {
-      if (abortController.signal.aborted || activeRequestIdRef.current !== requestId) {
+      if (
+        abortController.signal.aborted ||
+        activeRequestIdRef.current !== requestId
+      ) {
         return;
       }
       console.error('Failed to generate AI substitutions:', error);
@@ -100,7 +108,10 @@ export function IngredientDrawerContent({
       if (abortControllerRef.current === abortController) {
         abortControllerRef.current = null;
       }
-      if (!abortController.signal.aborted && activeRequestIdRef.current === requestId) {
+      if (
+        !abortController.signal.aborted &&
+        activeRequestIdRef.current === requestId
+      ) {
         setIsLoadingAi(false);
       }
     }
@@ -172,60 +183,71 @@ export function IngredientDrawerContent({
         )}
 
         {/* State: Idle with static subs — show cards + suggest button */}
-        {!isLoadingAi && !hasAiSubstitutes && !aiError && hasStaticSubstitutes && (
-          <>
-            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
-              {substitutions.map((sub, i) => (
-                <div
-                  key={i}
-                  className="flex-shrink-0 w-[260px] bg-white border border-stone-100 rounded-xl p-4 space-y-2 shadow-sm"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-[15px] font-albert font-semibold text-stone-900">
-                      {sub}
-                    </span>
+        {!isLoadingAi &&
+          !hasAiSubstitutes &&
+          !aiError &&
+          hasStaticSubstitutes && (
+            <>
+              <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
+                {substitutions.map((sub, i) => (
+                  <div
+                    key={i}
+                    className="flex-shrink-0 w-[260px] bg-white border border-stone-100 rounded-xl p-4 space-y-2 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[15px] font-albert font-semibold text-stone-900">
+                        {sub}
+                      </span>
+                    </div>
+                    <p className="text-[13px] text-stone-500 font-albert leading-relaxed">
+                      Use {sub.toLowerCase()} for a unique twist in this recipe.
+                    </p>
                   </div>
-                  <p className="text-[13px] text-stone-500 font-albert leading-relaxed">
-                    Use {sub.toLowerCase()} for a unique twist in this recipe.
-                  </p>
-                </div>
-              ))}
-            </div>
-            {parsedRecipe && (
-              <div>
-                <button
-                  onClick={handleGetAiSubstitutions}
-                  className="flex items-center gap-1.5 text-[13px] font-albert font-semibold text-primary hover:text-primary/80 transition-[color] cursor-pointer"
-                >
-                  <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                  Suggest Substitutes
-                </button>
+                ))}
               </div>
-            )}
-          </>
-        )}
+              {parsedRecipe && (
+                <div>
+                  <button
+                    onClick={handleGetAiSubstitutions}
+                    className="flex items-center gap-1.5 text-[13px] font-albert font-semibold text-primary hover:text-primary/80 transition-[color] cursor-pointer"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                    Suggest Substitutes
+                  </button>
+                </div>
+              )}
+            </>
+          )}
 
         {/* State: Idle, no static subs, recipe available — suggest action */}
-        {!isLoadingAi && !hasAiSubstitutes && !aiError && !hasStaticSubstitutes && parsedRecipe && (
-          <div>
-            <button
-              onClick={handleGetAiSubstitutions}
-              className="flex items-center gap-1.5 text-[13px] font-albert font-semibold text-stone-500 hover:text-stone-800 transition-[color] cursor-pointer"
-            >
-              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-              Suggest substitutes
-            </button>
-          </div>
-        )}
+        {!isLoadingAi &&
+          !hasAiSubstitutes &&
+          !aiError &&
+          !hasStaticSubstitutes &&
+          parsedRecipe && (
+            <div>
+              <button
+                onClick={handleGetAiSubstitutions}
+                className="flex items-center gap-1.5 text-[13px] font-albert font-semibold text-stone-500 hover:text-stone-800 transition-[color] cursor-pointer"
+              >
+                <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                Suggest substitutes
+              </button>
+            </div>
+          )}
 
         {/* State: No static subs, no recipe context — nothing can be done */}
-        {!isLoadingAi && !hasAiSubstitutes && !aiError && !hasStaticSubstitutes && !parsedRecipe && (
-          <div className="bg-stone-50/50 rounded-xl border border-stone-100 p-4">
-            <p className="text-[13px] text-stone-400 font-albert">
-              No substitutions available.
-            </p>
-          </div>
-        )}
+        {!isLoadingAi &&
+          !hasAiSubstitutes &&
+          !aiError &&
+          !hasStaticSubstitutes &&
+          !parsedRecipe && (
+            <div className="bg-stone-50/50 rounded-xl border border-stone-100 p-4">
+              <p className="text-[13px] text-stone-400 font-albert">
+                No substitutions available.
+              </p>
+            </div>
+          )}
       </div>
 
       {/* Used In */}
@@ -237,7 +259,8 @@ export function IngredientDrawerContent({
           <div className="flex flex-wrap gap-2">
             {linkedSteps.map((stepNum) => {
               const stepTitle = stepTitlesMap?.[stepNum];
-              const hasMeaningfulTitle = stepTitle &&
+              const hasMeaningfulTitle =
+                stepTitle &&
                 stepTitle.trim() !== `Step ${stepNum}` &&
                 stepTitle.trim() !== `step ${stepNum}`;
               const buttonText = hasMeaningfulTitle
@@ -259,7 +282,6 @@ export function IngredientDrawerContent({
           </div>
         </div>
       )}
-
     </div>
   );
 }

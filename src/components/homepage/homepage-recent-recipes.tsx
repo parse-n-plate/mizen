@@ -28,7 +28,7 @@ import { toast } from 'sonner';
 
 /**
  * HomepageRecentRecipes Component
- * 
+ *
  * Displays recent recipes as a vertical list under the search bar.
  * Each recipe shows: name, preparation time pill, and bookmark icon.
  * Based on Figma design - clean, minimal vertical list.
@@ -65,45 +65,47 @@ export default function HomepageRecentRecipes() {
 
   // Determine which recipes to display
   // Show 5 by default, or all if showAll is true
-  const displayRecipes = showAll ? unbookmarkedRecipes : unbookmarkedRecipes.slice(0, 5);
+  const displayRecipes = showAll
+    ? unbookmarkedRecipes
+    : unbookmarkedRecipes.slice(0, 5);
   const hasMoreThanFive = unbookmarkedRecipes.length > 5;
 
   // Format time display (e.g., "35m", "3h 30m", "48m")
   const formatTime = (minutes?: number): string => {
     if (!minutes) return '';
-    
+
     if (minutes < 60) {
       return `${minutes}m`;
     }
-    
+
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
-    
+
     if (remainingMinutes === 0) {
       return `${hours}h`;
     }
-    
+
     return `${hours}h ${remainingMinutes}m`;
   };
 
   // Get time to display (prefer totalTime, then prepTime + cookTime, then prepTime or cookTime)
-  const getDisplayTime = (recipe: typeof recentRecipes[0]): string => {
+  const getDisplayTime = (recipe: (typeof recentRecipes)[0]): string => {
     if (recipe.totalTimeMinutes) {
       return formatTime(recipe.totalTimeMinutes);
     }
-    
+
     if (recipe.prepTimeMinutes && recipe.cookTimeMinutes) {
       return formatTime(recipe.prepTimeMinutes + recipe.cookTimeMinutes);
     }
-    
+
     if (recipe.prepTimeMinutes) {
       return formatTime(recipe.prepTimeMinutes);
     }
-    
+
     if (recipe.cookTimeMinutes) {
       return formatTime(recipe.cookTimeMinutes);
     }
-    
+
     return '';
   };
 
@@ -145,13 +147,13 @@ export default function HomepageRecentRecipes() {
   const handleBookmarkToggle = (recipeId: string) => {
     // Check if recipe is currently bookmarked
     const isCurrentlyBookmarked = isBookmarked(recipeId);
-    
+
     if (isCurrentlyBookmarked) {
       // If bookmarked, show confirmation dialog
       const confirmed = window.confirm(
-        'Are you sure you want to remove this recipe from your Cookbook? You can add it back later.'
+        'Are you sure you want to remove this recipe from your Cookbook? You can add it back later.',
       );
-      
+
       if (confirmed) {
         toggleBookmark(recipeId);
       }
@@ -161,11 +163,11 @@ export default function HomepageRecentRecipes() {
     }
   };
 
-  const getSourceUrl = (recipe: typeof recentRecipes[0]) =>
+  const getSourceUrl = (recipe: (typeof recentRecipes)[0]) =>
     recipe.sourceUrl || recipe.url;
 
   // Handle opening recipe in new tab
-  const handleOpenNewTab = (recipe: typeof recentRecipes[0]) => {
+  const handleOpenNewTab = (recipe: (typeof recentRecipes)[0]) => {
     const sourceUrl = getSourceUrl(recipe);
     if (sourceUrl) {
       window.open(sourceUrl, '_blank', 'noopener,noreferrer');
@@ -173,7 +175,7 @@ export default function HomepageRecentRecipes() {
   };
 
   // Handle copy link
-  const handleCopyLink = async (recipe: typeof recentRecipes[0]) => {
+  const handleCopyLink = async (recipe: (typeof recentRecipes)[0]) => {
     const sourceUrl = getSourceUrl(recipe);
     if (sourceUrl) {
       try {
@@ -188,7 +190,7 @@ export default function HomepageRecentRecipes() {
   };
 
   // Handle rename
-  const handleRename = (recipe: typeof recentRecipes[0]) => {
+  const handleRename = (recipe: (typeof recentRecipes)[0]) => {
     setRenameRecipeId(recipe.id);
     setRenameValue(recipe.title);
     setRenameOpen(true);
@@ -278,15 +280,20 @@ export default function HomepageRecentRecipes() {
                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 focus-visible:ring-offset-2 rounded-lg
                   "
                 >
-                  <span className="font-albert text-xl text-stone-800 text-left truncate" style={{ fontSize: '16px' }}>
+                  <span
+                    className="font-albert text-xl text-stone-800 text-left truncate"
+                    style={{ fontSize: '16px' }}
+                  >
                     {recipe.title}
                   </span>
                   {displayTime && (
-                    <span className="
+                    <span
+                      className="
                       font-albert text-sm text-stone-600
                       bg-stone-100 px-2.5 py-1 rounded-full
                       flex-shrink-0
-                    ">
+                    "
+                    >
                       {displayTime}
                     </span>
                   )}
@@ -295,7 +302,12 @@ export default function HomepageRecentRecipes() {
 
               {/* Right: 3-Dot Menu - Always visible */}
               <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                <DropdownMenu open={openMenuId === recipe.id} onOpenChange={(open) => setOpenMenuId(open ? recipe.id : null)}>
+                <DropdownMenu
+                  open={openMenuId === recipe.id}
+                  onOpenChange={(open) =>
+                    setOpenMenuId(open ? recipe.id : null)
+                  }
+                >
                   <DropdownMenuTrigger asChild>
                     <button
                       onClick={(e) => e.stopPropagation()}
@@ -312,7 +324,9 @@ export default function HomepageRecentRecipes() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
                     {(recipe.sourceUrl || recipe.url) && (
-                      <DropdownMenuItem onSelect={() => handleOpenNewTab(recipe)}>
+                      <DropdownMenuItem
+                        onSelect={() => handleOpenNewTab(recipe)}
+                      >
                         <span>Open in new tab</span>
                         <ExternalLink className="w-4 h-4 ml-auto" />
                       </DropdownMenuItem>
@@ -320,8 +334,14 @@ export default function HomepageRecentRecipes() {
 
                     <DropdownMenuSeparator />
 
-                    <DropdownMenuItem onSelect={() => handleBookmarkToggle(recipe.id)}>
-                      <span>{isBookmarkedState ? 'Remove from Cookbook' : 'Add to Cookbook'}</span>
+                    <DropdownMenuItem
+                      onSelect={() => handleBookmarkToggle(recipe.id)}
+                    >
+                      <span>
+                        {isBookmarkedState
+                          ? 'Remove from Cookbook'
+                          : 'Add to Cookbook'}
+                      </span>
                       <Bookmark className="w-4 h-4 ml-auto" />
                     </DropdownMenuItem>
 
@@ -368,12 +388,18 @@ export default function HomepageRecentRecipes() {
       </div>
 
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
-        <DialogContent className="max-w-sm p-0 gap-0 overflow-hidden" showCloseButton={false}>
+        <DialogContent
+          className="max-w-sm p-0 gap-0 overflow-hidden"
+          showCloseButton={false}
+        >
           <div className="px-6 pt-6 pb-4">
             <DialogHeader className="mb-4">
               <DialogTitle>Rename Recipe</DialogTitle>
             </DialogHeader>
-            <label htmlFor="rename-recent-input" className="block font-albert text-[13px] font-medium text-stone-500 mb-1.5">
+            <label
+              htmlFor="rename-recent-input"
+              className="block font-albert text-[13px] font-medium text-stone-500 mb-1.5"
+            >
               Recipe title
             </label>
             <Input

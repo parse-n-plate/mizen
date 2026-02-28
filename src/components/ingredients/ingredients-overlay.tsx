@@ -74,10 +74,11 @@ export default function IngredientsOverlay({
     }
   }, [isOpen, isMobile]);
 
-
   // Format ingredient for display
   const formatIngredient = (
-    ingredient: string | { amount?: string; units?: string; ingredient: string }
+    ingredient:
+      | string
+      | { amount?: string; units?: string; ingredient: string },
   ): string => {
     if (typeof ingredient === 'string') {
       return convertTextFractionsToSymbols(ingredient);
@@ -131,7 +132,9 @@ export default function IngredientsOverlay({
       <Drawer.Root
         modal={false}
         open={isOpen}
-        onOpenChange={(open) => { if (!open) onClose(); }}
+        onOpenChange={(open) => {
+          if (!open) onClose();
+        }}
       >
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-[200]" />
@@ -145,7 +148,8 @@ export default function IngredientsOverlay({
                   Ingredients
                 </Drawer.Title>
               </div>
-              <Drawer.Close className="mt-2 p-3 bg-stone-50 hover:bg-stone-100 rounded-full text-stone-400 hover:text-stone-900 transition-[background-color,color,transform] active:scale-90 focus-visible:ring-2 focus-visible:ring-stone-400 focus-visible:outline-none"
+              <Drawer.Close
+                className="mt-2 p-3 bg-stone-50 hover:bg-stone-100 rounded-full text-stone-400 hover:text-stone-900 transition-[background-color,color,transform] active:scale-90 focus-visible:ring-2 focus-visible:ring-stone-400 focus-visible:outline-none"
                 aria-label="Close ingredients"
               >
                 <X className="h-5 w-5" />
@@ -153,7 +157,10 @@ export default function IngredientsOverlay({
             </div>
 
             {/* Scrollable Content */}
-            <div className="flex-1 min-h-0 overflow-y-auto px-8 pb-8 overscroll-contain" data-vaul-no-drag>
+            <div
+              className="flex-1 min-h-0 overflow-y-auto px-8 pb-8 overscroll-contain"
+              data-vaul-no-drag
+            >
               {renderContent()}
             </div>
           </Drawer.Content>
@@ -183,9 +190,15 @@ export default function IngredientsOverlay({
             role="dialog"
             aria-modal="true"
             aria-label="Ingredients"
-            initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 20 }}
+            initial={
+              shouldReduceMotion ? false : { opacity: 0, scale: 0.95, y: 20 }
+            }
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.95, y: 20 }}
+            exit={
+              shouldReduceMotion
+                ? undefined
+                : { opacity: 0, scale: 0.95, y: 20 }
+            }
             transition={{ duration: shouldReduceMotion ? 0 : 0.2 }}
             className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-2xl shadow-2xl z-[201] overflow-hidden flex flex-col max-h-[85vh]"
           >

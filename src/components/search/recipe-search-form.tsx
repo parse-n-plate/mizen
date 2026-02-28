@@ -9,7 +9,12 @@ import { useRouter } from 'next/navigation';
 import { useRecipe } from '@/contexts/RecipeContext';
 import { useParsedRecipes } from '@/contexts/ParsedRecipesContext';
 import { errorLogger } from '@/utils/errorLogger';
-import { X, Image as ImageIcon, Link as LinkIcon, ChevronDown } from 'lucide-react';
+import {
+  X,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  ChevronDown,
+} from 'lucide-react';
 import LoadingAnimation from '@/components/shared/loading-animation';
 import { ParsedRecipe } from '@/lib/storage';
 import { useToast } from '@/hooks/useToast';
@@ -20,12 +25,12 @@ interface SearchFormProps {
   initialUrl?: string;
 }
 
-export default function SearchForm({
-  initialUrl = '',
-}: SearchFormProps) {
+export default function SearchForm({ initialUrl = '' }: SearchFormProps) {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
-  const [detectedCuisine, setDetectedCuisine] = useState<string[] | undefined>(undefined);
+  const [detectedCuisine, setDetectedCuisine] = useState<string[] | undefined>(
+    undefined,
+  );
   const [isFocused, setIsFocused] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchResults, setSearchResults] = useState<ParsedRecipe[]>([]);
@@ -35,8 +40,10 @@ export default function SearchForm({
   const [inputMode, setInputMode] = useState<'url' | 'image'>('url'); // Toggle between URL and image mode
   // Loading progress tracking
   const [loadingProgress, setLoadingProgress] = useState<number>(0);
-  const [loadingPhase, setLoadingPhase] = useState<'gathering' | 'reading' | 'plating' | 'done' | undefined>(undefined);
-  
+  const [loadingPhase, setLoadingPhase] = useState<
+    'gathering' | 'reading' | 'plating' | 'done' | undefined
+  >(undefined);
+
   const { setParsedRecipe } = useRecipe();
   const { addRecipe, recentRecipes } = useParsedRecipes();
   const { showError, showSuccess, showInfo, showWarning } = useToast();
@@ -170,14 +177,14 @@ export default function SearchForm({
       setLoadingPhase('gathering');
 
       console.log('[Client] Parsing recipe from image:', selectedImage.name);
-      
+
       // Update progress: Gathering Resources phase (0-30%)
       setLoadingProgress(10);
       setLoadingPhase('gathering');
-      
+
       // Call the new image parsing function
       const response = await parseRecipeFromImage(selectedImage);
-      
+
       // Update progress: Start Reading the Recipe phase (30-90%)
       setLoadingProgress(30);
       setLoadingPhase('reading');
@@ -188,7 +195,11 @@ export default function SearchForm({
         setLoadingProgress(0);
         setLoadingPhase(undefined);
         const errorCode = response.error?.code || 'ERR_NO_RECIPE_FOUND';
-        errorLogger.log(errorCode, response.error?.message || 'Image parsing failed', selectedImage.name);
+        errorLogger.log(
+          errorCode,
+          response.error?.message || 'Image parsing failed',
+          selectedImage.name,
+        );
         showError({
           code: errorCode,
           message: response.error?.message,
@@ -197,7 +208,10 @@ export default function SearchForm({
         return;
       }
 
-      console.log('[Client] Successfully parsed recipe from image:', response.title);
+      console.log(
+        '[Client] Successfully parsed recipe from image:',
+        response.title,
+      );
 
       // Update progress: Parsing complete, start Plating phase (90-100%)
       setLoadingProgress(90);
@@ -219,15 +233,31 @@ export default function SearchForm({
         summary: response.summary, // Include AI-generated summary if available
         imageData: imagePreview || undefined, // Store base64 image data for preview
         imageFilename: selectedImage.name, // Store original filename
-        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
-        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
-        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
+        ...(response.prepTimeMinutes !== undefined && {
+          prepTimeMinutes: response.prepTimeMinutes,
+        }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && {
+          cookTimeMinutes: response.cookTimeMinutes,
+        }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && {
+          totalTimeMinutes: response.totalTimeMinutes,
+        }), // Include total time if available
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings if available
-        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
-        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
-        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
-        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
-        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
+        ...(response.storageGuide !== undefined && {
+          storageGuide: response.storageGuide,
+        }),
+        ...(response.shelfLife !== undefined && {
+          shelfLife: response.shelfLife,
+        }),
+        ...(response.platingNotes !== undefined && {
+          platingNotes: response.platingNotes,
+        }),
+        ...(response.servingVessel !== undefined && {
+          servingVessel: response.servingVessel,
+        }),
+        ...(response.servingTemp !== undefined && {
+          servingTemp: response.servingTemp,
+        }),
       });
 
       // Add to recent recipes
@@ -244,14 +274,30 @@ export default function SearchForm({
         author: response.author, // Include author if available
         sourceUrl: response.sourceUrl, // Include source URL if available
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
-        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
-        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
-        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
-        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
-        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
-        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
-        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
-        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
+        ...(response.prepTimeMinutes !== undefined && {
+          prepTimeMinutes: response.prepTimeMinutes,
+        }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && {
+          cookTimeMinutes: response.cookTimeMinutes,
+        }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && {
+          totalTimeMinutes: response.totalTimeMinutes,
+        }), // Include total time if available
+        ...(response.storageGuide !== undefined && {
+          storageGuide: response.storageGuide,
+        }),
+        ...(response.shelfLife !== undefined && {
+          shelfLife: response.shelfLife,
+        }),
+        ...(response.platingNotes !== undefined && {
+          platingNotes: response.platingNotes,
+        }),
+        ...(response.servingVessel !== undefined && {
+          servingVessel: response.servingVessel,
+        }),
+        ...(response.servingTemp !== undefined && {
+          servingTemp: response.servingTemp,
+        }),
         imageData: imagePreview || undefined, // Store base64 image data for preview
         imageFilename: selectedImage.name, // Store original filename
       });
@@ -261,7 +307,10 @@ export default function SearchForm({
       setLoadingPhase('done');
 
       // Show success toast
-      showSuccess('Recipe parsed successfully!', 'Navigating to recipe page...');
+      showSuccess(
+        'Recipe parsed successfully!',
+        'Navigating to recipe page...',
+      );
 
       // Brief pause for the loading animation to flash completion before navigating
       setTimeout(() => {
@@ -329,7 +378,7 @@ export default function SearchForm({
       // Step 1: Quick validation to ensure URL contains recipe-related keywords
       // This provides fast feedback before making the full parsing request
       const validUrlResponse = await validateRecipeUrl(normalizedUrl);
-      
+
       // Update progress: Validation complete (20%)
       setLoadingProgress(20);
 
@@ -378,7 +427,7 @@ export default function SearchForm({
       // - Returns consistently structured data
       console.log('[Client] Calling unified recipe parser...');
       const response = await recipeScrape(normalizedUrl);
-      
+
       // Update progress: Parsing complete (85%)
       setLoadingProgress(85);
 
@@ -388,7 +437,11 @@ export default function SearchForm({
         setLoadingProgress(0);
         setLoadingPhase(undefined);
         const errorCode = response.error?.code || 'ERR_NO_RECIPE_FOUND';
-        errorLogger.log(errorCode, response.error?.message || 'Parsing failed', normalizedUrl);
+        errorLogger.log(
+          errorCode,
+          response.error?.message || 'Parsing failed',
+          normalizedUrl,
+        );
         showError({
           code: errorCode,
           message: response.error?.message,
@@ -399,23 +452,31 @@ export default function SearchForm({
       }
 
       console.log('[Client] Successfully parsed recipe:', response.title);
-      console.log(`[Client] Parser used: ${response.method === 'ai' ? 'AI parser only' : response.method === 'json-ld+ai' ? 'JSON-LD + AI enrichment' : response.method || 'unknown'}`);
+      console.log(
+        `[Client] Parser used: ${response.method === 'ai' ? 'AI parser only' : response.method === 'json-ld+ai' ? 'JSON-LD + AI enrichment' : response.method || 'unknown'}`,
+      );
 
       if (response.warnings?.includes('AI_NOT_CONFIGURED')) {
-        showWarning('AI enrichment unavailable', 'GROQ_API_KEY is not configured. Plating, storage, and summary data will be missing.');
+        showWarning(
+          'AI enrichment unavailable',
+          'GROQ_API_KEY is not configured. Plating, storage, and summary data will be missing.',
+        );
       } else if (response.warnings?.includes('AI_ENRICHMENT_FAILED')) {
-        showWarning('Partial recipe data', 'AI enrichment failed for this recipe. Plating, storage, and summary data may be missing.');
+        showWarning(
+          'Partial recipe data',
+          'AI enrichment failed for this recipe. Plating, storage, and summary data may be missing.',
+        );
       }
 
       // Update progress: Start Plating phase (90-100%)
       setLoadingProgress(90);
       setLoadingPhase('plating');
-      
+
       // Store detected cuisine for the loading animation reveal
       if (response.cuisine) {
         setDetectedCuisine(response.cuisine);
       }
-      
+
       // Step 3: Store parsed recipe in context
       // The new parser already returns data in the correct grouped format
       const recipeToStore = {
@@ -427,28 +488,46 @@ export default function SearchForm({
         summary: response.summary, // Include AI-generated summary if available
         cuisine: response.cuisine, // Include cuisine tags if available
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
-        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
-        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
-        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
-        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }), // Include storage instructions if available
-        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }), // Include shelf life info if available
-        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }), // Include plating suggestions if available
-        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }), // Include serving vessel recommendation if available
-        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }), // Include serving temperature if available
+        ...(response.prepTimeMinutes !== undefined && {
+          prepTimeMinutes: response.prepTimeMinutes,
+        }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && {
+          cookTimeMinutes: response.cookTimeMinutes,
+        }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && {
+          totalTimeMinutes: response.totalTimeMinutes,
+        }), // Include total time if available
+        ...(response.storageGuide !== undefined && {
+          storageGuide: response.storageGuide,
+        }), // Include storage instructions if available
+        ...(response.shelfLife !== undefined && {
+          shelfLife: response.shelfLife,
+        }), // Include shelf life info if available
+        ...(response.platingNotes !== undefined && {
+          platingNotes: response.platingNotes,
+        }), // Include plating suggestions if available
+        ...(response.servingVessel !== undefined && {
+          servingVessel: response.servingVessel,
+        }), // Include serving vessel recommendation if available
+        ...(response.servingTemp !== undefined && {
+          servingTemp: response.servingTemp,
+        }), // Include serving temperature if available
       };
 
       // Store recipe first (this writes to localStorage synchronously)
       setParsedRecipe(recipeToStore);
-      
+
       // Ensure localStorage write completes before navigation
       // localStorage.setItem is synchronous, but we want to ensure React state
       // has a chance to update. Use setTimeout to defer navigation slightly.
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       // Step 4: Add to recent recipes for quick access
       const recipeSummary = Array.isArray(response.instructions)
         ? response.instructions
-            .map((inst: string | { detail?: string }) => (typeof inst === 'string' ? inst : inst.detail))
+            .map((inst: string | { detail?: string }) =>
+              typeof inst === 'string' ? inst : inst.detail,
+            )
             .join(' ')
             .slice(0, 140)
         : response.instructions.slice(0, 140);
@@ -464,18 +543,38 @@ export default function SearchForm({
         sourceUrl: response.sourceUrl || normalizedUrl, // Include source URL if available
         cuisine: response.cuisine, // Include cuisine tags if available
         ...(response.servings !== undefined && { servings: response.servings }), // Include servings/yield if available
-        ...(response.prepTimeMinutes !== undefined && { prepTimeMinutes: response.prepTimeMinutes }), // Include prep time if available
-        ...(response.cookTimeMinutes !== undefined && { cookTimeMinutes: response.cookTimeMinutes }), // Include cook time if available
-        ...(response.totalTimeMinutes !== undefined && { totalTimeMinutes: response.totalTimeMinutes }), // Include total time if available
-        ...(response.storageGuide !== undefined && { storageGuide: response.storageGuide }),
-        ...(response.shelfLife !== undefined && { shelfLife: response.shelfLife }),
-        ...(response.platingNotes !== undefined && { platingNotes: response.platingNotes }),
-        ...(response.servingVessel !== undefined && { servingVessel: response.servingVessel }),
-        ...(response.servingTemp !== undefined && { servingTemp: response.servingTemp }),
+        ...(response.prepTimeMinutes !== undefined && {
+          prepTimeMinutes: response.prepTimeMinutes,
+        }), // Include prep time if available
+        ...(response.cookTimeMinutes !== undefined && {
+          cookTimeMinutes: response.cookTimeMinutes,
+        }), // Include cook time if available
+        ...(response.totalTimeMinutes !== undefined && {
+          totalTimeMinutes: response.totalTimeMinutes,
+        }), // Include total time if available
+        ...(response.storageGuide !== undefined && {
+          storageGuide: response.storageGuide,
+        }),
+        ...(response.shelfLife !== undefined && {
+          shelfLife: response.shelfLife,
+        }),
+        ...(response.platingNotes !== undefined && {
+          platingNotes: response.platingNotes,
+        }),
+        ...(response.servingVessel !== undefined && {
+          servingVessel: response.servingVessel,
+        }),
+        ...(response.servingTemp !== undefined && {
+          servingTemp: response.servingTemp,
+        }),
       });
 
       // Show success toast
-      showSuccess('Recipe parsed successfully!', 'Navigating to recipe page...', normalizedUrl);
+      showSuccess(
+        'Recipe parsed successfully!',
+        'Navigating to recipe page...',
+        normalizedUrl,
+      );
 
       // Brief pause for the loading animation to flash completion before navigating
       setTimeout(() => {
@@ -564,12 +663,12 @@ export default function SearchForm({
 
   return (
     <>
-      <LoadingAnimation 
-        isVisible={loading} 
-        cuisine={detectedCuisine} 
+      <LoadingAnimation
+        isVisible={loading}
+        cuisine={detectedCuisine}
         progress={loadingProgress}
         phase={loadingPhase}
-        onCancel={handleCancelLoading} 
+        onCancel={handleCancelLoading}
       />
       <div className="relative w-full">
         {/* URL Input Mode */}
@@ -592,62 +691,62 @@ export default function SearchForm({
                 {/* URL Icon - replaced Search icon */}
                 <LinkIcon className="w-5 h-5 text-stone-600 flex-shrink-0" />
 
-              {/* Input */}
-              <div className="flex-1 ml-3 relative">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  placeholder="Enter a recipe URL"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                  className={`
+                {/* Input */}
+                <div className="flex-1 ml-3 relative">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    placeholder="Enter a recipe URL"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    onFocus={handleFocus}
+                    onBlur={handleBlur}
+                    className={`
                     w-full bg-transparent font-albert text-[14px] text-stone-600 
                     placeholder:text-stone-500 focus:outline-none border-none
                     transition-all duration-300 ease-in-out
                   `}
-                  disabled={loading}
-                />
-              </div>
+                    disabled={loading}
+                  />
+                </div>
 
-              {/* Mode Toggle Chevron - switches between URL and Image */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  toggleInputMode();
-                }}
-                className="ml-2 p-1.5 hover:bg-stone-200 rounded transition-all duration-200 flex-shrink-0"
-                aria-label="Switch input mode"
-                disabled={loading}
-              >
-                <ChevronDown className="w-4 h-4 text-stone-600" />
-              </button>
-
-              {/* Clear Button */}
-              {query && (
+                {/* Mode Toggle Chevron - switches between URL and Image */}
                 <button
                   type="button"
-                  onClick={clearInput}
-                  className="ml-1 p-1 hover:bg-stone-200 rounded transition-all duration-200 flex-shrink-0"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    toggleInputMode();
+                  }}
+                  className="ml-2 p-1.5 hover:bg-stone-200 rounded transition-all duration-200 flex-shrink-0"
+                  aria-label="Switch input mode"
                   disabled={loading}
                 >
-                  <X className="w-4 h-4 text-stone-600" />
+                  <ChevronDown className="w-4 h-4 text-stone-600" />
                 </button>
-              )}
 
-              {/* Parse Button (for URLs) */}
-              {query && isUrl(query) && (
-                <button
-                  type="submit"
-                  className="ml-2 bg-[#FFA423] hover:bg-[#FF9500] text-white font-albert text-[12px] px-3 py-1.5 rounded transition-colors duration-200 flex-shrink-0"
-                  disabled={loading}
-                >
-                  Parse Recipe
-                </button>
-              )}
+                {/* Clear Button */}
+                {query && (
+                  <button
+                    type="button"
+                    onClick={clearInput}
+                    className="ml-1 p-1 hover:bg-stone-200 rounded transition-all duration-200 flex-shrink-0"
+                    disabled={loading}
+                  >
+                    <X className="w-4 h-4 text-stone-600" />
+                  </button>
+                )}
+
+                {/* Parse Button (for URLs) */}
+                {query && isUrl(query) && (
+                  <button
+                    type="submit"
+                    className="ml-2 bg-[#FFA423] hover:bg-[#FF9500] text-white font-albert text-[12px] px-3 py-1.5 rounded transition-colors duration-200 flex-shrink-0"
+                    disabled={loading}
+                  >
+                    Parse Recipe
+                  </button>
+                )}
               </div>
             </div>
           </form>

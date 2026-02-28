@@ -9,7 +9,9 @@ interface MobileMenuToggleProps {
   controlsId: string;
 }
 
-export default function MobileMenuToggle({ controlsId }: MobileMenuToggleProps) {
+export default function MobileMenuToggle({
+  controlsId,
+}: MobileMenuToggleProps) {
   const isMobile = useIsMobile();
   const { isMobileNavVisible, showMobileNav, hideMobileNav } = useSidebar();
 
@@ -19,7 +21,9 @@ export default function MobileMenuToggle({ controlsId }: MobileMenuToggleProps) 
     <button
       onClick={isMobileNavVisible ? hideMobileNav : showMobileNav}
       className="absolute top-4 left-4 z-30 flex items-center justify-center w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm border border-stone-200 shadow-sm"
-      aria-label={isMobileNavVisible ? 'Close navigation menu' : 'Open navigation menu'}
+      aria-label={
+        isMobileNavVisible ? 'Close navigation menu' : 'Open navigation menu'
+      }
       aria-controls={controlsId}
       aria-expanded={isMobileNavVisible}
     >

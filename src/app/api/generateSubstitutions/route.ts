@@ -7,16 +7,23 @@ export async function POST(request: NextRequest) {
       console.error('GROQ_API_KEY is not configured');
       return NextResponse.json(
         { error: 'AI service is not configured' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
-    const { ingredientName, ingredientAmount, recipeTitle, cuisine, ingredients, instructions } = await request.json();
+    const {
+      ingredientName,
+      ingredientAmount,
+      recipeTitle,
+      cuisine,
+      ingredients,
+      instructions,
+    } = await request.json();
 
     if (!ingredientName) {
       return NextResponse.json(
         { error: 'Ingredient name is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -29,15 +36,36 @@ export async function POST(request: NextRequest) {
 Recipe: ${recipeTitle || 'Untitled'}
 ${cuisine && cuisine.length > 0 ? `Cuisine: ${cuisine.join(', ')}` : ''}
 
-${ingredients ? `Ingredients:\n${ingredients.map((g: { groupName: string; ingredients: { amount?: string; units?: string; ingredient: string }[] }) =>
-  `${g.groupName !== 'Main' ? `${g.groupName}:\n` : ''}${g.ingredients.map((i) =>
-    `- ${i.amount} ${i.units} ${i.ingredient}`
-  ).join('\n')}`
-).join('\n\n')}` : ''}
+${
+  ingredients
+    ? `Ingredients:\n${ingredients
+        .map(
+          (g: {
+            groupName: string;
+            ingredients: {
+              amount?: string;
+              units?: string;
+              ingredient: string;
+            }[];
+          }) =>
+            `${g.groupName !== 'Main' ? `${g.groupName}:\n` : ''}${g.ingredients
+              .map((i) => `- ${i.amount} ${i.units} ${i.ingredient}`)
+              .join('\n')}`,
+        )
+        .join('\n\n')}`
+    : ''
+}
 
-${instructions ? `Instructions:\n${instructions.map((step: string | { detail: string }, i: number) =>
-  `${i + 1}. ${typeof step === 'string' ? step : step.detail}`
-).join('\n')}` : ''}
+${
+  instructions
+    ? `Instructions:\n${instructions
+        .map(
+          (step: string | { detail: string }, i: number) =>
+            `${i + 1}. ${typeof step === 'string' ? step : step.detail}`,
+        )
+        .join('\n')}`
+    : ''
+}
     `.trim();
 
     const response = await groq.chat.completions.create({
@@ -45,7 +73,8 @@ ${instructions ? `Instructions:\n${instructions.map((step: string | { detail: st
       messages: [
         {
           role: 'system',
-          content: 'You are a professional chef and recipe adaptation specialist. Suggest ingredient substitutions in JSON format. Always respond with valid JSON only, no other text.',
+          content:
+            'You are a professional chef and recipe adaptation specialist. Suggest ingredient substitutions in JSON format. Always respond with valid JSON only, no other text.',
         },
         {
           role: 'user',
@@ -95,7 +124,7 @@ Only respond with the JSON object, no other text.`,
         error: 'Failed to generate substitutions',
         details: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

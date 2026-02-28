@@ -9,7 +9,9 @@ interface DesignLabTabsProps {
   defaultValue?: string;
 }
 
-export function DesignLabTabs({ defaultValue = 'compact' }: DesignLabTabsProps) {
+export function DesignLabTabs({
+  defaultValue = 'compact',
+}: DesignLabTabsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentVariant = searchParams.get('variant') || defaultValue;
@@ -21,17 +23,30 @@ export function DesignLabTabs({ defaultValue = 'compact' }: DesignLabTabsProps) 
   };
 
   return (
-    <Tabs value={currentVariant} onValueChange={handleValueChange} className="w-full">
+    <Tabs
+      value={currentVariant}
+      onValueChange={handleValueChange}
+      className="w-full"
+    >
       <TabsList className="grid w-full grid-cols-3 bg-stone-100">
-        <TabsTrigger value="compact" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+        <TabsTrigger
+          value="compact"
+          className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+        >
           <List className="h-4 w-4" />
           <span>Compact</span>
         </TabsTrigger>
-        <TabsTrigger value="spacious" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+        <TabsTrigger
+          value="spacious"
+          className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+        >
           <Layout className="h-4 w-4" />
           <span>Spacious</span>
         </TabsTrigger>
-        <TabsTrigger value="minimal" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+        <TabsTrigger
+          value="minimal"
+          className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+        >
           <Monitor className="h-4 w-4" />
           <span>Minimal</span>
         </TabsTrigger>
@@ -39,4 +54,3 @@ export function DesignLabTabs({ defaultValue = 'compact' }: DesignLabTabsProps) 
     </Tabs>
   );
 }
-

@@ -1,6 +1,13 @@
 'use client';
 
-import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
@@ -39,7 +46,10 @@ import UserCircle from '@solar-icons/react/csr/users/UserCircle';
 // Shared easing for all sidebar transitions — ease-in-out-cubic
 const SIDEBAR_EASING = 'cubic-bezier(0.645,0.045,0.355,1)';
 
-function isSameOrder(current: ParsedRecipe[] | null, next: ParsedRecipe[]): boolean {
+function isSameOrder(
+  current: ParsedRecipe[] | null,
+  next: ParsedRecipe[],
+): boolean {
   if (!current) return false;
   if (current.length !== next.length) return false;
   for (let i = 0; i < current.length; i += 1) {
@@ -203,11 +213,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   const isMobile = useIsMobile();
-  const {
-    hideMobileNav,
-    isCollapsed,
-    setIsCollapsed,
-  } = useSidebar();
+  const { hideMobileNav, isCollapsed, setIsCollapsed } = useSidebar();
   const { openSearch } = useCommandK();
   const { openLab } = usePrototypeLab();
 
@@ -218,12 +224,16 @@ export default function Sidebar() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setUser(user);
     };
     getUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 
@@ -302,8 +312,12 @@ export default function Sidebar() {
   );
 
   // Local drag state — drives Reorder.Group visuals without touching context
-  const [localPinnedOrder, setLocalPinnedOrder] = useState<ParsedRecipe[] | null>(null);
-  const [localUnpinnedOrder, setLocalUnpinnedOrder] = useState<ParsedRecipe[] | null>(null);
+  const [localPinnedOrder, setLocalPinnedOrder] = useState<
+    ParsedRecipe[] | null
+  >(null);
+  const [localUnpinnedOrder, setLocalUnpinnedOrder] = useState<
+    ParsedRecipe[] | null
+  >(null);
   const [draggedRecipeId, setDraggedRecipeId] = useState<string | null>(null);
   const displayPinned = localPinnedOrder ?? pinnedRecipes;
   const displayUnpinned = localUnpinnedOrder ?? unpinnedRecipes;
@@ -436,7 +450,9 @@ export default function Sidebar() {
   }, [reorderRecipes]);
 
   const handlePinnedReorder = useCallback((nextOrder: ParsedRecipe[]) => {
-    setLocalPinnedOrder((current) => (isSameOrder(current, nextOrder) ? current : nextOrder));
+    setLocalPinnedOrder((current) =>
+      isSameOrder(current, nextOrder) ? current : nextOrder,
+    );
   }, []);
 
   const handleUnpinnedReorder = useCallback((nextOrder: ParsedRecipe[]) => {
@@ -468,14 +484,22 @@ export default function Sidebar() {
       const [dialogOpen, setDialogOpen] = useState(false);
       if (isMobile) {
         return (
-          <RecipeContextMenu recipe={recipe} onRecipeClick={handleRecipeClick} onDialogOpenChange={setDialogOpen}>
+          <RecipeContextMenu
+            recipe={recipe}
+            onRecipeClick={handleRecipeClick}
+            onDialogOpenChange={setDialogOpen}
+          >
             {children}
           </RecipeContextMenu>
         );
       }
       return (
         <RecipeHoverCard recipe={recipe} forceClose={dialogOpen}>
-          <RecipeContextMenu recipe={recipe} onRecipeClick={handleRecipeClick} onDialogOpenChange={setDialogOpen}>
+          <RecipeContextMenu
+            recipe={recipe}
+            onRecipeClick={handleRecipeClick}
+            onDialogOpenChange={setDialogOpen}
+          >
             {children}
           </RecipeContextMenu>
         </RecipeHoverCard>
@@ -484,7 +508,6 @@ export default function Sidebar() {
     Wrapper.displayName = 'RecipeItemWrapper';
     return Wrapper;
   }, [isMobile, handleRecipeClick]);
-
 
   // Whether we're showing the desktop collapsed rail
   const isRail = !isMobile && isCollapsed;
@@ -579,7 +602,11 @@ export default function Sidebar() {
 
           {/* New Recipe Button — icon stays put, text fades */}
           <div className="px-2 mb-2">
-            <NavTooltip isCollapsed={isCollapsed} isMobile={isMobile} label="New Recipe">
+            <NavTooltip
+              isCollapsed={isCollapsed}
+              isMobile={isMobile}
+              label="New Recipe"
+            >
               <button
                 onClick={() => {
                   if (pathname === '/') {
@@ -609,15 +636,19 @@ export default function Sidebar() {
           {/* Navigation — icons stay at fixed left position, text fades */}
           <nav className="px-2 py-2">
             {/* Search — opens command modal */}
-            <NavTooltip isCollapsed={isCollapsed} isMobile={isMobile} label="Search  ⌘K">
+            <NavTooltip
+              isCollapsed={isCollapsed}
+              isMobile={isMobile}
+              label="Search  ⌘K"
+            >
               <button
                 onClick={() => {
                   openSearch();
                   if (isMobile) hideMobileNav();
                 }}
                 className={cn(
-                  "group w-full flex items-center px-3 py-2 rounded-lg transition-colors font-albert text-sm text-stone-600 hover:bg-stone-100 hover:text-stone-900",
-                  isRail && "justify-center"
+                  'group w-full flex items-center px-3 py-2 rounded-lg transition-colors font-albert text-sm text-stone-600 hover:bg-stone-100 hover:text-stone-900',
+                  isRail && 'justify-center',
                 )}
                 aria-label="Search recipes"
               >
@@ -644,7 +675,12 @@ export default function Sidebar() {
 
               if (item.disabled) {
                 return (
-                  <NavTooltip key={item.label} isCollapsed={isCollapsed} isMobile={isMobile} label={item.label}>
+                  <NavTooltip
+                    key={item.label}
+                    isCollapsed={isCollapsed}
+                    isMobile={isMobile}
+                    label={item.label}
+                  >
                     <span
                       className="group w-full flex items-center px-3 py-2 rounded-lg font-albert text-sm text-stone-300 cursor-not-allowed"
                       aria-label={item.label}
@@ -670,7 +706,12 @@ export default function Sidebar() {
               }
 
               return (
-                <NavTooltip key={item.label} isCollapsed={isCollapsed} isMobile={isMobile} label={item.label}>
+                <NavTooltip
+                  key={item.label}
+                  isCollapsed={isCollapsed}
+                  isMobile={isMobile}
+                  label={item.label}
+                >
                   <Link
                     href={item.href}
                     className={cn(
@@ -700,12 +741,16 @@ export default function Sidebar() {
             {/* Prototype Lab — dev + preview only */}
             {(process.env.NODE_ENV === 'development' ||
               process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview') && (
-              <NavTooltip isCollapsed={isCollapsed} isMobile={isMobile} label="Prototype Lab">
+              <NavTooltip
+                isCollapsed={isCollapsed}
+                isMobile={isMobile}
+                label="Prototype Lab"
+              >
                 <button
                   onClick={openLab}
                   className={cn(
-                    "w-full flex items-center px-3 py-2 rounded-lg transition-colors font-albert text-sm text-stone-600 hover:bg-stone-100 hover:text-stone-900",
-                    isRail && "justify-center"
+                    'w-full flex items-center px-3 py-2 rounded-lg transition-colors font-albert text-sm text-stone-600 hover:bg-stone-100 hover:text-stone-900',
+                    isRail && 'justify-center',
                   )}
                   aria-label="Open Prototype Lab"
                 >
@@ -821,7 +866,11 @@ export default function Sidebar() {
                 )}
               >
                 {isRail ? (
-                  <NavTooltip isCollapsed={isCollapsed} isMobile={isMobile} label={user.user_metadata?.full_name || 'Profile'}>
+                  <NavTooltip
+                    isCollapsed={isCollapsed}
+                    isMobile={isMobile}
+                    label={user.user_metadata?.full_name || 'Profile'}
+                  >
                     <Link href="/profile" className="block">
                       <div className="w-8 h-8 rounded-full overflow-hidden bg-stone-200 flex items-center justify-center flex-shrink-0">
                         {user.user_metadata?.avatar_url ? (
@@ -833,7 +882,9 @@ export default function Sidebar() {
                           />
                         ) : (
                           <span className="font-albert text-xs font-bold text-stone-600">
-                            {user.user_metadata?.full_name?.split(' ')[0]?.[0] || user.email?.[0]?.toUpperCase()}
+                            {user.user_metadata?.full_name?.split(
+                              ' ',
+                            )[0]?.[0] || user.email?.[0]?.toUpperCase()}
                           </span>
                         )}
                       </div>
@@ -851,7 +902,8 @@ export default function Sidebar() {
                         />
                       ) : (
                         <span className="font-albert text-sm font-bold text-stone-600">
-                          {user.user_metadata?.full_name?.split(' ')[0]?.[0] || user.email?.[0]?.toUpperCase()}
+                          {user.user_metadata?.full_name?.split(' ')[0]?.[0] ||
+                            user.email?.[0]?.toUpperCase()}
                         </span>
                       )}
                     </div>
@@ -877,7 +929,11 @@ export default function Sidebar() {
                 )}
               >
                 {isRail ? (
-                  <NavTooltip isCollapsed={isCollapsed} isMobile={isMobile} label="Login">
+                  <NavTooltip
+                    isCollapsed={isCollapsed}
+                    isMobile={isMobile}
+                    label="Login"
+                  >
                     <button
                       onClick={() => setIsAuthModalOpen(true)}
                       className="p-1 rounded-full hover:bg-stone-100 transition-colors"

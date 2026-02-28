@@ -9,23 +9,33 @@ interface StarIconProps {
 
 /**
  * StarIcon Component
- * 
+ *
  * A reusable star icon for rating interfaces.
  * Based on the prototype at /Users/gageminamoto/Desktop/Prototype Plate Tab/
- * 
+ *
  * @param filled - Whether the star should be filled (yellow) or empty (gray)
  * @param size - Size in pixels (default: 48)
  * @param onClick - Optional click handler
  * @param className - Additional CSS classes
  */
-export default function StarIcon({ filled, size = 48, onClick, className = '' }: StarIconProps) {
+export default function StarIcon({
+  filled,
+  size = 48,
+  onClick,
+  className = '',
+}: StarIconProps) {
   const fillColor = filled ? '#FFB800' : '#CACACA';
-  
+
   // Check if className contains responsive width/height classes
   // If so, use className for SVG sizing and don't set inline styles
   // Otherwise, use the size prop with inline styles
-  const hasSizeClasses = /[wh]-\[?\d/.test(className) || className.includes('w-') || className.includes('h-');
-  const svgStyle = hasSizeClasses ? {} : { width: `${size}px`, height: `${size}px` };
+  const hasSizeClasses =
+    /[wh]-\[?\d/.test(className) ||
+    className.includes('w-') ||
+    className.includes('h-');
+  const svgStyle = hasSizeClasses
+    ? {}
+    : { width: `${size}px`, height: `${size}px` };
   const svgClassName = hasSizeClasses ? className : '';
 
   return (
@@ -35,11 +45,11 @@ export default function StarIcon({ filled, size = 48, onClick, className = '' }:
       type="button"
       aria-label={filled ? 'Filled star' : 'Empty star'}
     >
-      <svg 
+      <svg
         className={svgClassName}
         style={svgStyle}
-        fill="none" 
-        preserveAspectRatio="none" 
+        fill="none"
+        preserveAspectRatio="none"
         viewBox="0 0 34.2452 32.7067"
       >
         <path

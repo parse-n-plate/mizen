@@ -16,7 +16,13 @@ import Gallery from '@solar-icons/react/csr/video/Gallery';
 import { LogIn, UserPlus, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export default function AuthModal({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -66,8 +72,16 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
-      <DialogContent className="sm:max-w-5xl p-0 gap-0 overflow-hidden" showCloseButton={false}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) handleClose();
+      }}
+    >
+      <DialogContent
+        className="sm:max-w-5xl p-0 gap-0 overflow-hidden"
+        showCloseButton={false}
+      >
         {/* Close button */}
         <button
           onClick={handleClose}
@@ -90,7 +104,9 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
                   transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
                 >
                   <DialogTitle className="text-2xl">
-                    {isSignUp ? 'Create your account' : 'Log in to your account'}
+                    {isSignUp
+                      ? 'Create your account'
+                      : 'Log in to your account'}
                   </DialogTitle>
                   <DialogDescription>
                     {isSignUp
@@ -103,8 +119,16 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
 
             {/* Social login */}
             <div className="space-y-3 mb-6">
-              <Button variant="outline" className="w-full justify-start" onClick={handleGoogleLogin}>
-                <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="" />
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={handleGoogleLogin}
+              >
+                <img
+                  src="https://www.google.com/favicon.ico"
+                  className="w-4 h-4"
+                  alt=""
+                />
                 Sign in with Google
               </Button>
             </div>
@@ -124,7 +148,10 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
             {/* Email form */}
             <form onSubmit={handleEmailAuth} className="space-y-4">
               <div className="space-y-1.5">
-                <label htmlFor="auth-email" className="text-sm font-medium text-stone-700 font-albert">
+                <label
+                  htmlFor="auth-email"
+                  className="text-sm font-medium text-stone-700 font-albert"
+                >
                   Email
                 </label>
                 <Input
@@ -139,7 +166,10 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
               </div>
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label htmlFor="auth-password" className="text-sm font-medium text-stone-700 font-albert">
+                  <label
+                    htmlFor="auth-password"
+                    className="text-sm font-medium text-stone-700 font-albert"
+                  >
                     Password
                   </label>
                   <AnimatePresence initial={false}>
@@ -175,7 +205,13 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
               >
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.span
-                    key={loading ? 'loading' : isSignUp ? 'signup-btn' : 'login-btn'}
+                    key={
+                      loading
+                        ? 'loading'
+                        : isSignUp
+                          ? 'signup-btn'
+                          : 'login-btn'
+                    }
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
@@ -185,9 +221,13 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
                     {loading ? (
                       'Processing...'
                     ) : isSignUp ? (
-                      <><UserPlus className="w-4 h-4" /> Sign up</>
+                      <>
+                        <UserPlus className="w-4 h-4" /> Sign up
+                      </>
                     ) : (
-                      <><LogIn className="w-4 h-4" /> Sign in</>
+                      <>
+                        <LogIn className="w-4 h-4" /> Sign in
+                      </>
                     )}
                   </motion.span>
                 </AnimatePresence>
@@ -203,7 +243,9 @@ export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClos
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.12 }}
                 >
-                  {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+                  {isSignUp
+                    ? 'Already have an account?'
+                    : "Don't have an account?"}{' '}
                   <button
                     type="button"
                     onClick={() => setIsSignUp(!isSignUp)}

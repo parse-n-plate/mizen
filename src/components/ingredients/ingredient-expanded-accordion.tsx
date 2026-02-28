@@ -25,7 +25,7 @@ export function IngredientExpandedAccordion({
   linkedSteps,
   stepTitlesMap,
   onStepClick,
-  isOpen
+  isOpen,
 }: IngredientExpandedAccordionProps) {
   return (
     <motion.div

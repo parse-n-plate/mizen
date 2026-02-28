@@ -24,12 +24,12 @@ export function ProgressPie({
   percentage,
   size = 18,
   strokeWidth = 1.5,
-  color = "currentColor",
-  className
+  color = 'currentColor',
+  className,
 }: ProgressPieProps) {
   // Ensure percentage is between 0 and 100
   const clampedPercentage = Math.min(100, Math.max(0, percentage));
-  
+
   // SVG calculations
   const radius = (size - strokeWidth) / 2;
   const center = size / 2;
@@ -41,7 +41,10 @@ export function ProgressPie({
       width={size}
       height={size}
       viewBox={`0 0 ${size} ${size}`}
-      className={cn("transform -rotate-90 transition-opacity duration-300", className)}
+      className={cn(
+        'transform -rotate-90 transition-opacity duration-300',
+        className,
+      )}
       aria-hidden="true"
     >
       {/* Background ring (Empty state) */}
@@ -54,7 +57,7 @@ export function ProgressPie({
         strokeWidth={strokeWidth}
         className="opacity-20"
       />
-      
+
       {/* Progress arc (Filled state) */}
       <circle
         cx={center}
@@ -66,12 +69,10 @@ export function ProgressPie({
         strokeDasharray={circumference}
         style={{
           strokeDashoffset: offset,
-          transition: 'stroke-dashoffset 0.2s ease-out'
+          transition: 'stroke-dashoffset 0.2s ease-out',
         }}
         strokeLinecap="round"
       />
     </svg>
   );
 }
-
-

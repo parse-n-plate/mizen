@@ -11,7 +11,10 @@ interface ListViewProps {
   allIngredients?: IngredientInfo[];
 }
 
-export default function ListView({ steps, allIngredients = [] }: ListViewProps) {
+export default function ListView({
+  steps,
+  allIngredients = [],
+}: ListViewProps) {
   const { settings } = useUISettings();
   const { stepSizing } = settings;
 
@@ -61,16 +64,24 @@ export default function ListView({ steps, allIngredients = [] }: ListViewProps) 
                     Step {index + 1}
                   </span>
                 </div>
-                <p className={`${settings.fontFamily === 'serif' ? 'font-domine' : 'font-albert'} text-stone-900 leading-[1.6] antialiased ${fontSizeMap[stepSizing]}`}>
-                  {highlightQuantitiesAndIngredients(step.detail, allIngredients)}
+                <p
+                  className={`${settings.fontFamily === 'serif' ? 'font-domine' : 'font-albert'} text-stone-900 leading-[1.6] antialiased ${fontSizeMap[stepSizing]}`}
+                >
+                  {highlightQuantitiesAndIngredients(
+                    step.detail,
+                    allIngredients,
+                  )}
                 </p>
               </div>
-              
+
               {/* Right side: Square image */}
               {step.imageUrl && (
-                <div className={`flex-shrink-0 rounded-lg overflow-hidden border border-stone-200 bg-stone-50 transition-all duration-300 ${imageSizeMap[stepSizing]}`}>
+                <div
+                  className={`flex-shrink-0 rounded-lg overflow-hidden border border-stone-200 bg-stone-50 transition-all duration-300 ${imageSizeMap[stepSizing]}`}
+                >
                   {/* Use regular img for external URLs, Next.js Image for local paths */}
-                  {step.imageUrl.startsWith('/') || step.imageUrl.startsWith('http://localhost') ? (
+                  {step.imageUrl.startsWith('/') ||
+                  step.imageUrl.startsWith('http://localhost') ? (
                     <Image
                       src={step.imageUrl}
                       alt={`Step ${index + 1}: ${step.step}`}
@@ -92,7 +103,7 @@ export default function ListView({ steps, allIngredients = [] }: ListViewProps) 
                 </div>
               )}
             </div>
-            
+
             {/* Subtle separator line - disappears on hover of itself or neighbors */}
             {index < steps.length - 1 && (
               <div className="absolute bottom-0 left-4 right-4 h-px bg-stone-200/50" />

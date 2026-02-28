@@ -61,26 +61,26 @@ html {
   --text-hero-desktop: 85px;
 
   /* Heading sizes */
-  --text-h1-sm: 35px;           /* was 32px */
-  --text-h1-md: 46px;           /* was 42px */
-  --text-h2: 26px;              /* was 24px */
-  --text-h3: 22px;              /* was 20px */
+  --text-h1-sm: 35px; /* was 32px */
+  --text-h1-md: 46px; /* was 42px */
+  --text-h2: 26px; /* was 24px */
+  --text-h3: 22px; /* was 20px */
 
   /* Body text sizes */
-  --text-body-lg-sm: 18px;      /* was 16px */
-  --text-body-lg-md: 19px;      /* was 17px */
-  --text-body-md-sm: 17px;      /* was 15px */
-  --text-body-md: 18px;         /* was 16px */
-  --text-body-sm: 15px;         /* was 14px */
+  --text-body-lg-sm: 18px; /* was 16px */
+  --text-body-lg-md: 19px; /* was 17px */
+  --text-body-md-sm: 17px; /* was 15px */
+  --text-body-md: 18px; /* was 16px */
+  --text-body-sm: 15px; /* was 14px */
 
   /* Small / Label sizes */
-  --text-label-lg-sm: 13px;     /* was 12px */
-  --text-label-lg-md: 14px;     /* was 13px */
-  --text-label-sm: 13px;        /* was 12px */
+  --text-label-lg-sm: 13px; /* was 12px */
+  --text-label-lg-md: 14px; /* was 13px */
+  --text-label-sm: 13px; /* was 12px */
 
   /* Tab / Navigation sizes */
-  --text-nav-sm: 17px;          /* was 15px */
-  --text-nav-md: 18px;          /* was 16px */
+  --text-nav-sm: 17px; /* was 15px */
+  --text-nav-md: 18px; /* was 16px */
 
   /* Line Heights */
   --line-height-heading: 1.3;
@@ -135,7 +135,7 @@ html {
     margin: 0;
     padding: 0;
     overflow-x: hidden;
-    background-color: #FFFFFF;
+    background-color: #ffffff;
   }
 
   * {
@@ -151,14 +151,14 @@ html {
   */
   a[href],
   button:not(:disabled),
-  [role="button"]:not([aria-disabled="true"]),
-  [tabindex]:not([tabindex="-1"]) {
+  [role='button']:not([aria-disabled='true']),
+  [tabindex]:not([tabindex='-1']) {
     cursor: pointer;
   }
 
   /* Disabled buttons should show not-allowed cursor */
   button:disabled,
-  [role="button"][aria-disabled="true"] {
+  [role='button'][aria-disabled='true'] {
     cursor: not-allowed;
   }
 
@@ -229,7 +229,7 @@ html {
 
   /* Disable dragging on all images globally */
   img,
-  [role="img"],
+  [role='img'],
   picture img {
     -webkit-user-drag: none;
     -khtml-user-drag: none;
@@ -244,14 +244,14 @@ html {
   }
 
   /* Specifically target images by file extension in src attribute */
-  img[src$=".png"],
-  img[src$=".jpg"],
-  img[src$=".jpeg"],
-  img[src$=".svg"],
-  img[src$=".PNG"],
-  img[src$=".JPG"],
-  img[src$=".JPEG"],
-  img[src$=".SVG"] {
+  img[src$='.png'],
+  img[src$='.jpg'],
+  img[src$='.jpeg'],
+  img[src$='.svg'],
+  img[src$='.PNG'],
+  img[src$='.JPG'],
+  img[src$='.JPEG'],
+  img[src$='.SVG'] {
     -webkit-user-drag: none;
     -khtml-user-drag: none;
     -moz-user-drag: none;
@@ -339,7 +339,7 @@ html {
     background: linear-gradient(135deg, #fafaf9 0%, #f5f5f4 100%);
     border-radius: 1rem;
     border: 1px solid #e7e5e4;
-    box-shadow: 
+    box-shadow:
       0 1px 2px rgba(0, 0, 0, 0.03),
       0 4px 12px rgba(0, 0, 0, 0.02);
   }
@@ -386,7 +386,7 @@ html {
     background: white;
     border-radius: 0.75rem;
     border: 1px solid rgba(231, 229, 228, 1);
-    box-shadow: 
+    box-shadow:
       0 1px 2px rgba(0, 0, 0, 0.04),
       inset 0 1px 0 rgba(255, 255, 255, 0.8);
     overflow: hidden;
@@ -443,7 +443,7 @@ html {
   }
 
   .yield-stepper-btn:hover:not(:disabled) .yield-stepper-icon {
-    color: #0C0A09;
+    color: #0c0a09;
   }
 
   /* Center value display */
@@ -465,7 +465,7 @@ html {
     font-size: inherit;
     color: inherit;
   }
-  
+
   /* When disabled, remove hover effect */
   .yield-value-display:disabled {
     cursor: default;
@@ -477,7 +477,7 @@ html {
     font-family: var(--font-albert);
     font-size: 1.375rem;
     font-weight: 700;
-    color: #0C0A09;
+    color: #0c0a09;
     line-height: 1;
     min-width: 1.5rem;
     text-align: center;
@@ -503,7 +503,7 @@ html {
     padding: 0.25rem;
     border-radius: 0.625rem;
     border: 1px solid #e7e5e4;
-    box-shadow: 
+    box-shadow:
       0 1px 2px rgba(0, 0, 0, 0.04),
       inset 0 1px 0 rgba(255, 255, 255, 0.8);
   }
@@ -543,7 +543,7 @@ html {
 
   /* Active/selected state */
   .yield-multiplier-pill-active {
-    background: #0C0A09;
+    background: #0c0a09;
     color: white;
     box-shadow:
       0 2px 4px rgba(25, 61, 52, 0.2),
@@ -605,7 +605,7 @@ html {
     background: #fafaf9; /* hover:bg-stone-50 */
   }
 
-  .ingredients-header-menu-btn[data-state="open"] {
+  .ingredients-header-menu-btn[data-state='open'] {
     background: #f5f5f4; /* bg-stone-100 */
     color: #0c0a09; /* text-stone-900 */
   }
@@ -660,11 +660,11 @@ html {
     align-items: center;
     gap: 0.5rem;
   }
-  
+
   /* ─────────────────────────────────────────────────────────────────────────
      SERVINGS SLIDER CARD STYLES - Matches Figma Design
   ───────────────────────────────────────────────────────────────────────── */
-  
+
   .ingredients-header-container {
     display: flex;
     flex-direction: column;
@@ -678,14 +678,14 @@ html {
   /* ─────────────────────────────────────────────────────────────────────────
      INGREDIENTS SEARCH BAR - Matches Figma Design
   ───────────────────────────────────────────────────────────────────────── */
-  
+
   .ingredients-search-container {
     width: 100%;
     max-width: 700px;
     margin-left: auto;
     margin-right: auto;
   }
-  
+
   .ingredients-search-wrapper {
     display: flex;
     align-items: center;
@@ -696,7 +696,7 @@ html {
     border: 2px solid transparent;
     transition: all 0.2s ease;
   }
-  
+
   /* Focus state - subtle border change */
   .ingredients-search-wrapper:focus-within {
     background: #ffffff; /* white when focused */
@@ -704,7 +704,7 @@ html {
     border-width: 2px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
   }
-  
+
   /* Search icon - magnifying glass */
   .ingredients-search-icon {
     width: 1.125rem; /* 18px */
@@ -712,7 +712,7 @@ html {
     color: #a8a29e; /* stone-400 - subtle gray */
     flex-shrink: 0;
   }
-  
+
   /* Search input field */
   .ingredients-search-input {
     flex: 1;
@@ -726,18 +726,18 @@ html {
     padding: 0;
     margin: 0;
   }
-  
+
   /* Placeholder text styling */
   .ingredients-search-input::placeholder {
     color: #a8a29e; /* stone-400 - matches icon color */
     font-weight: 400;
   }
-  
+
   /* Remove default input styling */
   .ingredients-search-input:focus {
     outline: none;
   }
-  
+
   .servings-slider-card {
     background: white;
     border-radius: 1.5rem; /* 24px */
@@ -747,7 +747,7 @@ html {
     width: 100%;
     overflow: hidden;
   }
-  
+
   .servings-slider-label {
     font-family: var(--font-albert);
     font-size: 1rem;
@@ -757,13 +757,13 @@ html {
     line-height: 1;
     margin-bottom: 1.5rem;
   }
-  
+
   .servings-slider-row {
     display: flex;
     align-items: center;
     gap: 1.5rem;
   }
-  
+
   .servings-indicator {
     position: relative;
     display: flex;
@@ -777,14 +777,14 @@ html {
     flex-shrink: 0;
     transition: border-color 0.2s ease;
   }
-  
+
   /* Blue outline when input is focused - thinner */
   .servings-indicator:focus-within {
     border-color: #0088ff;
     outline: 1px solid #0088ff;
     outline-offset: 0;
   }
-  
+
   .servings-indicator-text {
     font-family: var(--font-albert);
     font-size: 1rem;
@@ -794,7 +794,7 @@ html {
     align-items: center;
     gap: 4px; /* 4px gap between "Serves" and number */
   }
-  
+
   /* Custom servings input styling - constrained to fit 3 digits */
   .servings-indicator-input {
     font-family: var(--font-albert);
@@ -816,27 +816,27 @@ html {
     display: inline-block;
     box-sizing: content-box; /* Hug content, don't include padding in width */
   }
-  
+
   .servings-indicator-input:focus {
     color: #0088ff; /* Blue number when focused */
   }
-  
+
   .servings-indicator-input::placeholder {
     color: #a8a29e; /* stone-400 */
     font-weight: 500;
   }
-  
+
   /* Remove number input spinners */
   .servings-indicator-input::-webkit-outer-spin-button,
   .servings-indicator-input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
-  
-  .servings-indicator-input[type="number"] {
+
+  .servings-indicator-input[type='number'] {
     -moz-appearance: textfield;
   }
-  
+
   /* Reset button styling */
   .servings-reset-btn {
     display: flex;
@@ -860,17 +860,17 @@ html {
     margin-block: auto;
     z-index: 2;
   }
-  
+
   .servings-reset-btn:hover {
     color: #78716c; /* stone-500 - darker on hover */
   }
-  
+
   .servings-reset-btn:focus-visible {
     outline: 2px solid #0088ff;
     outline-offset: 2px;
     border-radius: 0.25rem;
   }
-  
+
   .servings-slider-track-container {
     flex: 1;
     position: relative;
@@ -882,7 +882,7 @@ html {
     user-select: none;
     -webkit-user-select: none;
   }
-  
+
   .servings-slider-track {
     width: 100%;
     height: 0.375rem;
@@ -890,14 +890,14 @@ html {
     border-radius: 9999px;
     position: relative;
   }
-  
+
   .servings-slider-fill {
     height: 100%;
     background: #0088ff;
     border-radius: 9999px;
     transition: width 50ms ease-out;
   }
-  
+
   .servings-slider-handle {
     position: absolute;
     top: 50%;
@@ -913,7 +913,7 @@ html {
     user-select: none;
     -webkit-user-select: none;
   }
-  
+
   .servings-slider-handle:active {
     cursor: grabbing;
   }
@@ -1016,7 +1016,7 @@ html {
   .servings-value {
     font-family: var(--font-albert);
     font-weight: 600;
-    color: #0C0A09;
+    color: #0c0a09;
     min-width: 20px;
     text-align: center;
   }
@@ -1056,12 +1056,12 @@ html {
 
   /* Multiplier Button Selected */
   .multiplier-button-selected {
-    background-color: #0C0A09;
+    background-color: #0c0a09;
     color: white;
   }
 
   .multiplier-button-selected:hover {
-    background-color: #0C0A09;
+    background-color: #0c0a09;
   }
 
   /* Classic Split View Components */
@@ -1083,7 +1083,7 @@ html {
     width: 2rem;
     height: 2rem;
     border-radius: 9999px;
-    background-color: #0C0A09;
+    background-color: #0c0a09;
     color: white;
     display: flex;
     align-items: center;
@@ -1164,7 +1164,9 @@ html {
 
   /* Darken background on hover */
   .ingredient-list-item:hover .ingredient-list-content {
-    background-color: var(--color-background-cream); /* stone-50 - using design token */
+    background-color: var(
+      --color-background-cream
+    ); /* stone-50 - using design token */
   }
 
   .ingredient-list-checkbox {
@@ -1178,18 +1180,20 @@ html {
     height: 20px;
     border: none; /* Removed border - using filled style */
     border-radius: 4px;
-    background-color: #E7E5E4; /* stone-200 - filled background */
+    background-color: #e7e5e4; /* stone-200 - filled background */
     cursor: pointer;
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
     position: relative;
     flex-shrink: 0;
-    transform: translateY(-1px); /* Nudge checkbox up slightly for better visual centering */
+    transform: translateY(
+      -1px
+    ); /* Nudge checkbox up slightly for better visual centering */
   }
 
   .ingredient-checkbox-input:checked {
-    background-color: #0C0A09;
+    background-color: #0c0a09;
     border: none; /* Removed border for consistency */
   }
 
@@ -1268,8 +1272,11 @@ html {
     color: #0c0a09;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s ease, transform 0.2s ease,
-      background-color 0.2s ease, border-color 0.2s ease;
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease,
+      background-color 0.2s ease,
+      border-color 0.2s ease;
     z-index: 10;
   }
 
@@ -1288,7 +1295,6 @@ html {
     outline: 2px solid #d6d3d1;
     outline-offset: 2px;
   }
-
 
   /* Admin drawer and toggle */
   .admin-drawer-overlay {
@@ -1324,7 +1330,9 @@ html {
     border: 1px solid #e7e5e4;
     background-color: #f5f5f4;
     color: #1c1917;
-    transition: background-color 0.2s ease, border-color 0.2s ease,
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease,
       transform 0.2s ease;
   }
 
@@ -1346,7 +1354,9 @@ html {
     border-radius: 9999px;
     background-color: #e7e5e4;
     border: 1px solid #d6d3d1;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease;
     display: inline-flex;
     align-items: center;
     padding: 4px;
@@ -1359,7 +1369,9 @@ html {
     border-radius: 9999px;
     background-color: #ffffff;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-    transition: transform 0.2s ease, background-color 0.2s ease;
+    transition:
+      transform 0.2s ease,
+      background-color 0.2s ease;
   }
 
   .admin-toggle.is-on {
@@ -1393,7 +1405,9 @@ html {
     border-radius: 14px 0 0 14px; /* Binder-tab feel */
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     border: 1px solid #111827;
-    transition: background-color 0.2s ease, transform 0.2s ease,
+    transition:
+      background-color 0.2s ease,
+      transform 0.2s ease,
       box-shadow 0.2s ease;
     z-index: 65;
   }
@@ -1458,10 +1472,18 @@ html {
   }
 
   @keyframes ingredient-pulse {
-    0% { background-color: transparent; }
-    20% { background-color: rgba(207, 241, 232, 0.5); }
-    80% { background-color: rgba(207, 241, 232, 0.5); }
-    100% { background-color: transparent; }
+    0% {
+      background-color: transparent;
+    }
+    20% {
+      background-color: rgba(207, 241, 232, 0.5);
+    }
+    80% {
+      background-color: rgba(207, 241, 232, 0.5);
+    }
+    100% {
+      background-color: transparent;
+    }
   }
 
   /* Tooltip animation */
@@ -1488,8 +1510,14 @@ html {
   }
 
   @keyframes tooltip-in {
-    from { opacity: 0; transform: translate(-50%, 4px); }
-    to { opacity: 1; transform: translate(-50%, 0); }
+    from {
+      opacity: 0;
+      transform: translate(-50%, 4px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
@@ -1502,7 +1530,7 @@ html {
      data-instant skips the enter animation when moving between cards.
   ═══════════════════════════════════════════════════════════════════════════ */
 
-  .hover-card-content[data-state="open"] {
+  .hover-card-content[data-state='open'] {
     opacity: 1;
     transform: scale(1) translateY(0);
     transform-origin: var(--radix-hover-card-content-transform-origin);
@@ -1513,13 +1541,13 @@ html {
 
   /* Entry state — defines "from" values when element first renders */
   @starting-style {
-    .hover-card-content[data-state="open"] {
+    .hover-card-content[data-state='open'] {
       opacity: 0;
       transform: scale(0.96) translateY(2px);
     }
   }
 
-  .hover-card-content[data-state="closed"] {
+  .hover-card-content[data-state='closed'] {
     opacity: 0;
     transform: scale(0.97) translateY(2px);
     transform-origin: var(--radix-hover-card-content-transform-origin);
@@ -1529,13 +1557,13 @@ html {
   }
 
   /* When moving between cards, skip the enter animation only */
-  .hover-card-content[data-state="open"][data-instant] {
+  .hover-card-content[data-state='open'][data-instant] {
     transition-duration: 0ms;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .hover-card-content[data-state="open"],
-    .hover-card-content[data-state="closed"] {
+    .hover-card-content[data-state='open'],
+    .hover-card-content[data-state='closed'] {
       transition: none;
       opacity: 1;
       transform: none;
@@ -1568,7 +1596,9 @@ html {
     border-radius: 0.5rem;
     overflow: hidden;
     border: 1px solid #e7e5e4;
-    transition: border-color 0.3s ease, transform 0.3s ease;
+    transition:
+      border-color 0.3s ease,
+      transform 0.3s ease;
   }
 
   .recipe-step-list-item:hover .recipe-step-image {
@@ -1627,7 +1657,7 @@ html {
   }
 
   .group:hover .ingredient-group-chevron,
-  [aria-expanded="false"] .ingredient-group-chevron {
+  [aria-expanded='false'] .ingredient-group-chevron {
     opacity: 1;
   }
 
@@ -1645,7 +1675,6 @@ html {
     }
   }
 
-
   /* ═══════════════════════════════════════════════════════════════════════════
      SONNER TOAST STYLING
      Styles for Sonner toast notifications using classNames
@@ -1661,7 +1690,9 @@ html {
     border: 1px solid #e7e5e4 !important;
     border-radius: 0.5rem !important;
     padding: 1rem 1.25rem !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
     word-wrap: break-word !important;
     overflow-wrap: break-word !important;
     display: flex !important;
@@ -1867,7 +1898,7 @@ html {
        Following the Frequency Principle: users switch tabs 100+ times per session */
     transition: none;
     background-color: transparent;
-    color: #78716C;
+    color: #78716c;
     border: none;
     position: relative;
     cursor: pointer;
@@ -1876,14 +1907,14 @@ html {
     z-index: 1;
   }
 
-  .folder-tab-trigger:hover:not([data-state="active"]) {
+  .folder-tab-trigger:hover:not([data-state='active']) {
     background-color: rgba(231, 229, 228, 0.4);
-    color: #0C0A09;
+    color: #0c0a09;
   }
 
-  .folder-tab-trigger[data-state="active"] {
+  .folder-tab-trigger[data-state='active'] {
     background-color: white;
-    color: #0C0A09;
+    color: #0c0a09;
     border-color: transparent;
     z-index: 3;
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.03);
@@ -1910,7 +1941,7 @@ html {
     /* Smooth transitions for all interactive states
        Using ease easing for hover effects (200ms matches app patterns)
        Animating transform, background-color, border-color, and box-shadow */
-    transition: 
+    transition:
       transform 200ms ease,
       background-color 200ms ease,
       border-color 200ms ease,
@@ -1926,13 +1957,13 @@ html {
      Only applies on devices with precise pointer (not touch)
      Adds subtle shadow for depth */
   @media (hover: hover) and (pointer: fine) {
-    .cuisine-filter-pill:hover:not([aria-pressed="true"]) {
+    .cuisine-filter-pill:hover:not([aria-pressed='true']) {
       transform: translateY(-1px) scale(1.01);
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
     }
-    
+
     /* Hover state for selected pills - slightly different */
-    .cuisine-filter-pill[aria-pressed="true"]:hover {
+    .cuisine-filter-pill[aria-pressed='true']:hover {
       transform: translateY(-1px) scale(1.01);
       box-shadow: 0 1px 5px rgba(0, 0, 0, 0.06);
     }
@@ -1941,7 +1972,7 @@ html {
   /* Selected state - subtle visual emphasis
      Selected pills have a slightly elevated appearance with shadow
      Subtle scale to make them feel "pressed in" */
-  .cuisine-filter-pill[aria-pressed="true"] {
+  .cuisine-filter-pill[aria-pressed='true'] {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
     transform: scale(1);
   }
@@ -1977,7 +2008,9 @@ html {
      Keep color transitions but remove transform animations */
   @media (prefers-reduced-motion: reduce) {
     .cuisine-filter-pill {
-      transition: background-color 200ms ease, border-color 200ms ease;
+      transition:
+        background-color 200ms ease,
+        border-color 200ms ease;
     }
 
     .cuisine-filter-pill:hover {
@@ -1989,7 +2022,7 @@ html {
       transform: none;
     }
 
-    .cuisine-filter-pill[aria-pressed="true"] {
+    .cuisine-filter-pill[aria-pressed='true'] {
       animation: none;
       box-shadow: none;
     }
@@ -2011,7 +2044,7 @@ html {
 
   /* Bookmark button hover effect - subtle lift and gentle rotation */
   .recipe-page-bookmark-btn {
-    transition: 
+    transition:
       transform 200ms ease,
       background-color 150ms ease;
     transform-origin: center;
@@ -2019,7 +2052,7 @@ html {
 
   /* Settings button hover effect - subtle lift and gentle rotation */
   .recipe-page-settings-btn {
-    transition: 
+    transition:
       transform 200ms ease,
       background-color 150ms ease;
     transform-origin: center;
@@ -2098,15 +2131,15 @@ html {
 /* Ensure centering — Tailwind v4 translate-x and translate-y both write to the
    CSS `translate` property, and the animation's `transform` with `forwards`
    can interfere. This explicit rule guarantees correct centering. */
-[data-slot="dialog-content"].search-command-modal {
+[data-slot='dialog-content'].search-command-modal {
   translate: -50% -50%;
 }
 
-[data-slot="dialog-content"].search-command-modal[data-state="open"] {
+[data-slot='dialog-content'].search-command-modal[data-state='open'] {
   animation: search-cmd-enter 200ms var(--ease-out-quint) forwards;
 }
 
-[data-slot="dialog-content"].search-command-modal[data-state="closed"] {
+[data-slot='dialog-content'].search-command-modal[data-state='closed'] {
   animation: search-cmd-exit 150ms var(--ease-out-quad) forwards;
 }
 
@@ -2131,7 +2164,6 @@ html {
     transform: translateY(-4px) scale(0.98);
   }
 }
-
 
 /* ═══════════════════════════════════════════════════════════════════════════
    REDUCED MOTION - Accessibility support for users who prefer reduced motion

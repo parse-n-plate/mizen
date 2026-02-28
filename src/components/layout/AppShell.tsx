@@ -1,7 +1,12 @@
 'use client';
 
 import React, { useCallback, useEffect } from 'react';
-import { motion, useDragControls, useReducedMotion, type PanInfo } from 'framer-motion';
+import {
+  motion,
+  useDragControls,
+  useReducedMotion,
+  type PanInfo,
+} from 'framer-motion';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import Sidebar from '@/components/layout/Sidebar';
@@ -12,7 +17,9 @@ const NAV_WIDTH = '85vw';
 const EDGE_SWIPE_WIDTH_PX = 24;
 const SWIPE_THRESHOLD_PX = 100;
 const SWIPE_VELOCITY = 500;
-const EASE_OUT_CUBIC: [number, number, number, number] = [0.215, 0.61, 0.355, 1];
+const EASE_OUT_CUBIC: [number, number, number, number] = [
+  0.215, 0.61, 0.355, 1,
+];
 
 function isInteractiveTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -33,12 +40,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
       if (isMobileNavVisible) {
         // Nav is open — swipe left to close
-        if (info.offset.x < -SWIPE_THRESHOLD_PX || info.velocity.x < -SWIPE_VELOCITY) {
+        if (
+          info.offset.x < -SWIPE_THRESHOLD_PX ||
+          info.velocity.x < -SWIPE_VELOCITY
+        ) {
           hideMobileNav();
         }
       } else {
         // Nav is closed — swipe right to open
-        if (info.offset.x > SWIPE_THRESHOLD_PX || info.velocity.x > SWIPE_VELOCITY) {
+        if (
+          info.offset.x > SWIPE_THRESHOLD_PX ||
+          info.velocity.x > SWIPE_VELOCITY
+        ) {
           showMobileNav();
         }
       }
@@ -112,9 +125,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         }}
       >
         <MobileMenuToggle controlsId={NAV_ID} />
-        <main className="h-full overflow-y-auto">
-          {children}
-        </main>
+        <main className="h-full overflow-y-auto">{children}</main>
 
         {/* Tap overlay to dismiss when nav is open */}
         {isMobileNavVisible && (

@@ -12,14 +12,18 @@ interface ImagePreviewProps {
 
 /**
  * ImagePreview Component
- * 
+ *
  * Displays a preview of an uploaded image with options to:
  * - View full-size image in a modal
  * - Download the image
- * 
+ *
  * Used for recipes parsed from uploaded images instead of showing a link.
  */
-export default function ImagePreview({ imageData, filename = 'recipe-image', className }: ImagePreviewProps) {
+export default function ImagePreview({
+  imageData,
+  filename = 'recipe-image',
+  className,
+}: ImagePreviewProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Handle image download

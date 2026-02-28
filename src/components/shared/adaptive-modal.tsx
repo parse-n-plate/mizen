@@ -7,7 +7,11 @@ import { X, ChevronUp, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useModalViewMode } from '@/hooks/use-modal-view-mode';
 import { ModalViewSwitcher } from './view-mode-switcher';
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip';
 
 interface AdaptiveModalProps {
   isOpen: boolean;
@@ -140,9 +144,7 @@ export function AdaptiveModal({
               className="flex-1 min-h-0 overflow-y-auto px-8 pb-8 overscroll-contain flex flex-col"
               data-vaul-no-drag
             >
-              <div className="mt-auto w-full">
-                {children}
-              </div>
+              <div className="mt-auto w-full">{children}</div>
             </div>
           </Drawer.Content>
         </Drawer.Portal>
@@ -187,9 +189,7 @@ export function AdaptiveModal({
                 hasNext={hasNext}
               />
               <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-2 pb-8 overscroll-contain flex flex-col">
-                <div className="mt-auto w-full max-w-full">
-                  {children}
-                </div>
+                <div className="mt-auto w-full max-w-full">{children}</div>
               </div>
             </motion.div>
           ) : (
@@ -222,9 +222,7 @@ export function AdaptiveModal({
                 hasNext={hasNext}
               />
               <div className="flex-1 min-h-0 overflow-y-auto px-6 pt-2 pb-8 overscroll-contain flex flex-col">
-                <div className="mt-auto w-full">
-                  {children}
-                </div>
+                <div className="mt-auto w-full">{children}</div>
               </div>
             </motion.div>
           )}
@@ -292,7 +290,9 @@ function DesktopHeader({
                       <ChevronUp className="size-5" aria-hidden="true" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom">Previous ingredient</TooltipContent>
+                  <TooltipContent side="bottom">
+                    Previous ingredient
+                  </TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -308,7 +308,10 @@ function DesktopHeader({
                   <TooltipContent side="bottom">Next ingredient</TooltipContent>
                 </Tooltip>
                 {/* Vertical separator */}
-                <div className="w-px h-5 bg-stone-200 mx-0.5" aria-hidden="true" />
+                <div
+                  className="w-px h-5 bg-stone-200 mx-0.5"
+                  aria-hidden="true"
+                />
               </>
             )}
             <Tooltip>

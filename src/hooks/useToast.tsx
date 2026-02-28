@@ -17,7 +17,13 @@ interface ShowErrorOptions {
  */
 export function useToast() {
   const showError = (options: ShowErrorOptions) => {
-    const { code = ERROR_CODES.ERR_UNKNOWN, message, retry, retryAfter, sourceUrl } = options;
+    const {
+      code = ERROR_CODES.ERR_UNKNOWN,
+      message,
+      retry,
+      retryAfter,
+      sourceUrl,
+    } = options;
     const errorDetails = getErrorDetails(code);
 
     // Use provided message or fallback to user-friendly message
@@ -50,7 +56,7 @@ export function useToast() {
       const timeString = retryDate.toLocaleTimeString([], {
         hour: 'numeric',
         minute: '2-digit',
-        hour12: true
+        hour12: true,
       });
 
       description = `${errorDetails.detailedExplanation} ${retryTimeText} (at ${timeString})`;
@@ -70,19 +76,25 @@ export function useToast() {
     // Create the toast with title and description
     return toast.error(userMessage, {
       description,
-      duration: code === ERROR_CODES.ERR_RATE_LIMIT && retryAfter ? 10000 : 5000, // Show rate limit toasts longer
+      duration:
+        code === ERROR_CODES.ERR_RATE_LIMIT && retryAfter ? 10000 : 5000, // Show rate limit toasts longer
       action,
     });
   };
 
-  const showSuccess = (message: string, description?: string, sourceUrl?: string) => {
+  const showSuccess = (
+    message: string,
+    description?: string,
+    sourceUrl?: string,
+  ) => {
     return toast.success(message, {
       description: description || 'Operation completed successfully',
       duration: 3000,
       action: sourceUrl
         ? {
             label: 'View original',
-            onClick: () => window.open(sourceUrl, '_blank', 'noopener,noreferrer'),
+            onClick: () =>
+              window.open(sourceUrl, '_blank', 'noopener,noreferrer'),
           }
         : undefined,
     });
@@ -95,7 +107,10 @@ export function useToast() {
     });
   };
 
-  const showInfo = (messageOrOptions: string | ShowErrorOptions, description?: string) => {
+  const showInfo = (
+    messageOrOptions: string | ShowErrorOptions,
+    description?: string,
+  ) => {
     // Support both string message and options object (like showError)
     if (typeof messageOrOptions === 'string') {
       return toast.info(messageOrOptions, {
@@ -124,4 +139,3 @@ export function useToast() {
     showInfo,
   };
 }
-

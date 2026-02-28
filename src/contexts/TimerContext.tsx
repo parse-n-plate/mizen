@@ -1,10 +1,16 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 
 export interface ActiveTimer {
   stepNumber: number;
-  startTime: number;          // Unix timestamp when started
+  startTime: number; // Unix timestamp when started
   durationMinutes: number;
   label: string;
   originalDurationSeconds?: number; // Store original duration in seconds for accuracy
@@ -12,7 +18,11 @@ export interface ActiveTimer {
 
 interface TimerContextType {
   activeTimers: ActiveTimer[];
-  startTimer: (stepNumber: number, durationMinutes: number, label: string) => void;
+  startTimer: (
+    stepNumber: number,
+    durationMinutes: number,
+    label: string,
+  ) => void;
   pauseTimer: (stepNumber: number) => void;
   resetTimer: (stepNumber: number) => void;
   getTimerForStep: (stepNumber: number) => ActiveTimer | undefined;
@@ -49,34 +59,49 @@ export function TimerProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const startTimer = (stepNumber: number, durationMinutes: number, label: string) => {
-    setActiveTimers(prev => {
+  const startTimer = (
+    stepNumber: number,
+    durationMinutes: number,
+    label: string,
+  ) => {
+    setActiveTimers((prev) => {
       // Remove existing timer for this step if any
-      const filtered = prev.filter(t => t.stepNumber !== stepNumber);
-      return [...filtered, {
-        stepNumber,
-        startTime: Date.now(),
-        durationMinutes,
-        label,
-        originalDurationSeconds: durationMinutes * 60
-      }];
+      const filtered = prev.filter((t) => t.stepNumber !== stepNumber);
+      return [
+        ...filtered,
+        {
+          stepNumber,
+          startTime: Date.now(),
+          durationMinutes,
+          label,
+          originalDurationSeconds: durationMinutes * 60,
+        },
+      ];
     });
   };
 
   const pauseTimer = (stepNumber: number) => {
-    setActiveTimers(prev => prev.filter(t => t.stepNumber !== stepNumber));
+    setActiveTimers((prev) => prev.filter((t) => t.stepNumber !== stepNumber));
   };
 
   const resetTimer = (stepNumber: number) => {
-    setActiveTimers(prev => prev.filter(t => t.stepNumber !== stepNumber));
+    setActiveTimers((prev) => prev.filter((t) => t.stepNumber !== stepNumber));
   };
 
   const getTimerForStep = (stepNumber: number) => {
-    return activeTimers.find(t => t.stepNumber === stepNumber);
+    return activeTimers.find((t) => t.stepNumber === stepNumber);
   };
 
   return (
-    <TimerContext.Provider value={{ activeTimers, startTimer, pauseTimer, resetTimer, getTimerForStep }}>
+    <TimerContext.Provider
+      value={{
+        activeTimers,
+        startTimer,
+        pauseTimer,
+        resetTimer,
+        getTimerForStep,
+      }}
+    >
       {children}
     </TimerContext.Provider>
   );
@@ -89,4 +114,3 @@ export function useTimer() {
   }
   return context;
 }
-

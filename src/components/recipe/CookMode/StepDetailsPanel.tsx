@@ -13,7 +13,7 @@ import { findIngredientsInText } from '@/utils/ingredientMatcher';
  */
 function toTitleCase(text: string): string {
   if (!text) return text;
-  
+
   // Split by word boundaries, preserving spaces and punctuation
   return text.replace(/\b\w+\b/g, (word) => {
     // Skip if it's a number or starts with a number/fraction symbol
@@ -30,17 +30,23 @@ interface StepDetailsPanelProps {
   allIngredients: IngredientInfo[];
 }
 
-export default function StepDetailsPanel({ step, allIngredients }: StepDetailsPanelProps) {
+export default function StepDetailsPanel({
+  step,
+  allIngredients,
+}: StepDetailsPanelProps) {
   // Find ingredients mentioned in the step text for detailed view
   const matchedIngredients = findIngredientsInText(step.detail, allIngredients);
   const handleIngredientClick = (name: string) => {
     // Dispatch a custom event for the page to handle tab switching and scrolling
-    const event = new CustomEvent('navigate-to-ingredient', { detail: { name } });
+    const event = new CustomEvent('navigate-to-ingredient', {
+      detail: { name },
+    });
     window.dispatchEvent(event);
   };
 
   // Check if there's any content to show
-  const hasIngredients = matchedIngredients.length > 0 ||
+  const hasIngredients =
+    matchedIngredients.length > 0 ||
     (step.ingredients && step.ingredients.length > 0);
   const hasTimer = step.time && step.time > 0;
   const hasTip = step.tips && step.tips.trim().length > 0;
@@ -80,7 +86,10 @@ export default function StepDetailsPanel({ step, allIngredients }: StepDetailsPa
                     {(ing.amount || ing.units) && (
                       <p className="font-albert text-[14px] text-stone-400">
                         {[ing.amount, ing.units]
-                          .filter((text): text is string => typeof text === 'string' && text.length > 0)
+                          .filter(
+                            (text): text is string =>
+                              typeof text === 'string' && text.length > 0,
+                          )
                           .map(toTitleCase)
                           .join(' ')}
                       </p>
@@ -92,26 +101,28 @@ export default function StepDetailsPanel({ step, allIngredients }: StepDetailsPa
           )}
 
           {/* Fallback to legacy ingredients if no matches found in text but they exist in step object */}
-          {matchedIngredients.length === 0 && step.ingredients && step.ingredients.length > 0 && (
-            <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-1 gap-2">
-                {step.ingredients.map((ingredient, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: index * 0.03 }}
-                    onClick={() => handleIngredientClick(ingredient)}
-                    className="group flex items-center justify-between py-2 border-b border-stone-100 last:border-0 cursor-pointer hover:bg-stone-50/50 -mx-4 px-4 rounded-lg transition-colors"
-                  >
-                    <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">
-                      {toTitleCase(ingredient)}
-                    </p>
-                  </motion.div>
-                ))}
+          {matchedIngredients.length === 0 &&
+            step.ingredients &&
+            step.ingredients.length > 0 && (
+              <div className="flex flex-col gap-4">
+                <div className="grid grid-cols-1 gap-2">
+                  {step.ingredients.map((ingredient, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: index * 0.03 }}
+                      onClick={() => handleIngredientClick(ingredient)}
+                      className="group flex items-center justify-between py-2 border-b border-stone-100 last:border-0 cursor-pointer hover:bg-stone-50/50 -mx-4 px-4 rounded-lg transition-colors"
+                    >
+                      <p className="font-albert font-medium text-[16px] text-stone-800 group-hover:text-black">
+                        {toTitleCase(ingredient)}
+                      </p>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Timer and Tips Cards with refined spacing */}
           <div className="grid grid-cols-1 gap-4 pt-4">

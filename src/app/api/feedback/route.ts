@@ -227,8 +227,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Use user-provided title, fall back to truncated message
-    const title = payload.title
-      || (payload.message.length > 60
+    const title =
+      payload.title ||
+      (payload.message.length > 60
         ? payload.message.slice(0, 60) + '…'
         : payload.message);
 

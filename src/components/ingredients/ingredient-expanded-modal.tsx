@@ -42,7 +42,7 @@ export function IngredientExpandedModal({
             onClick={onClose}
             className="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[200]"
           />
-          
+
           {/* Modal */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -52,17 +52,21 @@ export function IngredientExpandedModal({
           >
             <div className="p-6 border-b border-stone-100 flex items-center justify-between">
               <div>
-                <h3 className="font-domine font-bold text-xl text-stone-900">{ingredientName}</h3>
-                <p className="text-sm font-albert text-stone-400">{ingredientAmount}</p>
+                <h3 className="font-domine font-bold text-xl text-stone-900">
+                  {ingredientName}
+                </h3>
+                <p className="text-sm font-albert text-stone-400">
+                  {ingredientAmount}
+                </p>
               </div>
-              <button 
+              <button
                 onClick={onClose}
                 className="p-2 hover:bg-stone-50 rounded-full text-stone-400 hover:text-stone-900 transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            
+
             <div className="p-4">
               <IngredientExpandedContent
                 ingredientName={ingredientName}

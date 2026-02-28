@@ -15,10 +15,10 @@ interface PhotoRatingModalProps {
 
 /**
  * PhotoRatingModal Component
- * 
+ *
  * Displays a rating prompt after a user captures a photo of their dish.
  * Based on the Figma designs for desktop and mobile layouts.
- * 
+ *
  * Features:
  * - White background modal with rounded corners and shadow
  * - Close button (X) - top-right on desktop, top-left on mobile
@@ -26,19 +26,19 @@ interface PhotoRatingModalProps {
  * - 5-star rating interface (interactive) with rating labels
  * - "Continue" button to proceed
  * - Viewport locked (prevents scrolling when modal is open)
- * 
+ *
  * Flow: Photo Capture → Rating Modal → Share Sheet
- * 
+ *
  * @param photos - Array of photo objects with data URLs
  * @param recipeTitle - Optional recipe title to display in title
  * @param onConfirm - Callback function called with rating (1-5) when user confirms
  * @param onClose - Callback function called when user clicks close button
  */
-export default function PhotoRatingModal({ 
+export default function PhotoRatingModal({
   photos,
   recipeTitle,
   onConfirm,
-  onClose
+  onClose,
 }: PhotoRatingModalProps) {
   // Default rating starts at 3 stars (middle rating)
   const [rating, setRating] = useState(3);
@@ -66,17 +66,19 @@ export default function PhotoRatingModal({
     // Lock body scroll
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    
+
     // Hide navbar by finding it via its z-index
-    const navbar = document.querySelector('[class*="sticky"][class*="z-[10000]"]') as HTMLElement;
+    const navbar = document.querySelector(
+      '[class*="sticky"][class*="z-[10000]"]',
+    ) as HTMLElement;
     if (navbar) {
       navbar.style.display = 'none';
     }
-    
+
     return () => {
       // Restore body scroll
       document.body.style.overflow = originalOverflow;
-      
+
       // Show navbar again
       if (navbar) {
         navbar.style.display = '';
@@ -114,7 +116,14 @@ export default function PhotoRatingModal({
         {/* Photo Preview - Single tilted card matching Figma */}
         <div className="mb-5 md:mb-6 relative w-full h-[180px] md:h-[200px] flex items-center justify-center">
           {photos.length > 0 && (
-            <div className="absolute" style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
+            <div
+              className="absolute"
+              style={{
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+              }}
+            >
               <div
                 className="transform bg-white border-[3.8px] border-white rounded-[15px] w-[99px] md:w-[120px] h-[122px] md:h-[148px] overflow-hidden shadow-lg"
                 style={{

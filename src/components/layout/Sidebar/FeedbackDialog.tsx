@@ -34,14 +34,16 @@ export const CATEGORIES: {
     icon: Bug,
     subtitle: "Something isn't working correctly",
     responseHint: "We'll look into this right away",
-    titlePlaceholder: 'Brief summary of the issue, e.g. "Map won\'t load on Safari"',
+    titlePlaceholder:
+      'Brief summary of the issue, e.g. "Map won\'t load on Safari"',
   },
   {
     type: 'Feature Idea',
     icon: Lightbulb,
     subtitle: 'Suggest a new feature or improvement',
     responseHint: 'We love hearing new ideas',
-    titlePlaceholder: 'Name your idea in a few words, e.g. "Add dark mode toggle"',
+    titlePlaceholder:
+      'Name your idea in a few words, e.g. "Add dark mode toggle"',
   },
   {
     type: 'User Feedback',
@@ -254,7 +256,10 @@ export default function FeedbackDialog({
                     onClick={() => handleSelectType(t)}
                     className="flex items-center gap-3 w-full bg-stone-50 border border-stone-200 rounded-xl p-4 text-left hover:bg-stone-100 active:scale-[0.97] transition-[background-color,transform]"
                   >
-                    <Icon className="size-5 text-stone-500 flex-shrink-0" aria-hidden="true" />
+                    <Icon
+                      className="size-5 text-stone-500 flex-shrink-0"
+                      aria-hidden="true"
+                    />
                     <div className="min-w-0">
                       <p className="font-albert text-sm font-semibold text-stone-900">
                         {t}
@@ -289,7 +294,10 @@ export default function FeedbackDialog({
                 </button>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <selectedCategory.icon className="size-4 text-stone-500" aria-hidden="true" />
+                    <selectedCategory.icon
+                      className="size-4 text-stone-500"
+                      aria-hidden="true"
+                    />
                     <span className="font-albert text-sm font-semibold text-stone-900">
                       {type}
                     </span>

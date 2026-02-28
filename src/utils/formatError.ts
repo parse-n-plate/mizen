@@ -14,7 +14,11 @@ export interface EnhancedErrorInfo {
   hasSourcePage: boolean; // true = the page likely exists, show "Visit page" action
 }
 
-export const formatError = (code: string, message: string, retryAfter?: number): ErrorResponse => ({
+export const formatError = (
+  code: string,
+  message: string,
+  retryAfter?: number,
+): ErrorResponse => ({
   success: false,
   error: { code, message, ...(retryAfter && { retryAfter }) },
 });
@@ -42,7 +46,8 @@ export const ERROR_MESSAGES = {
   [ERROR_CODES.ERR_UNSUPPORTED_DOMAIN]: "We don't support this website yet",
   [ERROR_CODES.ERR_FETCH_FAILED]: "We couldn't reach that page",
   [ERROR_CODES.ERR_NO_RECIPE_FOUND]: 'No recipe found on this page',
-  [ERROR_CODES.ERR_AI_PARSE_FAILED]: "We found the page but couldn't extract the recipe",
+  [ERROR_CODES.ERR_AI_PARSE_FAILED]:
+    "We found the page but couldn't extract the recipe",
   [ERROR_CODES.ERR_TIMEOUT]: 'That website is taking too long',
   [ERROR_CODES.ERR_UNKNOWN]: 'Something went wrong',
   [ERROR_CODES.ERR_INVALID_FILE_TYPE]: 'Please select a valid image file',
@@ -58,28 +63,31 @@ export const ERROR_MESSAGES = {
 export const ERROR_DETAILS: Record<string, EnhancedErrorInfo> = {
   [ERROR_CODES.ERR_INVALID_URL]: {
     userMessage: "That doesn't look like a valid URL",
-    detailedExplanation: 'Double-check the URL you pasted \u2014 it should start with http:// or https://',
+    detailedExplanation:
+      'Double-check the URL you pasted \u2014 it should start with http:// or https://',
     suggestions: [
       'Make sure to include http:// or https://',
       'Check for typos in the URL',
-      'Try copying the URL directly from your browser\'s address bar',
+      "Try copying the URL directly from your browser's address bar",
       'Ensure the URL is complete and not truncated',
     ],
     hasSourcePage: false,
   },
   [ERROR_CODES.ERR_UNSUPPORTED_DOMAIN]: {
     userMessage: "We don't support this website yet",
-    detailedExplanation: 'This site uses a format we can\'t read. Try a recipe from a different website.',
+    detailedExplanation:
+      "This site uses a format we can't read. Try a recipe from a different website.",
     suggestions: [
       'Try a recipe from a different website',
       'Check if the site has a standard recipe format',
-      'Some sites may require special handling - we\'re working on adding more support',
+      "Some sites may require special handling - we're working on adding more support",
     ],
     hasSourcePage: true,
   },
   [ERROR_CODES.ERR_FETCH_FAILED]: {
     userMessage: "We couldn't reach that page",
-    detailedExplanation: 'The site may be down or blocking our request. Try visiting the page directly.',
+    detailedExplanation:
+      'The site may be down or blocking our request. Try visiting the page directly.',
     suggestions: [
       'Check your internet connection',
       'The website might be down - try again later',
@@ -90,7 +98,8 @@ export const ERROR_DETAILS: Record<string, EnhancedErrorInfo> = {
   },
   [ERROR_CODES.ERR_NO_RECIPE_FOUND]: {
     userMessage: 'No recipe found on this page',
-    detailedExplanation: 'Make sure the URL points to a recipe page, not a homepage or category.',
+    detailedExplanation:
+      'Make sure the URL points to a recipe page, not a homepage or category.',
     suggestions: [
       'Make sure the URL points to a recipe page, not a homepage or category page',
       'Try a different recipe from the same website',
@@ -101,7 +110,8 @@ export const ERROR_DETAILS: Record<string, EnhancedErrorInfo> = {
   },
   [ERROR_CODES.ERR_AI_PARSE_FAILED]: {
     userMessage: "We found the page but couldn't extract the recipe",
-    detailedExplanation: 'The recipe format may be unusual. Try visiting the page to copy it manually.',
+    detailedExplanation:
+      'The recipe format may be unusual. Try visiting the page to copy it manually.',
     suggestions: [
       'The recipe format might be unusual - try a different recipe',
       'Make sure the recipe page is fully loaded before parsing',
@@ -112,7 +122,8 @@ export const ERROR_DETAILS: Record<string, EnhancedErrorInfo> = {
   },
   [ERROR_CODES.ERR_TIMEOUT]: {
     userMessage: 'That website is taking too long',
-    detailedExplanation: "The site didn't respond in time \u2014 this usually means it's under heavy traffic.",
+    detailedExplanation:
+      "The site didn't respond in time \u2014 this usually means it's under heavy traffic.",
     suggestions: [
       'The site might be experiencing high traffic - try again in a few moments',
       'Try a different recipe from a faster site',
@@ -123,7 +134,8 @@ export const ERROR_DETAILS: Record<string, EnhancedErrorInfo> = {
   },
   [ERROR_CODES.ERR_UNKNOWN]: {
     userMessage: 'Something went wrong',
-    detailedExplanation: 'This is usually temporary. Try again or try a different recipe URL.',
+    detailedExplanation:
+      'This is usually temporary. Try again or try a different recipe URL.',
     suggestions: [
       'Try again in a few moments',
       'Try a different recipe URL',
@@ -136,7 +148,7 @@ export const ERROR_DETAILS: Record<string, EnhancedErrorInfo> = {
     userMessage: 'Please select a valid image file',
     detailedExplanation: 'Only image files are supported (PNG, JPG, WEBP).',
     suggestions: [
-      'Make sure you\'re uploading an image file',
+      "Make sure you're uploading an image file",
       'Supported formats: PNG, JPG, JPEG, WEBP',
       'Try taking a screenshot if you have a PDF or document',
     ],
@@ -144,7 +156,8 @@ export const ERROR_DETAILS: Record<string, EnhancedErrorInfo> = {
   },
   [ERROR_CODES.ERR_FILE_TOO_LARGE]: {
     userMessage: 'Image size must be less than 10MB',
-    detailedExplanation: 'The image file you selected is too large. We support images up to 10MB in size.',
+    detailedExplanation:
+      'The image file you selected is too large. We support images up to 10MB in size.',
     suggestions: [
       'Resize the image before uploading',
       'Use an image compression tool to reduce file size',
@@ -155,9 +168,10 @@ export const ERROR_DETAILS: Record<string, EnhancedErrorInfo> = {
   },
   [ERROR_CODES.ERR_NOT_A_URL]: {
     userMessage: 'Paste a recipe URL',
-    detailedExplanation: 'This app imports recipes from recipe websites. Paste a full URL to get started.',
+    detailedExplanation:
+      'This app imports recipes from recipe websites. Paste a full URL to get started.',
     suggestions: [
-      'Copy the full URL from your browser\'s address bar',
+      "Copy the full URL from your browser's address bar",
       'Make sure the URL starts with http:// or https://',
       'Try a recipe from sites like AllRecipes, Food Network, or Bon App\u00e9tit',
     ],
@@ -165,7 +179,8 @@ export const ERROR_DETAILS: Record<string, EnhancedErrorInfo> = {
   },
   [ERROR_CODES.ERR_RATE_LIMIT]: {
     userMessage: 'Too many requests',
-    detailedExplanation: 'You\'ve hit the rate limit. Please wait a moment before trying again.',
+    detailedExplanation:
+      "You've hit the rate limit. Please wait a moment before trying again.",
     suggestions: [
       'Wait 30-60 seconds before trying again',
       'Try parsing a different recipe',
@@ -175,7 +190,8 @@ export const ERROR_DETAILS: Record<string, EnhancedErrorInfo> = {
   },
   [ERROR_CODES.ERR_API_UNAVAILABLE]: {
     userMessage: 'Our service is temporarily down',
-    detailedExplanation: "We're experiencing a brief outage \u2014 this usually resolves in a few minutes.",
+    detailedExplanation:
+      "We're experiencing a brief outage \u2014 this usually resolves in a few minutes.",
     suggestions: [
       'Wait a few minutes and try again',
       'The service should be back online shortly',
@@ -185,7 +201,8 @@ export const ERROR_DETAILS: Record<string, EnhancedErrorInfo> = {
   },
   [ERROR_CODES.ERR_FEEDBACK_SUBMIT_FAILED]: {
     userMessage: 'Failed to submit feedback',
-    detailedExplanation: 'We encountered an error while submitting your feedback. Please try again.',
+    detailedExplanation:
+      'We encountered an error while submitting your feedback. Please try again.',
     suggestions: [
       'Check your internet connection',
       'Try submitting again in a few moments',
@@ -195,7 +212,8 @@ export const ERROR_DETAILS: Record<string, EnhancedErrorInfo> = {
   },
   [ERROR_CODES.ERR_FEEDBACK_UPLOAD_FAILED]: {
     userMessage: 'Failed to upload screenshots',
-    detailedExplanation: 'We encountered an error while uploading your screenshots. Your feedback may still be submitted without images.',
+    detailedExplanation:
+      'We encountered an error while uploading your screenshots. Your feedback may still be submitted without images.',
     suggestions: [
       'Try uploading smaller images',
       'Check your internet connection',
@@ -209,39 +227,3 @@ export const ERROR_DETAILS: Record<string, EnhancedErrorInfo> = {
 export function getErrorDetails(code: string): EnhancedErrorInfo {
   return ERROR_DETAILS[code] || ERROR_DETAILS[ERROR_CODES.ERR_UNKNOWN];
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

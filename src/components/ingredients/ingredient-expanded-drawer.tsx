@@ -40,7 +40,10 @@ export function IngredientExpandedDrawer({
       onClose={onClose}
       title={ingredientName}
       subtitle={ingredientAmount}
-      description={description || 'A staple in this dish, providing that signature flavor and texture you love.'}
+      description={
+        description ||
+        'A staple in this dish, providing that signature flavor and texture you love.'
+      }
       onPrevious={onPrevious}
       onNext={onNext}
       hasPrevious={hasPrevious}

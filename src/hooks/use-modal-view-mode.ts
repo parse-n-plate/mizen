@@ -29,7 +29,9 @@ if (typeof window !== 'undefined') {
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
-  return () => { listeners.delete(listener); };
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
 function getSnapshot() {
@@ -41,7 +43,10 @@ function getServerSnapshot() {
 }
 
 // ── Hook ───────────────────────────────────────────────────────────────
-export function useModalViewMode(): [ModalViewMode, (mode: ModalViewMode) => void] {
+export function useModalViewMode(): [
+  ModalViewMode,
+  (mode: ModalViewMode) => void,
+] {
   const mode = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   const setMode = useCallback((next: ModalViewMode) => {

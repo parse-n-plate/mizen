@@ -19,7 +19,11 @@ interface PlatePhotoCaptureProps {
   recipeTitle?: string;
   recipeAuthor?: string;
   cuisine?: string[];
-  onPhotoCapture: (photoData: string, filename: string, rating?: number) => void;
+  onPhotoCapture: (
+    photoData: string,
+    filename: string,
+    rating?: number,
+  ) => void;
   onPhotoRemove?: (index: number) => void;
   onPhotoRatingUpdate?: (index: number, rating: number) => void;
   onShare?: () => void;
@@ -43,13 +47,18 @@ export default function PlatePhotoCapture({
   // Flow orchestration state
   const [showRatingPrompt, setShowRatingPrompt] = useState(false);
   const [isShareSheetOpen, setIsShareSheetOpen] = useState(false);
-  const [pendingPhoto, setPendingPhoto] = useState<{ data: string; filename: string } | null>(null);
+  const [pendingPhoto, setPendingPhoto] = useState<{
+    data: string;
+    filename: string;
+  } | null>(null);
   const [currentRating, setCurrentRating] = useState(3);
 
   const MAX_PHOTOS = 5;
   const hasReachedLimit = photos.length >= MAX_PHOTOS;
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
@@ -85,7 +94,9 @@ export default function PlatePhotoCapture({
       }
 
       if (files.length > remainingSlots) {
-        setError(`Only ${remainingSlots} photo${remainingSlots === 1 ? '' : 's'} could be added (max ${MAX_PHOTOS} total)`);
+        setError(
+          `Only ${remainingSlots} photo${remainingSlots === 1 ? '' : 's'} could be added (max ${MAX_PHOTOS} total)`,
+        );
       }
     } catch (err) {
       console.error('Error processing image:', err);
@@ -115,16 +126,16 @@ export default function PlatePhotoCapture({
   // Handle share sheet close - update photo rating if changed
   const handleShareSheetClose = () => {
     setIsShareSheetOpen(false);
-    
+
     // Update the photo's rating if it changed
     if (pendingPhoto && onPhotoRatingUpdate) {
-      const photoIndex = photos.findIndex(p => p.data === pendingPhoto.data);
+      const photoIndex = photos.findIndex((p) => p.data === pendingPhoto.data);
       if (photoIndex !== -1 && photos[photoIndex].rating !== currentRating) {
         // Update the photo's rating through parent callback
         onPhotoRatingUpdate(photoIndex, currentRating);
       }
     }
-    
+
     setPendingPhoto(null);
     setCurrentRating(3); // Reset for next time
   };
@@ -145,18 +156,18 @@ export default function PlatePhotoCapture({
 
     // Get the most recent photo (or first photo if only one)
     const photoToShare = photos[photos.length - 1];
-    
+
     if (!photoToShare) return;
 
     // Set up the share flow: Rating Modal → Share Sheet
-    setPendingPhoto({ 
-      data: photoToShare.data, 
-      filename: photoToShare.filename 
+    setPendingPhoto({
+      data: photoToShare.data,
+      filename: photoToShare.filename,
     });
-    
+
     // Use existing rating if available, otherwise default to 3
     setCurrentRating(photoToShare.rating || 3);
-    
+
     // Show rating modal first
     setShowRatingPrompt(true);
 
@@ -186,7 +197,9 @@ export default function PlatePhotoCapture({
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <p className="font-albert font-semibold text-[20px] text-white leading-tight mb-2">
-                {photos.length === 1 ? 'Nice shot!' : `${photos.length} great shots!`}
+                {photos.length === 1
+                  ? 'Nice shot!'
+                  : `${photos.length} great shots!`}
               </p>
               <p className="font-albert text-[16px] text-white/90 leading-[1.4] mb-4">
                 {photos.length === 1

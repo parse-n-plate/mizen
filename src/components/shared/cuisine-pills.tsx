@@ -59,8 +59,9 @@ export const STYLE_FILTERS = [
 ] as const;
 
 export type FilterGroupKey = keyof typeof FILTER_GROUPS;
-export type StyleFilterId = typeof STYLE_FILTERS[number]['id'];
-export type GroupedFilterId = typeof FILTER_GROUPS[FilterGroupKey]['options'][number]['id'];
+export type StyleFilterId = (typeof STYLE_FILTERS)[number]['id'];
+export type GroupedFilterId =
+  (typeof FILTER_GROUPS)[FilterGroupKey]['options'][number]['id'];
 export type QuickFilterId = GroupedFilterId | StyleFilterId;
 export type SelectedQuickFilters = QuickFilterId[];
 
@@ -71,9 +72,17 @@ interface CuisinePillsProps {
   onShowCookedOnlyChange?: (value: boolean) => void;
 }
 
-export default function CuisinePills({ onCuisineChange, onQuickFilterChange, showCookedOnly, onShowCookedOnlyChange }: CuisinePillsProps) {
-  const [selectedCuisines, setSelectedCuisines] = useState<SelectedCuisines>([]);
-  const [selectedQuickFilters, setSelectedQuickFilters] = useState<SelectedQuickFilters>([]);
+export default function CuisinePills({
+  onCuisineChange,
+  onQuickFilterChange,
+  showCookedOnly,
+  onShowCookedOnlyChange,
+}: CuisinePillsProps) {
+  const [selectedCuisines, setSelectedCuisines] = useState<SelectedCuisines>(
+    [],
+  );
+  const [selectedQuickFilters, setSelectedQuickFilters] =
+    useState<SelectedQuickFilters>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pillsScrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -81,7 +90,10 @@ export default function CuisinePills({ onCuisineChange, onQuickFilterChange, sho
   const [justSelected, setJustSelected] = useState<string | null>(null);
 
   // Check if any filters are active
-  const hasActiveFilters = selectedCuisines.length > 0 || selectedQuickFilters.length > 0 || showCookedOnly;
+  const hasActiveFilters =
+    selectedCuisines.length > 0 ||
+    selectedQuickFilters.length > 0 ||
+    showCookedOnly;
 
   // Keep arrow visibility in sync with scroll position
   useEffect(() => {
@@ -116,7 +128,7 @@ export default function CuisinePills({ onCuisineChange, onQuickFilterChange, sho
   const handleCuisineClick = (cuisine: (typeof SUPPORTED_CUISINES)[number]) => {
     const wasSelected = selectedCuisines.includes(cuisine);
     const newSelection = wasSelected
-      ? selectedCuisines.filter(c => c !== cuisine)
+      ? selectedCuisines.filter((c) => c !== cuisine)
       : [...selectedCuisines, cuisine];
 
     setSelectedCuisines(newSelection);
@@ -134,7 +146,7 @@ export default function CuisinePills({ onCuisineChange, onQuickFilterChange, sho
   const handleQuickFilterToggle = (filterId: QuickFilterId) => {
     const wasSelected = selectedQuickFilters.includes(filterId);
     const newSelection = wasSelected
-      ? selectedQuickFilters.filter(f => f !== filterId)
+      ? selectedQuickFilters.filter((f) => f !== filterId)
       : [...selectedQuickFilters, filterId];
 
     setSelectedQuickFilters(newSelection);
@@ -154,20 +166,22 @@ export default function CuisinePills({ onCuisineChange, onQuickFilterChange, sho
 
   const getSelectedCountForGroup = (groupKey: FilterGroupKey): number => {
     const group = FILTER_GROUPS[groupKey];
-    return group.options.filter(opt => selectedQuickFilters.includes(opt.id as QuickFilterId)).length;
+    return group.options.filter((opt) =>
+      selectedQuickFilters.includes(opt.id as QuickFilterId),
+    ).length;
   };
 
   const getSelectedLabelsForGroup = (groupKey: FilterGroupKey): string[] => {
     const group = FILTER_GROUPS[groupKey];
     return group.options
-      .filter(opt => selectedQuickFilters.includes(opt.id as QuickFilterId))
-      .map(opt => opt.label);
+      .filter((opt) => selectedQuickFilters.includes(opt.id as QuickFilterId))
+      .map((opt) => opt.label);
   };
 
   const handleStyleFilterClick = (filterId: StyleFilterId) => {
     const wasSelected = selectedQuickFilters.includes(filterId);
     const newSelection = wasSelected
-      ? selectedQuickFilters.filter(f => f !== filterId)
+      ? selectedQuickFilters.filter((f) => f !== filterId)
       : [...selectedQuickFilters, filterId];
 
     setSelectedQuickFilters(newSelection);
@@ -192,20 +206,25 @@ export default function CuisinePills({ onCuisineChange, onQuickFilterChange, sho
                 className={`cuisine-filter-item group flex-shrink-0 flex flex-col items-center w-[100px] py-3 px-2 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 transition-colors duration-150 ${
                   showCookedOnly ? 'bg-stone-100' : 'hover:bg-stone-50'
                 }`}
-                aria-label={showCookedOnly ? 'Show all recipes' : 'Show cooked dishes only'}
+                aria-label={
+                  showCookedOnly
+                    ? 'Show all recipes'
+                    : 'Show cooked dishes only'
+                }
                 aria-pressed={showCookedOnly}
               >
                 {/* Icon container */}
                 <span className="flex items-center justify-center w-14 h-14">
-                  <Camera
-                    weight="Bold"
-                    className="w-14 h-14 text-stone-600"
-                  />
+                  <Camera weight="Bold" className="w-14 h-14 text-stone-600" />
                 </span>
                 {/* Label text */}
-                <span className={`mt-2 font-albert text-[13px] leading-tight text-center transition-colors duration-150 ${
-                  showCookedOnly ? 'text-stone-900 font-medium' : 'text-stone-600'
-                }`}>
+                <span
+                  className={`mt-2 font-albert text-[13px] leading-tight text-center transition-colors duration-150 ${
+                    showCookedOnly
+                      ? 'text-stone-900 font-medium'
+                      : 'text-stone-600'
+                  }`}
+                >
                   Cooked
                 </span>
               </button>
@@ -236,9 +255,13 @@ export default function CuisinePills({ onCuisineChange, onQuickFilterChange, sho
                     />
                   </span>
                   {/* Label text */}
-                  <span className={`mt-2 font-albert text-[13px] leading-tight text-center transition-colors duration-150 ${
-                    isSelected ? 'text-stone-900 font-medium' : 'text-stone-600'
-                  }`}>
+                  <span
+                    className={`mt-2 font-albert text-[13px] leading-tight text-center transition-colors duration-150 ${
+                      isSelected
+                        ? 'text-stone-900 font-medium'
+                        : 'text-stone-600'
+                    }`}
+                  >
                     {cuisine}
                   </span>
                 </button>
@@ -291,44 +314,54 @@ export default function CuisinePills({ onCuisineChange, onQuickFilterChange, sho
           <div className="overflow-x-auto scrollbar-hide" ref={pillsScrollRef}>
             <div className="flex items-center gap-2">
               {/* Grouped filter dropdowns */}
-              {(Object.keys(FILTER_GROUPS) as FilterGroupKey[]).map((groupKey) => {
-                const group = FILTER_GROUPS[groupKey];
-                const selectedCount = getSelectedCountForGroup(groupKey);
-                const selectedLabels = getSelectedLabelsForGroup(groupKey);
-                const hasSelections = selectedCount > 0;
+              {(Object.keys(FILTER_GROUPS) as FilterGroupKey[]).map(
+                (groupKey) => {
+                  const group = FILTER_GROUPS[groupKey];
+                  const selectedCount = getSelectedCountForGroup(groupKey);
+                  const selectedLabels = getSelectedLabelsForGroup(groupKey);
+                  const hasSelections = selectedCount > 0;
 
-                return (
-                  <DropdownMenu key={groupKey}>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full font-albert text-[13px] font-medium transition-colors duration-150 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 ${
-                          hasSelections
-                            ? 'bg-stone-900 text-white data-[state=open]:bg-stone-800'
-                            : 'bg-stone-100 text-stone-700 hover:bg-stone-200 data-[state=open]:bg-stone-200 data-[state=open]:text-stone-900'
-                        }`}
-                      >
-                        {hasSelections ? (
-                          selectedCount === 1 ? selectedLabels[0] : `${group.label} (${selectedCount})`
-                        ) : (
-                          group.label
-                        )}
-                        <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 [[data-state=open]>&]:rotate-180 ${hasSelections ? 'text-white' : 'text-stone-500'}`} />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-48">
-                      {group.options.map((option) => (
-                        <DropdownMenuCheckboxItem
-                          key={option.id}
-                          checked={selectedQuickFilters.includes(option.id as QuickFilterId)}
-                          onCheckedChange={() => handleQuickFilterToggle(option.id as QuickFilterId)}
+                  return (
+                    <DropdownMenu key={groupKey}>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className={`flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full font-albert text-[13px] font-medium transition-colors duration-150 whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-stone-300 ${
+                            hasSelections
+                              ? 'bg-stone-900 text-white data-[state=open]:bg-stone-800'
+                              : 'bg-stone-100 text-stone-700 hover:bg-stone-200 data-[state=open]:bg-stone-200 data-[state=open]:text-stone-900'
+                          }`}
                         >
-                          {option.label}
-                        </DropdownMenuCheckboxItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                );
-              })}
+                          {hasSelections
+                            ? selectedCount === 1
+                              ? selectedLabels[0]
+                              : `${group.label} (${selectedCount})`
+                            : group.label}
+                          <ChevronDown
+                            className={`w-3.5 h-3.5 transition-transform duration-200 [[data-state=open]>&]:rotate-180 ${hasSelections ? 'text-white' : 'text-stone-500'}`}
+                          />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="w-48">
+                        {group.options.map((option) => (
+                          <DropdownMenuCheckboxItem
+                            key={option.id}
+                            checked={selectedQuickFilters.includes(
+                              option.id as QuickFilterId,
+                            )}
+                            onCheckedChange={() =>
+                              handleQuickFilterToggle(
+                                option.id as QuickFilterId,
+                              )
+                            }
+                          >
+                            {option.label}
+                          </DropdownMenuCheckboxItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  );
+                },
+              )}
 
               {/* Standalone style filter pills */}
               {STYLE_FILTERS.map((filter) => {

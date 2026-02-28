@@ -7,7 +7,6 @@ import StarIcon from '@/components/shared/star-icon';
 import Image from 'next/image';
 import { CUISINE_ICON_MAP } from '@/config/cuisineConfig';
 
-
 interface ShareSheetModalProps {
   photos: Array<{ data: string; filename: string }>;
   rating: number;
@@ -27,18 +26,18 @@ const CARD_COLORS = [
 
 /**
  * ShareSheetModal Component
- * 
+ *
  * Full-screen modal displaying a shareable card preview with share options.
  * Based on the prototype at /Users/gageminamoto/Desktop/Prototype Plate Tab/src/app/components/ShareSheet.tsx
- * 
+ *
  * Features:
  * - Header with close button
  * - Share card preview (photo, title, cuisine, rating, metadata)
  * - Share options row (Messages, IG Story, Photos, More)
  * - Editable rating on the card
- * 
+ *
  * Flow: Photo Capture → Rating Modal → Share Sheet
- * 
+ *
  * @param photos - Array of photo objects with data URLs
  * @param rating - Current rating (1-5 stars)
  * @param onRatingChange - Callback to update rating
@@ -58,10 +57,10 @@ export default function ShareSheetModal({
 }: ShareSheetModalProps) {
   // Get today's date formatted
   const today = new Date();
-  const formattedDate = today.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: 'numeric', 
-    year: 'numeric' 
+  const formattedDate = today.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
   });
 
   // Get selected cuisines for display (all of them, not just the first)
@@ -69,7 +68,7 @@ export default function ShareSheetModal({
 
   // Ref for the share card element to capture
   const shareCardRef = useRef<HTMLDivElement>(null);
-  
+
   // State for selected card color
   const [selectedColor, setSelectedColor] = useState('#2D6651'); // Default green (matching design)
 
@@ -78,17 +77,19 @@ export default function ShareSheetModal({
     // Lock body scroll
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    
+
     // Hide navbar by adding a class or setting style
-    const navbar = document.querySelector('[class*="sticky"][class*="z-[10000]"]') as HTMLElement;
+    const navbar = document.querySelector(
+      '[class*="sticky"][class*="z-[10000]"]',
+    ) as HTMLElement;
     if (navbar) {
       navbar.style.display = 'none';
     }
-    
+
     return () => {
       // Restore body scroll
       document.body.style.overflow = originalOverflow;
-      
+
       // Show navbar again
       if (navbar) {
         navbar.style.display = '';
@@ -99,8 +100,8 @@ export default function ShareSheetModal({
   // Handle share card download - capture and download the entire card
   const handleSavePhoto = async () => {
     // Wait a bit to ensure the element is rendered (framer-motion animation)
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     const cardElement = shareCardRef.current;
     if (!cardElement) {
       console.error('Share card ref not found');
@@ -111,11 +112,11 @@ export default function ShareSheetModal({
     try {
       // Dynamically import html2canvas for capturing the card
       const html2canvas = (await import('html2canvas-pro')).default;
-      
+
       // Create a full-resolution clone for export
       // The displayed card is scaled to fit viewport, but we want full resolution for export
       const clone = cardElement.cloneNode(true) as HTMLElement;
-      
+
       // Set clone to full resolution width (remove viewport constraints)
       const exportWidth = 1200; // Full resolution width for export
       clone.style.position = 'absolute';
@@ -126,22 +127,24 @@ export default function ShareSheetModal({
       clone.style.transform = 'none'; // Remove any transforms
       clone.style.opacity = '1'; // Ensure it's visible for capture
       clone.style.zIndex = '9999'; // Ensure it's on top for capture
-      
+
       // Remove height constraints on photo container to allow images to render at full resolution
       // The photo container has responsive height classes (h-[180px] sm:h-[200px] md:h-[220px])
       // We'll remove these and let it scale naturally with the larger width
-      const photoContainer = clone.querySelector('[data-photo-container="true"]') as HTMLElement;
+      const photoContainer = clone.querySelector(
+        '[data-photo-container="true"]',
+      ) as HTMLElement;
       if (photoContainer) {
         // Remove fixed height - let it scale proportionally
-        // Calculate proportional height: if display is ~440px wide with ~220px height, 
+        // Calculate proportional height: if display is ~440px wide with ~220px height,
         // then at 1200px width, height should be ~600px (maintaining aspect ratio)
         photoContainer.style.height = 'auto';
         photoContainer.style.minHeight = '600px'; // Set a larger min-height for export
       }
-      
+
       // Append clone to body temporarily
       document.body.appendChild(clone);
-      
+
       // Wait for images to load at full resolution
       // Load all images first to ensure they're ready
       const images = clone.querySelectorAll('img');
@@ -155,12 +158,12 @@ export default function ShareSheetModal({
               img.onerror = () => resolve(); // Resolve even on error to not block
             }
           });
-        })
+        }),
       );
-      
+
       // Additional wait to ensure rendering is complete
-      await new Promise(resolve => setTimeout(resolve, 200));
-      
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
       // Capture the full-resolution clone
       const canvas = await html2canvas(clone, {
         backgroundColor: selectedColor, // Use selected color for any transparent areas
@@ -211,7 +214,9 @@ export default function ShareSheetModal({
       // Convert base64 to blob
       const base64Response = await fetch(photoToShare.data);
       const blob = await base64Response.blob();
-      const file = new File([blob], `${recipeTitle}.jpg`, { type: 'image/jpeg' });
+      const file = new File([blob], `${recipeTitle}.jpg`, {
+        type: 'image/jpeg',
+      });
 
       // Check if Web Share API is supported
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
@@ -240,17 +245,17 @@ export default function ShareSheetModal({
       <div className="h-screen flex flex-col items-center justify-between p-2 sm:p-3 md:p-4 max-w-full w-full box-border [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {/* Header with close button - Compact layout */}
         <div className="flex items-center justify-between w-full max-w-md mb-2 sm:mb-3 px-1 flex-shrink-0">
-          <button 
+          <button
             onClick={onClose}
             className="bg-white rounded-full size-8 sm:size-9 md:size-10 flex items-center justify-center hover:opacity-70 transition-opacity shadow-sm flex-shrink-0"
           >
             <X className="size-5 sm:size-6 md:size-7 text-black" />
           </button>
-          
+
           <h1 className="font-albert font-bold text-sm sm:text-base md:text-lg lg:text-xl text-heading leading-tight text-center flex-1 mx-2 sm:mx-3">
             Share your masterpiece!
           </h1>
-          
+
           {/* Spacer for centering */}
           <div className="w-8 sm:w-9 md:w-10 flex-shrink-0" />
         </div>
@@ -274,16 +279,15 @@ export default function ShareSheetModal({
                     key={color.value}
                     onClick={() => setSelectedColor(color.value)}
                     className={`rounded-full transition-all hover:scale-110 flex-shrink-0 focus:outline-none ${
-                      isSelected 
-                        ? 'w-8 h-8 border-2 border-white' 
-                        : 'w-7 h-7'
+                      isSelected ? 'w-8 h-8 border-2 border-white' : 'w-7 h-7'
                     }`}
                     style={{
                       backgroundColor: color.value,
                       // Add subtle border for white/light colors to make them visible
-                      ...(color.value === '#FFFFFF' && !isSelected && {
-                        border: '1px solid #e5e5e5',
-                      }),
+                      ...(color.value === '#FFFFFF' &&
+                        !isSelected && {
+                          border: '1px solid #e5e5e5',
+                        }),
                     }}
                     aria-label={`Select ${color.name} color`}
                   />
@@ -351,7 +355,10 @@ export default function ShareSheetModal({
               )}
 
               {/* Photo preview - Responsive height that scales with viewport */}
-              <div data-photo-container="true" className="flex items-center justify-center h-[160px] sm:h-[180px] md:h-[200px] lg:h-[220px] xl:h-[240px] w-full max-w-full relative overflow-hidden">
+              <div
+                data-photo-container="true"
+                className="flex items-center justify-center h-[160px] sm:h-[180px] md:h-[200px] lg:h-[220px] xl:h-[240px] w-full max-w-full relative overflow-hidden"
+              >
                 {photos.length > 0 ? (
                   photos.slice(0, 3).map((photo, index) => {
                     const rotations = [12, -8, 4];
@@ -391,10 +398,12 @@ export default function ShareSheetModal({
                   })
                 ) : (
                   <div className="w-full h-full bg-white/10 backdrop-blur-sm flex items-center justify-center rounded-xl sm:rounded-2xl border border-white/20">
-                    <p className="font-albert text-white/60 text-xs sm:text-sm italic">No photos captured</p>
+                    <p className="font-albert text-white/60 text-xs sm:text-sm italic">
+                      No photos captured
+                    </p>
                   </div>
                 )}
-                
+
                 {/* Show count badge if more than 3 photos */}
                 {photos.length > 3 && (
                   <div
@@ -433,7 +442,7 @@ export default function ShareSheetModal({
                       Chef __
                     </p>
                   </div>
-                  
+
                   <div className="flex flex-col gap-0.5">
                     <p className="font-albert font-normal text-[8px] sm:text-[9px] md:text-[10px] text-white/60 uppercase tracking-wider">
                       Cooked On
@@ -468,7 +477,7 @@ export default function ShareSheetModal({
               className="flex items-center justify-center gap-2 sm:gap-3 md:gap-4 overflow-visible scrollbar-hide [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
             >
               {/* Copy Link button */}
-              <button 
+              <button
                 onClick={() => {
                   navigator.clipboard.writeText(window.location.href);
                   alert('Link copied to clipboard!');
@@ -484,15 +493,23 @@ export default function ShareSheetModal({
               </button>
 
               {/* Save Photo button */}
-              <button 
+              <button
                 onClick={handleSavePhoto}
                 className="flex flex-col gap-1 sm:gap-1.5 md:gap-2 items-center group flex-shrink-0"
               >
                 <div className="bg-white rounded-full size-12 sm:size-14 md:size-16 flex items-center justify-center border border-stone-200 shadow-sm group-hover:scale-110 transition-transform">
-                  <svg className="size-5 sm:size-6 md:size-7 text-stone-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                    <polyline points="17 21 17 13 7 13 7 21"/>
-                    <polyline points="7 3 7 8 15 8"/>
+                  <svg
+                    className="size-5 sm:size-6 md:size-7 text-stone-600"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                    <polyline points="17 21 17 13 7 13 7 21" />
+                    <polyline points="7 3 7 8 15 8" />
                   </svg>
                 </div>
                 <p className="font-albert font-medium text-[9px] sm:text-[10px] md:text-xs text-stone-700 leading-tight text-center">
@@ -501,7 +518,7 @@ export default function ShareSheetModal({
               </button>
 
               {/* Messages button */}
-              <button 
+              <button
                 onClick={() => alert('Sharing to Messages!')}
                 className="flex flex-col gap-1 sm:gap-1.5 md:gap-2 items-center group flex-shrink-0"
               >
@@ -514,13 +531,18 @@ export default function ShareSheetModal({
               </button>
 
               {/* X (Twitter) button */}
-              <button 
+              <button
                 onClick={() => alert('Sharing to X!')}
                 className="flex flex-col gap-1 sm:gap-1.5 md:gap-2 items-center group flex-shrink-0"
               >
                 <div className="bg-black rounded-full size-12 sm:size-14 md:size-16 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                  <svg className="size-5 sm:size-6 md:size-7 text-white" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  <svg
+                    className="size-5 sm:size-6 md:size-7 text-white"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                   </svg>
                 </div>
                 <p className="font-albert font-medium text-[9px] sm:text-[10px] md:text-xs text-stone-700 leading-tight text-center">

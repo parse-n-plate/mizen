@@ -3,14 +3,23 @@ import { InstructionStep, RecipeStep } from '@/contexts/RecipeContext';
 type RawInstruction = string | InstructionStep | RecipeStep;
 
 // Helper to check if instructions are in RecipeStep format
-export function isEnhancedInstructions(instructions: RawInstruction[]): instructions is RecipeStep[] {
+export function isEnhancedInstructions(
+  instructions: RawInstruction[],
+): instructions is RecipeStep[] {
   if (instructions.length === 0) return false;
   const first = instructions[0];
-  return typeof first === 'object' && first !== null && 'stepNumber' in first && 'instruction' in first;
+  return (
+    typeof first === 'object' &&
+    first !== null &&
+    'stepNumber' in first &&
+    'instruction' in first
+  );
 }
 
 // Convert old format to new format (for migration)
-export function migrateInstructionsToSteps(instructions: RawInstruction[]): RecipeStep[] {
+export function migrateInstructionsToSteps(
+  instructions: RawInstruction[],
+): RecipeStep[] {
   return instructions.map((instruction, index) => {
     if (typeof instruction === 'string') {
       return {
