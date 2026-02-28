@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import Image from "next/image";
 import { useUser } from "@/hooks/useUser";
 import {
   Dialog,
@@ -140,10 +141,13 @@ function AccountSection({
       {/* Profile card */}
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-stone-100 dark:border-stone-800">
         {avatarUrl ? (
-          <img
+          <Image
             src={avatarUrl}
             alt={name}
+            width={40}
+            height={40}
             className="h-10 w-10 rounded-full"
+            unoptimized
           />
         ) : (
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-stone-200 dark:bg-stone-700 font-sans text-sm font-medium text-stone-600 dark:text-stone-300">
@@ -189,11 +193,7 @@ const THEME_OPTIONS: { value: Theme; label: string }[] = [
 ];
 
 function AppearanceSection() {
-  const [theme, setThemeState] = useState<Theme>("system");
-
-  useEffect(() => {
-    setThemeState(getTheme());
-  }, []);
+  const [theme, setThemeState] = useState<Theme>(getTheme);
 
   const handleThemeChange = (t: Theme) => {
     setThemeState(t);

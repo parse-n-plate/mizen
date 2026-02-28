@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -393,10 +394,13 @@ export function TopBar() {
                   className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden hover:ring-2 hover:ring-stone-300 dark:hover:ring-stone-700 transition-all"
                 >
                   {user.user_metadata?.avatar_url ? (
-                    <img
+                    <Image
                       src={user.user_metadata.avatar_url}
                       alt={name}
+                      width={32}
+                      height={32}
                       className="h-8 w-8 rounded-lg"
+                      unoptimized
                     />
                   ) : (
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-stone-200 dark:bg-stone-700 font-sans text-xs font-medium text-stone-600 dark:text-stone-300">

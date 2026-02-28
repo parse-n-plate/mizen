@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import type { InstructionStep } from "@/lib/types";
 
 interface StepListProps {
@@ -71,11 +72,14 @@ function StepRow({
           >
             <div>
               <div className="pt-2">
-                <img
-                  src={step.imageUrl}
+                <Image
+                  src={step.imageUrl!}
                   alt={`Step ${index + 1}`}
+                  width={400}
+                  height={320}
                   className="rounded-lg max-w-full max-h-80 object-contain border border-stone-200 dark:border-stone-700 cursor-pointer"
                   onError={() => setExpanded(false)}
+                  unoptimized
                 />
               </div>
             </div>
@@ -94,15 +98,18 @@ function StepRow({
           className="flex-shrink-0 pt-0.5 cursor-pointer"
           aria-label={expanded ? "Hide step photo" : "Show step photo"}
         >
-          <img
-            src={step.imageUrl}
+          <Image
+            src={step.imageUrl!}
             alt=""
+            width={40}
+            height={40}
             className={`h-10 w-10 rounded-lg object-cover border transition-colors ${
               expanded
                 ? "border-stone-400 dark:border-stone-500"
                 : "border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600"
             }`}
             onError={() => setImgError(true)}
+            unoptimized
           />
         </button>
       )}

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { redirect } from "next/navigation";
@@ -50,10 +51,13 @@ export default async function ProfilePage() {
         <div className="space-y-6">
           <div className="flex items-center gap-4">
             {avatarUrl ? (
-              <img
+              <Image
                 src={avatarUrl}
                 alt={name}
+                width={64}
+                height={64}
                 className="h-16 w-16 rounded-full"
+                unoptimized
               />
             ) : (
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-stone-100 dark:bg-stone-800 font-serif text-2xl font-bold text-stone-600 dark:text-stone-300">
