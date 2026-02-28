@@ -62,9 +62,17 @@
   --text-nav-md: 18px;
 }
 
-/* Prevent layout shift when modals toggle body overflow: hidden */
+/* Prevent layout shift when modals toggle body overflow: hidden.
+   scrollbar-gutter: stable reserves scrollbar space permanently.
+   react-remove-scroll-bar adds padding-right to body as compensation —
+   since gutter already handles it, we neutralize the extra padding. */
 html {
   scrollbar-gutter: stable;
+}
+
+html body[data-scroll-locked] {
+  padding-right: 0 !important;
+  margin-right: 0 !important;
 }
 
 /* Custom CSS Variables — Parse & Plate Design System */
