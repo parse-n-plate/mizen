@@ -4,10 +4,20 @@ import { useState, useMemo } from "react";
 import Magnifer from "@solar-icons/react/csr/search/Magnifer";
 import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import type { IngredientGroup } from "@/lib/types";
+import type { Ingredient, IngredientGroup } from "@/lib/types";
 
 interface IngredientListProps {
   groups: IngredientGroup[];
+}
+
+interface FilteredIngredient {
+  ingredient: Ingredient;
+  sourceIndex: number;
+}
+
+interface FilteredIngredientGroup {
+  groupName: string;
+  ingredients: FilteredIngredient[];
 }
 
 export function IngredientList({ groups }: IngredientListProps) {
@@ -28,17 +38,29 @@ export function IngredientList({ groups }: IngredientListProps) {
   };
 
   const filteredGroups = useMemo(() => {
-    if (!searchQuery.trim()) return groups;
+    const normalizedGroups: FilteredIngredientGroup[] = groups.map((group) => ({
+      groupName: group.groupName,
+      ingredients: group.ingredients.map((ingredient, sourceIndex) => ({
+        ingredient,
+        sourceIndex,
+      })),
+    }));
+
+    if (!searchQuery.trim()) return normalizedGroups;
+
     const query = searchQuery.toLowerCase().trim();
-    return groups
+    return normalizedGroups
       .map((group) => ({
         ...group,
         ingredients: group.ingredients.filter(
-          (ing) =>
-            ing.ingredient.toLowerCase().includes(query) ||
-            (ing.description && ing.description.toLowerCase().includes(query)) ||
-            (ing.substitutions &&
-              ing.substitutions.some((sub) => sub.toLowerCase().includes(query)))
+          ({ ingredient }) =>
+            ingredient.ingredient.toLowerCase().includes(query) ||
+            (ingredient.description &&
+              ingredient.description.toLowerCase().includes(query)) ||
+            (ingredient.substitutions &&
+              ingredient.substitutions.some((sub) =>
+                sub.toLowerCase().includes(query)
+              ))
         ),
       }))
       .filter((group) => group.ingredients.length > 0);
@@ -96,7 +118,7 @@ function IngredientGroupSection({
   onToggle,
   onExpand,
 }: {
-  group: IngredientGroup;
+  group: FilteredIngredientGroup;
   checked: Set<string>;
   expanded: string | null;
   onToggle: (key: string) => void;
@@ -139,8 +161,8 @@ function IngredientGroupSection({
         }`}
       >
         <div className="overflow-hidden">
-          {group.ingredients.map((ing, i) => {
-            const key = `${group.groupName}-${i}`;
+          {group.ingredients.map(({ ingredient: ing, sourceIndex }, i) => {
+            const key = `${group.groupName}-${sourceIndex}`;
             const isChecked = checked.has(key);
             const isLast = i === group.ingredients.length - 1;
             const amount = `${ing.amount || ""} ${ing.units || ""}`.trim();
