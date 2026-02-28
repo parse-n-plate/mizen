@@ -288,7 +288,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
   }
 
   return (
-    <div className="w-full max-w-2xl flex flex-col items-center">
+    <div className="w-full max-w-3xl flex flex-col items-center">
       {showPill &&
         createPortal(
           <div className="fixed bottom-8 left-0 right-0 z-50 flex justify-center pointer-events-none">

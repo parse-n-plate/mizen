@@ -24,7 +24,7 @@ export function RecentRecipes() {
   };
 
   return (
-    <section className="page-fade-in-up page-fade-delay-3 w-full max-w-2xl">
+    <section className="page-fade-in-up page-fade-delay-3 w-full max-w-3xl">
       <div className="mb-4">
         <h2 className="font-serif text-xl font-semibold text-stone-900 dark:text-stone-100">
           Recent Recipes
