@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import Image from "next/image";
 import { useUser } from "@/hooks/useUser";
 import {
   Dialog,
@@ -196,11 +197,7 @@ const THEME_OPTIONS: { value: Theme; label: string }[] = [
 ];
 
 function AppearanceSection() {
-  const [theme, setThemeState] = useState<Theme>("system");
-
-  useEffect(() => {
-    setThemeState(getTheme());
-  }, []);
+  const [theme, setThemeState] = useState<Theme>(getTheme);
 
   const handleThemeChange = (t: Theme) => {
     setThemeState(t);

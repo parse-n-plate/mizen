@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   Dialog,
@@ -20,9 +20,13 @@ interface AuthModalProps {
 export function AuthModal({ open, onOpenChange, initialMode = "login" }: AuthModalProps) {
   const [mode, setMode] = useState<"login" | "signup">(initialMode);
 
-  useEffect(() => {
-    if (open) setMode(initialMode);
-  }, [open, initialMode]);
+  const [prevOpen, setPrevOpen] = useState(false);
+  if (open && !prevOpen) {
+    setMode(initialMode);
+  }
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+  }
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

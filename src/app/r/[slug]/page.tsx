@@ -56,7 +56,7 @@ export default async function SharedRecipePage({
             <TabsList className="flex items-end w-full relative rounded-none border-b border-stone-200 dark:border-stone-700 bg-transparent p-0 gap-0">
               <TabsTrigger
                 value="prep"
-                className="folder-tab-trigger h-11 px-5 sm:px-8 font-sans text-sm font-medium"
+                className="folder-tab-trigger h-11 px-5 sm:px-8 font-sans text-[14px] font-medium"
               >
                 Prep
                 {recipe.prepTimeMinutes ? (
@@ -68,7 +68,7 @@ export default async function SharedRecipePage({
               </TabsTrigger>
               <TabsTrigger
                 value="cook"
-                className="folder-tab-trigger h-11 px-5 sm:px-8 font-sans text-sm font-medium"
+                className="folder-tab-trigger h-11 px-5 sm:px-8 font-sans text-[14px] font-medium"
               >
                 Cook
                 {recipe.cookTimeMinutes ? (
