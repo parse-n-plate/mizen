@@ -97,16 +97,19 @@ function deduplicateUnits(groups: IngredientGroup[]): IngredientGroup[] {
     ...group,
     ingredients: group.ingredients.map((ing) => {
       if (!ing.units || !ing.ingredient) return ing;
-      const unit = ing.units.toLowerCase();
-      const name = ing.ingredient.toLowerCase();
+      const unit = ing.units.trim().toLowerCase();
+      if (!unit) return ing;
+
+      const ingredientText = ing.ingredient.trimStart();
+      const name = ingredientText.toLowerCase();
       // Check exact match or plural/singular variant
       const variants = [unit];
-      if (unit.endsWith("s")) variants.push(unit.slice(0, -1));
+      if (unit.endsWith("s") && unit.length > 1) variants.push(unit.slice(0, -1));
       else variants.push(unit + "s");
 
       for (const v of variants) {
         if (name.startsWith(v + " ")) {
-          return { ...ing, ingredient: ing.ingredient.slice(v.length).trim() };
+          return { ...ing, ingredient: ingredientText.slice(v.length).trim() };
         }
       }
       return ing;
