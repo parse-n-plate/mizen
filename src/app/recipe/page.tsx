@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRecipe } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
 import { toast } from "sonner";
 import { RecipeHeader, formatTime } from "@/components/RecipeHeader";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
+import { scaleIngredients } from "@/utils/ingredientScaler";
 import Link from "next/link";
 
 export default function RecipePage() {
@@ -16,6 +17,19 @@ export default function RecipePage() {
   const [unsaving, setUnsaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"prep" | "cook">("prep");
+
+  const originalServings = useMemo(() => recipe?.servings, [recipe?.servings]);
+  const [servings, setServings] = useState<number | undefined>(recipe?.servings);
+
+  // Sync servings when recipe object changes (e.g. new parse with same servings count)
+  useEffect(() => {
+    setServings(recipe?.servings);
+  }, [recipe]);
+
+  const scaledIngredients = useMemo(() => {
+    if (!recipe || !originalServings || !servings) return recipe?.ingredients ?? [];
+    return scaleIngredients(recipe.ingredients, originalServings, servings);
+  }, [recipe, originalServings, servings]);
 
   const shareUrl = savedMeta
     ? `${typeof window !== "undefined" ? window.location.origin : ""}/r/${savedMeta.slug}`
@@ -91,7 +105,12 @@ export default function RecipePage() {
       {/* Header section with cream background */}
       <div className="px-6 pt-8 pb-0">
         <div className="max-w-3xl mx-auto w-full pb-8">
-          <RecipeHeader recipe={recipe} />
+          <RecipeHeader
+            recipe={recipe}
+            servings={servings}
+            originalServings={originalServings}
+            onServingsChange={setServings}
+          />
         </div>
       </div>
 
@@ -99,7 +118,7 @@ export default function RecipePage() {
       <div className="hidden print:block px-6">
         <div className="max-w-3xl mx-auto w-full">
           <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 mb-3">Ingredients</h3>
-          {recipe.ingredients.map((group) => (
+          {scaledIngredients.map((group) => (
             <div key={group.groupName} className="mb-4">
               <h4 className="font-sans text-sm font-semibold capitalize mb-1">{group.groupName}</h4>
               <ul className="list-disc pl-5 space-y-0.5">
@@ -258,7 +277,7 @@ export default function RecipePage() {
             <div className="max-w-3xl mx-auto px-5 sm:px-6 pt-5 pb-24 sm:pb-6">
               {activeTab === "prep" ? (
                 <div key="prep" className="tab-content-animate">
-                  <PrepSection ingredients={recipe.ingredients} steps={recipe.instructions} />
+                  <PrepSection ingredients={scaledIngredients} steps={recipe.instructions} />
                 </div>
               ) : (
                 <div key="cook" className="tab-content-animate">
