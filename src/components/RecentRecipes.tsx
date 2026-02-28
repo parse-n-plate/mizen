@@ -58,7 +58,7 @@ export function RecentRecipes() {
             );
           })}
         </div>
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white dark:from-stone-900 to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white dark:from-[#0B0A0A] to-transparent" />
       </div>
     </section>
   );

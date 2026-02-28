@@ -46,7 +46,7 @@ function StepRow({
       {/* Content */}
       <div className="flex-1 min-w-0 space-y-1">
         {step.title && (
-          <h4 className="font-sans text-sm font-semibold text-stone-900 dark:text-stone-100">
+          <h4 className="font-sans text-body-md-sm font-medium text-[#1c1917] dark:text-stone-100">
             {step.title}
           </h4>
         )}

@@ -63,7 +63,7 @@ function IngredientGroupSection({
         aria-expanded={!collapsed}
       >
         <div className="flex items-center gap-3 flex-1">
-          <h3 className="font-sans text-sm font-semibold text-stone-900 dark:text-stone-100 capitalize">
+          <h3 className="font-sans text-base font-semibold text-stone-900 dark:text-stone-100 capitalize">
             {group.groupName}
           </h3>
           <svg
@@ -125,7 +125,7 @@ function IngredientGroupSection({
                       }`}
                     >
                       <p
-                        className={`font-sans font-medium text-sm text-stone-800 dark:text-stone-200 capitalize ${
+                        className={`font-sans font-medium text-base text-stone-800 dark:text-stone-200 capitalize ${
                           isChecked ? "line-through" : ""
                         }`}
                       >
@@ -133,7 +133,7 @@ function IngredientGroupSection({
                       </p>
                       <div className="flex items-baseline gap-2 ml-3 flex-shrink-0">
                         {amount && (
-                          <p className="font-sans text-xs text-stone-400 dark:text-stone-500">
+                          <p className="font-sans text-sm text-stone-400 dark:text-stone-500">
                             {amount}
                           </p>
                         )}
