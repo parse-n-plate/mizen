@@ -32,6 +32,7 @@ export default function StorageGuidanceCard({
 
   // Update storage text when storageGuide prop changes (e.g., when AI generates new guidance)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sync editable state from prop
     setStorageText(storageGuide || "Storage guidance not available. Refrigerate leftovers promptly.");
   }, [storageGuide]);
 

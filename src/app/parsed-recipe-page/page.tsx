@@ -472,6 +472,7 @@ export default function ParsedRecipePage({
     if (saved) {
       try {
         const { checked, collapsed } = JSON.parse(saved);
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration-safe localStorage init
         if (checked) setCheckedIngredients(checked);
         if (collapsed) setCollapsedGroups(collapsed);
       } catch {
@@ -494,6 +495,7 @@ export default function ParsedRecipePage({
     if (saved) {
       try {
         const { unitSystem: savedUnitSystem } = JSON.parse(saved);
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration-safe localStorage init
         if (savedUnitSystem) setUnitSystem(savedUnitSystem);
       } catch {
         console.error('Error loading scale settings');
@@ -774,6 +776,7 @@ export default function ParsedRecipePage({
 
   // Initialize servings from recipe when loaded
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sync editable state from loaded recipe
     setServings(parsedRecipe?.servings);
   }, [parsedRecipe]);
 

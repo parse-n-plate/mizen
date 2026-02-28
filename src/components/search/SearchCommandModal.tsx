@@ -57,6 +57,7 @@ export default function SearchCommandModal({
 
   // Collapse feedback sub-items when search changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset UI state on search change
     setFeedbackExpanded(false);
   }, [search]);
 

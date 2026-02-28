@@ -166,6 +166,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     if (saved) {
       try {
         const loaded = JSON.parse(saved) as ParsedRecipe;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration-safe localStorage init
         setParsedRecipe({
           ...loaded,
           instructions: normalizeInstructions(loaded.instructions),

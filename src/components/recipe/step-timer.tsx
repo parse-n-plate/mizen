@@ -27,6 +27,7 @@ export function StepTimer({
   // Reset state when timer becomes inactive
   useEffect(() => {
     if (!activeTimer) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset timer display on deactivation
       setTimeLeft(durationMinutes * 60);
       setIsComplete(false);
     }

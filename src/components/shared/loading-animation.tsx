@@ -88,6 +88,7 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
   const [steps, setSteps] = useState<LoadingStep[]>(initialSteps);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- portal mount detection for SSR
     setMounted(true);
   }, []);
 
@@ -107,6 +108,7 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
   // Manage step transitions and progress bar
   useEffect(() => {
     if (!isVisible) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset animation state on hide
       setCurrentStepIdx(0);
       setProgress(0);
       progressRef.current = 0;
@@ -170,6 +172,7 @@ export default function LoadingAnimation({ isVisible, cuisine, progress: externa
   // Reactive logic for when cuisine is detected (Parsing Complete)
   useEffect(() => {
     if (isVisible && cuisine && cuisine.length > 0 && !hasCuisine) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time cuisine detection trigger
       setHasCuisine(true);
       if (timerRef.current) clearTimeout(timerRef.current);
 

@@ -80,6 +80,7 @@ export default function FeedbackDialog({
   // Sync initial props when dialog opens
   useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset form state on dialog open
       if (initialType) setType(initialType);
       if (initialStep) setStep(initialStep);
     }

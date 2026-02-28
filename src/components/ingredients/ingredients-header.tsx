@@ -102,6 +102,7 @@ export function IngredientsHeader({
     const hasServingsChanged = servings !== prevServingsRef.current;
 
     if (servings !== undefined) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync display value from controlled prop
       setServingsInputValue(formatSliderValue(servings));
       if (hasServingsChanged) {
         setDragValue(null);

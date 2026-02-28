@@ -30,6 +30,7 @@ export default function HomepageBanner() {
   // Read localStorage after mount to avoid hydration mismatch
   useEffect(() => {
     if (localStorage.getItem('homepage-banner-dismissed') === 'true') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- hydration-safe localStorage init
       setIsDismissed(true);
     }
   }, []);
