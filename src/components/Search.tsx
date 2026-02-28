@@ -80,7 +80,7 @@ function fileToImageFile(file: File): Promise<ImageFile> {
   });
 }
 
-export function Search() {
+export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
   const [url, setUrl] = useState("");
   const [imageFile, setImageFile] = useState<ImageFile | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -209,6 +209,7 @@ export function Search() {
 
         if (result.success && result.data) {
           setRecipe(result.data);
+          onSuccess?.();
           router.push("/recipe");
         } else {
           toast.error(result.error || "Failed to parse recipe");
@@ -219,7 +220,7 @@ export function Search() {
         setIsLoading(false);
       }
     },
-    [isLoading, setIsLoading, setError, setRecipe, router]
+    [isLoading, setIsLoading, setError, setRecipe, router, onSuccess]
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -244,6 +245,7 @@ export function Search() {
 
         if (result.success && result.data) {
           setRecipe(result.data);
+          onSuccess?.();
           router.push("/recipe");
         } else {
           toast.error(result.error || "Failed to parse recipe");

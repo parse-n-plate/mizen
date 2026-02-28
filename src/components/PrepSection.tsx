@@ -87,7 +87,7 @@ function TipsCallout({
                 <span className="font-sans text-xs text-amber-400 dark:text-amber-600 flex-shrink-0 pt-0.5">
                   &bull;
                 </span>
-                <p className="font-sans text-sm text-amber-900/80 dark:text-amber-200/80 leading-relaxed">
+                <p className="font-sans text-base text-amber-900/80 dark:text-amber-200/80 leading-relaxed">
                   {t.tip}
                 </p>
               </div>
