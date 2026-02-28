@@ -202,6 +202,16 @@ html {
   --color-wheat-tint: #2a2520;
   --color-mint-tint: #1e2926;
   --color-orange-tint: #2a2218;
+
+  /* Shadows — true black with higher opacity for dark backgrounds.
+     Overrides Tailwind defaults (5-10% opacity) which are invisible on dark surfaces. */
+  --shadow-2xs: 0 1px rgb(0 0 0 / 0.15);
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.25), 0 1px 2px -1px rgb(0 0 0 / 0.25);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.25);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.35), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.35), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.5);
 }
 
 /* Base Typography — Outside @layer for higher specificity over Tailwind preflight */
