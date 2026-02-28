@@ -158,7 +158,7 @@ export function GettingStarted() {
 
   return (
     <>
-      <section className="page-fade-in-up page-fade-delay-3 w-full max-w-2xl space-y-8">
+      <section className="page-fade-in-up page-fade-delay-3 w-full max-w-3xl space-y-8">
         {/* Example recipes */}
         <div>
           <p className="mb-3 text-center font-sans text-sm font-medium text-stone-500 dark:text-stone-400">
