@@ -290,7 +290,7 @@ export default function RecipePage() {
       </div>
 
       {/* Mobile: fade above bottom tabs */}
-      <div className="sm:hidden print:hidden fixed bottom-12 left-0 right-0 z-[19] h-24 pointer-events-none bg-gradient-to-t from-white dark:from-[#0B0A0A] to-transparent" />
+      <div className="sm:hidden print:hidden fixed bottom-12 left-0 right-0 z-[19] h-24 pointer-events-none bg-gradient-to-t from-white dark:from-mizen-dark-surface to-transparent" />
 
       {/* Mobile: fixed bottom folder tabs (hidden on desktop) */}
       <div className="sm:hidden print:hidden fixed bottom-0 left-0 right-0 z-20 pb-[env(safe-area-inset-bottom)] bg-white dark:bg-stone-950">
