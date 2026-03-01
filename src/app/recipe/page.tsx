@@ -8,7 +8,9 @@ import { RecipeHeader, formatTime } from "@/components/RecipeHeader";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
 import { scaleIngredients } from "@/utils/ingredientScaler";
+import { convertIngredients, detectUnitSystem, type UnitSystem } from "@/utils/unitConverter";
 import Link from "next/link";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 export default function RecipePage() {
   const { recipe, savedMeta, setSavedMeta } = useRecipe();
@@ -26,10 +28,26 @@ export default function RecipePage() {
     setServings(recipe?.servings);
   }, [recipe]);
 
+  const detectedSystem = useMemo(
+    () => (recipe ? detectUnitSystem(recipe.ingredients) : "imperial"),
+    [recipe]
+  );
+  const [unitSystem, setUnitSystem] = useState<UnitSystem>(detectedSystem);
+
+  // Sync unit system when recipe changes
+  useEffect(() => {
+    setUnitSystem(detectedSystem);
+  }, [detectedSystem]);
+
   const scaledIngredients = useMemo(() => {
     if (!recipe || !originalServings || !servings) return recipe?.ingredients ?? [];
     return scaleIngredients(recipe.ingredients, originalServings, servings);
   }, [recipe, originalServings, servings]);
+
+  const displayIngredients = useMemo(
+    () => convertIngredients(scaledIngredients, unitSystem, detectedSystem),
+    [scaledIngredients, unitSystem, detectedSystem]
+  );
 
   const shareUrl = savedMeta
     ? `${typeof window !== "undefined" ? window.location.origin : ""}/r/${savedMeta.slug}`
@@ -86,6 +104,29 @@ export default function RecipePage() {
     }
   };
 
+  const handleShare = async () => {
+    if (!recipe) return;
+    const url = shareUrl || recipe.sourceUrl || "";
+    const shareData = {
+      title: recipe.title,
+      ...(recipe.summary && { text: recipe.summary }),
+      ...(url && { url }),
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        const text = url || recipe.title;
+        await navigator.clipboard.writeText(text);
+        toast.success("Link copied to clipboard");
+      }
+    } catch (err) {
+      // User cancelled the share sheet — not an error
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      toast.error("Failed to share");
+    }
+  };
+
   if (!recipe) {
     return (
       <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center gap-4 px-6">
@@ -118,7 +159,7 @@ export default function RecipePage() {
       <div className="hidden print:block px-6">
         <div className="max-w-3xl mx-auto w-full">
           <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 mb-3">Ingredients</h3>
-          {scaledIngredients.map((group) => (
+          {displayIngredients.map((group) => (
             <div key={group.groupName} className="mb-4">
               <h4 className="font-sans text-sm font-semibold capitalize mb-1">{group.groupName}</h4>
               <ul className="list-disc pl-5 space-y-0.5">
@@ -179,59 +220,75 @@ export default function RecipePage() {
             </button>
 
             {/* Quick actions — right-aligned, revealed on hover */}
-            <div className="ml-auto flex items-center gap-1 pb-2 opacity-0 group-hover/tabs:opacity-100 transition-opacity duration-150">
+            <div className="ml-auto flex items-center gap-1 pb-2 opacity-0 group-hover/tabs:opacity-100 group-focus-within/tabs:opacity-100 transition-opacity duration-150">
               {/* Save / Share */}
               <div className="flex items-center gap-1">
                 {/* Save / Saved */}
                 {user && !savedMeta && (
-                  <button
-                    onClick={handleSave}
-                    disabled={saving}
-                    title="Save recipe"
-                    className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors disabled:opacity-50"
-                  >
-                    <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                    </svg>
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={handleSave}
+                        disabled={saving}
+                        aria-label="Save recipe"
+                        className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors disabled:opacity-50"
+                      >
+                        <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                        </svg>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Save recipe</TooltipContent>
+                  </Tooltip>
                 )}
                 {savedMeta && (
-                  <button
-                    onClick={handleUnsave}
-                    disabled={unsaving}
-                    title="Remove from saved"
-                    className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-emerald-500 dark:text-emerald-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors disabled:opacity-50"
-                  >
-                    <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
-                    </svg>
-                  </button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={handleUnsave}
+                        disabled={unsaving}
+                        aria-label="Remove from saved"
+                        className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-emerald-500 dark:text-emerald-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors disabled:opacity-50"
+                      >
+                        <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                        </svg>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Remove from saved</TooltipContent>
+                  </Tooltip>
                 )}
 
                 {/* Share / Copy link */}
                 {savedMeta && (
-                  <div className="relative">
-                    <button
-                      onClick={handleCopy}
-                      title={copied ? "Copied!" : "Copy share link"}
-                      className={`press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors ${
-                        copied
-                          ? "text-emerald-500 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950"
-                          : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
-                      }`}
-                    >
-                      {copied ? (
-                        <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      ) : (
-                        <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={handleCopy}
+                        aria-label={copied ? "Share link copied" : "Copy share link"}
+                        className={`press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors ${
+                          copied
+                            ? "text-emerald-500 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950"
+                            : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
+                        }`}
+                      >
+                        {copied ? (
+                          <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        ) : (
+                          <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                          </svg>
+                        )}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>{copied ? "Copied!" : "Copy share link"}</TooltipContent>
+                  </Tooltip>
                 )}
               </div>
 
@@ -240,35 +297,81 @@ export default function RecipePage() {
                 <div className="h-4 w-px bg-stone-200 dark:bg-stone-700 mx-0.5" />
               )}
 
-              {/* Source link */}
-              {recipe.sourceUrl && (
-                <a
-                  href={recipe.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="View original recipe"
-                  className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
-                >
-                  <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                    <polyline points="15 3 21 3 21 9" />
-                    <line x1="10" y1="14" x2="21" y2="3" />
-                  </svg>
-                </a>
-              )}
+              {/* Convert units */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setUnitSystem((s) => s === "metric" ? "imperial" : "metric")
+                    }
+                    className={`press-scale inline-flex items-center justify-center h-8 px-2.5 rounded-lg text-xs font-medium font-sans transition-colors ${
+                      unitSystem !== detectedSystem
+                        ? "text-[var(--color-blue)] bg-blue-50 dark:bg-blue-950 dark:text-blue-400"
+                        : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
+                    }`}
+                  >
+                    {unitSystem === "metric" ? "Metric" : "Imperial"}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Switch to {unitSystem === "metric" ? "imperial" : "metric"}</TooltipContent>
+              </Tooltip>
+
+              {/* Copy recipe */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    disabled
+                    aria-label="Copy recipe (coming soon)"
+                    className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-300 dark:text-stone-600 transition-colors cursor-not-allowed disabled:opacity-100"
+                  >
+                    <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                    </svg>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Copy recipe (coming soon)</TooltipContent>
+              </Tooltip>
 
               {/* Print */}
-              <button
-                onClick={() => window.print()}
-                title="Print recipe"
-                className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
-              >
-                <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="6 9 6 2 18 2 18 9" />
-                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                  <rect width="12" height="8" x="6" y="14" />
-                </svg>
-              </button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    aria-label="Print recipe"
+                    className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                  >
+                    <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="6 9 6 2 18 2 18 9" />
+                      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                      <rect width="12" height="8" x="6" y="14" />
+                    </svg>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Print recipe</TooltipContent>
+              </Tooltip>
+
+              {/* Share */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={handleShare}
+                    aria-label="Share recipe"
+                    className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                  >
+                    <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                      <polyline points="16 6 12 2 8 6" />
+                      <line x1="12" x2="12" y1="2" y2="15" />
+                    </svg>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>Share recipe</TooltipContent>
+              </Tooltip>
             </div>
           </div>
 
@@ -277,7 +380,7 @@ export default function RecipePage() {
             <div className="max-w-3xl mx-auto px-5 sm:px-6 pt-5 pb-24 sm:pb-6">
               {activeTab === "prep" ? (
                 <div key="prep" className="tab-content-animate">
-                  <PrepSection ingredients={scaledIngredients} steps={recipe.instructions} />
+                  <PrepSection ingredients={displayIngredients} steps={recipe.instructions} />
                 </div>
               ) : (
                 <div key="cook" className="tab-content-animate">
