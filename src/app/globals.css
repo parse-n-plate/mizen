@@ -105,6 +105,7 @@ html body[data-scroll-locked] {
 
   /* Mizen palette — Neutrals */
   --color-white: #ffffff;
+  --color-surface: #ffffff;
   --color-cream: #fafaf9;
   --color-background-cream: #ffffff;
   --color-gray-light: #e7e5e4;
@@ -193,6 +194,7 @@ html body[data-scroll-locked] {
 
   /* Mizen palette — Neutrals (inverted) */
   --color-white: #292524;
+  --color-surface: #1C1918;
   --color-cream: #292524;
   --color-background-cream: #171412;
   --color-gray-light: #3a3633;
@@ -369,10 +371,10 @@ body {
   }
 
   .folder-tab-trigger[data-state="active"] {
-    background-color: var(--color-white) !important;
+    background-color: var(--color-surface) !important;
     color: var(--color-black);
     border-color: var(--color-border-light) !important;
-    border-bottom-color: var(--color-white) !important;
+    border-bottom-color: var(--color-surface) !important;
     border-top-color: var(--color-border-light) !important;
     z-index: 3;
     box-shadow: none !important;
@@ -419,10 +421,10 @@ body {
   }
 
   .folder-tab-trigger-bottom[data-state="active"] {
-    background-color: var(--color-white) !important;
+    background-color: var(--color-surface) !important;
     color: var(--color-black);
     border-color: var(--color-border-light) !important;
-    border-top-color: var(--color-white) !important;
+    border-top-color: var(--color-surface) !important;
     border-bottom: 2px solid var(--color-orange) !important;
     z-index: 3;
     box-shadow: var(--shadow-soft) !important;
