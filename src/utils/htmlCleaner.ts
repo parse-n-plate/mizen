@@ -199,18 +199,25 @@ export function cleanRecipeHTML(rawHtml: string): CleanedHTML {
           if ($(el).attr('type') !== 'application/ld+json') $(el).remove();
         });
         const cardContent = $clone.html();
-        // Validate the card actually contains recipe content (ingredients AND/OR instructions)
-        // This prevents generic `.recipe-card` from matching "related recipes" widgets
-        const hasIngredientContent = $clone.find(
-          '[class*="ingredient"], [itemprop="recipeIngredient"], ul, ol'
+        // Validate the card actually contains recipe content.
+        // Avoid generic list-only widgets by requiring strong ingredient+instruction signals
+        // or explicit section headings.
+        const hasIngredientSignal = $clone.find(
+          '[class*="ingredient"], [itemprop="recipeIngredient"]'
         ).length > 0;
-        const hasInstructionContent = $clone.find(
-          '[class*="instruction"], [class*="direction"], [class*="step"], [itemprop="recipeInstructions"], ol'
+        const hasInstructionSignal = $clone.find(
+          '[class*="instruction"], [class*="direction"], [class*="step"], [itemprop="recipeInstructions"]'
         ).length > 0;
+        const headingText = $clone.find('h1, h2, h3, h4, h5, h6').text().toLowerCase();
+        const hasIngredientHeading = /\bingredients?\b/.test(headingText);
+        const hasInstructionHeading = /\binstructions?\b|\bdirections?\b|\bsteps?\b/.test(headingText);
+        const hasStrongRecipeSignals =
+          (hasIngredientSignal && hasInstructionSignal) ||
+          (hasIngredientHeading && hasInstructionHeading);
         if (
           cardContent &&
           cardContent.trim().length > 200 &&
-          (hasIngredientContent || hasInstructionContent)
+          hasStrongRecipeSignals
         ) {
           recipeCardHtml = cardContent.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim();
           break;
@@ -485,7 +492,6 @@ export function extractTextContent(rawHtml: string): string {
     return '';
   }
 }
-
 
 
 
