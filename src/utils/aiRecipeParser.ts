@@ -1685,9 +1685,6 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
       
       // Merge JSON-LD data with AI-detected cuisine and servings (and summary if available)
       console.log('[Recipe Parser] 🔄 Merging JSON-LD + AI results for cuisine detection');
-      
-      // Merge JSON-LD data with AI-detected cuisine and servings (and summary if available)
-      console.log('[Recipe Parser] 🔄 Merging JSON-LD + AI results for cuisine detection');
       console.log('[Recipe Parser] JSON-LD result cuisine:', jsonLdResult.cuisine || 'none');
       console.log('[Recipe Parser] AI result cuisine:', aiCuisineResult?.cuisine || 'none');
       console.log('[Recipe Parser] JSON-LD result servings:', jsonLdResult.servings || 'none');
