@@ -81,7 +81,6 @@ const UNITS = new Set([
   "sheet", "sheets",
   "drop", "drops",
   "handful", "handfuls",
-  "large", "medium", "small",
 ]);
 
 // Matches leading amounts: "2", "2½", "1/2", "2 1/2", "6-8", "6–8"
@@ -133,8 +132,8 @@ function parseIngredientString(raw: string): Ingredient {
     }
   }
 
-  // 4. If no amount was found, default to "as needed"
-  if (!amount && !units) {
+  // 4. If no amount was found, default to "as needed" (including unit-only forms like "pinch salt")
+  if (!amount) {
     amount = "as needed";
   }
 
