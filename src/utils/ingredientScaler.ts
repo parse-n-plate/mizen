@@ -160,25 +160,32 @@ function normalizeUnit(unit: string): string {
   return unit.toLowerCase().trim();
 }
 
+// Cached set of all known, normalized units, built once at module load.
+const KNOWN_UNITS: Set<string> = new Set<string>();
+
+(function initializeKnownUnits(): void {
+  // Add volume units
+  Object.keys(VOLUME_TO_ML).forEach((u: string) => {
+    KNOWN_UNITS.add(normalizeUnit(u));
+  });
+
+  // Add weight units
+  Object.keys(WEIGHT_TO_GRAMS).forEach((u: string) => {
+    KNOWN_UNITS.add(normalizeUnit(u));
+  });
+
+  // Add non-convertible units
+  NON_CONVERTIBLE_UNITS.forEach((u: string) => {
+    KNOWN_UNITS.add(normalizeUnit(u));
+  });
+})();
+
 /**
  * Check if a unit string is a recognized cooking unit
  */
 function isRecognizedUnit(unit: string): boolean {
   const normalized = normalizeUnit(unit);
-  
-  // Build set of all known units
-  const knownUnits = new Set<string>();
-  
-  // Add volume units
-  Object.keys(VOLUME_TO_ML).forEach((u: string) => knownUnits.add(normalizeUnit(u)));
-  
-  // Add weight units
-  Object.keys(WEIGHT_TO_GRAMS).forEach((u: string) => knownUnits.add(normalizeUnit(u)));
-  
-  // Add non-convertible units
-  NON_CONVERTIBLE_UNITS.forEach((u: string) => knownUnits.add(normalizeUnit(u)));
-  
-  return knownUnits.has(normalized);
+  return KNOWN_UNITS.has(normalized);
 }
 
 /**
