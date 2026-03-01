@@ -28,11 +28,7 @@ export function PrepSection({ ingredients, steps }: PrepSectionProps) {
   );
 }
 
-function TipsCallout({
-  tips,
-}: {
-  tips: { tip: string; stepTitle: string; index: number }[];
-}) {
+function TipsCallout({ tips }: { tips: { tip: string; stepTitle: string; index: number }[] }) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (

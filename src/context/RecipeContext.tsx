@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import type { ParsedRecipe } from "@/lib/types";
 
 interface SavedMeta {
@@ -39,27 +34,33 @@ const MAX_HISTORY = 10;
 
 export function RecipeProvider({ children }: { children: ReactNode }) {
   const [recipe, setRecipeState] = useState<ParsedRecipe | null>(() => {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === "undefined") return null;
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored ? JSON.parse(stored) : null;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   });
   const [savedMeta, setSavedMetaState] = useState<SavedMeta | null>(() => {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === "undefined") return null;
     try {
       const stored = localStorage.getItem(META_STORAGE_KEY);
       return stored ? JSON.parse(stored) : null;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>(() => {
-    if (typeof window === 'undefined') return [];
+    if (typeof window === "undefined") return [];
     try {
       const stored = localStorage.getItem(HISTORY_KEY);
       return stored ? JSON.parse(stored) : [];
-    } catch { return []; }
+    } catch {
+      return [];
+    }
   });
 
   const setRecipe = (newRecipe: ParsedRecipe | null) => {
@@ -76,10 +77,10 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
           recipe: newRecipe,
           parsedAt: new Date().toISOString(),
         };
-        const updated = [
-          entry,
-          ...history.filter((h) => h.recipe.title !== newRecipe.title),
-        ].slice(0, MAX_HISTORY);
+        const updated = [entry, ...history.filter((h) => h.recipe.title !== newRecipe.title)].slice(
+          0,
+          MAX_HISTORY
+        );
         setHistory(updated);
         localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
       } else {
