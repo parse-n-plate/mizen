@@ -634,7 +634,7 @@ Steps: ${steps.join(' ')}`,
  * Parse recipe using AI (Layer 2 - AI Fallback)
  * This uses the Groq API to extract recipe data from cleaned HTML
  */
-async function parseWithAI(cleanedHtml: string): Promise<ParsedRecipe | null> {
+async function parseWithAI(cleanedHtml: string, debug?: boolean): Promise<ParsedRecipe | null> {
   try {
     logDecision('[parseWithAI] entry');
     // Check if Groq API key is configured
@@ -651,7 +651,9 @@ async function parseWithAI(cleanedHtml: string): Promise<ParsedRecipe | null> {
     // Limit HTML to prevent token overflow (keep first 15k characters)
     const limitedHtml = cleanedHtml.slice(0, 15000);
     logDecision('[parseWithAI] limitedHtml length=' + limitedHtml.length);
-        logDecision('[parseWithAI] limitedHtml content:\n' + limitedHtml);
+    if (debug) {
+      logDecision('[parseWithAI] limitedHtml content:\n' + limitedHtml);
+    }
     console.log('[AI Parser] Sending HTML to AI for parsing...');
     logDecision('[parseWithAI] decision=call groq.chat.completions');
 
@@ -1570,16 +1572,19 @@ ABSOLUTE REQUIREMENTS:
  * Main parsing function - tries JSON-LD first, then AI fallback
  * 
  * @param rawHtml - Raw HTML from recipe page
+ * @param debug - When true, logs full HTML content to the decision log for troubleshooting
  * @returns ParserResult with success status, data, error, and method used
  */
-export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
+export async function parseRecipe(rawHtml: string, debug?: boolean): Promise<ParserResult> {
   try {
     console.log('[Recipe Parser] Starting universal recipe parsing...');
 
     // Clean the HTML first
     const cleaned = cleanRecipeHTML(rawHtml);
     logDecision('[parseRecipe] cleaned HTML success=' + cleaned.success + ' length=' + (cleaned.html ? cleaned.html.length : 0));
-    logDecision('[parseRecipe] cleaned HTML content:\n' + indentLines(cleaned.html ? cleaned.html : '<empty>'));
+    if (debug) {
+      logDecision('[parseRecipe] cleaned HTML content:\n' + indentLines(cleaned.html ? cleaned.html : '<empty>'));
+    }
     logDecision('[parseRecipe] state after clean: ' + JSON.stringify({ cleanedSuccess: cleaned.success, cleanedLength: cleaned.html?.length }));
     if (!cleaned.success || !cleaned.html) {
       logDecision('[parseRecipe] aborting due to bad HTML');
@@ -1609,7 +1614,7 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
         console.log('[Recipe Parser] JSON-LD has only "Main" group, trying AI parsing for better groupings...');
         logDecision('[parseRecipe] decision=call AI parser for groupings');
         logDecision('[parseRecipe] state before AI groupings: ' + JSON.stringify({ cleanedHtmlLength: cleaned.html?.length, jsonLdResult }));
-        const aiResult = await parseWithAI(cleaned.html);
+        const aiResult = await parseWithAI(cleaned.html, debug);
         logDecision('[parseRecipe] aiResult for groupings=' + (aiResult ? aiResult.title : 'null'));
         logDecision('[parseRecipe] state after AI groupings: ' + JSON.stringify({ aiResult }));
         
@@ -1674,7 +1679,7 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
       logDecision('[parseRecipe] state before AI cuisine: ' + JSON.stringify({ jsonLdResult }));
       let aiCuisineResult: ParsedRecipe | null = null;
       try {
-        aiCuisineResult = await parseWithAI(cleaned.html);
+        aiCuisineResult = await parseWithAI(cleaned.html, debug);
         logDecision('[parseRecipe] aiCuisineResult=' + (aiCuisineResult ? aiCuisineResult.title : 'null'));
         logDecision('[parseRecipe] state after AI cuisine: ' + JSON.stringify({ aiCuisineResult }));
       } catch (error) {
@@ -1736,7 +1741,7 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
     logDecision('[parseRecipe] state before AI fallback: ' + JSON.stringify({ cleanedLength: cleaned.html?.length }));
 
     // Layer 2: AI parsing fallback
-    const aiResult = await parseWithAI(cleaned.html);
+    const aiResult = await parseWithAI(cleaned.html, debug);
     logDecision('[parseRecipe] aiResult (fallback)=' + (aiResult ? aiResult.title : 'null'));
     logDecision('[parseRecipe] state after AI fallback: ' + JSON.stringify({ aiResult }));
     if (aiResult) {
@@ -1840,9 +1845,10 @@ export async function parseRecipe(rawHtml: string): Promise<ParserResult> {
  * Parse recipe from URL (fetches HTML first)
  * 
  * @param url - Recipe URL to fetch and parse
+ * @param debug - When true, logs full HTML content to the decision log for troubleshooting
  * @returns ParserResult with success status, data, error, and method used
  */
-export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
+export async function parseRecipeFromUrl(url: string, debug?: boolean): Promise<ParserResult> {
   try {
     console.log(`[Recipe Parser] Fetching recipe from URL: ${url}`);
 
@@ -1887,7 +1893,7 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
     }
 
     // Parse the fetched HTML
-    const result = await parseRecipe(html);
+    const result = await parseRecipe(html, debug);
     
     // Add sourceUrl to the result if parsing was successful
     if (result.success && result.data) {
