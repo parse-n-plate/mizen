@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { detectCollectionUrl } from "@/utils/urlPatterns";
 import { useUser } from "@/hooks/useUser";
 import { useRecipe } from "@/context/RecipeContext";
 import { AuthModal } from "@/components/AuthModal";
@@ -49,6 +50,12 @@ export function TopBar() {
   const handleQuickAddUrl = async () => {
     const trimmed = quickAddUrl.trim();
     if (!trimmed || quickAddLoading) return;
+
+    const collectionWarning = detectCollectionUrl(trimmed);
+    if (collectionWarning) {
+      toast.warning(`${collectionWarning} We'll still try parsing it.`);
+    }
+
     setQuickAddLoading(true);
     try {
       const res = await fetch("/api/parse", {
