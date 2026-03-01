@@ -23,10 +23,17 @@ export function migrateInstructionsToSteps(instructions: string[]): RecipeStep[]
  * "Stir in 3 tablespoons ketchup" → "Stir in ketchup"
  */
 export function removeQuantitiesFromInstructions(instruction: string): string {
-  // Pattern matches quantities at word boundaries followed by units
+  // Pattern matches quantities at word boundaries followed by known ingredient units
   // Captures: amount + unit + following spaces
-  const quantityPattern = /\b([\d]+(?:\/[\d]+)?(?:\s+[\d]+\/[\d]+)?|[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+(?:\s*[–-]\s*[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)?)\s+([a-zA-Z]+)\s+/g;
-  
+  const amountPattern =
+    String.raw`[\d]+(?:\/[\d]+)?(?:\s+[\d]+\/[\d]+)?|[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+(?:\s*[–-]\s*[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)?`;
+  // Allowlist of ingredient units; intentionally excludes time and temperature units
+  const unitPattern =
+    String.raw`(?:cup|cups|teaspoon|teaspoons|tsp|tablespoon|tablespoons|tbsp|gram|grams|g|kilogram|kilograms|kg|milligram|milligrams|mg|ounce|ounces|oz|pound|pounds|lb|lbs|milliliter|milliliters|ml|liter|liters|l|pinch|pinches|clove|cloves|slice|slices|can|cans|packet|packets|stick|sticks|piece|pieces)`;
+  const quantityPattern = new RegExp(
+    String.raw`\b(` + amountPattern + String.raw`)\s+` + unitPattern + String.raw`\s+`,
+    'gi',
+  );
   return instruction.replace(quantityPattern, '');
 }
 
