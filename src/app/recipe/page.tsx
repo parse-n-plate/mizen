@@ -90,10 +90,7 @@ export default function RecipePage() {
     return (
       <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center gap-4 px-6">
         <p className="font-sans text-stone-500 dark:text-stone-400">No recipe loaded.</p>
-        <Link
-          href="/"
-          className="font-sans text-sm text-[var(--color-blue)] hover:underline"
-        >
+        <Link href="/" className="font-sans text-sm text-[var(--color-blue)] hover:underline">
           Go back and paste a URL
         </Link>
       </div>
@@ -117,7 +114,9 @@ export default function RecipePage() {
       {/* Print-only: linear layout with ingredients + instructions */}
       <div className="hidden print:block px-6">
         <div className="max-w-3xl mx-auto w-full">
-          <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 mb-3">Ingredients</h3>
+          <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 mb-3">
+            Ingredients
+          </h3>
           {scaledIngredients.map((group) => (
             <div key={group.groupName} className="mb-4">
               <h4 className="font-sans text-sm font-semibold capitalize mb-1">{group.groupName}</h4>
@@ -126,14 +125,18 @@ export default function RecipePage() {
                   <li key={i} className="text-sm">
                     {ing.ingredient}
                     {(ing.amount || ing.units) && (
-                      <span className="text-stone-500 ml-1">— {`${ing.amount || ""} ${ing.units || ""}`.trim()}</span>
+                      <span className="text-stone-500 ml-1">
+                        — {`${ing.amount || ""} ${ing.units || ""}`.trim()}
+                      </span>
                     )}
                   </li>
                 ))}
               </ul>
             </div>
           ))}
-          <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 mb-3 mt-6">Instructions</h3>
+          <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 mb-3 mt-6">
+            Instructions
+          </h3>
           <ol className="list-decimal pl-5 space-y-3">
             {recipe.instructions.map((step, i) => (
               <li key={i} className="text-sm leading-relaxed">
@@ -159,8 +162,12 @@ export default function RecipePage() {
               Prep
               {recipe.prepTimeMinutes ? (
                 <>
-                  <span className="text-stone-300 dark:text-stone-600" aria-hidden>·</span>
-                  <span className="font-normal text-stone-400 dark:text-stone-500">{formatTime(recipe.prepTimeMinutes)}</span>
+                  <span className="text-stone-300 dark:text-stone-600" aria-hidden>
+                    ·
+                  </span>
+                  <span className="font-normal text-stone-400 dark:text-stone-500">
+                    {formatTime(recipe.prepTimeMinutes)}
+                  </span>
                 </>
               ) : null}
             </button>
@@ -172,8 +179,12 @@ export default function RecipePage() {
               Cook
               {recipe.cookTimeMinutes ? (
                 <>
-                  <span className="text-stone-300 dark:text-stone-600" aria-hidden>·</span>
-                  <span className="font-normal text-stone-400 dark:text-stone-500">{formatTime(recipe.cookTimeMinutes)}</span>
+                  <span className="text-stone-300 dark:text-stone-600" aria-hidden>
+                    ·
+                  </span>
+                  <span className="font-normal text-stone-400 dark:text-stone-500">
+                    {formatTime(recipe.cookTimeMinutes)}
+                  </span>
                 </>
               ) : null}
             </button>
@@ -190,7 +201,16 @@ export default function RecipePage() {
                     title="Save recipe"
                     className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors disabled:opacity-50"
                   >
-                    <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      className="h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
                     </svg>
                   </button>
@@ -202,7 +222,16 @@ export default function RecipePage() {
                     title="Remove from saved"
                     className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-emerald-500 dark:text-emerald-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors disabled:opacity-50"
                   >
-                    <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      className="h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
                     </svg>
                   </button>
@@ -221,11 +250,29 @@ export default function RecipePage() {
                       }`}
                     >
                       {copied ? (
-                        <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg
+                          className="h-4 w-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
                           <polyline points="20 6 9 17 4 12" />
                         </svg>
                       ) : (
-                        <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg
+                          className="h-4 w-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
                           <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                           <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                         </svg>
@@ -236,9 +283,7 @@ export default function RecipePage() {
               </div>
 
               {/* Divider — visible when save actions exist */}
-              {user && (
-                <div className="h-4 w-px bg-stone-200 dark:bg-stone-700 mx-0.5" />
-              )}
+              {user && <div className="h-4 w-px bg-stone-200 dark:bg-stone-700 mx-0.5" />}
 
               {/* Source link */}
               {recipe.sourceUrl && (
@@ -249,7 +294,16 @@ export default function RecipePage() {
                   title="View original recipe"
                   className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
                 >
-                  <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    className="h-4 w-4"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                     <polyline points="15 3 21 3 21 9" />
                     <line x1="10" y1="14" x2="21" y2="3" />
@@ -263,7 +317,16 @@ export default function RecipePage() {
                 title="Print recipe"
                 className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
               >
-                <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  className="h-4 w-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <polyline points="6 9 6 2 18 2 18 9" />
                   <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                   <rect width="12" height="8" x="6" y="14" />
@@ -304,8 +367,12 @@ export default function RecipePage() {
               Prep
               {recipe.prepTimeMinutes ? (
                 <>
-                  <span className="text-stone-300 dark:text-stone-600" aria-hidden>·</span>
-                  <span className="font-normal text-stone-400 dark:text-stone-500">{formatTime(recipe.prepTimeMinutes)}</span>
+                  <span className="text-stone-300 dark:text-stone-600" aria-hidden>
+                    ·
+                  </span>
+                  <span className="font-normal text-stone-400 dark:text-stone-500">
+                    {formatTime(recipe.prepTimeMinutes)}
+                  </span>
                 </>
               ) : null}
             </button>
@@ -317,8 +384,12 @@ export default function RecipePage() {
               Cook
               {recipe.cookTimeMinutes ? (
                 <>
-                  <span className="text-stone-300 dark:text-stone-600" aria-hidden>·</span>
-                  <span className="font-normal text-stone-400 dark:text-stone-500">{formatTime(recipe.cookTimeMinutes)}</span>
+                  <span className="text-stone-300 dark:text-stone-600" aria-hidden>
+                    ·
+                  </span>
+                  <span className="font-normal text-stone-400 dark:text-stone-500">
+                    {formatTime(recipe.cookTimeMinutes)}
+                  </span>
                 </>
               ) : null}
             </button>

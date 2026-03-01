@@ -1,5 +1,6 @@
 import * as cheerio from "cheerio";
 import { getGroqClient, extractJsonFromAiResponse } from "@/lib/groq";
+import { logger } from "@/lib/logger";
 import { CoreRecipeSchema } from "@/lib/schemas/recipe";
 import { EXTRACTION_PROMPT } from "@/lib/prompts/extraction";
 import { cleanRecipeHTML } from "./htmlCleaner";
@@ -10,6 +11,8 @@ import type {
   InstructionStep,
   TimeMarker,
 } from "@/lib/types";
+
+const log = logger.child({ module: "parseRecipe" });
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -28,12 +31,8 @@ function parseISODuration(duration: string): number | undefined {
 function decodeHtmlEntities(text: string): string {
   if (!text) return text;
   return text
-    .replace(/&#(\d+);/g, (_, dec: string) =>
-      String.fromCodePoint(parseInt(dec, 10))
-    )
-    .replace(/&#x([0-9a-f]+);/gi, (_, hex: string) =>
-      String.fromCodePoint(parseInt(hex, 16))
-    )
+    .replace(/&#(\d+);/g, (_, dec: string) => String.fromCodePoint(parseInt(dec, 10)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex: string) => String.fromCodePoint(parseInt(hex, 16)))
     .replace(/&apos;/g, "'")
     .replace(/&quot;/g, '"')
     .replace(/&amp;/g, "&")
@@ -46,8 +45,7 @@ function decodeHtmlEntities(text: string): string {
 function normalizeInstructionSteps(instructions: unknown): InstructionStep[] {
   if (!Array.isArray(instructions)) return [];
 
-  const cleanLeading = (text: string): string =>
-    (text || "").replace(/^[\s.:;,\-–—]+/, "").trim();
+  const cleanLeading = (text: string): string => (text || "").replace(/^[\s.:;,\-–—]+/, "").trim();
 
   return instructions
     .map((item: unknown, index: number): InstructionStep | null => {
@@ -67,17 +65,14 @@ function normalizeInstructionSteps(instructions: unknown): InstructionStep[] {
                 ? obj.name
                 : "";
         if (!rawDetail.trim()) return null;
-        const aiTitle =
-          typeof obj.title === "string" && obj.title.trim()
-            ? obj.title.trim()
-            : null;
+        const aiTitle = typeof obj.title === "string" && obj.title.trim() ? obj.title.trim() : null;
         const title = aiTitle ? cleanLeading(aiTitle) : `Step ${index + 1}`;
         const detail = cleanLeading(rawDetail.trim());
         return {
           title,
           detail,
           timeMinutes: obj.timeMinutes as number | undefined,
-          timers: Array.isArray(obj.timers) ? obj.timers as TimeMarker[] : undefined,
+          timers: Array.isArray(obj.timers) ? (obj.timers as TimeMarker[]) : undefined,
           ingredients: obj.ingredients as string[] | undefined,
           tips: obj.tips as string | undefined,
           imageUrl: obj.imageUrl as string | undefined,
@@ -121,10 +116,7 @@ function deduplicateUnits(groups: IngredientGroup[]): IngredientGroup[] {
  * Merge step images into instructions that don't already have one.
  * Applies positionally — only fills in gaps.
  */
-function mergeStepImages(
-  instructions: InstructionStep[],
-  htmlImages: string[]
-): void {
+function mergeStepImages(instructions: InstructionStep[], htmlImages: string[]): void {
   if (htmlImages.length === 0) return;
   const hasAnyImages = instructions.some((s) => s.imageUrl);
   if (hasAnyImages) return;
@@ -152,10 +144,10 @@ function extractStepImagesFromHtml(rawHtml: string): string[] {
       '[itemprop="recipeInstructions"]',
       '[class*="steps"]',
       '[id*="steps"]',
-      '.recipe-instructions, #recipe-instructions',
-      '.recipe-directions, #recipe-directions',
-      '.wprm-recipe-instructions-container',
-      '.wprm-recipe-instruction',
+      ".recipe-instructions, #recipe-instructions",
+      ".recipe-directions, #recipe-directions",
+      ".wprm-recipe-instructions-container",
+      ".wprm-recipe-instruction",
       '[class*="wprm-recipe-instruction"]',
     ];
 
@@ -163,9 +155,9 @@ function extractStepImagesFromHtml(rawHtml: string): string[] {
     for (const selector of instructionSelectors) {
       const $match = $(selector);
       if ($match.length) {
-        const $parent = $match.first().closest(
-          '[class*="instruction"], [class*="direction"], [class*="step"], section, div'
-        );
+        const $parent = $match
+          .first()
+          .closest('[class*="instruction"], [class*="direction"], [class*="step"], section, div');
         $container = $parent.length ? $parent : $match.first().parent();
         break;
       }
@@ -194,9 +186,7 @@ function extractStepImagesFromHtml(rawHtml: string): string[] {
 // Layer 1: JSON-LD Extraction
 // ---------------------------------------------------------------------------
 
-function extractFromJsonLd(
-  $: cheerio.CheerioAPI
-): ParsedRecipe | null {
+function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
   try {
     const scripts = $('script[type="application/ld+json"]');
     for (let i = 0; i < scripts.length; i++) {
@@ -209,8 +199,7 @@ function extractFromJsonLd(
         for (const item of items) {
           const itemType = item["@type"];
           const isRecipeType =
-            itemType === "Recipe" ||
-            (Array.isArray(itemType) && itemType.includes("Recipe"));
+            itemType === "Recipe" || (Array.isArray(itemType) && itemType.includes("Recipe"));
 
           if (
             isRecipeType ||
@@ -219,8 +208,7 @@ function extractFromJsonLd(
               item["@graph"].some(
                 (g: Record<string, unknown>) =>
                   g["@type"] === "Recipe" ||
-                  (Array.isArray(g["@type"]) &&
-                    (g["@type"] as string[]).includes("Recipe"))
+                  (Array.isArray(g["@type"]) && (g["@type"] as string[]).includes("Recipe"))
               ))
           ) {
             const recipe = isRecipeType
@@ -228,15 +216,12 @@ function extractFromJsonLd(
               : item["@graph"].find(
                   (g: Record<string, unknown>) =>
                     g["@type"] === "Recipe" ||
-                    (Array.isArray(g["@type"]) &&
-                      (g["@type"] as string[]).includes("Recipe"))
+                    (Array.isArray(g["@type"]) && (g["@type"] as string[]).includes("Recipe"))
                 );
             if (!recipe) continue;
 
             const title = decodeHtmlEntities(String(recipe.name || ""));
-            const ingredientStrings: string[] = Array.isArray(
-              recipe.recipeIngredient
-            )
+            const ingredientStrings: string[] = Array.isArray(recipe.recipeIngredient)
               ? recipe.recipeIngredient.filter(
                   (ing: unknown) => typeof ing === "string" && (ing as string).trim()
                 )
@@ -254,7 +239,10 @@ function extractFromJsonLd(
             ];
 
             // Extract instructions (with optional step images from JSON-LD)
-            interface StepData { text: string; imageUrl?: string }
+            interface StepData {
+              text: string;
+              imageUrl?: string;
+            }
             let instructionData: StepData[] = [];
             const normalizeText = (text: string) =>
               decodeHtmlEntities(text).replace(/\s+/g, " ").trim();
@@ -277,9 +265,7 @@ function extractFromJsonLd(
               if (node && typeof node === "object") {
                 const obj = node as Record<string, unknown>;
                 if (Array.isArray(obj.itemListElement)) {
-                  return obj.itemListElement.flatMap((i: unknown) =>
-                    extractStepData(i)
-                  );
+                  return obj.itemListElement.flatMap((i: unknown) => extractStepData(i));
                 }
                 const imageUrl = extractImageUrl(obj.image);
                 if (typeof obj.text === "string") {
@@ -330,16 +316,11 @@ function extractFromJsonLd(
                 servings = first;
               }
             }
-            if (servings && (isNaN(servings) || servings <= 0))
-              servings = undefined;
+            if (servings && (isNaN(servings) || servings <= 0)) servings = undefined;
 
             // Extract times
-            const prepTimeMinutes = recipe.prepTime
-              ? parseISODuration(recipe.prepTime)
-              : undefined;
-            const cookTimeMinutes = recipe.cookTime
-              ? parseISODuration(recipe.cookTime)
-              : undefined;
+            const prepTimeMinutes = recipe.prepTime ? parseISODuration(recipe.prepTime) : undefined;
+            const cookTimeMinutes = recipe.cookTime ? parseISODuration(recipe.cookTime) : undefined;
             const totalTimeMinutes = recipe.totalTime
               ? parseISODuration(recipe.totalTime)
               : undefined;
@@ -349,8 +330,7 @@ function extractFromJsonLd(
               detail: d.text,
               ...(d.imageUrl && { imageUrl: d.imageUrl }),
             }));
-            const normalizedInstructions =
-              normalizeInstructionSteps(instructionInputs);
+            const normalizedInstructions = normalizeInstructionSteps(instructionInputs);
 
             if (
               title &&
@@ -376,7 +356,7 @@ function extractFromJsonLd(
       }
     }
   } catch (error) {
-    console.error("[JSON-LD] Error parsing:", error);
+    log.error({ err: error }, "JSON-LD parse error");
   }
   return null;
 }
@@ -385,9 +365,7 @@ function extractFromJsonLd(
 // Layer 2: AI Extraction (Groq)
 // ---------------------------------------------------------------------------
 
-async function extractWithAI(
-  cleanedHtml: string
-): Promise<ParsedRecipe | null> {
+async function extractWithAI(cleanedHtml: string): Promise<ParsedRecipe | null> {
   const groq = getGroqClient();
   const limitedHtml = cleanedHtml.slice(0, 15000);
 
@@ -409,7 +387,7 @@ async function extractWithAI(
   const validated = CoreRecipeSchema.safeParse(parsedData);
 
   if (!validated.success) {
-    console.error("[AI Parser] Zod validation failed:", validated.error.issues);
+    log.error({ issues: validated.error.issues }, "AI parser Zod validation failed");
     return null;
   }
 
@@ -496,10 +474,7 @@ export async function parseRecipeFromImage(
     const validated = CoreRecipeSchema.safeParse(parsedData);
 
     if (!validated.success) {
-      console.error(
-        "[Image Parser] Zod validation failed:",
-        validated.error.issues
-      );
+      log.error({ issues: validated.error.issues }, "Image parser Zod validation failed");
       return {
         success: false,
         error: "Could not parse recipe from image",
@@ -539,8 +514,7 @@ export async function parseRecipeFromImage(
 
     return { success: true, data: recipe, method: "image" };
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unknown error";
+    const message = error instanceof Error ? error.message : "Unknown error";
     return { success: false, error: message, method: "none" };
   }
 }
@@ -565,8 +539,7 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
         "Accept-Encoding": "gzip, deflate, br",
         "Cache-Control": "no-cache",
         Pragma: "no-cache",
-        "Sec-Ch-Ua":
-          '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+        "Sec-Ch-Ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
         "Sec-Ch-Ua-Mobile": "?0",
         "Sec-Ch-Ua-Platform": '"Windows"',
         "Sec-Fetch-Dest": "document",
@@ -618,19 +591,17 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
           aiResult = await extractWithAI(cleaned.html);
         }
       } catch (error) {
-        console.error("[Parser] AI enrichment failed:", error);
+        log.warn({ err: error }, "AI enrichment failed, falling back to JSON-LD only");
       }
 
       const hasOnlyMainGroup =
-        jsonLdResult.ingredients.length === 1 &&
-        jsonLdResult.ingredients[0].groupName === "Main";
+        jsonLdResult.ingredients.length === 1 && jsonLdResult.ingredients[0].groupName === "Main";
 
       const useBetterAiGroupings =
         hasOnlyMainGroup &&
         aiResult &&
         aiResult.ingredients.length > 0 &&
-        (aiResult.ingredients.length > 1 ||
-          aiResult.ingredients[0].groupName !== "Main");
+        (aiResult.ingredients.length > 1 || aiResult.ingredients[0].groupName !== "Main");
 
       const mergedRecipe: ParsedRecipe = {
         ...jsonLdResult,
@@ -683,8 +654,7 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
       method: "none",
     };
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unknown error";
+    const message = error instanceof Error ? error.message : "Unknown error";
 
     if (message.includes("abort")) {
       return {

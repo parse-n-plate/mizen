@@ -21,10 +21,19 @@ export function formatTime(minutes: number): string {
 }
 
 function Dot() {
-  return <span className="text-stone-300 dark:text-stone-600" aria-hidden>·</span>;
+  return (
+    <span className="text-stone-300 dark:text-stone-600" aria-hidden>
+      ·
+    </span>
+  );
 }
 
-export function RecipeHeader({ recipe, servings, originalServings, onServingsChange }: RecipeHeaderProps) {
+export function RecipeHeader({
+  recipe,
+  servings,
+  originalServings,
+  onServingsChange,
+}: RecipeHeaderProps) {
   const [isSliderOpen, setIsSliderOpen] = useState(false);
   const showPrepAndCook = !!recipe.prepTimeMinutes || !!recipe.cookTimeMinutes;
 
@@ -86,8 +95,8 @@ export function RecipeHeader({ recipe, servings, originalServings, onServingsCha
         ))}
 
         {/* Servings: interactive button if adjustable, static text otherwise */}
-        {hasServings && (
-          canAdjustServings ? (
+        {hasServings &&
+          (canAdjustServings ? (
             <button
               onClick={() => setIsSliderOpen(!isSliderOpen)}
               className="inline-flex items-center gap-1 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-md hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors cursor-pointer"
@@ -98,7 +107,9 @@ export function RecipeHeader({ recipe, servings, originalServings, onServingsCha
                 <User weight="Bold" className="w-3.5 h-3.5" />
               </span>
               <span className="text-stone-400 dark:text-stone-500">Serves</span>{" "}
-              <span className="font-medium text-stone-600 dark:text-stone-300">{displayServings}</span>
+              <span className="font-medium text-stone-600 dark:text-stone-300">
+                {displayServings}
+              </span>
               <AltArrowDown
                 className={`w-3 h-3 text-stone-400 dark:text-stone-500 transition-transform duration-200 ${isSliderOpen ? "rotate-180" : ""}`}
               />
@@ -107,11 +118,12 @@ export function RecipeHeader({ recipe, servings, originalServings, onServingsCha
             <span className="flex items-center gap-1.5">
               <span>
                 <span className="text-stone-400 dark:text-stone-500">Serves</span>{" "}
-                <span className="font-medium text-stone-600 dark:text-stone-300">{displayServings}</span>
+                <span className="font-medium text-stone-600 dark:text-stone-300">
+                  {displayServings}
+                </span>
               </span>
             </span>
-          )
-        )}
+          ))}
       </div>
 
       {/* Servings slider card */}

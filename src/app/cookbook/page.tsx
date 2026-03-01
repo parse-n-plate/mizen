@@ -42,9 +42,7 @@ export default async function CookbookPage() {
     <div className="min-h-[calc(100vh-3.5rem)] bg-white">
       <div className="mx-auto max-w-3xl px-6 py-10">
         <div className="page-fade-in-up mb-8">
-          <h1 className="font-serif text-3xl font-bold sm:text-4xl">
-            Cookbook
-          </h1>
+          <h1 className="font-serif text-3xl font-bold sm:text-4xl">Cookbook</h1>
           <p className="mt-2 font-sans text-sm text-stone-400 dark:text-stone-500">
             {count} {count === 1 ? "recipe" : "recipes"} saved
           </p>

@@ -35,11 +35,7 @@ interface AuthModalProps {
 const TRANSITION = { duration: 0.15, ease: [0.4, 0, 0.2, 1] as const };
 const INSTANT = { duration: 0 };
 
-export function AuthModal({
-  open,
-  onOpenChange,
-  initialMode = "login",
-}: AuthModalProps) {
+export function AuthModal({ open, onOpenChange, initialMode = "login" }: AuthModalProps) {
   const shouldReduceMotion = useReducedMotion();
   const t = shouldReduceMotion ? INSTANT : TRANSITION;
 
@@ -188,10 +184,7 @@ export function AuthModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent
-        showCloseButton
-        className="sm:max-w-4xl p-0 gap-0 overflow-hidden rounded-xl"
-      >
+      <DialogContent showCloseButton className="sm:max-w-4xl p-0 gap-0 overflow-hidden rounded-xl">
         <div className="grid grid-cols-1 sm:grid-cols-2">
           {/* ─── Left panel: Form ─── */}
           <div className="p-8 sm:p-10">
@@ -204,12 +197,8 @@ export function AuthModal({
                   exit={{ opacity: 0, y: -6 }}
                   transition={t}
                 >
-                  <DialogTitle className="font-serif text-2xl">
-                    {titles[mode].title}
-                  </DialogTitle>
-                  <DialogDescription className="mt-1">
-                    {titles[mode].description}
-                  </DialogDescription>
+                  <DialogTitle className="font-serif text-2xl">{titles[mode].title}</DialogTitle>
+                  <DialogDescription className="mt-1">{titles[mode].description}</DialogDescription>
                 </motion.div>
               </AnimatePresence>
             </DialogHeader>
@@ -222,11 +211,7 @@ export function AuthModal({
                   className="w-full justify-start gap-3"
                   onClick={handleGoogleLogin}
                 >
-                  <svg
-                    className="h-4 w-4 shrink-0"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
+                  <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                     <path
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
                       fill="#4285F4"
@@ -253,9 +238,7 @@ export function AuthModal({
                     <span className="w-full border-t" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-3 font-sans text-muted-foreground">
-                      or
-                    </span>
+                    <span className="bg-background px-3 font-sans text-muted-foreground">or</span>
                   </div>
                 </div>
               </>
@@ -312,11 +295,7 @@ export function AuthModal({
                   className="w-full bg-mizen-blue text-white hover:bg-mizen-blue/90 focus-visible:ring-mizen-blue/50"
                   size="lg"
                 >
-                  {loading ? (
-                    <Spinner />
-                  ) : (
-                    "Send Reset Link"
-                  )}
+                  {loading ? <Spinner /> : "Send Reset Link"}
                 </Button>
 
                 <p className="font-sans text-center text-sm text-muted-foreground">
@@ -383,9 +362,7 @@ export function AuthModal({
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      autoComplete={
-                        mode === "signup" ? "new-password" : "current-password"
-                      }
+                      autoComplete={mode === "signup" ? "new-password" : "current-password"}
                       minLength={6}
                       className="pr-10"
                     />
@@ -393,9 +370,7 @@ export function AuthModal({
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      aria-label={
-                        showPassword ? "Hide password" : "Show password"
-                      }
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? (
                         <EyeClosed className="h-4 w-4" />
@@ -437,13 +412,7 @@ export function AuthModal({
                 >
                   <AnimatePresence mode="wait" initial={false}>
                     <motion.span
-                      key={
-                        loading
-                          ? "loading"
-                          : mode === "login"
-                            ? "login-btn"
-                            : "signup-btn"
-                      }
+                      key={loading ? "loading" : mode === "login" ? "login-btn" : "signup-btn"}
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
@@ -480,14 +449,10 @@ export function AuthModal({
                     exit={{ opacity: 0 }}
                     transition={{ duration: shouldReduceMotion ? 0 : 0.12 }}
                   >
-                    {mode === "login"
-                      ? "No account?"
-                      : "Already have an account?"}{" "}
+                    {mode === "login" ? "No account?" : "Already have an account?"}{" "}
                     <button
                       type="button"
-                      onClick={() =>
-                        switchMode(mode === "login" ? "signup" : "login")
-                      }
+                      onClick={() => switchMode(mode === "login" ? "signup" : "login")}
                       className="font-sans font-semibold text-foreground hover:underline underline-offset-2"
                     >
                       {mode === "login" ? "Sign up" : "Sign in"}
@@ -553,10 +518,7 @@ function InteractivePanel() {
       }}
     >
       {/* Cursor-tracking radial glow */}
-      <motion.div
-        className="absolute inset-0 opacity-40"
-        style={{ background: glowBg }}
-      />
+      <motion.div className="absolute inset-0 opacity-40" style={{ background: glowBg }} />
       {/* Subtle grid pattern */}
       <div
         className="absolute inset-0 opacity-[0.04]"
@@ -576,20 +538,8 @@ function InteractivePanel() {
 
 function Spinner() {
   return (
-    <svg
-      className="h-4 w-4 animate-spin"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      />
+    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path
         className="opacity-75"
         fill="currentColor"
