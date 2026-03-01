@@ -112,8 +112,8 @@ html body[data-scroll-locked] {
   --color-black: #292524;
 
   /* Mizen palette — Primary */
-  --color-blue: #18A1F7;
-  --color-primary-blue: #18A1F7;
+  --color-blue: #18a1f7;
+  --color-primary-blue: #18a1f7;
   --color-blue-light: #e6f0ff;
 
   /* Mizen palette — Accents */
@@ -188,13 +188,13 @@ html body[data-scroll-locked] {
   --accent: oklch(0.264 0 0);
   --accent-foreground: oklch(0.922 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.320 0 0);
-  --input: oklch(0.320 0 0);
+  --border: oklch(0.32 0 0);
+  --input: oklch(0.32 0 0);
   --ring: oklch(0.556 0 0);
 
   /* Mizen palette — Neutrals (inverted) */
   --color-white: #292524;
-  --color-surface: #1C1918;
+  --color-surface: #1c1918;
   --color-cream: #292524;
   --color-background-cream: #171412;
   --color-gray-light: #3a3633;
@@ -207,8 +207,8 @@ html body[data-scroll-locked] {
   --color-border-light: #3a3633;
 
   /* Primary — brighter blue for dark backgrounds */
-  --color-blue: #18A1F7;
-  --color-primary-blue: #18A1F7;
+  --color-blue: #18a1f7;
+  --color-primary-blue: #18a1f7;
   --color-blue-light: #1e293b;
 
   /* Accents — brighter for dark backgrounds */
@@ -220,7 +220,7 @@ html body[data-scroll-locked] {
   --color-mint-tint: #1e2926;
   --color-orange-tint: #2a2218;
 
-  --color-dark-surface: #0B0A0A;
+  --color-dark-surface: #0b0a0a;
   --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.2);
 
   /* Shadows — true black with higher opacity for dark backgrounds.
@@ -253,7 +253,12 @@ body {
 }
 
 @layer base {
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-family-serif);
     line-height: var(--line-height-heading);
     color: var(--color-text-heading);
@@ -341,7 +346,6 @@ body {
 
 /* Component Styles */
 @layer components {
-
   /* ═══════════════════════════════════════════════════════════════════════════
      FOLDER TABS — Modern tab navigation that looks like file folders
   ═══════════════════════════════════════════════════════════════════════════ */
@@ -353,7 +357,9 @@ body {
     gap: 8px;
     padding: 0 8px;
     border-radius: 16px 16px 0 0 !important;
-    transition: color 150ms ease, background-color 150ms ease;
+    transition:
+      color 150ms ease,
+      background-color 150ms ease;
     background-color: transparent !important;
     color: var(--color-text-muted);
     border: 1px solid transparent !important;
@@ -403,7 +409,9 @@ body {
     gap: 8px;
     padding: 0 8px;
     border-radius: 0 0 16px 16px !important;
-    transition: color 150ms ease, background-color 150ms ease;
+    transition:
+      color 150ms ease,
+      background-color 150ms ease;
     background-color: transparent !important;
     color: var(--color-text-muted);
     border: 1px solid transparent !important;
@@ -458,9 +466,15 @@ body {
     will-change: transform;
   }
 
-  .page-fade-delay-1 { animation-delay: 100ms; }
-  .page-fade-delay-2 { animation-delay: 200ms; }
-  .page-fade-delay-3 { animation-delay: 300ms; }
+  .page-fade-delay-1 {
+    animation-delay: 100ms;
+  }
+  .page-fade-delay-2 {
+    animation-delay: 200ms;
+  }
+  .page-fade-delay-3 {
+    animation-delay: 300ms;
+  }
 
   @media (prefers-reduced-motion: reduce) {
     .page-fade-in-up {
@@ -547,7 +561,7 @@ body {
   }
 
   .ingredient-checkbox-input:checked::after {
-    content: '';
+    content: "";
     position: absolute;
     left: 50%;
     top: 50%;
@@ -622,7 +636,9 @@ body {
 
   .step-image-reveal {
     display: grid;
-    transition: grid-template-rows 250ms var(--ease-out-quart), opacity 250ms var(--ease-out-quart);
+    transition:
+      grid-template-rows 250ms var(--ease-out-quart),
+      opacity 250ms var(--ease-out-quart);
   }
 
   .step-image-reveal[data-open="true"] {
@@ -715,8 +731,14 @@ body {
   ═══════════════════════════════════════════════════════════════════════════ */
 
   @keyframes tab-fade-in {
-    from { opacity: 0; transform: translateY(4px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .tab-content-animate {
@@ -728,9 +750,15 @@ body {
   ═══════════════════════════════════════════════════════════════════════════ */
 
   @keyframes checkbox-pop {
-    0%   { transform: translateY(-1px) scale(1); }
-    50%  { transform: translateY(-1px) scale(1.2); }
-    100% { transform: translateY(-1px) scale(1); }
+    0% {
+      transform: translateY(-1px) scale(1);
+    }
+    50% {
+      transform: translateY(-1px) scale(1.2);
+    }
+    100% {
+      transform: translateY(-1px) scale(1);
+    }
   }
 
   .ingredient-checkbox-input:checked {
@@ -757,12 +785,59 @@ body {
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
+     IMAGE PILL — Pop-in entry animation
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  @keyframes image-pill-in {
+    from {
+      opacity: 0;
+      transform: translateX(-8px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  @keyframes image-pill-out {
+    from {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateX(-8px) scale(0.96);
+    }
+  }
+
+  .image-pill-animate {
+    animation: image-pill-in 280ms var(--ease-out-quint) forwards;
+  }
+
+  .image-pill-exit {
+    animation: image-pill-out 180ms var(--ease-out-quint) forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .image-pill-animate,
+    .image-pill-exit {
+      animation: none;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
      TIMER VAULT — Slide up from bottom
   ═══════════════════════════════════════════════════════════════════════════ */
 
   @keyframes vault-slide-up {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .vault-animate {
@@ -774,8 +849,13 @@ body {
   ═══════════════════════════════════════════════════════════════════════════ */
 
   @keyframes timer-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
   }
 
   .timer-done-pulse {
@@ -821,7 +901,8 @@ body {
     size: auto;
   }
 
-  html, body {
+  html,
+  body {
     background: white !important;
     color: black !important;
     font-size: 12pt !important;

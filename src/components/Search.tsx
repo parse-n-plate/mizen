@@ -7,52 +7,11 @@ import { useRecipe } from "@/context/RecipeContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import GalleryAdd from "@solar-icons/react/csr/video/GalleryAdd";
+import { looksLikeRecipeUrl, detectCollectionUrl } from "@/utils/urlPatterns";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
-
-const RECIPE_DOMAINS = new Set([
-  "allrecipes.com",
-  "bonappetit.com",
-  "budgetbytes.com",
-  "cooking.nytimes.com",
-  "cookinglight.com",
-  "delish.com",
-  "eatingwell.com",
-  "epicurious.com",
-  "food52.com",
-  "food.com",
-  "foodandwine.com",
-  "foodnetwork.com",
-  "halfbakedharvest.com",
-  "justonecookbook.com",
-  "kingarthurbaking.com",
-  "minimalistbaker.com",
-  "pinchofyum.com",
-  "recipetineats.com",
-  "seriouseats.com",
-  "simplyrecipes.com",
-  "skinnytaste.com",
-  "smittenkitchen.com",
-  "tasteofhome.com",
-  "tasty.co",
-  "thekitchn.com",
-  "thespruceeats.com",
-]);
-
-const RECIPE_PATH_PATTERNS = /\/(recipes?|cooking|dish|meal|baking)\b/i;
-
-function looksLikeRecipeUrl(urlString: string): boolean {
-  try {
-    const parsed = new URL(urlString);
-    const host = parsed.hostname.replace(/^www\./, "");
-    if (RECIPE_DOMAINS.has(host)) return true;
-    if (RECIPE_PATH_PATTERNS.test(parsed.pathname)) return true;
-    return false;
-  } catch {
-    return false;
-  }
-}
 
 interface ImageFile {
   base64: string;
@@ -88,8 +47,9 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
   const [dismissedUrl, setDismissedUrl] = useState<string | null>(null);
   const dragCounter = useRef(0);
   const formRef = useRef<HTMLFormElement>(null);
-  const { setRecipe, setIsLoading, setError, isLoading } =
-    useRecipe();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const pillRef = useRef<HTMLDivElement>(null);
+  const { setRecipe, setIsLoading, setError, isLoading } = useRecipe();
   const router = useRouter();
 
   // Clipboard URL detection
@@ -113,6 +73,15 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
     return () => window.removeEventListener("focus", checkClipboard);
   }, []);
 
+  // Revoke current object URL when component unmounts.
+  useEffect(() => {
+    return () => {
+      if (imageFile?.preview) {
+        URL.revokeObjectURL(imageFile.preview);
+      }
+    };
+  }, [imageFile]);
+
   const handleFile = useCallback(
     async (file: File) => {
       if (!ALLOWED_TYPES.includes(file.type)) {
@@ -125,7 +94,12 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
       }
       try {
         const img = await fileToImageFile(file);
-        setImageFile(img);
+        setImageFile((prev) => {
+          if (prev?.preview) {
+            URL.revokeObjectURL(prev.preview);
+          }
+          return img;
+        });
         setUrl("");
         setError(null);
       } catch {
@@ -136,9 +110,36 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
   );
 
   const removeImage = useCallback(() => {
-    if (imageFile) {
+    if (!imageFile) return;
+
+    const clearImage = () => {
       URL.revokeObjectURL(imageFile.preview);
       setImageFile(null);
+    };
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      clearImage();
+      return;
+    }
+
+    const el = pillRef.current;
+    if (el) {
+      el.classList.remove("image-pill-animate");
+      el.classList.add("image-pill-exit");
+
+      let done = false;
+      const onEnd = () => {
+        if (done) return;
+        done = true;
+        el.removeEventListener("animationend", onEnd);
+        window.clearTimeout(fallbackTimeout);
+        clearImage();
+      };
+
+      const fallbackTimeout = window.setTimeout(onEnd, 220);
+      el.addEventListener("animationend", onEnd);
+    } else {
+      clearImage();
     }
   }, [imageFile]);
 
@@ -194,6 +195,11 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
   const submitUrl = useCallback(
     async (recipeUrl: string) => {
       if (isLoading) return;
+
+      const collectionWarning = detectCollectionUrl(recipeUrl);
+      if (collectionWarning) {
+        toast.warning(`${collectionWarning} We'll still try parsing it.`);
+      }
 
       setIsLoading(true);
       setError(null);
@@ -272,11 +278,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
 
   const hasInput = imageFile || url.trim();
   const showPill =
-    clipboardUrl &&
-    clipboardUrl !== dismissedUrl &&
-    !url &&
-    !imageFile &&
-    !isLoading;
+    clipboardUrl && clipboardUrl !== dismissedUrl && !url && !imageFile && !isLoading;
 
   let clipboardDomain = "";
   if (clipboardUrl) {
@@ -340,58 +342,39 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
           document.body
         )}
       <form ref={formRef} onSubmit={handleSubmit} className="w-full">
-      <div
-        className={`rounded-2xl border bg-white dark:bg-transparent shadow-sm transition-all focus-within:border-stone-300 dark:focus-within:border-stone-600 focus-within:shadow-md ${
-          isDragging
-            ? "border-[var(--color-blue)] ring-2 ring-[var(--color-blue)]/20"
-            : "border-stone-200 dark:border-stone-700"
-        }`}
-        onDragEnter={onDragEnter}
-        onDragLeave={onDragLeave}
-        onDragOver={onDragOver}
-        onDrop={onDrop}
-      >
-        {/* Input area */}
-        <div className="px-4 pt-3 pb-2">
-          {isDragging ? (
-            <p className="py-1 text-sm text-[var(--color-blue)]">
-              Drop image here...
-            </p>
-          ) : (
-            <Input
-              type="url"
-              placeholder="Paste a recipe URL or drop an image..."
-              value={url}
-              onChange={(e) => {
-                setUrl(e.target.value);
-                if (imageFile) removeImage();
-              }}
-              onPaste={onPaste}
-              className="border-0 bg-transparent dark:bg-transparent px-0 text-base shadow-none placeholder:text-stone-400 dark:placeholder:text-stone-500 dark:text-stone-100 focus-visible:ring-0"
-              disabled={isLoading || !!imageFile}
-              autoFocus
-            />
-          )}
-        </div>
-
-        {/* Bottom toolbar */}
-        <div className="flex items-center justify-between px-3 pb-3">
-          <div className="flex items-center gap-1">
-            {imageFile ? (
-              <div className="flex h-8 items-center gap-2 rounded-lg bg-stone-100 dark:bg-stone-800 px-2">
+        <div
+          className={`w-full rounded-2xl border bg-white dark:bg-transparent shadow-sm transition-all focus-within:border-stone-300 dark:focus-within:border-stone-600 focus-within:shadow-md ${
+            isDragging
+              ? "border-[var(--color-blue)] ring-2 ring-[var(--color-blue)]/20"
+              : "border-stone-200 dark:border-stone-700"
+          }`}
+          onDragEnter={onDragEnter}
+          onDragLeave={onDragLeave}
+          onDragOver={onDragOver}
+          onDrop={onDrop}
+        >
+          {/* Input area */}
+          <div className="flex items-center h-9 px-4 mt-3 mb-2">
+            {isDragging ? (
+              <p className="text-sm text-[var(--color-blue)]">Drop image here...</p>
+            ) : imageFile ? (
+              <div
+                ref={pillRef}
+                className="image-pill-animate flex items-center gap-2 rounded-lg bg-stone-100 dark:bg-stone-800 px-2 py-1 w-fit"
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={imageFile.preview}
                   alt="Recipe"
                   className="h-5 w-5 rounded object-cover"
                 />
-                <span className="max-w-[160px] truncate text-xs font-medium text-stone-600 dark:text-stone-300">
+                <span className="max-w-[200px] truncate text-sm font-medium text-stone-600 dark:text-stone-300">
                   {imageFile.name}
                 </span>
                 <button
                   type="button"
                   onClick={removeImage}
-                  className="ml-0.5 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
+                  className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
                   aria-label="Remove image"
                 >
                   <svg
@@ -410,7 +393,63 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                 </button>
               </div>
             ) : (
-              <div className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-stone-400">
+              <Input
+                type="url"
+                placeholder="Paste a recipe URL or drop an image..."
+                value={url}
+                onChange={(e) => {
+                  setUrl(e.target.value);
+                }}
+                onPaste={onPaste}
+                className="border-0 bg-transparent dark:bg-transparent px-0 text-base shadow-none placeholder:text-stone-400 dark:placeholder:text-stone-500 dark:text-stone-100 focus-visible:ring-0"
+                disabled={isLoading}
+                autoFocus
+              />
+            )}
+          </div>
+
+          {/* Bottom toolbar */}
+          <div className="flex items-center justify-between px-3 pb-3">
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading}
+                className="press-scale flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 duration-0 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-800 dark:hover:text-stone-300 disabled:opacity-50"
+                aria-label="Upload image"
+              >
+                <GalleryAdd size={18} />
+              </button>
+            </div>
+
+            <Button
+              type="submit"
+              size="icon"
+              disabled={!hasInput || isLoading}
+              className="press-scale h-8 w-8 rounded-lg bg-[var(--color-blue)] transition-opacity hover:bg-[var(--color-blue)]/90 disabled:opacity-30"
+            >
+              {isLoading ? (
+                <svg
+                  className="h-4 w-4 animate-spin"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  />
+                </svg>
+              ) : (
                 <svg
                   className="h-4 w-4"
                   xmlns="http://www.w3.org/2000/svg"
@@ -421,60 +460,25 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
                 </svg>
-                <span className="text-xs font-medium text-stone-500 dark:text-stone-400">URL</span>
-              </div>
-            )}
+              )}
+            </Button>
           </div>
-
-          <Button
-            type="submit"
-            size="icon"
-            disabled={!hasInput || isLoading}
-            className="press-scale h-8 w-8 rounded-lg bg-[var(--color-blue)] transition-opacity hover:bg-[var(--color-blue)]/90 disabled:opacity-30"
-          >
-            {isLoading ? (
-              <svg
-                className="h-4 w-4 animate-spin"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                />
-              </svg>
-            ) : (
-              <svg
-                className="h-4 w-4"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M5 12h14" />
-                <path d="m12 5 7 7-7 7" />
-              </svg>
-            )}
-          </Button>
         </div>
-      </div>
-    </form>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="sr-only"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) handleFile(file);
+            e.target.value = "";
+          }}
+        />
+      </form>
     </div>
   );
 }

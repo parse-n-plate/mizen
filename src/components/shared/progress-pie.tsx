@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { cn } from '@/lib/utils';
+import React from "react";
+import { cn } from "@/lib/utils";
 
 interface ProgressPieProps {
   /** Completion percentage (0 to 100) */
@@ -25,7 +25,7 @@ export function ProgressPie({
   size = 18,
   strokeWidth = 1.5,
   color = "currentColor",
-  className
+  className,
 }: ProgressPieProps) {
   // Ensure percentage is between 0 and 100
   const clampedPercentage = Math.min(100, Math.max(0, percentage));
@@ -66,7 +66,7 @@ export function ProgressPie({
         strokeDasharray={circumference}
         style={{
           strokeDashoffset: offset,
-          transition: 'stroke-dashoffset 0.2s ease-out'
+          transition: "stroke-dashoffset 0.2s ease-out",
         }}
         strokeLinecap="round"
       />

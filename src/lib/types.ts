@@ -12,8 +12,8 @@ export interface IngredientGroup {
 }
 
 export interface TimeMarker {
-  text: string;      // exact substring from detail, e.g. "15 minutes"
-  seconds: number;   // duration in seconds
+  text: string; // exact substring from detail, e.g. "15 minutes"
+  seconds: number; // duration in seconds
 }
 
 export interface InstructionStep {

@@ -56,12 +56,9 @@ export function IngredientList({ groups }: IngredientListProps) {
         ingredients: group.ingredients.filter(
           ({ ingredient }) =>
             ingredient.ingredient.toLowerCase().includes(query) ||
-            (ingredient.description &&
-              ingredient.description.toLowerCase().includes(query)) ||
+            (ingredient.description && ingredient.description.toLowerCase().includes(query)) ||
             (ingredient.substitutions &&
-              ingredient.substitutions.some((sub) =>
-                sub.toLowerCase().includes(query)
-              ))
+              ingredient.substitutions.some((sub) => sub.toLowerCase().includes(query)))
         ),
       }))
       .filter((group) => group.ingredients.length > 0);
@@ -148,9 +145,7 @@ function IngredientGroupSection({
   );
   const totalCount = ingredientKeys.length;
   const checkedCount = ingredientKeys.filter((key) => checked.has(key)).length;
-  const progressPercentage = totalCount > 0
-    ? Math.round((checkedCount / totalCount) * 100)
-    : 0;
+  const progressPercentage = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
 
   return (
     <div className="ingredient-group">
@@ -168,7 +163,9 @@ function IngredientGroupSection({
           {/* Progress Pie - appears when at least one ingredient is checked */}
           <div
             className={`flex items-center flex-shrink-0 transition-all duration-150 ease-out ${
-              checkedCount > 0 ? "opacity-100" : "opacity-0 w-0 -ml-3 overflow-hidden pointer-events-none"
+              checkedCount > 0
+                ? "opacity-100"
+                : "opacity-0 w-0 -ml-3 overflow-hidden pointer-events-none"
             }`}
             onClick={(e) => {
               e.stopPropagation();
