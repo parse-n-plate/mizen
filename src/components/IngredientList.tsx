@@ -221,7 +221,7 @@ function IngredientGroupSection({
             const isChecked = checked.has(key);
             const isLast = i === group.ingredients.length - 1;
             const amount = `${ing.amount || ""} ${ing.units || ""}`.trim();
-            const hasDetails = ing.description || (ing.substitutions && ing.substitutions.length > 0);
+            const hasSubstitutions = ing.substitutions && ing.substitutions.length > 0;
             const isExpanded = expanded === key;
 
             return (
@@ -251,20 +251,27 @@ function IngredientGroupSection({
                         isChecked ? "opacity-50" : "opacity-100"
                       }`}
                     >
-                      <p
-                        className={`font-sans font-medium text-base text-stone-800 dark:text-stone-200 capitalize ${
-                          isChecked ? "line-through" : ""
-                        }`}
-                      >
-                        {ing.ingredient}
-                      </p>
+                      <div className="flex items-baseline gap-1.5 min-w-0">
+                        <p
+                          className={`font-sans font-medium text-base text-stone-800 dark:text-stone-200 capitalize flex-shrink-0 ${
+                            isChecked ? "line-through" : ""
+                          }`}
+                        >
+                          {ing.ingredient}
+                        </p>
+                        {ing.description && (
+                          <p className="font-sans text-sm text-stone-400 dark:text-stone-500 truncate">
+                            {ing.description.charAt(0).toUpperCase() + ing.description.slice(1).toLowerCase()}
+                          </p>
+                        )}
+                      </div>
                       <div className="flex items-baseline gap-2 ml-3 flex-shrink-0">
                         {amount && (
                           <p className="font-sans text-sm text-stone-400 dark:text-stone-500">
                             {amount}
                           </p>
                         )}
-                        {hasDetails && !isChecked && (
+                        {hasSubstitutions && !isChecked && (
                           <button
                             type="button"
                             onClick={(e) => {
@@ -293,33 +300,26 @@ function IngredientGroupSection({
                   </div>
                 </div>
 
-                {/* Expandable detail row */}
-                {hasDetails && (
+                {/* Expandable substitutions row */}
+                {hasSubstitutions && (
                   <div
                     className={`grid transition-[grid-template-rows] duration-200 ease-out ${
                       isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
                     }`}
                   >
                     <div className="overflow-hidden">
-                      <div className="pl-10 pr-2 pb-3 space-y-1.5">
-                        {ing.description && (
-                          <p className="font-sans text-xs italic text-stone-500 dark:text-stone-400">
-                            {ing.description}
-                          </p>
-                        )}
-                        {ing.substitutions && ing.substitutions.length > 0 && (
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-sans text-[11px] text-stone-400 dark:text-stone-500">Sub:</span>
-                            {ing.substitutions.map((sub) => (
-                              <span
-                                key={sub}
-                                className="font-sans text-[11px] px-1.5 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300"
-                              >
-                                {sub}
-                              </span>
-                            ))}
-                          </div>
-                        )}
+                      <div className="pl-10 pr-2 pb-3">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-sans text-[11px] text-stone-400 dark:text-stone-500">Sub:</span>
+                          {ing.substitutions!.map((sub) => (
+                            <span
+                              key={sub}
+                              className="font-sans text-[11px] px-1.5 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300"
+                            >
+                              {sub}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>

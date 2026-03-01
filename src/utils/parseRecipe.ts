@@ -5,6 +5,7 @@ import { CoreRecipeSchema, IngredientGroupSchema } from "@/lib/schemas/recipe";
 import { EXTRACTION_PROMPT, ENRICHMENT_PROMPT } from "@/lib/prompts/extraction";
 import { cleanRecipeHTML, type CleanedHTML } from "./htmlCleaner";
 import type {
+  Ingredient,
   ParsedRecipe,
   ParserResult,
   IngredientGroup,
@@ -42,6 +43,109 @@ function decodeHtmlEntities(text: string): string {
     .replace(/&gt;/g, ">")
     .replace(/&nbsp;/g, " ")
     .trim();
+}
+
+// ---------------------------------------------------------------------------
+// Ingredient string parser — splits raw JSON-LD strings into structured fields
+// ---------------------------------------------------------------------------
+
+const UNITS = new Set([
+  "cup", "cups", "c",
+  "tablespoon", "tablespoons", "tbsp", "tbs", "tb",
+  "teaspoon", "teaspoons", "tsp", "ts",
+  "ounce", "ounces", "oz",
+  "pound", "pounds", "lb", "lbs",
+  "gram", "grams", "g",
+  "kilogram", "kilograms", "kg",
+  "milliliter", "milliliters", "ml",
+  "liter", "liters", "l",
+  "gallon", "gallons", "gal",
+  "quart", "quarts", "qt",
+  "pint", "pints", "pt",
+  "fluid ounce", "fluid ounces", "fl oz",
+  "pinch", "pinches", "dash", "dashes",
+  "clove", "cloves",
+  "sprig", "sprigs",
+  "slice", "slices",
+  "piece", "pieces",
+  "can", "cans",
+  "bunch", "bunches",
+  "head", "heads",
+  "stalk", "stalks",
+  "serving", "servings",
+  "package", "packages", "pkg",
+  "stick", "sticks",
+  "bag", "bags",
+  "bottle", "bottles",
+  "jar", "jars",
+  "sheet", "sheets",
+  "drop", "drops",
+  "handful", "handfuls",
+  "large", "medium", "small",
+]);
+
+// Matches leading amounts: "2", "2½", "1/2", "2 1/2", "6-8", "6–8"
+const AMOUNT_RE =
+  /^(\d+\s*[½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]|\d+\s*\/\s*\d+|\d+\s+\d+\s*\/\s*\d+|\d+\s*[–\-]\s*\d+|\d+(?:\.\d+)?|[½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞])\s*/;
+
+function parseIngredientString(raw: string): Ingredient {
+  let text = raw.trim();
+
+  // 1. Extract parenthetical content → description parts
+  const descParts: string[] = [];
+
+  // Double parens ((Optional)) → strip outer, keep inner
+  text = text.replace(/\(\(([^)]*)\)\)/g, (_, inner: string) => {
+    const cleaned = inner.trim();
+    if (cleaned) descParts.push(cleaned);
+    return "";
+  });
+
+  // Single parens (Japanese Soup Stock)
+  text = text.replace(/\(([^)]*)\)/g, (_, inner: string) => {
+    const cleaned = inner.trim();
+    if (cleaned) descParts.push(cleaned);
+    return "";
+  });
+
+  text = text.replace(/\s+/g, " ").trim();
+
+  // 2. Extract leading amount
+  let amount = "";
+  const amountMatch = text.match(AMOUNT_RE);
+  if (amountMatch) {
+    amount = amountMatch[1].trim();
+    text = text.slice(amountMatch[0].length).trim();
+  }
+
+  // 3. Extract unit (first word if it's a known unit)
+  let units = "";
+  // Check for two-word units first (e.g., "fl oz", "fluid ounce")
+  const twoWordUnit = text.match(/^(\S+\s+\S+)\s+/);
+  if (twoWordUnit && UNITS.has(twoWordUnit[1].toLowerCase())) {
+    units = twoWordUnit[1];
+    text = text.slice(twoWordUnit[0].length).trim();
+  } else {
+    const firstWord = text.match(/^(\S+)\s+/);
+    if (firstWord && UNITS.has(firstWord[1].toLowerCase())) {
+      units = firstWord[1];
+      text = text.slice(firstWord[0].length).trim();
+    }
+  }
+
+  // 4. If no amount was found, default to "as needed"
+  if (!amount && !units) {
+    amount = "as needed";
+  }
+
+  const description = descParts.length > 0 ? descParts.join(". ") : undefined;
+
+  return {
+    amount,
+    units,
+    ingredient: text || raw.trim(),
+    ...(description && { description }),
+  };
 }
 
 function normalizeInstructionSteps(instructions: unknown): InstructionStep[] {
@@ -246,11 +350,7 @@ function extractFromJsonLd(
             const ingredients: IngredientGroup[] = [
               {
                 groupName: "Main",
-                ingredients: ingredientStrings.map((ing) => ({
-                  amount: "",
-                  units: "",
-                  ingredient: ing,
-                })),
+                ingredients: ingredientStrings.map(parseIngredientString),
               },
             ];
 
