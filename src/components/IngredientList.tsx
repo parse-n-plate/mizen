@@ -1,16 +1,30 @@
 "use client";
 
-import { useState } from "react";
-import type { IngredientGroup } from "@/lib/types";
+import { useState, useMemo } from "react";
+import Magnifer from "@solar-icons/react/csr/search/Magnifer";
+import { X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import type { Ingredient, IngredientGroup } from "@/lib/types";
 import { ProgressPie } from "@/components/shared/progress-pie";
 
 interface IngredientListProps {
   groups: IngredientGroup[];
 }
 
+interface FilteredIngredient {
+  ingredient: Ingredient;
+  sourceIndex: number;
+}
+
+interface FilteredIngredientGroup {
+  groupName: string;
+  ingredients: FilteredIngredient[];
+}
+
 export function IngredientList({ groups }: IngredientListProps) {
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const toggleCheck = (key: string) => {
     setChecked((prev) => {
@@ -24,16 +38,43 @@ export function IngredientList({ groups }: IngredientListProps) {
     });
   };
 
-  const toggleAll = (groupName: string, totalCount: number) => {
+  const filteredGroups = useMemo(() => {
+    const normalizedGroups: FilteredIngredientGroup[] = groups.map((group) => ({
+      groupName: group.groupName,
+      ingredients: group.ingredients.map((ingredient, sourceIndex) => ({
+        ingredient,
+        sourceIndex,
+      })),
+    }));
+
+    if (!searchQuery.trim()) return normalizedGroups;
+
+    const query = searchQuery.toLowerCase().trim();
+    return normalizedGroups
+      .map((group) => ({
+        ...group,
+        ingredients: group.ingredients.filter(
+          ({ ingredient }) =>
+            ingredient.ingredient.toLowerCase().includes(query) ||
+            (ingredient.description &&
+              ingredient.description.toLowerCase().includes(query)) ||
+            (ingredient.substitutions &&
+              ingredient.substitutions.some((sub) =>
+                sub.toLowerCase().includes(query)
+              ))
+        ),
+      }))
+      .filter((group) => group.ingredients.length > 0);
+  }, [groups, searchQuery]);
+  const toggleAll = (keys: string[]) => {
     setChecked((prev) => {
       const next = new Set(prev);
-      const keys = Array.from({ length: totalCount }, (_, i) => `${groupName}-${i}`);
-      const allChecked = keys.every((k) => prev.has(k));
-      for (const k of keys) {
+      const allChecked = keys.every((key) => prev.has(key));
+      for (const key of keys) {
         if (allChecked) {
-          next.delete(k);
+          next.delete(key);
         } else {
-          next.add(k);
+          next.add(key);
         }
       }
       return next;
@@ -42,17 +83,45 @@ export function IngredientList({ groups }: IngredientListProps) {
 
   return (
     <div className="space-y-6">
-      {groups.map((group) => (
-        <IngredientGroupSection
-          key={group.groupName}
-          group={group}
-          checked={checked}
-          expanded={expanded}
-          onToggle={toggleCheck}
-          onExpand={(key) => setExpanded(expanded === key ? null : key)}
-          onToggleAll={toggleAll}
+      <div className="relative w-full max-w-[700px] mx-auto">
+        <Magnifer className="absolute left-3 top-1/2 -translate-y-1/2 size-[18px] text-muted-foreground pointer-events-none" />
+        <Input
+          type="text"
+          placeholder="Search ingredients"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          aria-label="Search ingredients"
+          className="pl-10 pr-9 h-11 rounded-lg border-transparent bg-stone-100 dark:bg-stone-800 font-sans text-[15px] placeholder:text-muted-foreground focus-visible:bg-background focus-visible:border-input"
         />
-      ))}
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={() => setSearchQuery("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-sm text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Clear search"
+          >
+            <X className="size-4" />
+          </button>
+        )}
+      </div>
+
+      {filteredGroups.length === 0 && searchQuery.trim() ? (
+        <p className="font-sans text-sm text-muted-foreground text-center py-4">
+          No ingredients match &ldquo;{searchQuery}&rdquo;
+        </p>
+      ) : (
+        filteredGroups.map((group) => (
+          <IngredientGroupSection
+            key={group.groupName}
+            group={group}
+            checked={checked}
+            expanded={expanded}
+            onToggle={toggleCheck}
+            onExpand={(key) => setExpanded(expanded === key ? null : key)}
+            onToggleAll={toggleAll}
+          />
+        ))
+      )}
     </div>
   );
 }
@@ -65,19 +134,20 @@ function IngredientGroupSection({
   onExpand,
   onToggleAll,
 }: {
-  group: IngredientGroup;
+  group: FilteredIngredientGroup;
   checked: Set<string>;
   expanded: string | null;
   onToggle: (key: string) => void;
   onExpand: (key: string) => void;
-  onToggleAll: (groupName: string, totalCount: number) => void;
+  onToggleAll: (keys: string[]) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
 
-  const totalCount = group.ingredients.length;
-  const checkedCount = group.ingredients.filter(
-    (_, i) => checked.has(`${group.groupName}-${i}`)
-  ).length;
+  const ingredientKeys = group.ingredients.map(
+    ({ sourceIndex }) => `${group.groupName}-${sourceIndex}`
+  );
+  const totalCount = ingredientKeys.length;
+  const checkedCount = ingredientKeys.filter((key) => checked.has(key)).length;
   const progressPercentage = totalCount > 0
     ? Math.round((checkedCount / totalCount) * 100)
     : 0;
@@ -102,13 +172,13 @@ function IngredientGroupSection({
             }`}
             onClick={(e) => {
               e.stopPropagation();
-              onToggleAll(group.groupName, totalCount);
+              onToggleAll(ingredientKeys);
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 e.stopPropagation();
-                onToggleAll(group.groupName, totalCount);
+                onToggleAll(ingredientKeys);
               }
             }}
             role="button"
@@ -146,8 +216,8 @@ function IngredientGroupSection({
         }`}
       >
         <div className="overflow-hidden">
-          {group.ingredients.map((ing, i) => {
-            const key = `${group.groupName}-${i}`;
+          {group.ingredients.map(({ ingredient: ing, sourceIndex }, i) => {
+            const key = `${group.groupName}-${sourceIndex}`;
             const isChecked = checked.has(key);
             const isLast = i === group.ingredients.length - 1;
             const amount = `${ing.amount || ""} ${ing.units || ""}`.trim();
