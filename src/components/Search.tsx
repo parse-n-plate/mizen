@@ -7,6 +7,7 @@ import { useRecipe } from "@/context/RecipeContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import GalleryAdd from "@solar-icons/react/csr/video/GalleryAdd";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -88,6 +89,8 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
   const [dismissedUrl, setDismissedUrl] = useState<string | null>(null);
   const dragCounter = useRef(0);
   const formRef = useRef<HTMLFormElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const pillRef = useRef<HTMLDivElement>(null);
   const { setRecipe, setIsLoading, setError, isLoading } =
     useRecipe();
   const router = useRouter();
@@ -113,6 +116,15 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
     return () => window.removeEventListener("focus", checkClipboard);
   }, []);
 
+  // Revoke current object URL when component unmounts.
+  useEffect(() => {
+    return () => {
+      if (imageFile?.preview) {
+        URL.revokeObjectURL(imageFile.preview);
+      }
+    };
+  }, [imageFile]);
+
   const handleFile = useCallback(
     async (file: File) => {
       if (!ALLOWED_TYPES.includes(file.type)) {
@@ -125,7 +137,12 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
       }
       try {
         const img = await fileToImageFile(file);
-        setImageFile(img);
+        setImageFile((prev) => {
+          if (prev?.preview) {
+            URL.revokeObjectURL(prev.preview);
+          }
+          return img;
+        });
         setUrl("");
         setError(null);
       } catch {
@@ -136,9 +153,36 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
   );
 
   const removeImage = useCallback(() => {
-    if (imageFile) {
+    if (!imageFile) return;
+
+    const clearImage = () => {
       URL.revokeObjectURL(imageFile.preview);
       setImageFile(null);
+    };
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      clearImage();
+      return;
+    }
+
+    const el = pillRef.current;
+    if (el) {
+      el.classList.remove("image-pill-animate");
+      el.classList.add("image-pill-exit");
+
+      let done = false;
+      const onEnd = () => {
+        if (done) return;
+        done = true;
+        el.removeEventListener("animationend", onEnd);
+        window.clearTimeout(fallbackTimeout);
+        clearImage();
+      };
+
+      const fallbackTimeout = window.setTimeout(onEnd, 220);
+      el.addEventListener("animationend", onEnd);
+    } else {
+      clearImage();
     }
   }, [imageFile]);
 
@@ -341,7 +385,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
         )}
       <form ref={formRef} onSubmit={handleSubmit} className="w-full">
       <div
-        className={`rounded-2xl border bg-white dark:bg-transparent shadow-sm transition-all focus-within:border-stone-300 dark:focus-within:border-stone-600 focus-within:shadow-md ${
+        className={`w-full rounded-2xl border bg-white dark:bg-transparent shadow-sm transition-all focus-within:border-stone-300 dark:focus-within:border-stone-600 focus-within:shadow-md ${
           isDragging
             ? "border-[var(--color-blue)] ring-2 ring-[var(--color-blue)]/20"
             : "border-stone-200 dark:border-stone-700"
@@ -352,67 +396,30 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
         onDrop={onDrop}
       >
         {/* Input area */}
-        <div className="px-4 pt-3 pb-2">
+        <div className="flex items-center h-9 px-4 mt-3 mb-2">
           {isDragging ? (
-            <p className="py-1 text-sm text-[var(--color-blue)]">
+            <p className="text-sm text-[var(--color-blue)]">
               Drop image here...
             </p>
-          ) : (
-            <Input
-              type="url"
-              placeholder="Paste a recipe URL or drop an image..."
-              value={url}
-              onChange={(e) => {
-                setUrl(e.target.value);
-                if (imageFile) removeImage();
-              }}
-              onPaste={onPaste}
-              className="border-0 bg-transparent dark:bg-transparent px-0 text-base shadow-none placeholder:text-stone-400 dark:placeholder:text-stone-500 dark:text-stone-100 focus-visible:ring-0"
-              disabled={isLoading || !!imageFile}
-              autoFocus
-            />
-          )}
-        </div>
-
-        {/* Bottom toolbar */}
-        <div className="flex items-center justify-between px-3 pb-3">
-          <div className="flex items-center gap-1">
-            {imageFile ? (
-              <div className="flex h-8 items-center gap-2 rounded-lg bg-stone-100 dark:bg-stone-800 px-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={imageFile.preview}
-                  alt="Recipe"
-                  className="h-5 w-5 rounded object-cover"
-                />
-                <span className="max-w-[160px] truncate text-xs font-medium text-stone-600 dark:text-stone-300">
-                  {imageFile.name}
-                </span>
-                <button
-                  type="button"
-                  onClick={removeImage}
-                  className="ml-0.5 text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
-                  aria-label="Remove image"
-                >
-                  <svg
-                    className="h-3.5 w-3.5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M18 6 6 18" />
-                    <path d="m6 6 12 12" />
-                  </svg>
-                </button>
-              </div>
-            ) : (
-              <div className="flex h-8 items-center gap-1.5 rounded-lg px-2 text-stone-400">
+          ) : imageFile ? (
+            <div ref={pillRef} className="image-pill-animate flex items-center gap-2 rounded-lg bg-stone-100 dark:bg-stone-800 px-2 py-1 w-fit">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imageFile.preview}
+                alt="Recipe"
+                className="h-5 w-5 rounded object-cover"
+              />
+              <span className="max-w-[200px] truncate text-sm font-medium text-stone-600 dark:text-stone-300">
+                {imageFile.name}
+              </span>
+              <button
+                type="button"
+                onClick={removeImage}
+                className="text-stone-400 hover:text-stone-600 dark:hover:text-stone-300"
+                aria-label="Remove image"
+              >
                 <svg
-                  className="h-4 w-4"
+                  className="h-3.5 w-3.5"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
                   fill="none"
@@ -421,12 +428,39 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
                 </svg>
-                <span className="text-xs font-medium text-stone-500 dark:text-stone-400">URL</span>
-              </div>
-            )}
+              </button>
+            </div>
+          ) : (
+            <Input
+              type="url"
+              placeholder="Paste a recipe URL or drop an image..."
+              value={url}
+              onChange={(e) => {
+                setUrl(e.target.value);
+              }}
+              onPaste={onPaste}
+              className="border-0 bg-transparent dark:bg-transparent px-0 text-base shadow-none placeholder:text-stone-400 dark:placeholder:text-stone-500 dark:text-stone-100 focus-visible:ring-0"
+              disabled={isLoading}
+              autoFocus
+            />
+          )}
+        </div>
+
+        {/* Bottom toolbar */}
+        <div className="flex items-center justify-between px-3 pb-3">
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isLoading}
+              className="press-scale flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 duration-0 hover:bg-stone-100 hover:text-stone-600 dark:hover:bg-stone-800 dark:hover:text-stone-300 disabled:opacity-50"
+              aria-label="Upload image"
+            >
+              <GalleryAdd size={18} />
+            </button>
           </div>
 
           <Button
@@ -474,6 +508,17 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
           </Button>
         </div>
       </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="sr-only"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFile(file);
+          e.target.value = "";
+        }}
+      />
     </form>
     </div>
   );

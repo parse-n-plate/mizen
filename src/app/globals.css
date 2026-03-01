@@ -757,6 +757,47 @@ body {
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
+     IMAGE PILL — Pop-in entry animation
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  @keyframes image-pill-in {
+    from {
+      opacity: 0;
+      transform: translateX(-8px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  @keyframes image-pill-out {
+    from {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateX(-8px) scale(0.96);
+    }
+  }
+
+  .image-pill-animate {
+    animation: image-pill-in 280ms var(--ease-out-quint) forwards;
+  }
+
+  .image-pill-exit {
+    animation: image-pill-out 180ms var(--ease-out-quint) forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .image-pill-animate,
+    .image-pill-exit {
+      animation: none;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
      TIMER VAULT — Slide up from bottom
   ═══════════════════════════════════════════════════════════════════════════ */
 
