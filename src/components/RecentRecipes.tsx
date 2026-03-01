@@ -24,38 +24,41 @@ export function RecentRecipes() {
   };
 
   return (
-    <section className="page-fade-in-up page-fade-delay-3 w-full max-w-2xl">
+    <section className="page-fade-in-up page-fade-delay-3 w-full max-w-3xl">
       <div className="mb-4">
         <h2 className="font-serif text-xl font-semibold text-stone-900 dark:text-stone-100">
           Recent Recipes
         </h2>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-        {history.map((entry) => {
-          const time =
-            entry.recipe.totalTimeMinutes ||
-            ((entry.recipe.prepTimeMinutes || 0) +
-              (entry.recipe.cookTimeMinutes || 0)) ||
-            null;
+      <div className="relative">
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          {history.map((entry) => {
+            const time =
+              entry.recipe.totalTimeMinutes ||
+              ((entry.recipe.prepTimeMinutes || 0) +
+                (entry.recipe.cookTimeMinutes || 0)) ||
+              null;
 
-          return (
-            <button
-              key={entry.parsedAt}
-              onClick={() => handleClick(entry)}
-              className="flex min-w-[180px] max-w-[220px] shrink-0 flex-col gap-1.5 rounded-2xl border border-stone-200 dark:border-stone-700 bg-[var(--color-white)] px-4 py-4 text-left transition-colors hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800"
-            >
-              <p className="w-full truncate font-sans text-[15px] font-medium text-stone-900 dark:text-stone-100">
-                {entry.recipe.title}
-              </p>
-              {time ? (
-                <p className="font-sans text-sm text-stone-500 dark:text-stone-400">
-                  {formatTime(time)}
+            return (
+              <button
+                key={entry.parsedAt}
+                onClick={() => handleClick(entry)}
+                className="flex min-w-[180px] max-w-[220px] shrink-0 flex-col gap-1.5 rounded-2xl border border-stone-200 dark:border-stone-700 bg-[var(--color-white)] px-4 py-4 text-left transition-colors hover:border-stone-300 dark:hover:border-stone-600 hover:bg-stone-50 dark:hover:bg-stone-800"
+              >
+                <p className="w-full truncate font-sans text-[15px] font-medium text-stone-900 dark:text-stone-100">
+                  {entry.recipe.title}
                 </p>
-              ) : null}
-            </button>
-          );
-        })}
+                {time ? (
+                  <p className="font-sans text-sm text-stone-500 dark:text-stone-400">
+                    {formatTime(time)}
+                  </p>
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-white dark:from-mizen-dark-surface to-transparent" />
       </div>
     </section>
   );

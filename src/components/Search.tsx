@@ -80,7 +80,7 @@ function fileToImageFile(file: File): Promise<ImageFile> {
   });
 }
 
-export function Search() {
+export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
   const [url, setUrl] = useState("");
   const [imageFile, setImageFile] = useState<ImageFile | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -209,6 +209,7 @@ export function Search() {
 
         if (result.success && result.data) {
           setRecipe(result.data);
+          onSuccess?.();
           router.push("/recipe");
         } else {
           toast.error(result.error || "Failed to parse recipe");
@@ -219,7 +220,7 @@ export function Search() {
         setIsLoading(false);
       }
     },
-    [isLoading, setIsLoading, setError, setRecipe, router]
+    [isLoading, setIsLoading, setError, setRecipe, router, onSuccess]
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -244,6 +245,7 @@ export function Search() {
 
         if (result.success && result.data) {
           setRecipe(result.data);
+          onSuccess?.();
           router.push("/recipe");
         } else {
           toast.error(result.error || "Failed to parse recipe");
@@ -286,7 +288,7 @@ export function Search() {
   }
 
   return (
-    <div className="w-full max-w-2xl flex flex-col items-center">
+    <div className="w-full max-w-3xl flex flex-col items-center">
       {showPill &&
         createPortal(
           <div className="fixed bottom-8 left-0 right-0 z-50 flex justify-center pointer-events-none">
@@ -339,7 +341,7 @@ export function Search() {
         )}
       <form ref={formRef} onSubmit={handleSubmit} className="w-full">
       <div
-        className={`rounded-2xl border bg-white dark:bg-stone-900 shadow-sm transition-all focus-within:border-stone-300 dark:focus-within:border-stone-600 focus-within:shadow-md ${
+        className={`rounded-2xl border bg-white dark:bg-transparent shadow-sm transition-all focus-within:border-stone-300 dark:focus-within:border-stone-600 focus-within:shadow-md ${
           isDragging
             ? "border-[var(--color-blue)] ring-2 ring-[var(--color-blue)]/20"
             : "border-stone-200 dark:border-stone-700"
@@ -365,7 +367,7 @@ export function Search() {
                 if (imageFile) removeImage();
               }}
               onPaste={onPaste}
-              className="border-0 bg-transparent px-0 text-base shadow-none placeholder:text-stone-400 dark:placeholder:text-stone-500 dark:text-stone-100 focus-visible:ring-0"
+              className="border-0 bg-transparent dark:bg-transparent px-0 text-base shadow-none placeholder:text-stone-400 dark:placeholder:text-stone-500 dark:text-stone-100 focus-visible:ring-0"
               disabled={isLoading || !!imageFile}
               autoFocus
             />

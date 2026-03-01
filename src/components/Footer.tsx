@@ -24,7 +24,7 @@ export function Footer() {
     <footer className="w-full px-6 py-12">
       <div className="mx-auto flex max-w-3xl items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <p className="font-sans text-xs text-stone-400">
+          <p className="font-sans text-sm text-stone-400">
             Cooked with love by
           </p>
           <div className="flex -space-x-2">
@@ -52,13 +52,13 @@ export function Footer() {
         <div className="flex items-center gap-3">
           <Link
             href="/privacy"
-            className="font-sans text-xs text-stone-400 transition-colors hover:text-stone-600 dark:hover:text-stone-300"
+            className="font-sans text-sm text-stone-400 transition-colors hover:text-stone-600 dark:hover:text-stone-300"
           >
             Privacy
           </Link>
           <Link
             href="/terms"
-            className="font-sans text-xs text-stone-400 transition-colors hover:text-stone-600 dark:hover:text-stone-300"
+            className="font-sans text-sm text-stone-400 transition-colors hover:text-stone-600 dark:hover:text-stone-300"
           >
             Terms
           </Link>

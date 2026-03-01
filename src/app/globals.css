@@ -41,20 +41,22 @@
   --color-mizen-green: var(--color-green);
   --color-mizen-wheat: var(--color-wheat);
   --color-mizen-orange: var(--color-orange);
+  --color-mizen-dark-surface: var(--color-dark-surface);
+  --color-mizen-overlay: var(--color-overlay);
 
   /* Typography scale */
   --text-hero: 63px;
   --text-hero-tablet: 74px;
   --text-hero-desktop: 85px;
-  --text-h1-sm: 35px;
-  --text-h1-md: 46px;
+  --text-h1-sm: 30px;
+  --text-h1-md: 36px;
   --text-h2: 26px;
   --text-h3: 22px;
   --text-body-lg-sm: 18px;
   --text-body-lg-md: 19px;
-  --text-body-md-sm: 17px;
+  --text-body-md-sm: 16px;
   --text-body-md: 18px;
-  --text-body-sm: 15px;
+  --text-body-sm: 16px;
   --text-label-lg-sm: 13px;
   --text-label-lg-md: 14px;
   --text-label-sm: 13px;
@@ -62,9 +64,17 @@
   --text-nav-md: 18px;
 }
 
-/* Prevent layout shift when modals toggle body overflow: hidden */
+/* Prevent layout shift when modals toggle body overflow: hidden.
+   scrollbar-gutter: stable reserves scrollbar space permanently.
+   react-remove-scroll-bar adds padding-right to body as compensation —
+   since gutter already handles it, we neutralize the extra padding. */
 html {
   scrollbar-gutter: stable;
+}
+
+html body[data-scroll-locked] {
+  padding-right: 0 !important;
+  margin-right: 0 !important;
 }
 
 /* Custom CSS Variables — Parse & Plate Design System */
@@ -124,6 +134,11 @@ html {
   --color-text-body: #333333;
   --color-text-muted: #78716c;
   --color-border-light: #e7e5e4;
+  --color-dark-surface: transparent;
+  --color-overlay: rgba(0, 0, 0, 0.75);
+
+  /* Shadows */
+  --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.04);
 
   /* Typography */
   --font-family-serif: "Domine", "Georgia", "Times New Roman", serif;
@@ -202,6 +217,19 @@ html {
   --color-wheat-tint: #2a2520;
   --color-mint-tint: #1e2926;
   --color-orange-tint: #2a2218;
+
+  --color-dark-surface: #0B0A0A;
+  --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.2);
+
+  /* Shadows — true black with higher opacity for dark backgrounds.
+     Overrides Tailwind defaults (5-10% opacity) which are invisible on dark surfaces. */
+  --shadow-2xs: 0 1px rgb(0 0 0 / 0.15);
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.25), 0 1px 2px -1px rgb(0 0 0 / 0.25);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.25);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.35), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.35), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.5);
 }
 
 /* Base Typography — Outside @layer for higher specificity over Tailwind preflight */
@@ -397,7 +425,7 @@ body {
     border-top-color: var(--color-white) !important;
     border-bottom: 2px solid var(--color-orange) !important;
     z-index: 3;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+    box-shadow: var(--shadow-soft) !important;
   }
 
   @media (max-width: 640px) {
@@ -465,6 +493,17 @@ body {
     position: relative;
     width: 100%;
     cursor: pointer;
+    border-radius: var(--radius-md);
+  }
+
+  .ingredient-list-item:hover {
+    background-color: var(--color-cream);
+  }
+
+  /* Hide the previous item's divider when the next item is hovered */
+  .ingredient-list-item:has(+ .ingredient-list-item:hover) .ingredient-list-divider,
+  .group:has(+ .group:hover) .step-list-divider {
+    opacity: 0;
   }
 
   .ingredient-list-content {
@@ -473,12 +512,6 @@ body {
     gap: 12px;
     padding: 16px 8px;
     position: relative;
-    transition: background-color 150ms ease;
-    border-radius: 8px;
-  }
-
-  .ingredient-list-item:hover .ingredient-list-content {
-    background-color: var(--color-background-cream);
   }
 
   .ingredient-list-divider {
@@ -488,16 +521,15 @@ body {
     right: 8px;
     height: 1px;
     background-color: var(--color-border-light);
-    transition: opacity 150ms ease;
   }
 
   /* Native checkbox styled to match production */
   .ingredient-checkbox-input {
     width: 20px;
     height: 20px;
-    border: none;
+    border: 1.5px solid var(--color-gray-light);
     border-radius: 4px;
-    background-color: var(--color-gray-light);
+    background-color: transparent;
     cursor: pointer;
     appearance: none;
     -webkit-appearance: none;
@@ -546,7 +578,7 @@ body {
   .ingredient-list-item.is-checked .ingredient-list-name span,
   .ingredient-list-item.is-checked .ingredient-list-description {
     text-decoration: line-through;
-    color: #a8a29e;
+    color: var(--color-text-muted);
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
