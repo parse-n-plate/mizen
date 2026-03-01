@@ -23,6 +23,8 @@ import Login from "@solar-icons/react/csr/arrows-action/Login";
 import UserPlus from "@solar-icons/react/csr/users/UserPlus";
 import Eye from "@solar-icons/react/csr/security/Eye";
 import EyeClosed from "@solar-icons/react/csr/security/EyeClosed";
+import Restart from "@solar-icons/react/csr/arrows/Restart";
+import Letter from "@solar-icons/react/csr/messages/Letter";
 
 type Mode = "login" | "signup" | "forgot";
 
@@ -50,6 +52,7 @@ export function AuthModal({
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [confirmationSent, setConfirmationSent] = useState(false);
   const mode = modeOverride ?? initialMode;
   const openRef = useRef(open);
   const closeResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -73,6 +76,7 @@ export function AuthModal({
   const clearMessages = () => {
     setError(null);
     setMessage(null);
+    setConfirmationSent(false);
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -128,7 +132,7 @@ export function AuthModal({
         handleOpenChange(false);
       }
     } else {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -137,8 +141,18 @@ export function AuthModal({
       });
       if (error) {
         setError(error.message);
+      } else if (
+        data.user &&
+        (!data.user.identities || data.user.identities.length === 0)
+      ) {
+        setError(
+          "An account with this email already exists. Please sign in instead."
+        );
       } else {
-        setMessage("Check your email for a confirmation link.");
+        setConfirmationSent(true);
+        setMessage(
+          "Check your email for a confirmation link. It may take a minute to arrive."
+        );
       }
     }
 
@@ -169,6 +183,35 @@ export function AuthModal({
       setError(error.message);
     } else {
       setMessage("Check your email for a password reset link.");
+    }
+
+    setLoading(false);
+  };
+
+  const handleResend = async () => {
+    setLoading(true);
+    clearMessages();
+    setConfirmationSent(true);
+
+    const supabase = createClient();
+    if (!supabase) {
+      setError("Authentication is unavailable right now. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      setError(error.message);
+    } else {
+      setMessage("Confirmation email resent. Check your inbox and spam folder.");
     }
 
     setLoading(false);
@@ -418,14 +461,31 @@ export function AuthModal({
                     </motion.p>
                   )}
                   {message && (
-                    <motion.p
+                    <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="font-sans text-sm text-green-600 dark:text-green-400"
+                      className="space-y-2"
                     >
-                      {message}
-                    </motion.p>
+                      <p className="font-sans text-sm text-green-600 dark:text-green-400 flex items-start gap-2">
+                        <Letter className="h-4 w-4 mt-0.5 shrink-0" />
+                        <span>{message}</span>
+                      </p>
+                      {confirmationSent && (
+                        <p className="font-sans text-xs text-muted-foreground">
+                          Don&apos;t see it? Check your spam folder.{" "}
+                          <button
+                            type="button"
+                            onClick={handleResend}
+                            disabled={loading}
+                            className="inline-flex items-center gap-1 font-semibold text-foreground hover:underline underline-offset-2 disabled:opacity-50"
+                          >
+                            <Restart className="h-3 w-3" />
+                            Resend email
+                          </button>
+                        </p>
+                      )}
+                    </motion.div>
                   )}
                 </AnimatePresence>
 

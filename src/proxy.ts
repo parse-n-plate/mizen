@@ -1,7 +1,24 @@
-import { type NextRequest } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
+export function shouldRedirectOAuthRootCallback(request: Pick<NextRequest, 'method' | 'nextUrl'>) {
+  return (
+    request.method === 'GET' &&
+    request.nextUrl.pathname === '/' &&
+    request.nextUrl.searchParams.has('code') &&
+    request.nextUrl.searchParams.has('state')
+  )
+}
+
 export async function proxy(request: NextRequest) {
+  // Supabase may redirect OAuth codes to the root URL if the callback URL
+  // isn't in the dashboard allowlist. Forward them to the proper handler.
+  if (shouldRedirectOAuthRootCallback(request)) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/callback'
+    return NextResponse.redirect(url)
+  }
+
   return await updateSession(request)
 }
 
