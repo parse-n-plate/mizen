@@ -529,20 +529,34 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
     const response = await fetch(url, {
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
         Accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+        "Sec-Ch-Ua":
+          '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Platform": '"Windows"',
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-User": "?1",
+        "Upgrade-Insecure-Requests": "1",
       },
       signal: controller.signal,
+      redirect: "follow",
     });
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      return {
-        success: false,
-        error: `Failed to fetch URL: ${response.status}`,
-        method: "none",
-      };
+      const error =
+        response.status === 402 || response.status === 403
+          ? "This website blocked the request. Try copying the recipe text and pasting it instead."
+          : `Failed to fetch URL: ${response.status}`;
+      return { success: false, error, method: "none" };
     }
 
     const rawHtml = await response.text();
