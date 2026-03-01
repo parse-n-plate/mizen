@@ -8,52 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import GalleryAdd from "@solar-icons/react/csr/video/GalleryAdd";
+import { looksLikeRecipeUrl, detectCollectionUrl } from "@/utils/urlPatterns";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
-
-const RECIPE_DOMAINS = new Set([
-  "allrecipes.com",
-  "bonappetit.com",
-  "budgetbytes.com",
-  "cooking.nytimes.com",
-  "cookinglight.com",
-  "delish.com",
-  "eatingwell.com",
-  "epicurious.com",
-  "food52.com",
-  "food.com",
-  "foodandwine.com",
-  "foodnetwork.com",
-  "halfbakedharvest.com",
-  "justonecookbook.com",
-  "kingarthurbaking.com",
-  "minimalistbaker.com",
-  "pinchofyum.com",
-  "recipetineats.com",
-  "seriouseats.com",
-  "simplyrecipes.com",
-  "skinnytaste.com",
-  "smittenkitchen.com",
-  "tasteofhome.com",
-  "tasty.co",
-  "thekitchn.com",
-  "thespruceeats.com",
-]);
-
-const RECIPE_PATH_PATTERNS = /\/(recipes?|cooking|dish|meal|baking)\b/i;
-
-function looksLikeRecipeUrl(urlString: string): boolean {
-  try {
-    const parsed = new URL(urlString);
-    const host = parsed.hostname.replace(/^www\./, "");
-    if (RECIPE_DOMAINS.has(host)) return true;
-    if (RECIPE_PATH_PATTERNS.test(parsed.pathname)) return true;
-    return false;
-  } catch {
-    return false;
-  }
-}
 
 interface ImageFile {
   base64: string;
@@ -238,6 +196,11 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
   const submitUrl = useCallback(
     async (recipeUrl: string) => {
       if (isLoading) return;
+
+      const collectionWarning = detectCollectionUrl(recipeUrl);
+      if (collectionWarning) {
+        toast.warning(`${collectionWarning} We'll still try parsing it.`);
+      }
 
       setIsLoading(true);
       setError(null);

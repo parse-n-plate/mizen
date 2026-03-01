@@ -3,6 +3,7 @@ import { getGroqClient, extractJsonFromAiResponse } from "@/lib/groq";
 import { CoreRecipeSchema } from "@/lib/schemas/recipe";
 import { EXTRACTION_PROMPT } from "@/lib/prompts/extraction";
 import { cleanRecipeHTML } from "./htmlCleaner";
+import { COLLECTION_MESSAGE } from "./urlPatterns";
 import type {
   ParsedRecipe,
   ParserResult,
@@ -187,6 +188,61 @@ function extractStepImagesFromHtml(rawHtml: string): string[] {
     return images;
   } catch {
     return [];
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Collection Page Detection (JSON-LD)
+// ---------------------------------------------------------------------------
+
+const COLLECTION_TYPES = new Set([
+  "ItemList",
+  "CollectionPage",
+  "SearchResultsPage",
+]);
+
+function detectCollectionSchema($: cheerio.CheerioAPI): boolean {
+  try {
+    const scripts = $('script[type="application/ld+json"]');
+    let hasRecipe = false;
+    let hasCollection = false;
+
+    for (let i = 0; i < scripts.length; i++) {
+      try {
+        const content = $(scripts[i]).html();
+        if (!content) continue;
+        const data = JSON.parse(content);
+        const items = Array.isArray(data) ? data : [data];
+
+        for (const item of items) {
+          const types = Array.isArray(item["@type"])
+            ? item["@type"]
+            : [item["@type"]];
+
+          if (types.includes("Recipe")) hasRecipe = true;
+          if (types.some((t: string) => COLLECTION_TYPES.has(t)))
+            hasCollection = true;
+
+          if (Array.isArray(item["@graph"])) {
+            for (const g of item["@graph"]) {
+              const gTypes = Array.isArray(g["@type"])
+                ? g["@type"]
+                : [g["@type"]];
+              if (gTypes.includes("Recipe")) hasRecipe = true;
+              if (gTypes.some((t: string) => COLLECTION_TYPES.has(t)))
+                hasCollection = true;
+            }
+          }
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    return hasCollection && !hasRecipe;
+  } catch {
+    // Let normal flow handle it
+    return false;
   }
 }
 
@@ -606,6 +662,11 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
       };
     }
 
+    // Collection pages are often not parseable; treat as a hint and only
+    // surface it if extraction fails to avoid premature false negatives.
+    const $raw = cheerio.load(rawHtml);
+    const looksLikeCollection = detectCollectionSchema($raw);
+
     // Layer 1: JSON-LD
     const $ = cheerio.load(cleaned.html);
     const jsonLdResult = extractFromJsonLd($);
@@ -679,7 +740,9 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
 
     return {
       success: false,
-      error: "Could not extract recipe data",
+      error: looksLikeCollection
+        ? COLLECTION_MESSAGE
+        : "Could not extract recipe data",
       method: "none",
     };
   } catch (error) {
