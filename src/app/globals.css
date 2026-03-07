@@ -124,12 +124,6 @@ html body[data-scroll-locked] {
   --color-green: #1a8521;
   --color-wheat: #fdeecc;
   --color-orange: #fb9c00;
-
-  /* Accent tints — soft pastel backgrounds */
-  --color-wheat-tint: #fef8eb;
-  --color-mint-tint: #edfaf7;
-  --color-orange-tint: #fff5e0;
-
   /* Semantic aliases */
   --color-text-heading: #1c1917;
   --color-text-body: #333333;
@@ -214,11 +208,6 @@ html body[data-scroll-locked] {
   /* Accents — brighter for dark backgrounds */
   --color-green: #2ecc55;
   --color-olive: #8ec420;
-
-  /* Accent tints — dark mode variants */
-  --color-wheat-tint: #2a2520;
-  --color-mint-tint: #1e2926;
-  --color-orange-tint: #2a2218;
 
   --color-dark-surface: #0b0a0a;
   --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.2);
@@ -785,43 +774,56 @@ body {
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
-     IMAGE PILL — Pop-in entry animation
+     SMART BAR — Morphing container transitions
   ═══════════════════════════════════════════════════════════════════════════ */
 
-  @keyframes image-pill-in {
+  .smart-bar {
+    transition:
+      height 300ms var(--ease-out-quart),
+      border-radius 200ms var(--ease-out-quart),
+      padding 300ms var(--ease-out-quart),
+      box-shadow 200ms ease;
+    overflow: hidden;
+    will-change: height;
+  }
+
+  @keyframes smart-bar-fade-in {
     from {
       opacity: 0;
-      transform: translateX(-8px) scale(0.96);
+      transform: translateY(4px);
     }
     to {
       opacity: 1;
-      transform: translateX(0) scale(1);
+      transform: translateY(0);
     }
   }
 
-  @keyframes image-pill-out {
-    from {
-      opacity: 1;
-      transform: translateX(0) scale(1);
-    }
+  .smart-bar-fade-in {
+    animation: smart-bar-fade-in 200ms var(--ease-out-quart) forwards;
+  }
+
+  .smart-bar-focus-ring {
+    border-color: var(--color-blue);
+    box-shadow: 0 0 0 3px rgba(0, 114, 251, 0.25);
+  }
+
+  @keyframes smart-bar-spin {
     to {
-      opacity: 0;
-      transform: translateX(-8px) scale(0.96);
+      transform: rotate(360deg);
     }
   }
 
-  .image-pill-animate {
-    animation: image-pill-in 280ms var(--ease-out-quint) forwards;
-  }
-
-  .image-pill-exit {
-    animation: image-pill-out 180ms var(--ease-out-quint) forwards;
+  .smart-bar-spinner {
+    animation: smart-bar-spin 1s linear infinite;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .image-pill-animate,
-    .image-pill-exit {
+    .smart-bar {
+      transition: none;
+    }
+    .smart-bar-fade-in {
       animation: none;
+      opacity: 1;
     }
   }
 
