@@ -6,6 +6,7 @@ import {
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const DATA_URL_MIME_PATTERN = /^data:([^;,]+)(?:;[^,]*)?,/i;
 
 export async function POST(request: Request) {
   try {
@@ -121,9 +122,29 @@ export async function POST(request: Request) {
         );
       }
 
-      const dataUrl = legacyImage.startsWith("data:")
-        ? legacyImage
-        : `data:${legacyMimeType};base64,${legacyImage}`;
+      let dataUrl: string;
+      if (legacyImage.startsWith("data:")) {
+        const mimeMatch = legacyImage.match(DATA_URL_MIME_PATTERN);
+        const embeddedMimeType = mimeMatch?.[1];
+
+        if (!embeddedMimeType || embeddedMimeType !== legacyMimeType) {
+          return NextResponse.json(
+            { success: false, error: "MIME type does not match image data" },
+            { status: 400 }
+          );
+        }
+
+        if (!ALLOWED_MIME_TYPES.includes(embeddedMimeType)) {
+          return NextResponse.json(
+            { success: false, error: "Unsupported image type" },
+            { status: 400 }
+          );
+        }
+
+        dataUrl = legacyImage;
+      } else {
+        dataUrl = `data:${legacyMimeType};base64,${legacyImage}`;
+      }
 
       const result = await parseRecipeFromImage(dataUrl);
       return NextResponse.json(result, {
