@@ -482,7 +482,7 @@ async function extractWithAI(cleanedHtml: string): Promise<ParsedRecipe | null> 
 // ---------------------------------------------------------------------------
 
 export async function parseRecipeFromImage(
-  base64: string
+  dataUrl: string
 ): Promise<ParserResult> {
   try {
     const groq = getGroqClient();
@@ -496,7 +496,7 @@ export async function parseRecipeFromImage(
           content: [
             {
               type: "image_url",
-              image_url: { url: base64 },
+              image_url: { url: dataUrl },
             },
             {
               type: "text",
