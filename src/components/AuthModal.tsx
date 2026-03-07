@@ -10,6 +10,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { resolveEmailAuthFeedback } from "@/lib/auth-feedback";
 import {
   Dialog,
   DialogContent,
@@ -93,16 +94,24 @@ export function AuthModal({ open, onOpenChange, initialMode = "login" }: AuthMod
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleAuth = async () => {
+    clearMessages();
     const supabase = createClient();
-    if (!supabase) return;
+    if (!supabase) {
+      setError("Authentication is unavailable right now. Please try again.");
+      return;
+    }
     const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(returnTo || "/")}`,
       },
     });
+
+    if (error) {
+      setError(error.message);
+    }
   };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -122,9 +131,11 @@ export function AuthModal({ open, onOpenChange, initialMode = "login" }: AuthMod
         email,
         password,
       });
-      if (error) {
-        setError(error.message);
-      } else {
+
+      const feedback = resolveEmailAuthFeedback("login", { error });
+      if (feedback.error) {
+        setError(feedback.error);
+      } else if (feedback.shouldClose) {
         handleOpenChange(false);
       }
     } else {
@@ -135,20 +146,16 @@ export function AuthModal({ open, onOpenChange, initialMode = "login" }: AuthMod
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
-      if (error) {
-        setError(error.message);
-      } else if (
-        data.user &&
-        (!data.user.identities || data.user.identities.length === 0)
-      ) {
-        setError(
-          "An account with this email already exists. Please sign in instead."
-        );
+
+      const feedback = resolveEmailAuthFeedback("signup", {
+        error,
+        user: data.user,
+      });
+      if (feedback.error) {
+        setError(feedback.error);
       } else {
-        setConfirmationSent(true);
-        setMessage(
-          "Check your email for a confirmation link. It may take a minute to arrive."
-        );
+        setConfirmationSent(feedback.confirmationSent);
+        setMessage(feedback.message);
       }
     }
 
@@ -206,6 +213,7 @@ export function AuthModal({ open, onOpenChange, initialMode = "login" }: AuthMod
 
     if (error) {
       setError(error.message);
+      setMessage("The original confirmation was sent. Try resending again.");
     } else {
       setMessage("Confirmation email resent. Check your inbox and spam folder.");
     }
@@ -252,7 +260,7 @@ export function AuthModal({ open, onOpenChange, initialMode = "login" }: AuthMod
                 <Button
                   variant="outline"
                   className="w-full justify-start gap-3"
-                  onClick={handleGoogleLogin}
+                  onClick={handleGoogleAuth}
                 >
                   <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                     <path
