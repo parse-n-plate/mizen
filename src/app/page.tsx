@@ -20,8 +20,7 @@ export default function HomePage() {
             calm cooking.
           </h1>
           <p className="page-fade-in-up page-fade-delay-1 mx-auto max-w-md font-sans text-lg text-stone-500 dark:text-stone-400">
-            Paste a recipe URL. We strip the clutter and give you a clean, focused cooking
-            experience.
+            Paste a recipe URL. Get a focused cooking experience.
           </p>
         </div>
 
