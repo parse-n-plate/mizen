@@ -13,15 +13,15 @@ export default function HomePage() {
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] flex-col">
       <main className="flex flex-1 flex-col items-center justify-center px-6 pb-6">
-        <div className="page-fade-in-up w-full max-w-2xl space-y-8 text-center">
+        <div className="page-fade-in-up w-full max-w-3xl space-y-8 text-center">
           <h1 className="font-serif text-[clamp(40px,8vw,72px)] font-bold leading-[1.1] text-stone-900 dark:text-stone-100">
             Clean recipes,
             <br />
             calm cooking.
           </h1>
           <p className="page-fade-in-up page-fade-delay-1 mx-auto max-w-md font-sans text-lg text-stone-500 dark:text-stone-400">
-            Paste a recipe URL. We strip the clutter and give you a clean,
-            focused cooking experience.
+            Paste a recipe URL. We strip the clutter and give you a clean, focused cooking
+            experience.
           </p>
         </div>
 
@@ -36,9 +36,7 @@ export default function HomePage() {
         )}
 
         {error && (
-          <p className="mt-6 max-w-md text-center font-sans text-sm text-red-500">
-            {error}
-          </p>
+          <p className="mt-6 max-w-md text-center font-sans text-sm text-red-500">{error}</p>
         )}
 
         <div className="mt-12 w-full flex justify-center">

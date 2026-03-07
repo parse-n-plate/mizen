@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  parseRecipeFromUrl,
-  parseRecipeFromImage,
-} from "@/utils/parseRecipe";
+import { parseRecipeFromUrl, parseRecipeFromImage } from "@/utils/parseRecipe";
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -163,10 +160,7 @@ export async function POST(request: Request) {
     try {
       new URL(url);
     } catch {
-      return NextResponse.json(
-        { success: false, error: "Invalid URL format" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "Invalid URL format" }, { status: 400 });
     }
 
     const result = await parseRecipeFromUrl(url);
@@ -174,11 +168,7 @@ export async function POST(request: Request) {
       status: result.success ? 200 : 422,
     });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Internal server error";
-    return NextResponse.json(
-      { success: false, error: message },
-      { status: 500 }
-    );
+    const message = error instanceof Error ? error.message : "Internal server error";
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

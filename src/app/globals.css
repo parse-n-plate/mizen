@@ -41,20 +41,22 @@
   --color-mizen-green: var(--color-green);
   --color-mizen-wheat: var(--color-wheat);
   --color-mizen-orange: var(--color-orange);
+  --color-mizen-dark-surface: var(--color-dark-surface);
+  --color-mizen-overlay: var(--color-overlay);
 
   /* Typography scale */
   --text-hero: 63px;
   --text-hero-tablet: 74px;
   --text-hero-desktop: 85px;
-  --text-h1-sm: 35px;
-  --text-h1-md: 46px;
+  --text-h1-sm: 30px;
+  --text-h1-md: 36px;
   --text-h2: 26px;
   --text-h3: 22px;
   --text-body-lg-sm: 18px;
   --text-body-lg-md: 19px;
-  --text-body-md-sm: 17px;
+  --text-body-md-sm: 16px;
   --text-body-md: 18px;
-  --text-body-sm: 15px;
+  --text-body-sm: 16px;
   --text-label-lg-sm: 13px;
   --text-label-lg-md: 14px;
   --text-label-sm: 13px;
@@ -62,9 +64,17 @@
   --text-nav-md: 18px;
 }
 
-/* Prevent layout shift when modals toggle body overflow: hidden */
+/* Prevent layout shift when modals toggle body overflow: hidden.
+   scrollbar-gutter: stable reserves scrollbar space permanently.
+   react-remove-scroll-bar adds padding-right to body as compensation —
+   since gutter already handles it, we neutralize the extra padding. */
 html {
   scrollbar-gutter: stable;
+}
+
+html body[data-scroll-locked] {
+  padding-right: 0 !important;
+  margin-right: 0 !important;
 }
 
 /* Custom CSS Variables — Parse & Plate Design System */
@@ -95,14 +105,15 @@ html {
 
   /* Mizen palette — Neutrals */
   --color-white: #ffffff;
+  --color-surface: #ffffff;
   --color-cream: #fafaf9;
   --color-background-cream: #ffffff;
   --color-gray-light: #e7e5e4;
   --color-black: #292524;
 
   /* Mizen palette — Primary */
-  --color-blue: #18A1F7;
-  --color-primary-blue: #18A1F7;
+  --color-blue: #18a1f7;
+  --color-primary-blue: #18a1f7;
   --color-blue-light: #e6f0ff;
 
   /* Mizen palette — Accents */
@@ -124,6 +135,11 @@ html {
   --color-text-body: #333333;
   --color-text-muted: #78716c;
   --color-border-light: #e7e5e4;
+  --color-dark-surface: transparent;
+  --color-overlay: rgba(0, 0, 0, 0.75);
+
+  /* Shadows */
+  --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.04);
 
   /* Typography */
   --font-family-serif: "Domine", "Georgia", "Times New Roman", serif;
@@ -172,12 +188,13 @@ html {
   --accent: oklch(0.264 0 0);
   --accent-foreground: oklch(0.922 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.320 0 0);
-  --input: oklch(0.320 0 0);
+  --border: oklch(0.32 0 0);
+  --input: oklch(0.32 0 0);
   --ring: oklch(0.556 0 0);
 
   /* Mizen palette — Neutrals (inverted) */
   --color-white: #292524;
+  --color-surface: #1c1918;
   --color-cream: #292524;
   --color-background-cream: #171412;
   --color-gray-light: #3a3633;
@@ -190,8 +207,8 @@ html {
   --color-border-light: #3a3633;
 
   /* Primary — brighter blue for dark backgrounds */
-  --color-blue: #18A1F7;
-  --color-primary-blue: #18A1F7;
+  --color-blue: #18a1f7;
+  --color-primary-blue: #18a1f7;
   --color-blue-light: #1e293b;
 
   /* Accents — brighter for dark backgrounds */
@@ -202,6 +219,19 @@ html {
   --color-wheat-tint: #2a2520;
   --color-mint-tint: #1e2926;
   --color-orange-tint: #2a2218;
+
+  --color-dark-surface: #0b0a0a;
+  --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.2);
+
+  /* Shadows — true black with higher opacity for dark backgrounds.
+     Overrides Tailwind defaults (5-10% opacity) which are invisible on dark surfaces. */
+  --shadow-2xs: 0 1px rgb(0 0 0 / 0.15);
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.25), 0 1px 2px -1px rgb(0 0 0 / 0.25);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.25);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.35), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.35), 0 8px 10px -6px rgb(0 0 0 / 0.3);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.5);
 }
 
 /* Base Typography — Outside @layer for higher specificity over Tailwind preflight */
@@ -223,7 +253,12 @@ body {
 }
 
 @layer base {
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: var(--font-family-serif);
     line-height: var(--line-height-heading);
     color: var(--color-text-heading);
@@ -311,7 +346,6 @@ body {
 
 /* Component Styles */
 @layer components {
-
   /* ═══════════════════════════════════════════════════════════════════════════
      FOLDER TABS — Modern tab navigation that looks like file folders
   ═══════════════════════════════════════════════════════════════════════════ */
@@ -323,7 +357,9 @@ body {
     gap: 8px;
     padding: 0 8px;
     border-radius: 16px 16px 0 0 !important;
-    transition: color 150ms ease, background-color 150ms ease;
+    transition:
+      color 150ms ease,
+      background-color 150ms ease;
     background-color: transparent !important;
     color: var(--color-text-muted);
     border: 1px solid transparent !important;
@@ -341,10 +377,10 @@ body {
   }
 
   .folder-tab-trigger[data-state="active"] {
-    background-color: var(--color-white) !important;
+    background-color: var(--color-surface) !important;
     color: var(--color-black);
     border-color: var(--color-border-light) !important;
-    border-bottom-color: var(--color-white) !important;
+    border-bottom-color: var(--color-surface) !important;
     border-top-color: var(--color-border-light) !important;
     z-index: 3;
     box-shadow: none !important;
@@ -373,7 +409,9 @@ body {
     gap: 8px;
     padding: 0 8px;
     border-radius: 0 0 16px 16px !important;
-    transition: color 150ms ease, background-color 150ms ease;
+    transition:
+      color 150ms ease,
+      background-color 150ms ease;
     background-color: transparent !important;
     color: var(--color-text-muted);
     border: 1px solid transparent !important;
@@ -391,13 +429,13 @@ body {
   }
 
   .folder-tab-trigger-bottom[data-state="active"] {
-    background-color: var(--color-white) !important;
+    background-color: var(--color-surface) !important;
     color: var(--color-black);
     border-color: var(--color-border-light) !important;
-    border-top-color: var(--color-white) !important;
+    border-top-color: var(--color-surface) !important;
     border-bottom: 2px solid var(--color-orange) !important;
     z-index: 3;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+    box-shadow: var(--shadow-soft) !important;
   }
 
   @media (max-width: 640px) {
@@ -428,9 +466,15 @@ body {
     will-change: transform;
   }
 
-  .page-fade-delay-1 { animation-delay: 100ms; }
-  .page-fade-delay-2 { animation-delay: 200ms; }
-  .page-fade-delay-3 { animation-delay: 300ms; }
+  .page-fade-delay-1 {
+    animation-delay: 100ms;
+  }
+  .page-fade-delay-2 {
+    animation-delay: 200ms;
+  }
+  .page-fade-delay-3 {
+    animation-delay: 300ms;
+  }
 
   @media (prefers-reduced-motion: reduce) {
     .page-fade-in-up {
@@ -465,6 +509,17 @@ body {
     position: relative;
     width: 100%;
     cursor: pointer;
+    border-radius: var(--radius-md);
+  }
+
+  .ingredient-list-item:hover {
+    background-color: var(--color-cream);
+  }
+
+  /* Hide the previous item's divider when the next item is hovered */
+  .ingredient-list-item:has(+ .ingredient-list-item:hover) .ingredient-list-divider,
+  .group:has(+ .group:hover) .step-list-divider {
+    opacity: 0;
   }
 
   .ingredient-list-content {
@@ -473,12 +528,6 @@ body {
     gap: 12px;
     padding: 16px 8px;
     position: relative;
-    transition: background-color 150ms ease;
-    border-radius: 8px;
-  }
-
-  .ingredient-list-item:hover .ingredient-list-content {
-    background-color: var(--color-background-cream);
   }
 
   .ingredient-list-divider {
@@ -488,16 +537,15 @@ body {
     right: 8px;
     height: 1px;
     background-color: var(--color-border-light);
-    transition: opacity 150ms ease;
   }
 
   /* Native checkbox styled to match production */
   .ingredient-checkbox-input {
     width: 20px;
     height: 20px;
-    border: none;
+    border: 1.5px solid var(--color-gray-light);
     border-radius: 4px;
-    background-color: var(--color-gray-light);
+    background-color: transparent;
     cursor: pointer;
     appearance: none;
     -webkit-appearance: none;
@@ -513,7 +561,7 @@ body {
   }
 
   .ingredient-checkbox-input:checked::after {
-    content: '';
+    content: "";
     position: absolute;
     left: 50%;
     top: 50%;
@@ -546,7 +594,7 @@ body {
   .ingredient-list-item.is-checked .ingredient-list-name span,
   .ingredient-list-item.is-checked .ingredient-list-description {
     text-decoration: line-through;
-    color: #a8a29e;
+    color: var(--color-text-muted);
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
@@ -588,7 +636,9 @@ body {
 
   .step-image-reveal {
     display: grid;
-    transition: grid-template-rows 250ms var(--ease-out-quart), opacity 250ms var(--ease-out-quart);
+    transition:
+      grid-template-rows 250ms var(--ease-out-quart),
+      opacity 250ms var(--ease-out-quart);
   }
 
   .step-image-reveal[data-open="true"] {
@@ -681,8 +731,14 @@ body {
   ═══════════════════════════════════════════════════════════════════════════ */
 
   @keyframes tab-fade-in {
-    from { opacity: 0; transform: translateY(4px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .tab-content-animate {
@@ -694,9 +750,15 @@ body {
   ═══════════════════════════════════════════════════════════════════════════ */
 
   @keyframes checkbox-pop {
-    0%   { transform: translateY(-1px) scale(1); }
-    50%  { transform: translateY(-1px) scale(1.2); }
-    100% { transform: translateY(-1px) scale(1); }
+    0% {
+      transform: translateY(-1px) scale(1);
+    }
+    50% {
+      transform: translateY(-1px) scale(1.2);
+    }
+    100% {
+      transform: translateY(-1px) scale(1);
+    }
   }
 
   .ingredient-checkbox-input:checked {
@@ -723,12 +785,59 @@ body {
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
+     IMAGE PILL — Pop-in entry animation
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  @keyframes image-pill-in {
+    from {
+      opacity: 0;
+      transform: translateX(-8px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  @keyframes image-pill-out {
+    from {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateX(-8px) scale(0.96);
+    }
+  }
+
+  .image-pill-animate {
+    animation: image-pill-in 280ms var(--ease-out-quint) forwards;
+  }
+
+  .image-pill-exit {
+    animation: image-pill-out 180ms var(--ease-out-quint) forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .image-pill-animate,
+    .image-pill-exit {
+      animation: none;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
      TIMER VAULT — Slide up from bottom
   ═══════════════════════════════════════════════════════════════════════════ */
 
   @keyframes vault-slide-up {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .vault-animate {
@@ -740,8 +849,13 @@ body {
   ═══════════════════════════════════════════════════════════════════════════ */
 
   @keyframes timer-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
   }
 
   .timer-done-pulse {
@@ -787,7 +901,8 @@ body {
     size: auto;
   }
 
-  html, body {
+  html,
+  body {
     background: white !important;
     color: black !important;
     font-size: 12pt !important;

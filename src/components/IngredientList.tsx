@@ -1,15 +1,30 @@
 "use client";
 
-import { useState } from "react";
-import type { IngredientGroup } from "@/lib/types";
+import { useState, useMemo } from "react";
+import Magnifer from "@solar-icons/react/csr/search/Magnifer";
+import { X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import type { Ingredient, IngredientGroup } from "@/lib/types";
+import { ProgressPie } from "@/components/shared/progress-pie";
 
 interface IngredientListProps {
   groups: IngredientGroup[];
 }
 
+interface FilteredIngredient {
+  ingredient: Ingredient;
+  sourceIndex: number;
+}
+
+interface FilteredIngredientGroup {
+  groupName: string;
+  ingredients: FilteredIngredient[];
+}
+
 export function IngredientList({ groups }: IngredientListProps) {
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const toggleCheck = (key: string) => {
     setChecked((prev) => {
@@ -23,18 +38,87 @@ export function IngredientList({ groups }: IngredientListProps) {
     });
   };
 
+  const filteredGroups = useMemo(() => {
+    const normalizedGroups: FilteredIngredientGroup[] = groups.map((group) => ({
+      groupName: group.groupName,
+      ingredients: group.ingredients.map((ingredient, sourceIndex) => ({
+        ingredient,
+        sourceIndex,
+      })),
+    }));
+
+    if (!searchQuery.trim()) return normalizedGroups;
+
+    const query = searchQuery.toLowerCase().trim();
+    return normalizedGroups
+      .map((group) => ({
+        ...group,
+        ingredients: group.ingredients.filter(
+          ({ ingredient }) =>
+            ingredient.ingredient.toLowerCase().includes(query) ||
+            (ingredient.description && ingredient.description.toLowerCase().includes(query)) ||
+            (ingredient.substitutions &&
+              ingredient.substitutions.some((sub) => sub.toLowerCase().includes(query)))
+        ),
+      }))
+      .filter((group) => group.ingredients.length > 0);
+  }, [groups, searchQuery]);
+  const toggleAll = (keys: string[]) => {
+    setChecked((prev) => {
+      const next = new Set(prev);
+      const allChecked = keys.every((key) => prev.has(key));
+      for (const key of keys) {
+        if (allChecked) {
+          next.delete(key);
+        } else {
+          next.add(key);
+        }
+      }
+      return next;
+    });
+  };
+
   return (
     <div className="space-y-6">
-      {groups.map((group) => (
-        <IngredientGroupSection
-          key={group.groupName}
-          group={group}
-          checked={checked}
-          expanded={expanded}
-          onToggle={toggleCheck}
-          onExpand={(key) => setExpanded(expanded === key ? null : key)}
+      <div className="relative w-full max-w-[700px] mx-auto">
+        <Magnifer className="absolute left-3 top-1/2 -translate-y-1/2 size-[18px] text-muted-foreground pointer-events-none" />
+        <Input
+          type="text"
+          placeholder="Search ingredients"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          aria-label="Search ingredients"
+          className="pl-10 pr-9 h-11 rounded-lg border-transparent bg-stone-100 dark:bg-stone-800 font-sans text-[15px] placeholder:text-muted-foreground focus-visible:bg-background focus-visible:border-input"
         />
-      ))}
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={() => setSearchQuery("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-sm text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Clear search"
+          >
+            <X className="size-4" />
+          </button>
+        )}
+      </div>
+
+      {filteredGroups.length === 0 && searchQuery.trim() ? (
+        <p className="font-sans text-sm text-muted-foreground text-center py-4">
+          No ingredients match &ldquo;{searchQuery}&rdquo;
+        </p>
+      ) : (
+        filteredGroups.map((group) => (
+          <IngredientGroupSection
+            key={group.groupName}
+            group={group}
+            checked={checked}
+            expanded={expanded}
+            onToggle={toggleCheck}
+            onExpand={(key) => setExpanded(expanded === key ? null : key)}
+            onToggleAll={toggleAll}
+          />
+        ))
+      )}
     </div>
   );
 }
@@ -45,14 +129,23 @@ function IngredientGroupSection({
   expanded,
   onToggle,
   onExpand,
+  onToggleAll,
 }: {
-  group: IngredientGroup;
+  group: FilteredIngredientGroup;
   checked: Set<string>;
   expanded: string | null;
   onToggle: (key: string) => void;
   onExpand: (key: string) => void;
+  onToggleAll: (keys: string[]) => void;
 }) {
   const [collapsed, setCollapsed] = useState(false);
+
+  const ingredientKeys = group.ingredients.map(
+    ({ sourceIndex }) => `${group.groupName}-${sourceIndex}`
+  );
+  const totalCount = ingredientKeys.length;
+  const checkedCount = ingredientKeys.filter((key) => checked.has(key)).length;
+  const progressPercentage = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
 
   return (
     <div className="ingredient-group">
@@ -63,9 +156,40 @@ function IngredientGroupSection({
         aria-expanded={!collapsed}
       >
         <div className="flex items-center gap-3 flex-1">
-          <h3 className="font-sans text-sm font-semibold text-stone-900 dark:text-stone-100 capitalize">
+          <h3 className="font-sans text-base font-semibold text-stone-900 dark:text-stone-100 capitalize">
             {group.groupName}
           </h3>
+
+          {/* Progress Pie - appears when at least one ingredient is checked */}
+          <div
+            className={`flex items-center flex-shrink-0 transition-all duration-150 ease-out ${
+              checkedCount > 0
+                ? "opacity-100"
+                : "opacity-0 w-0 -ml-3 overflow-hidden pointer-events-none"
+            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleAll(ingredientKeys);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                e.stopPropagation();
+                onToggleAll(ingredientKeys);
+              }
+            }}
+            role="button"
+            tabIndex={checkedCount > 0 ? 0 : -1}
+            aria-label={`${checkedCount === totalCount ? "Uncheck" : "Check"} all ingredients in ${group.groupName}`}
+          >
+            <ProgressPie
+              percentage={progressPercentage}
+              size={18}
+              strokeWidth={1.5}
+              color="var(--primary)"
+            />
+          </div>
+
           <svg
             className={`w-4 h-4 text-stone-400 dark:text-stone-500 transition-transform duration-200 ${
               collapsed ? "-rotate-90" : ""
@@ -89,12 +213,13 @@ function IngredientGroupSection({
         }`}
       >
         <div className="overflow-hidden">
-          {group.ingredients.map((ing, i) => {
-            const key = `${group.groupName}-${i}`;
+          {group.ingredients.map(({ ingredient: ing, sourceIndex }, i) => {
+            const key = `${group.groupName}-${sourceIndex}`;
             const isChecked = checked.has(key);
             const isLast = i === group.ingredients.length - 1;
             const amount = `${ing.amount || ""} ${ing.units || ""}`.trim();
-            const hasDetails = ing.description || (ing.substitutions && ing.substitutions.length > 0);
+            const hasDetails =
+              ing.description || (ing.substitutions && ing.substitutions.length > 0);
             const isExpanded = expanded === key;
 
             return (
@@ -125,7 +250,7 @@ function IngredientGroupSection({
                       }`}
                     >
                       <p
-                        className={`font-sans font-medium text-sm text-stone-800 dark:text-stone-200 group-hover:text-black dark:group-hover:text-white capitalize ${
+                        className={`font-sans font-medium text-base text-stone-800 dark:text-stone-200 capitalize ${
                           isChecked ? "line-through" : ""
                         }`}
                       >
@@ -133,7 +258,7 @@ function IngredientGroupSection({
                       </p>
                       <div className="flex items-baseline gap-2 ml-3 flex-shrink-0">
                         {amount && (
-                          <p className="font-sans text-xs text-stone-400 dark:text-stone-500">
+                          <p className="font-sans text-sm text-stone-400 dark:text-stone-500">
                             {amount}
                           </p>
                         )}
@@ -182,7 +307,9 @@ function IngredientGroupSection({
                         )}
                         {ing.substitutions && ing.substitutions.length > 0 && (
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="font-sans text-[11px] text-stone-400 dark:text-stone-500">Sub:</span>
+                            <span className="font-sans text-[11px] text-stone-400 dark:text-stone-500">
+                              Sub:
+                            </span>
                             {ing.substitutions.map((sub) => (
                               <span
                                 key={sub}
@@ -199,7 +326,7 @@ function IngredientGroupSection({
                 )}
 
                 {!isLast && (
-                  <div className="ingredient-list-divider group-hover:opacity-0" />
+                  <div className="ingredient-list-divider absolute bottom-0 left-2 right-2 h-px bg-stone-100 dark:bg-stone-800 transition-opacity duration-150 group-hover:opacity-0" />
                 )}
               </div>
             );

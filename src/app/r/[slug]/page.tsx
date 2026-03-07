@@ -7,11 +7,7 @@ import { StepList } from "@/components/StepList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ParsedRecipe } from "@/lib/types";
 
-export default async function SharedRecipePage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function SharedRecipePage({ params }: { params: Promise<{ slug: string }> }) {
   if (!isSupabaseConfigured) {
     notFound();
   }
@@ -56,25 +52,33 @@ export default async function SharedRecipePage({
             <TabsList className="flex items-end w-full relative rounded-none border-b border-stone-200 dark:border-stone-700 bg-transparent p-0 gap-0">
               <TabsTrigger
                 value="prep"
-                className="folder-tab-trigger h-11 px-5 sm:px-8 font-sans text-sm font-medium"
+                className="folder-tab-trigger h-11 px-5 sm:px-8 font-sans text-[14px] font-medium"
               >
                 Prep
                 {recipe.prepTimeMinutes ? (
                   <>
-                    <span className="text-stone-300 dark:text-stone-600" aria-hidden>·</span>
-                    <span className="font-normal text-stone-400 dark:text-stone-500">{formatTime(recipe.prepTimeMinutes)}</span>
+                    <span className="text-stone-300 dark:text-stone-600" aria-hidden>
+                      ·
+                    </span>
+                    <span className="font-normal text-stone-400 dark:text-stone-500">
+                      {formatTime(recipe.prepTimeMinutes)}
+                    </span>
                   </>
                 ) : null}
               </TabsTrigger>
               <TabsTrigger
                 value="cook"
-                className="folder-tab-trigger h-11 px-5 sm:px-8 font-sans text-sm font-medium"
+                className="folder-tab-trigger h-11 px-5 sm:px-8 font-sans text-[14px] font-medium"
               >
                 Cook
                 {recipe.cookTimeMinutes ? (
                   <>
-                    <span className="text-stone-300 dark:text-stone-600" aria-hidden>·</span>
-                    <span className="font-normal text-stone-400 dark:text-stone-500">{formatTime(recipe.cookTimeMinutes)}</span>
+                    <span className="text-stone-300 dark:text-stone-600" aria-hidden>
+                      ·
+                    </span>
+                    <span className="font-normal text-stone-400 dark:text-stone-500">
+                      {formatTime(recipe.cookTimeMinutes)}
+                    </span>
                   </>
                 ) : null}
               </TabsTrigger>

@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import type { ParsedRecipe } from "@/lib/types";
 
 interface SavedMeta {
@@ -39,31 +33,35 @@ const HISTORY_KEY = "baby-mizen-history";
 const MAX_HISTORY = 10;
 
 export function RecipeProvider({ children }: { children: ReactNode }) {
-  const [recipe, setRecipeState] = useState<ParsedRecipe | null>(null);
-  const [savedMeta, setSavedMetaState] = useState<SavedMeta | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
-
-  // Load from localStorage on mount
-  useEffect(() => {
+  const [recipe, setRecipeState] = useState<ParsedRecipe | null>(() => {
+    if (typeof window === "undefined") return null;
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setRecipeState(JSON.parse(stored));
-      }
-      const storedMeta = localStorage.getItem(META_STORAGE_KEY);
-      if (storedMeta) {
-        setSavedMetaState(JSON.parse(storedMeta));
-      }
-      const storedHistory = localStorage.getItem(HISTORY_KEY);
-      if (storedHistory) {
-        setHistory(JSON.parse(storedHistory));
-      }
+      return stored ? JSON.parse(stored) : null;
     } catch {
-      // Ignore parse errors
+      return null;
     }
-  }, []);
+  });
+  const [savedMeta, setSavedMetaState] = useState<SavedMeta | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const stored = localStorage.getItem(META_STORAGE_KEY);
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const stored = localStorage.getItem(HISTORY_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const setRecipe = (newRecipe: ParsedRecipe | null) => {
     setRecipeState(newRecipe);
@@ -79,10 +77,10 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
           recipe: newRecipe,
           parsedAt: new Date().toISOString(),
         };
-        const updated = [
-          entry,
-          ...history.filter((h) => h.recipe.title !== newRecipe.title),
-        ].slice(0, MAX_HISTORY);
+        const updated = [entry, ...history.filter((h) => h.recipe.title !== newRecipe.title)].slice(
+          0,
+          MAX_HISTORY
+        );
         setHistory(updated);
         localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
       } else {

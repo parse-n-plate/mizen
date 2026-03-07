@@ -13,7 +13,8 @@ const EXAMPLE_RECIPES: { emoji: string; time: string; recipe: ParsedRecipe }[] =
     time: "25 min",
     recipe: {
       title: "Classic Carbonara",
-      summary: "A rich, creamy Roman pasta made with eggs, cheese, guanciale, and black pepper — no cream needed.",
+      summary:
+        "A rich, creamy Roman pasta made with eggs, cheese, guanciale, and black pepper — no cream needed.",
       author: "Bon Appetit",
       servings: 4,
       prepTimeMinutes: 10,
@@ -40,11 +41,31 @@ const EXAMPLE_RECIPES: { emoji: string; time: string; recipe: ParsedRecipe }[] =
         },
       ],
       instructions: [
-        { title: "Cook the pasta", detail: "Bring a large pot of heavily salted water to a boil. Cook spaghetti until just shy of al dente, about 1 minute less than package directions. Reserve 1½ cups pasta water before draining." },
-        { title: "Render the guanciale", detail: "While pasta cooks, place guanciale in a cold large skillet. Cook over medium heat, stirring occasionally, until the fat renders and the pieces are golden and crisp, about 7 minutes. Remove from heat." },
-        { title: "Make the egg mixture", detail: "Whisk egg yolks, whole eggs, and most of the Pecorino (save some for serving) in a medium bowl. Add plenty of freshly cracked black pepper." },
-        { title: "Combine everything", detail: "Add drained pasta to the skillet with guanciale. Toss over low heat for 30 seconds. Remove from heat entirely, then pour in the egg mixture, tossing vigorously. Add splashes of reserved pasta water until you have a glossy, creamy sauce that coats each strand." },
-        { title: "Serve", detail: "Divide among warmed bowls. Top with remaining Pecorino and more cracked black pepper. Serve immediately." },
+        {
+          title: "Cook the pasta",
+          detail:
+            "Bring a large pot of heavily salted water to a boil. Cook spaghetti until just shy of al dente, about 1 minute less than package directions. Reserve 1½ cups pasta water before draining.",
+        },
+        {
+          title: "Render the guanciale",
+          detail:
+            "While pasta cooks, place guanciale in a cold large skillet. Cook over medium heat, stirring occasionally, until the fat renders and the pieces are golden and crisp, about 7 minutes. Remove from heat.",
+        },
+        {
+          title: "Make the egg mixture",
+          detail:
+            "Whisk egg yolks, whole eggs, and most of the Pecorino (save some for serving) in a medium bowl. Add plenty of freshly cracked black pepper.",
+        },
+        {
+          title: "Combine everything",
+          detail:
+            "Add drained pasta to the skillet with guanciale. Toss over low heat for 30 seconds. Remove from heat entirely, then pour in the egg mixture, tossing vigorously. Add splashes of reserved pasta water until you have a glossy, creamy sauce that coats each strand.",
+        },
+        {
+          title: "Serve",
+          detail:
+            "Divide among warmed bowls. Top with remaining Pecorino and more cracked black pepper. Serve immediately.",
+        },
       ],
     },
   },
@@ -53,7 +74,8 @@ const EXAMPLE_RECIPES: { emoji: string; time: string; recipe: ParsedRecipe }[] =
     time: "35 min",
     recipe: {
       title: "Thai Green Curry",
-      summary: "A fragrant, coconut-based curry with tender chicken, Thai basil, and vegetables — faster than takeout.",
+      summary:
+        "A fragrant, coconut-based curry with tender chicken, Thai basil, and vegetables — faster than takeout.",
       author: "RecipeTin Eats",
       servings: 4,
       prepTimeMinutes: 10,
@@ -86,11 +108,31 @@ const EXAMPLE_RECIPES: { emoji: string; time: string; recipe: ParsedRecipe }[] =
         },
       ],
       instructions: [
-        { title: "Bloom the curry paste", detail: "Heat oil in a large skillet or wok over medium-high heat. Add the green curry paste and stir-fry for 1 minute until fragrant." },
-        { title: "Cook the chicken", detail: "Add sliced chicken and cook for 3 minutes, tossing to coat in the paste, until the outside turns white." },
-        { title: "Build the sauce", detail: "Pour in coconut milk and chicken broth. Add fish sauce, brown sugar, and kaffir lime leaves. Stir and bring to a simmer." },
-        { title: "Add vegetables", detail: "Add bell pepper and bamboo shoots. Simmer for 10–12 minutes until the chicken is cooked through and the sauce has thickened slightly." },
-        { title: "Finish and serve", detail: "Remove from heat and stir in Thai basil until just wilted. Serve over jasmine rice with lime wedges on the side." },
+        {
+          title: "Bloom the curry paste",
+          detail:
+            "Heat oil in a large skillet or wok over medium-high heat. Add the green curry paste and stir-fry for 1 minute until fragrant.",
+        },
+        {
+          title: "Cook the chicken",
+          detail:
+            "Add sliced chicken and cook for 3 minutes, tossing to coat in the paste, until the outside turns white.",
+        },
+        {
+          title: "Build the sauce",
+          detail:
+            "Pour in coconut milk and chicken broth. Add fish sauce, brown sugar, and kaffir lime leaves. Stir and bring to a simmer.",
+        },
+        {
+          title: "Add vegetables",
+          detail:
+            "Add bell pepper and bamboo shoots. Simmer for 10–12 minutes until the chicken is cooked through and the sauce has thickened slightly.",
+        },
+        {
+          title: "Finish and serve",
+          detail:
+            "Remove from heat and stir in Thai basil until just wilted. Serve over jasmine rice with lime wedges on the side.",
+        },
       ],
     },
   },
@@ -99,7 +141,8 @@ const EXAMPLE_RECIPES: { emoji: string; time: string; recipe: ParsedRecipe }[] =
     time: "30 min",
     recipe: {
       title: "Chocolate Chip Cookies",
-      summary: "Thick, chewy chocolate chip cookies with crispy edges and gooey centers — the only recipe you need.",
+      summary:
+        "Thick, chewy chocolate chip cookies with crispy edges and gooey centers — the only recipe you need.",
       author: "Sally's Baking Addiction",
       servings: 36,
       prepTimeMinutes: 15,
@@ -129,20 +172,34 @@ const EXAMPLE_RECIPES: { emoji: string; time: string; recipe: ParsedRecipe }[] =
         },
       ],
       instructions: [
-        { title: "Mix dry ingredients", detail: "Whisk flour, baking soda, salt, and cornstarch together in a medium bowl. Set aside." },
-        { title: "Make the dough", detail: "In a large bowl, whisk the melted butter, brown sugar, and granulated sugar until smooth. Add the egg, egg yolk, and vanilla, whisking until combined. Pour the dry ingredients into the wet and mix with a rubber spatula until a soft dough forms. Fold in the chocolate chips." },
-        { title: "Chill the dough", detail: "Cover the dough and chill in the refrigerator for at least 30 minutes (or up to 3 days). This step is essential for thick cookies." },
-        { title: "Bake", detail: "Preheat oven to 325°F (163°C). Line baking sheets with parchment paper. Scoop 1.5 tablespoon-sized balls of dough and place 3 inches apart. Bake for 11–13 minutes until edges are barely set and centers look undone." },
-        { title: "Cool", detail: "Let cookies cool on the baking sheet for 10 minutes — they'll continue to set. Transfer to a wire rack. Cookies stay fresh in an airtight container for up to 1 week." },
+        {
+          title: "Mix dry ingredients",
+          detail:
+            "Whisk flour, baking soda, salt, and cornstarch together in a medium bowl. Set aside.",
+        },
+        {
+          title: "Make the dough",
+          detail:
+            "In a large bowl, whisk the melted butter, brown sugar, and granulated sugar until smooth. Add the egg, egg yolk, and vanilla, whisking until combined. Pour the dry ingredients into the wet and mix with a rubber spatula until a soft dough forms. Fold in the chocolate chips.",
+        },
+        {
+          title: "Chill the dough",
+          detail:
+            "Cover the dough and chill in the refrigerator for at least 30 minutes (or up to 3 days). This step is essential for thick cookies.",
+        },
+        {
+          title: "Bake",
+          detail:
+            "Preheat oven to 325°F (163°C). Line baking sheets with parchment paper. Scoop 1.5 tablespoon-sized balls of dough and place 3 inches apart. Bake for 11–13 minutes until edges are barely set and centers look undone.",
+        },
+        {
+          title: "Cool",
+          detail:
+            "Let cookies cool on the baking sheet for 10 minutes — they'll continue to set. Transfer to a wire rack. Cookies stay fresh in an airtight container for up to 1 week.",
+        },
       ],
     },
   },
-];
-
-const HOW_IT_WORKS = [
-  { step: "Paste a URL", icon: "link" },
-  { step: "We strip the clutter", icon: "sparkles" },
-  { step: "Cook in peace", icon: "check" },
 ];
 
 export function GettingStarted() {
@@ -164,58 +221,21 @@ export function GettingStarted() {
 
   return (
     <>
-      <section className="page-fade-in-up page-fade-delay-3 w-full max-w-2xl space-y-8">
-        {/* How it works — simple inline steps */}
-        <div className="flex items-center justify-center gap-2 font-sans text-sm text-stone-400 dark:text-stone-500">
-          {HOW_IT_WORKS.map((item, i) => (
-            <span key={item.step} className="flex items-center gap-2">
-              {i > 0 && (
-                <svg className="h-3 w-3 text-stone-300 dark:text-stone-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="m9 18 6-6-6-6" />
-                </svg>
-              )}
-              <span className="flex items-center gap-1.5">
-                {item.icon === "link" && (
-                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                  </svg>
-                )}
-                {item.icon === "sparkles" && (
-                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
-                  </svg>
-                )}
-                {item.icon === "check" && (
-                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 6 9 17l-5-5" />
-                  </svg>
-                )}
-                {item.step}
-              </span>
-            </span>
-          ))}
-        </div>
-
+      <section className="page-fade-in-up page-fade-delay-3 w-full max-w-3xl space-y-8">
         {/* Example recipes */}
         <div>
           <p className="mb-3 text-center font-sans text-sm font-medium text-stone-500 dark:text-stone-400">
             Try one
           </p>
           <div className="grid grid-cols-3 gap-2.5">
-            {EXAMPLE_RECIPES.map((example, i) => {
+            {EXAMPLE_RECIPES.map((example) => {
               const isActive = loadingTitle === example.recipe.title;
-              const tints = [
-                "bg-[var(--color-wheat-tint)]",
-                "bg-[var(--color-mint-tint)]",
-                "bg-[var(--color-orange-tint)]",
-              ];
               return (
                 <button
                   key={example.recipe.title}
                   onClick={() => handleTryRecipe(example.recipe)}
                   disabled={!!loadingTitle}
-                  className={`press-scale flex flex-col items-start gap-1 rounded-2xl border border-stone-200 dark:border-stone-700 ${tints[i]} px-4 py-3.5 text-left transition-all hover:border-stone-300 dark:hover:border-stone-600 hover:shadow-sm disabled:opacity-50`}
+                  className="press-scale flex flex-col items-start gap-1 rounded-2xl border border-stone-200 dark:border-stone-700 bg-[var(--color-cream)] px-4 py-3.5 text-left transition-all hover:border-stone-300 dark:hover:border-stone-600 hover:shadow-sm disabled:opacity-50"
                 >
                   <span className="text-xl leading-none">{example.emoji}</span>
                   <span className="font-sans text-[14px] font-medium text-stone-900 dark:text-stone-100 leading-snug">
@@ -225,8 +245,19 @@ export function GettingStarted() {
                     {isActive ? (
                       <span className="inline-flex items-center gap-1">
                         <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                          />
                         </svg>
                         Parsing...
                       </span>
@@ -257,7 +288,7 @@ export function GettingStarted() {
       </section>
 
       {isSupabaseConfigured && (
-        <AuthModal open={authOpen} onOpenChange={setAuthOpen} />
+        <AuthModal open={authOpen} onOpenChange={setAuthOpen} initialMode="signup" />
       )}
     </>
   );

@@ -39,7 +39,5 @@ export const CoreRecipeSchema = z.object({
   cookTimeMinutes: z.number().optional(),
   totalTimeMinutes: z.number().optional(),
   ingredients: z.array(IngredientGroupSchema).min(1),
-  instructions: z.array(
-    z.union([InstructionStepSchema, z.string()])
-  ),
+  instructions: z.array(z.union([InstructionStepSchema, z.string()])),
 });
