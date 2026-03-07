@@ -20,10 +20,7 @@ export function extractJsonFromAiResponse(text: string): unknown {
   }
 
   // Strip markdown code fences
-  const fencePatterns = [
-    /```json\s*([\s\S]*?)```/i,
-    /```\s*([\s\S]*?)```/,
-  ];
+  const fencePatterns = [/```json\s*([\s\S]*?)```/i, /```\s*([\s\S]*?)```/];
 
   for (const pattern of fencePatterns) {
     const match = text.match(pattern);

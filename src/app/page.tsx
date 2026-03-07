@@ -20,8 +20,8 @@ export default function HomePage() {
             calm cooking.
           </h1>
           <p className="page-fade-in-up page-fade-delay-1 mx-auto max-w-md font-sans text-lg text-stone-500 dark:text-stone-400">
-            Paste a recipe URL. We strip the clutter and give you a clean,
-            focused cooking experience.
+            Paste a recipe URL. We strip the clutter and give you a clean, focused cooking
+            experience.
           </p>
         </div>
 
@@ -36,9 +36,7 @@ export default function HomePage() {
         )}
 
         {error && (
-          <p className="mt-6 max-w-md text-center font-sans text-sm text-red-500">
-            {error}
-          </p>
+          <p className="mt-6 max-w-md text-center font-sans text-sm text-red-500">{error}</p>
         )}
 
         <div className="mt-12 w-full flex justify-center">

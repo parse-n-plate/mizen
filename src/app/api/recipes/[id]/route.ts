@@ -1,11 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 
-export async function DELETE(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+const log = logger.child({ module: "api/recipes/[id]" });
+
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!isSupabaseConfigured) {
     return NextResponse.json(
       { error: "Removing recipes is not available right now" },
@@ -30,17 +30,14 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { error } = await supabase
-      .from("recipes")
-      .delete()
-      .eq("id", id)
-      .eq("user_id", user.id);
+    const { error } = await supabase.from("recipes").delete().eq("id", id).eq("user_id", user.id);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (err) {
+    log.error({ err }, "Failed to delete recipe");
     return NextResponse.json(
       { error: "Removing recipes is temporarily unavailable" },
       { status: 503 }

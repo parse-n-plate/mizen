@@ -7,11 +7,7 @@ import { StepList } from "@/components/StepList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ParsedRecipe } from "@/lib/types";
 
-export default async function SharedRecipePage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function SharedRecipePage({ params }: { params: Promise<{ slug: string }> }) {
   if (!isSupabaseConfigured) {
     notFound();
   }
@@ -61,8 +57,12 @@ export default async function SharedRecipePage({
                 Prep
                 {recipe.prepTimeMinutes ? (
                   <>
-                    <span className="text-stone-300 dark:text-stone-600" aria-hidden>·</span>
-                    <span className="font-normal text-stone-400 dark:text-stone-500">{formatTime(recipe.prepTimeMinutes)}</span>
+                    <span className="text-stone-300 dark:text-stone-600" aria-hidden>
+                      ·
+                    </span>
+                    <span className="font-normal text-stone-400 dark:text-stone-500">
+                      {formatTime(recipe.prepTimeMinutes)}
+                    </span>
                   </>
                 ) : null}
               </TabsTrigger>
@@ -73,8 +73,12 @@ export default async function SharedRecipePage({
                 Cook
                 {recipe.cookTimeMinutes ? (
                   <>
-                    <span className="text-stone-300 dark:text-stone-600" aria-hidden>·</span>
-                    <span className="font-normal text-stone-400 dark:text-stone-500">{formatTime(recipe.cookTimeMinutes)}</span>
+                    <span className="text-stone-300 dark:text-stone-600" aria-hidden>
+                      ·
+                    </span>
+                    <span className="font-normal text-stone-400 dark:text-stone-500">
+                      {formatTime(recipe.cookTimeMinutes)}
+                    </span>
                   </>
                 ) : null}
               </TabsTrigger>

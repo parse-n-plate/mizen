@@ -36,8 +36,7 @@ export function RecentRecipes() {
           {history.map((entry) => {
             const time =
               entry.recipe.totalTimeMinutes ||
-              ((entry.recipe.prepTimeMinutes || 0) +
-                (entry.recipe.cookTimeMinutes || 0)) ||
+              (entry.recipe.prepTimeMinutes || 0) + (entry.recipe.cookTimeMinutes || 0) ||
               null;
 
             return (
