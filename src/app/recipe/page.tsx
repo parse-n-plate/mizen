@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback, useSyncExternalStore } from "react";
 import { useRecipe } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import { RecipeHeader, formatTime } from "@/components/RecipeHeader";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
 import { scaleIngredients } from "@/utils/ingredientScaler";
+import { getRoundAmounts } from "@/lib/preferences";
 import Link from "next/link";
 
 export default function RecipePage() {
@@ -26,10 +27,19 @@ export default function RecipePage() {
     setServings(recipe?.servings);
   }, [recipe]);
 
+  const roundAmounts = useSyncExternalStore(
+    useCallback((cb: () => void) => {
+      window.addEventListener("round-amounts-changed", cb);
+      return () => window.removeEventListener("round-amounts-changed", cb);
+    }, []),
+    getRoundAmounts,
+    () => false
+  );
+
   const scaledIngredients = useMemo(() => {
     if (!recipe || !originalServings || !servings) return recipe?.ingredients ?? [];
-    return scaleIngredients(recipe.ingredients, originalServings, servings);
-  }, [recipe, originalServings, servings]);
+    return scaleIngredients(recipe.ingredients, originalServings, servings, roundAmounts);
+  }, [recipe, originalServings, servings, roundAmounts]);
 
   const shareUrl = savedMeta
     ? `${typeof window !== "undefined" ? window.location.origin : ""}/r/${savedMeta.slug}`
