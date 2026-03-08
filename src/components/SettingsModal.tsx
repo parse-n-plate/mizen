@@ -30,6 +30,7 @@ import {
   setTemperatureUnit,
   setUnitSystem,
 } from "@/lib/preferences";
+import { type NumberFormat, getNumberFormat, setNumberFormat } from "@/lib/numberFormat";
 import { useRecipe } from "@/context/RecipeContext";
 import {
   applySubstitutionsToGroups,
@@ -282,6 +283,11 @@ function AccountSection({
   );
 }
 
+const NUMBER_FORMAT_OPTIONS: { value: NumberFormat; label: string }[] = [
+  { value: "fractions", label: "⅓" },
+  { value: "decimals", label: "0.33" },
+];
+
 function PreferencesSection() {
   const [theme, setThemeState] = useState<Theme>(getTheme);
 
@@ -327,6 +333,7 @@ function CookingSection() {
   const { recipe, setRecipe } = useRecipe();
   const [unitSystem, setUnitSystemState] = useState<UnitSystem>(getUnitSystem);
   const [tempUnit, setTempUnitState] = useState<TemperatureUnit>(getTemperatureUnit);
+  const [numberFormat, setNumberFormatState] = useState<NumberFormat>(getNumberFormat);
   const [roundAmounts, setRoundAmountsState] = useState(getRoundAmounts);
   const [savedDefaultServings, setSavedDefaultServingsState] = useState(getDefaultServings);
   const [defaultServingsInput, setDefaultServingsInput] = useState(() =>
@@ -388,6 +395,11 @@ function CookingSection() {
     const next = value as TemperatureUnit;
     setTempUnitState(next);
     setTemperatureUnit(next);
+  };
+
+  const handleNumberFormatChange = (f: NumberFormat) => {
+    setNumberFormatState(f);
+    setNumberFormat(f);
   };
 
   const handleRoundAmountsChange = (checked: boolean) => {
@@ -471,6 +483,28 @@ function CookingSection() {
               className="h-auto px-3 py-1 font-sans text-[13px] data-[state=on]:bg-stone-900 data-[state=on]:text-white dark:data-[state=on]:bg-stone-100 dark:data-[state=on]:text-stone-900"
             >
               {option.label}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </SettingRow>
+
+      <SettingRow label="Numbers" description="Show amounts as fractions or decimals.">
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          value={numberFormat}
+          onValueChange={(v) => {
+            if (v) handleNumberFormatChange(v as NumberFormat);
+          }}
+          className="rounded-lg"
+        >
+          {NUMBER_FORMAT_OPTIONS.map((opt) => (
+            <ToggleGroupItem
+              key={opt.value}
+              value={opt.value}
+              className="h-auto px-3 py-1 font-sans text-[13px] data-[state=on]:bg-stone-900 data-[state=on]:text-white dark:data-[state=on]:bg-stone-100 dark:data-[state=on]:text-stone-900"
+            >
+              {opt.label}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>

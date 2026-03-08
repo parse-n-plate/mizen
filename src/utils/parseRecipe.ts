@@ -1,11 +1,14 @@
 import * as cheerio from "cheerio";
+import { z } from "zod";
 import { getGroqClient, extractJsonFromAiResponse } from "@/lib/groq";
 import { logger } from "@/lib/logger";
-import { CoreRecipeSchema } from "@/lib/schemas/recipe";
-import { EXTRACTION_PROMPT } from "@/lib/prompts/extraction";
-import { cleanRecipeHTML } from "./htmlCleaner";
+import { CoreRecipeSchema, IngredientGroupSchema } from "@/lib/schemas/recipe";
+import { EXTRACTION_PROMPT, ENRICHMENT_PROMPT } from "@/lib/prompts/extraction";
+import { cleanRecipeHTML, type CleanedHTML } from "./htmlCleaner";
 import { COLLECTION_MESSAGE } from "./urlPatterns";
+import { normalizeAmount, normalizeDecimalsInText } from "./ingredientScaler";
 import type {
+  Ingredient,
   ParsedRecipe,
   ParserResult,
   IngredientGroup,
@@ -43,90 +46,106 @@ function decodeHtmlEntities(text: string): string {
     .trim();
 }
 
-function parseIngredientString(raw: string): {
-  amount: string;
-  units: string;
-  ingredient: string;
-} {
-  const s = raw.trim();
-  if (!s) return { amount: "", units: "", ingredient: s };
+// ---------------------------------------------------------------------------
+// Ingredient string parser — splits raw JSON-LD strings into structured fields
+// ---------------------------------------------------------------------------
 
-  // Match amount at start: integers, fractions, decimals, mixed numbers, unicode fractions, and ranges.
-  const unicodeFractions = "½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞";
-  const numberToken = `(?:\\d+\\s+\\d+/\\d+|\\d+[${unicodeFractions}]|\\d+/\\d+|\\d*\\.\\d+|\\d+|[${unicodeFractions}])`;
-  const amountRe = new RegExp(
-    `^((?:${numberToken})(?:\\s*[\\-–—]\\s*(?:${numberToken}))?)\\s*`
-  );
-  const amountMatch = s.match(amountRe);
-  if (!amountMatch) return { amount: "", units: "", ingredient: s };
+const UNITS = new Set([
+  "cup", "cups", "c",
+  "tablespoon", "tablespoons", "tbsp", "tbs", "tb",
+  "teaspoon", "teaspoons", "tsp", "ts",
+  "ounce", "ounces", "oz",
+  "pound", "pounds", "lb", "lbs",
+  "gram", "grams", "g",
+  "kilogram", "kilograms", "kg",
+  "milliliter", "milliliters", "ml",
+  "liter", "liters", "l",
+  "gallon", "gallons", "gal",
+  "quart", "quarts", "qt",
+  "pint", "pints", "pt",
+  "fluid ounce", "fluid ounces", "fl oz",
+  "pinch", "pinches", "dash", "dashes",
+  "clove", "cloves",
+  "sprig", "sprigs",
+  "slice", "slices",
+  "piece", "pieces",
+  "can", "cans",
+  "bunch", "bunches",
+  "head", "heads",
+  "stalk", "stalks",
+  "serving", "servings",
+  "package", "packages", "pkg",
+  "stick", "sticks",
+  "bag", "bags",
+  "bottle", "bottles",
+  "jar", "jars",
+  "sheet", "sheets",
+  "drop", "drops",
+  "handful", "handfuls",
+]);
 
-  const amount = amountMatch[1].trim();
-  const rest = s.slice(amountMatch[0].length).trim();
+// Matches leading amounts: "2", "2½", "1/2", "2 1/2", "6-8", "6–8"
+const AMOUNT_RE =
+  /^(\d+\s*[½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]|\d+\s*\/\s*\d+|\d+\s+\d+\s*\/\s*\d+|\d+\s*[–\-]\s*\d+|\d+(?:\.\d+)?|[½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞])\s*/;
 
-  // Match common cooking units (singular/plural)
-  const unitPatterns = [
-    "cups?",
-    "tablespoons?",
-    "tbsps?\\.?",
-    "teaspoons?",
-    "tsps?\\.?",
-    "ounces?",
-    "oz\\.?",
-    "pounds?",
-    "lbs?\\.?",
-    "grams?",
-    "g",
-    "kilograms?",
-    "kg",
-    "millilit(?:er|re)s?",
-    "ml",
-    "lit(?:er|re)s?",
-    "l",
-    "pints?",
-    "quarts?",
-    "gallons?",
-    "pinch(?:es)?",
-    "dash(?:es)?",
-    "cloves?",
-    "slices?",
-    "pieces?",
-    "stalks?",
-    "sprigs?",
-    "bunche?s?",
-    "cans?",
-    "packages?",
-    "pkgs?\\.?",
-    "sticks?",
-    "heads?",
-    "ears?",
-    "large",
-    "medium",
-    "small",
-    "whole",
-  ];
-  const unitRe = new RegExp(
-    `^(${unitPatterns.join("|")})(?:\\b|\\.)\\s*`,
-    "i"
-  );
-  const unitMatch = rest.match(unitRe);
+function parseIngredientString(raw: string): Ingredient {
+  let text = raw.trim();
 
-  if (unitMatch) {
-    return {
-      amount,
-      units: unitMatch[1].replace(/\.$/, ""),
-      ingredient: rest
-        .slice(unitMatch[0].length)
-        .replace(/^of\s+/i, "")
-        .trim(),
-    };
+  // 1. Extract parenthetical content → description parts
+  const descParts: string[] = [];
+
+  // Double parens ((Optional)) → strip outer, keep inner
+  text = text.replace(/\(\(([^)]*)\)\)/g, (_, inner: string) => {
+    const cleaned = inner.trim();
+    if (cleaned) descParts.push(cleaned);
+    return "";
+  });
+
+  // Single parens (Japanese Soup Stock)
+  text = text.replace(/\(([^)]*)\)/g, (_, inner: string) => {
+    const cleaned = inner.trim();
+    if (cleaned) descParts.push(cleaned);
+    return "";
+  });
+
+  text = text.replace(/\s+/g, " ").trim();
+
+  // 2. Extract leading amount
+  let amount = "";
+  const amountMatch = text.match(AMOUNT_RE);
+  if (amountMatch) {
+    amount = amountMatch[1].trim();
+    text = text.slice(amountMatch[0].length).trim();
   }
 
-  // If parsing left a dangling dash, treat as an ambiguous parse and preserve the original string.
-  if (/^[\-–—]/.test(rest)) {
-    return { amount: "", units: "", ingredient: s };
+  // 3. Extract unit (first word if it's a known unit)
+  let units = "";
+  // Check for two-word units first (e.g., "fl oz", "fluid ounce")
+  const twoWordUnit = text.match(/^(\S+\s+\S+)\s+/);
+  if (twoWordUnit && UNITS.has(twoWordUnit[1].toLowerCase())) {
+    units = twoWordUnit[1];
+    text = text.slice(twoWordUnit[0].length).trim();
+  } else {
+    const firstWord = text.match(/^(\S+)\s+/);
+    if (firstWord && UNITS.has(firstWord[1].toLowerCase())) {
+      units = firstWord[1];
+      text = text.slice(firstWord[0].length).trim();
+    }
   }
 
-  return { amount, units: "", ingredient: rest };
+  // 4. If no amount was found, default to "as needed" (including unit-only forms like "pinch salt")
+  if (!amount) {
+    amount = "as needed";
+  }
+
+  const description = descParts.length > 0 ? descParts.join(". ") : undefined;
+
+  return {
+    amount,
+    units,
+    ingredient: text || raw.trim(),
+    ...(description && { description }),
+  };
 }
 
 function normalizeInstructionSteps(instructions: unknown): InstructionStep[] {
@@ -196,6 +215,31 @@ function deduplicateUnits(groups: IngredientGroup[]): IngredientGroup[] {
       }
       return ing;
     }),
+  }));
+}
+
+/**
+ * Normalize all ingredient amounts, converting LLM-generated decimal
+ * strings (e.g. "0.33333334326744") back to unicode fractions ("⅓").
+ */
+function normalizeIngredientAmounts(groups: IngredientGroup[]): IngredientGroup[] {
+  return groups.map((group) => ({
+    ...group,
+    ingredients: group.ingredients.map((ing) => ({
+      ...ing,
+      amount: normalizeAmount(ing.amount),
+    })),
+  }));
+}
+
+/**
+ * Normalize decimal numbers in instruction text back to unicode fractions.
+ */
+function normalizeInstructionText(instructions: InstructionStep[]): InstructionStep[] {
+  return instructions.map((step) => ({
+    ...step,
+    detail: normalizeDecimalsInText(step.detail),
+    ...(step.tips && { tips: normalizeDecimalsInText(step.tips) }),
   }));
 }
 
@@ -372,9 +416,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             const ingredients: IngredientGroup[] = [
               {
                 groupName: "Main",
-                ingredients: ingredientStrings.map((ing) =>
-                  parseIngredientString(ing)
-                ),
+                ingredients: ingredientStrings.map(parseIngredientString),
               },
             ];
 
@@ -480,8 +522,8 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             ) {
               return {
                 title,
-                ingredients,
-                instructions: normalizedInstructions,
+                ingredients: normalizeIngredientAmounts(ingredients),
+                instructions: normalizeInstructionText(normalizedInstructions),
                 ...(author && { author }),
                 ...(servings && { servings }),
                 ...(prepTimeMinutes && { prepTimeMinutes }),
@@ -546,8 +588,8 @@ async function extractWithAI(cleanedHtml: string): Promise<ParsedRecipe | null> 
 
   return {
     title: data.title,
-    ingredients: deduplicateUnits(data.ingredients),
-    instructions: normalizedInstructions,
+    ingredients: normalizeIngredientAmounts(deduplicateUnits(data.ingredients)),
+    instructions: normalizeInstructionText(normalizedInstructions),
     ...(data.author && { author: data.author }),
     ...(data.summary && { summary: data.summary }),
     ...(servings && { servings }),
@@ -555,6 +597,103 @@ async function extractWithAI(cleanedHtml: string): Promise<ParsedRecipe | null> 
     ...(data.cookTimeMinutes && { cookTimeMinutes: data.cookTimeMinutes }),
     ...(data.totalTimeMinutes && { totalTimeMinutes: data.totalTimeMinutes }),
   };
+}
+
+// ---------------------------------------------------------------------------
+// Layer 2b: AI Enrichment (Groq) — for JSON-LD data
+// ---------------------------------------------------------------------------
+
+async function enrichWithAI(
+  jsonLdData: ParsedRecipe
+): Promise<Partial<ParsedRecipe> | null> {
+  const groq = getGroqClient();
+
+  const inputPayload = JSON.stringify({
+    title: jsonLdData.title,
+    servings: jsonLdData.servings ?? null,
+    prepTimeMinutes: jsonLdData.prepTimeMinutes ?? null,
+    cookTimeMinutes: jsonLdData.cookTimeMinutes ?? null,
+    totalTimeMinutes: jsonLdData.totalTimeMinutes ?? null,
+    ingredients: jsonLdData.ingredients,
+    instructions: jsonLdData.instructions.map((s) => ({
+      detail: s.detail,
+    })),
+  });
+
+  const response = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages: [
+      { role: "system", content: ENRICHMENT_PROMPT },
+      { role: "user", content: inputPayload },
+    ],
+    temperature: 0.1,
+    max_tokens: 4000,
+  });
+
+  const result = response.choices[0]?.message?.content;
+  if (!result || result.trim().length === 0) return null;
+
+  const parsedData = extractJsonFromAiResponse(result);
+  if (!parsedData || typeof parsedData !== "object") return null;
+
+  const data = parsedData as Record<string, unknown>;
+
+  let enrichedIngredients: IngredientGroup[] | undefined;
+  if (Array.isArray(data.ingredients) && data.ingredients.length > 0) {
+    const result = z.array(IngredientGroupSchema).safeParse(data.ingredients);
+    if (result.success) enrichedIngredients = normalizeIngredientAmounts(result.data);
+    else log.error({ issues: result.error.issues }, "Enriched ingredients failed validation");
+  }
+
+  let enrichedInstructions: InstructionStep[] | undefined;
+  if (Array.isArray(data.instructions)) {
+    const normalized = normalizeInstructionSteps(data.instructions);
+    if (normalized.length > 0) enrichedInstructions = normalized;
+  }
+
+  const summary =
+    typeof data.summary === "string" && data.summary.trim()
+      ? data.summary.trim()
+      : undefined;
+
+  const enrichedServings =
+    typeof data.servings === "number" && data.servings > 0
+      ? data.servings
+      : undefined;
+  const enrichedPrepTime =
+    typeof data.prepTimeMinutes === "number" && data.prepTimeMinutes > 0
+      ? data.prepTimeMinutes
+      : undefined;
+  const enrichedCookTime =
+    typeof data.cookTimeMinutes === "number" && data.cookTimeMinutes > 0
+      ? data.cookTimeMinutes
+      : undefined;
+  const enrichedTotalTime =
+    typeof data.totalTimeMinutes === "number" && data.totalTimeMinutes > 0
+      ? data.totalTimeMinutes
+      : undefined;
+
+  return {
+    ...(enrichedIngredients && { ingredients: enrichedIngredients }),
+    ...(enrichedInstructions && { instructions: enrichedInstructions }),
+    ...(summary && { summary }),
+    ...(enrichedServings && { servings: enrichedServings }),
+    ...(enrichedPrepTime && { prepTimeMinutes: enrichedPrepTime }),
+    ...(enrichedCookTime && { cookTimeMinutes: enrichedCookTime }),
+    ...(enrichedTotalTime && { totalTimeMinutes: enrichedTotalTime }),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Content selection for full AI extraction
+// ---------------------------------------------------------------------------
+
+function pickContentForAI(cleaned: CleanedHTML): string {
+  // Prefer recipe card container (highest signal, no blog prose)
+  if (cleaned.recipeCardHtml && cleaned.recipeCardHtml.length > 500) {
+    return cleaned.recipeCardHtml;
+  }
+  return cleaned.html || "";
 }
 
 // ---------------------------------------------------------------------------
@@ -641,8 +780,8 @@ export async function parseRecipeFromImage(
 
     const recipe: ParsedRecipe = {
       title: data.title,
-      ingredients: deduplicateUnits(data.ingredients),
-      instructions: normalizedInstructions,
+      ingredients: normalizeIngredientAmounts(deduplicateUnits(data.ingredients)),
+      instructions: normalizeInstructionText(normalizedInstructions),
       ...(data.author && { author: data.author }),
       ...(data.summary && { summary: data.summary }),
       ...(servings && { servings }),
@@ -728,11 +867,12 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
     const jsonLdResult = extractFromJsonLd($);
 
     if (jsonLdResult) {
-      // Try AI enrichment for better groupings
-      let aiResult: ParsedRecipe | null = null;
+      // Enrich JSON-LD data with AI (groupings, step titles, summary)
+      // Sends compact JSON instead of full HTML — much smaller payload
+      let enrichment: Partial<ParsedRecipe> | null = null;
       try {
         if (process.env.GROQ_API_KEY) {
-          aiResult = await extractWithAI(cleaned.html);
+          enrichment = await enrichWithAI(jsonLdResult);
         }
       } catch (error) {
         log.warn({ err: error }, "AI enrichment failed, falling back to JSON-LD only");
@@ -743,49 +883,71 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
 
       const useBetterAiGroupings =
         hasOnlyMainGroup &&
-        aiResult &&
-        aiResult.ingredients.length > 0 &&
-        (aiResult.ingredients.length > 1 || aiResult.ingredients[0].groupName !== "Main");
+        enrichment?.ingredients &&
+        enrichment.ingredients.length > 0 &&
+        (enrichment.ingredients.length > 1 ||
+          enrichment.ingredients[0].groupName !== "Main");
+
+      // Use enriched instructions if same count and has real titles
+      const useEnrichedInstructions =
+        enrichment?.instructions &&
+        enrichment.instructions.length === jsonLdResult.instructions.length &&
+        enrichment.instructions.every(
+          (s) => s.title && !s.title.startsWith("Step ")
+        );
 
       const mergedRecipe: ParsedRecipe = {
         ...jsonLdResult,
-        ...(useBetterAiGroupings && { ingredients: aiResult!.ingredients }),
-        ...(aiResult?.summary && { summary: aiResult.summary }),
-        ...(jsonLdResult.servings
-          ? { servings: jsonLdResult.servings }
-          : aiResult?.servings
-            ? { servings: aiResult.servings }
-            : {}),
-        ...(jsonLdResult.prepTimeMinutes
-          ? { prepTimeMinutes: jsonLdResult.prepTimeMinutes }
-          : aiResult?.prepTimeMinutes
-            ? { prepTimeMinutes: aiResult.prepTimeMinutes }
-            : {}),
-        ...(jsonLdResult.cookTimeMinutes
-          ? { cookTimeMinutes: jsonLdResult.cookTimeMinutes }
-          : aiResult?.cookTimeMinutes
-            ? { cookTimeMinutes: aiResult.cookTimeMinutes }
-            : {}),
-        ...(jsonLdResult.totalTimeMinutes
-          ? { totalTimeMinutes: jsonLdResult.totalTimeMinutes }
-          : aiResult?.totalTimeMinutes
-            ? { totalTimeMinutes: aiResult.totalTimeMinutes }
-            : {}),
+        ...(useBetterAiGroupings && { ingredients: enrichment!.ingredients! }),
+        ...(useEnrichedInstructions && {
+          // Pin detail text from JSON-LD as source of truth — only take titles/tips/ingredients from AI
+          instructions: enrichment!.instructions!.map((enrichedStep, i) => ({
+            ...enrichedStep,
+            detail: jsonLdResult.instructions[i]?.detail ?? enrichedStep.detail,
+          })),
+        }),
+        ...(enrichment?.summary && { summary: enrichment.summary }),
+        // Backfill time/servings from AI enrichment only when JSON-LD didn't have them
+        ...(!jsonLdResult.servings && enrichment?.servings && { servings: enrichment.servings }),
+        ...(!jsonLdResult.prepTimeMinutes && enrichment?.prepTimeMinutes && { prepTimeMinutes: enrichment.prepTimeMinutes }),
+        ...(!jsonLdResult.cookTimeMinutes && enrichment?.cookTimeMinutes && { cookTimeMinutes: enrichment.cookTimeMinutes }),
+        ...(!jsonLdResult.totalTimeMinutes && enrichment?.totalTimeMinutes && { totalTimeMinutes: enrichment.totalTimeMinutes }),
         sourceUrl: url,
       };
 
-      // Merge HTML step images if JSON-LD didn't provide any
+      // Re-apply imageUrls from JSON-LD if enrichment replaced instructions
+      if (useEnrichedInstructions) {
+        for (let i = 0; i < jsonLdResult.instructions.length; i++) {
+          if (
+            jsonLdResult.instructions[i].imageUrl &&
+            !mergedRecipe.instructions[i].imageUrl
+          ) {
+            mergedRecipe.instructions[i].imageUrl =
+              jsonLdResult.instructions[i].imageUrl;
+          }
+        }
+      }
+
       mergeStepImages(mergedRecipe.instructions, htmlStepImages);
+
+      const enrichmentApplied =
+        useBetterAiGroupings ||
+        useEnrichedInstructions ||
+        Boolean(enrichment?.summary) ||
+        Boolean(!jsonLdResult.servings && enrichment?.servings) ||
+        Boolean(!jsonLdResult.prepTimeMinutes && enrichment?.prepTimeMinutes) ||
+        Boolean(!jsonLdResult.cookTimeMinutes && enrichment?.cookTimeMinutes) ||
+        Boolean(!jsonLdResult.totalTimeMinutes && enrichment?.totalTimeMinutes);
 
       return {
         success: true,
         data: mergedRecipe,
-        method: aiResult ? "json-ld+ai" : "json-ld",
+        method: enrichmentApplied ? "json-ld+ai" : "json-ld",
       };
     }
 
-    // Layer 2: Full AI parse
-    const aiResult = await extractWithAI(cleaned.html);
+    // Layer 2: Full AI parse — prefer recipe card content over full HTML
+    const aiResult = await extractWithAI(pickContentForAI(cleaned));
     if (aiResult) {
       aiResult.sourceUrl = url;
       mergeStepImages(aiResult.instructions, htmlStepImages);
