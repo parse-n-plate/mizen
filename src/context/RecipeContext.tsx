@@ -3,6 +3,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useState,
   type ReactNode,
 } from "react";
@@ -28,6 +29,7 @@ interface RecipeContextType {
   error: string | null;
   setError: (error: string | null) => void;
   history: HistoryEntry[];
+  hasHydrated: boolean;
 }
 
 const RecipeContext = createContext<RecipeContextType | undefined>(undefined);
@@ -38,29 +40,30 @@ const HISTORY_KEY = "baby-mizen-history";
 const MAX_HISTORY = 10;
 
 export function RecipeProvider({ children }: { children: ReactNode }) {
-  const [recipe, setRecipeState] = useState<ParsedRecipe | null>(() => {
-    if (typeof window === 'undefined') return null;
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : null;
-    } catch { return null; }
-  });
-  const [savedMeta, setSavedMetaState] = useState<SavedMeta | null>(() => {
-    if (typeof window === 'undefined') return null;
-    try {
-      const stored = localStorage.getItem(META_STORAGE_KEY);
-      return stored ? JSON.parse(stored) : null;
-    } catch { return null; }
-  });
+  const [recipe, setRecipeState] = useState<ParsedRecipe | null>(null);
+  const [savedMeta, setSavedMetaState] = useState<SavedMeta | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [history, setHistory] = useState<HistoryEntry[]>(() => {
-    if (typeof window === 'undefined') return [];
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [hasHydrated, setHasHydrated] = useState(false);
+
+  useEffect(() => {
     try {
-      const stored = localStorage.getItem(HISTORY_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch { return []; }
-  });
+      const storedRecipe = localStorage.getItem(STORAGE_KEY);
+      const storedMeta = localStorage.getItem(META_STORAGE_KEY);
+      const storedHistory = localStorage.getItem(HISTORY_KEY);
+
+      setRecipeState(storedRecipe ? JSON.parse(storedRecipe) : null);
+      setSavedMetaState(storedMeta ? JSON.parse(storedMeta) : null);
+      setHistory(storedHistory ? JSON.parse(storedHistory) : []);
+    } catch {
+      setRecipeState(null);
+      setSavedMetaState(null);
+      setHistory([]);
+    } finally {
+      setHasHydrated(true);
+    }
+  }, []);
 
   const setRecipe = (newRecipe: ParsedRecipe | null) => {
     setRecipeState(newRecipe);
@@ -116,6 +119,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
         error,
         setError,
         history,
+        hasHydrated,
       }}
     >
       {children}
