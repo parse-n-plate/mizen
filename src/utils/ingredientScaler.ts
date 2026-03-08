@@ -100,10 +100,19 @@ export function parseAmount(amountStr: string): number | null {
 }
 
 /**
+ * Round a number to the nearest 0.5
+ */
+function roundToHalf(n: number): number {
+  return Math.round(n * 2) / 2;
+}
+
+/**
  * Format a number back into a readable string
  * Prefers Unicode fraction symbols for common cooking values
+ * When round is true, rounds to the nearest 0.5 first
  */
-export function formatAmount(amount: number): string {
+export function formatAmount(amount: number, round?: boolean): string {
+  if (round) amount = roundToHalf(amount);
   if (amount === 0) return "0";
   if (amount < 0.01) return "< ⅛";
 
@@ -256,7 +265,11 @@ function parseIngredientString(
 /**
  * Scale a single ingredient
  */
-export function scaleIngredient(ingredient: Ingredient, scaleFactor: number): Ingredient {
+export function scaleIngredient(
+  ingredient: Ingredient,
+  scaleFactor: number,
+  round?: boolean
+): Ingredient {
   // If missing amount, try to parse from ingredient string
   if (!ingredient.amount && ingredient.ingredient) {
     const parsed = parseIngredientString(ingredient.ingredient);
@@ -265,7 +278,7 @@ export function scaleIngredient(ingredient: Ingredient, scaleFactor: number): In
       if (val !== null) {
         return {
           ...ingredient,
-          amount: formatAmount(val * scaleFactor),
+          amount: formatAmount(val * scaleFactor, round),
           units: parsed.unit,
           ingredient: parsed.name,
         };
@@ -285,7 +298,7 @@ export function scaleIngredient(ingredient: Ingredient, scaleFactor: number): In
         if (min !== null && max !== null) {
           return {
             ...ingredient,
-            amount: `${formatAmount(min * scaleFactor)}-${formatAmount(max * scaleFactor)}`,
+            amount: `${formatAmount(min * scaleFactor, round)}-${formatAmount(max * scaleFactor, round)}`,
           };
         }
       }
@@ -301,7 +314,7 @@ export function scaleIngredient(ingredient: Ingredient, scaleFactor: number): In
       if (min !== null && max !== null) {
         return {
           ...ingredient,
-          amount: `${formatAmount(min * scaleFactor)} to ${formatAmount(max * scaleFactor)}`,
+          amount: `${formatAmount(min * scaleFactor, round)} to ${formatAmount(max * scaleFactor, round)}`,
         };
       }
     }
@@ -311,7 +324,7 @@ export function scaleIngredient(ingredient: Ingredient, scaleFactor: number): In
 
   const val = parseAmount(ingredient.amount);
   if (val !== null) {
-    return { ...ingredient, amount: formatAmount(val * scaleFactor) };
+    return { ...ingredient, amount: formatAmount(val * scaleFactor, round) };
   }
 
   return ingredient;
@@ -323,16 +336,17 @@ export function scaleIngredient(ingredient: Ingredient, scaleFactor: number): In
 export function scaleIngredients(
   groups: IngredientGroup[],
   originalServings: number,
-  newServings: number
+  newServings: number,
+  round?: boolean
 ): IngredientGroup[] {
   const validOriginal = Math.max(1, originalServings);
   const validNew = Math.max(1, newServings);
   const scaleFactor = validNew / validOriginal;
 
-  if (scaleFactor === 1) return groups;
+  if (scaleFactor === 1 && !round) return groups;
 
   return groups.map((group) => ({
     ...group,
-    ingredients: group.ingredients.map((ing) => scaleIngredient(ing, scaleFactor)),
+    ingredients: group.ingredients.map((ing) => scaleIngredient(ing, scaleFactor, round)),
   }));
 }

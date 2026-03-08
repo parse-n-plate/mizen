@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { useUser } from "@/hooks/useUser";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -9,8 +8,10 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { type Theme, getTheme, setTheme } from "@/lib/theme";
 import { type NumberFormat, getNumberFormat, setNumberFormat } from "@/lib/numberFormat";
+import { getRoundAmounts, setRoundAmounts } from "@/lib/preferences";
 
 type Section = "account" | "appearance" | "about";
 
@@ -193,6 +194,7 @@ const NUMBER_FORMAT_OPTIONS: { value: NumberFormat; label: string }[] = [
 function AppearanceSection() {
   const [theme, setThemeState] = useState<Theme>(getTheme);
   const [numberFormat, setNumberFormatState] = useState<NumberFormat>(getNumberFormat);
+  const [roundAmounts, setRoundAmountsState] = useState(getRoundAmounts);
 
   const handleThemeChange = (t: Theme) => {
     setThemeState(t);
@@ -202,6 +204,11 @@ function AppearanceSection() {
   const handleNumberFormatChange = (f: NumberFormat) => {
     setNumberFormatState(f);
     setNumberFormat(f);
+  };
+
+  const handleRoundAmountsChange = (checked: boolean) => {
+    setRoundAmountsState(checked);
+    setRoundAmounts(checked);
   };
 
   return (
@@ -250,6 +257,10 @@ function AppearanceSection() {
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+      </SettingRow>
+
+      <SettingRow label="Round amounts" description="Round ingredient amounts to the nearest ½">
+        <Switch checked={roundAmounts} onCheckedChange={handleRoundAmountsChange} />
       </SettingRow>
 
       <SettingRow label="Font" description="Serif font used for headings">
