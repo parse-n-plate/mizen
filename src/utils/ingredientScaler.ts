@@ -3,6 +3,7 @@
  */
 
 import type { Ingredient, IngredientGroup } from "@/lib/types";
+import type { NumberFormat } from "@/lib/numberFormat";
 
 // Common fraction characters to decimal map
 const FRACTION_MAP: Record<string, number> = {
@@ -123,6 +124,101 @@ export function formatAmount(amount: number): string {
 
   const formattedDecimal = parseFloat(amount.toFixed(2)).toString();
   return formattedDecimal;
+}
+
+// Regex matching any unicode fraction character
+const FRACTION_CHARS_RE = /[½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]/;
+
+/**
+ * Normalize a string amount by converting LLM-generated decimal representations
+ * back to unicode fractions. E.g. "0.33333334326744" → "⅓".
+ * Only touches strings that are purely a decimal number.
+ */
+export function normalizeAmount(amountStr: string): string {
+  if (!amountStr) return amountStr;
+  const trimmed = amountStr.trim();
+  if (!/^\d+\.\d+$/.test(trimmed)) return amountStr;
+  const num = parseFloat(trimmed);
+  if (isNaN(num)) return amountStr;
+  return formatAmount(num);
+}
+
+/**
+ * Replace decimal numbers embedded in running text with unicode fractions.
+ * E.g. "Add 0.333 cup of sugar" → "Add ⅓ cup of sugar"
+ */
+export function normalizeDecimalsInText(text: string): string {
+  if (!text) return text;
+  return text.replace(/\b(\d+\.\d+)\b/g, (match) => {
+    const num = parseFloat(match);
+    if (isNaN(num)) return match;
+    const formatted = formatAmount(num);
+    // Only replace if formatAmount produced a cleaner result (not another decimal)
+    return formatted.includes(".") ? match : formatted;
+  });
+}
+
+/**
+ * Format a standalone amount string for display based on user preference.
+ * - "fractions": "0.5" → "½", "⅓" stays "⅓"
+ * - "decimals": "½" → "0.5", "⅓" → "0.33"
+ */
+export function displayAmount(amountStr: string, format: NumberFormat): string {
+  if (!amountStr) return amountStr;
+  const trimmed = amountStr.trim();
+  if (!trimmed || trimmed.toLowerCase() === "as needed" || trimmed.toLowerCase() === "to taste") {
+    return amountStr;
+  }
+
+  // Handle ranges — format each part
+  const normalized = trimmed.replace(/[–—]/g, "-");
+  if (normalized.includes("-")) {
+    const parts = normalized.split("-");
+    if (parts.length === 2) {
+      return `${displayAmount(parts[0], format)}-${displayAmount(parts[1], format)}`;
+    }
+  }
+  if (trimmed.toLowerCase().includes(" to ")) {
+    const parts = trimmed.split(/\s+to\s+/i);
+    if (parts.length === 2) {
+      return `${displayAmount(parts[0], format)} to ${displayAmount(parts[1], format)}`;
+    }
+  }
+
+  const val = parseAmount(trimmed);
+  if (val === null) return amountStr;
+
+  if (format === "decimals") {
+    return parseFloat(val.toFixed(2)).toString();
+  }
+  return formatAmount(val);
+}
+
+/**
+ * Format instruction/detail text for display based on user preference.
+ * Replaces inline fractions ↔ decimals within prose text.
+ */
+export function displayText(text: string, format: NumberFormat): string {
+  if (!text) return text;
+
+  if (format === "decimals") {
+    // Replace unicode fraction characters with decimals
+    // Handle mixed numbers like "1⅓" → "1.33" and standalone "⅓" → "0.33"
+    let result = text;
+    for (const [char, val] of Object.entries(FRACTION_MAP)) {
+      // Mixed: "2⅓" → "2.33"
+      result = result.replace(new RegExp(`(\\d+)\\s*${char}`, "g"), (_, whole) => {
+        const total = parseInt(whole) + val;
+        return parseFloat(total.toFixed(2)).toString();
+      });
+      // Standalone: "⅓" → "0.33"
+      result = result.replace(new RegExp(char, "g"), parseFloat(val.toFixed(2)).toString());
+    }
+    return result;
+  }
+
+  // Fractions mode: replace inline decimals with fraction characters
+  return normalizeDecimalsInText(text);
 }
 
 /**
