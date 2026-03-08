@@ -6,6 +6,7 @@ import { CoreRecipeSchema, IngredientGroupSchema } from "@/lib/schemas/recipe";
 import { EXTRACTION_PROMPT, ENRICHMENT_PROMPT } from "@/lib/prompts/extraction";
 import { cleanRecipeHTML, type CleanedHTML } from "./htmlCleaner";
 import { COLLECTION_MESSAGE } from "./urlPatterns";
+import { normalizeAmount, normalizeDecimalsInText } from "./ingredientScaler";
 import type {
   Ingredient,
   ParsedRecipe,
@@ -214,6 +215,31 @@ function deduplicateUnits(groups: IngredientGroup[]): IngredientGroup[] {
       }
       return ing;
     }),
+  }));
+}
+
+/**
+ * Normalize all ingredient amounts, converting LLM-generated decimal
+ * strings (e.g. "0.33333334326744") back to unicode fractions ("⅓").
+ */
+function normalizeIngredientAmounts(groups: IngredientGroup[]): IngredientGroup[] {
+  return groups.map((group) => ({
+    ...group,
+    ingredients: group.ingredients.map((ing) => ({
+      ...ing,
+      amount: normalizeAmount(ing.amount),
+    })),
+  }));
+}
+
+/**
+ * Normalize decimal numbers in instruction text back to unicode fractions.
+ */
+function normalizeInstructionText(instructions: InstructionStep[]): InstructionStep[] {
+  return instructions.map((step) => ({
+    ...step,
+    detail: normalizeDecimalsInText(step.detail),
+    ...(step.tips && { tips: normalizeDecimalsInText(step.tips) }),
   }));
 }
 
@@ -496,8 +522,8 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             ) {
               return {
                 title,
-                ingredients,
-                instructions: normalizedInstructions,
+                ingredients: normalizeIngredientAmounts(ingredients),
+                instructions: normalizeInstructionText(normalizedInstructions),
                 ...(author && { author }),
                 ...(servings && { servings }),
                 ...(prepTimeMinutes && { prepTimeMinutes }),
@@ -562,8 +588,8 @@ async function extractWithAI(cleanedHtml: string): Promise<ParsedRecipe | null> 
 
   return {
     title: data.title,
-    ingredients: deduplicateUnits(data.ingredients),
-    instructions: normalizedInstructions,
+    ingredients: normalizeIngredientAmounts(deduplicateUnits(data.ingredients)),
+    instructions: normalizeInstructionText(normalizedInstructions),
     ...(data.author && { author: data.author }),
     ...(data.summary && { summary: data.summary }),
     ...(servings && { servings }),
@@ -615,7 +641,7 @@ async function enrichWithAI(
   let enrichedIngredients: IngredientGroup[] | undefined;
   if (Array.isArray(data.ingredients) && data.ingredients.length > 0) {
     const result = z.array(IngredientGroupSchema).safeParse(data.ingredients);
-    if (result.success) enrichedIngredients = result.data;
+    if (result.success) enrichedIngredients = normalizeIngredientAmounts(result.data);
     else log.error({ issues: result.error.issues }, "Enriched ingredients failed validation");
   }
 
@@ -755,8 +781,8 @@ export async function parseRecipeFromImage(
 
     const recipe: ParsedRecipe = {
       title: data.title,
-      ingredients: deduplicateUnits(data.ingredients),
-      instructions: normalizedInstructions,
+      ingredients: normalizeIngredientAmounts(deduplicateUnits(data.ingredients)),
+      instructions: normalizeInstructionText(normalizedInstructions),
       ...(data.author && { author: data.author }),
       ...(data.summary && { summary: data.summary }),
       ...(servings && { servings }),
