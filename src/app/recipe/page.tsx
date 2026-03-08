@@ -8,7 +8,7 @@ import { RecipeHeader, formatTime } from "@/components/RecipeHeader";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
 import { scaleIngredients } from "@/utils/ingredientScaler";
-import { convertIngredients, detectUnitSystem, type UnitSystem } from "@/utils/unitConverter";
+import { convertIngredients, convertInstructions, detectUnitSystem, type UnitSystem } from "@/utils/unitConverter";
 import Link from "next/link";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
@@ -47,6 +47,11 @@ export default function RecipePage() {
   const displayIngredients = useMemo(
     () => convertIngredients(scaledIngredients, unitSystem, detectedSystem),
     [scaledIngredients, unitSystem, detectedSystem]
+  );
+
+  const displayInstructions = useMemo(
+    () => convertInstructions(recipe?.instructions ?? [], unitSystem, detectedSystem),
+    [recipe?.instructions, unitSystem, detectedSystem]
   );
 
   const shareUrl = savedMeta
@@ -176,7 +181,7 @@ export default function RecipePage() {
           ))}
           <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 mb-3 mt-6">Instructions</h3>
           <ol className="list-decimal pl-5 space-y-3">
-            {recipe.instructions.map((step, i) => (
+            {displayInstructions.map((step, i) => (
               <li key={i} className="text-sm leading-relaxed">
                 <strong>{step.title}</strong>
                 <br />
@@ -191,7 +196,7 @@ export default function RecipePage() {
       <div className="flex-1 flex flex-col px-6 print:hidden">
         <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col">
           {/* Desktop: top folder tabs + quick actions (hidden on mobile) */}
-          <div className="group/tabs hidden sm:flex items-end w-full relative border-b border-stone-200 dark:border-stone-700 gap-0">
+          <div className="hidden sm:flex items-end w-full relative border-b border-stone-200 dark:border-stone-700 gap-0">
             <button
               onClick={() => setActiveTab("prep")}
               className="folder-tab-trigger h-11 px-8 font-sans text-[14px] font-medium"
@@ -219,8 +224,8 @@ export default function RecipePage() {
               ) : null}
             </button>
 
-            {/* Quick actions — right-aligned, revealed on hover */}
-            <div className="ml-auto flex items-center gap-1 pb-2 opacity-0 group-hover/tabs:opacity-100 group-focus-within/tabs:opacity-100 transition-opacity duration-150">
+            {/* Quick actions — right-aligned */}
+            <div className="ml-auto flex items-center gap-1 pb-2">
               {/* Save / Share */}
               <div className="flex items-center gap-1">
                 {/* Save / Saved */}
@@ -380,11 +385,11 @@ export default function RecipePage() {
             <div className="max-w-3xl mx-auto px-5 sm:px-6 pt-5 pb-24 sm:pb-6">
               {activeTab === "prep" ? (
                 <div key="prep" className="tab-content-animate">
-                  <PrepSection ingredients={displayIngredients} steps={recipe.instructions} />
+                  <PrepSection ingredients={displayIngredients} steps={displayInstructions} />
                 </div>
               ) : (
                 <div key="cook" className="tab-content-animate">
-                  <StepList steps={recipe.instructions} />
+                  <StepList steps={displayInstructions} />
                 </div>
               )}
             </div>

@@ -5,7 +5,7 @@
 import type { Ingredient, IngredientGroup } from "@/lib/types";
 
 // Common fraction characters to decimal map
-const FRACTION_MAP: Record<string, number> = {
+export const FRACTION_MAP: Record<string, number> = {
   '½': 0.5,
   '⅓': 1 / 3,
   '⅔': 2 / 3,

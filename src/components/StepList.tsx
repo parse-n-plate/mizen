@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Image from "next/image";
 import type { InstructionStep } from "@/lib/types";
-import { StepTimer } from "./StepTimer";
 
 interface StepListProps {
   steps: InstructionStep[];
@@ -59,15 +58,6 @@ function StepRow({
           <p className="font-sans text-xs italic text-stone-400 dark:text-stone-500">
             Tip: {step.tips}
           </p>
-        )}
-
-        {/* Timers */}
-        {step.timers && step.timers.length > 0 && (
-          <div className="flex flex-wrap gap-2 pt-1">
-            {step.timers.map((timer, ti) => (
-              <StepTimer key={ti} timer={timer} />
-            ))}
-          </div>
         )}
 
         {/* Expanded image */}

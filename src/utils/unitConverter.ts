@@ -1,5 +1,5 @@
-import type { Ingredient, IngredientGroup } from "@/lib/types";
-import { parseAmount, formatAmount } from "./ingredientScaler";
+import type { Ingredient, IngredientGroup, InstructionStep } from "@/lib/types";
+import { parseAmount, formatAmount, FRACTION_MAP } from "./ingredientScaler";
 
 export type UnitSystem = "metric" | "imperial";
 
@@ -182,5 +182,182 @@ export function convertIngredients(
     ingredients: group.ingredients.map((ing) =>
       convertIngredient(ing, targetSystem, sourceSystem)
     ),
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// Inline text conversion (for instruction steps)
+// ---------------------------------------------------------------------------
+
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+const PACKAGE_NOUNS = new Set([
+  "bag",
+  "bags",
+  "bottle",
+  "bottles",
+  "box",
+  "boxes",
+  "can",
+  "cans",
+  "carton",
+  "cartons",
+  "container",
+  "containers",
+  "jar",
+  "jars",
+  "package",
+  "packages",
+  "packet",
+  "packets",
+  "pouch",
+  "pouches",
+  "stick",
+  "sticks",
+  "tin",
+  "tins",
+  "tube",
+  "tubes",
+]);
+
+function isPackageSizeReference(text: string, matchEnd: number): boolean {
+  const trailingText = text.slice(matchEnd).replace(/^[\s)\].,;-]+/, "");
+  const nextWord = trailingText.match(/^([a-zA-Z]+)/)?.[1]?.toLowerCase();
+  return nextWord ? PACKAGE_NOUNS.has(nextWord) : false;
+}
+
+function convertTemperatures(
+  text: string,
+  targetSystem: UnitSystem,
+  sourceSystem: UnitSystem
+): string {
+  const fToC = targetSystem === "metric" && sourceSystem === "imperial";
+  const cToF = targetSystem === "imperial" && sourceSystem === "metric";
+  if (!fToC && !cToF) return text;
+
+  const tempRegex =
+    /(\d+)\s*(?:°\s*|degrees?\s+)(F(?:ahrenheit)?|C(?:elsius)?)\b/gi;
+
+  return text.replace(tempRegex, (match, numStr, unit) => {
+    const temp = parseInt(numStr, 10);
+    const isF = unit.toUpperCase().startsWith("F");
+    const isC = unit.toUpperCase().startsWith("C");
+
+    if (fToC && isF) {
+      const celsius = Math.round(((temp - 32) * 5) / 9);
+      return match.includes("°") ? `${celsius}°C` : `${celsius} degrees C`;
+    }
+    if (cToF && isC) {
+      const fahrenheit = Math.round((temp * 9) / 5 + 32);
+      return match.includes("°") ? `${fahrenheit}°F` : `${fahrenheit} degrees F`;
+    }
+    return match;
+  });
+}
+
+function convertMeasurements(
+  text: string,
+  targetSystem: UnitSystem
+): string {
+  const conversionMap =
+    targetSystem === "metric" ? IMPERIAL_TO_METRIC : METRIC_TO_IMPERIAL;
+
+  // Build unit pattern from map keys, longest-first to avoid partial matches
+  const unitKeys = Object.keys(conversionMap).sort(
+    (a, b) => b.length - a.length
+  );
+  const unitPattern = unitKeys.map(escapeRegExp).join("|");
+
+  // Unicode fraction chars for the number pattern
+  const unicodeFracs = Object.keys(FRACTION_MAP).join("");
+
+  // Number pattern: mixed fractions (1 1/2), simple fractions (1/2),
+  // decimals with optional unicode frac (1½), or standalone unicode frac (½)
+  const numberPattern = String.raw`(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:\.\d+)?(?:\s*[${unicodeFracs}])?|[${unicodeFracs}])`;
+
+  const regex = new RegExp(
+    `${numberPattern}\\s*(${unitPattern})(?=\\s|[.,;:!?)]|$)`,
+    "gi"
+  );
+
+  return text.replace(regex, (match, numPart, unitPart, offset, fullText) => {
+    if (typeof offset !== "number" || typeof fullText !== "string") {
+      return match;
+    }
+
+    // Leave package-size references verbatim: "12 oz can", "1 (14 oz) package", etc.
+    if (isPackageSizeReference(fullText, offset + match.length)) {
+      return match;
+    }
+
+    const parsed = parseAmount(numPart.trim());
+    if (parsed === null) return match;
+
+    const unitLower = unitPart.toLowerCase().trim();
+    const conversion = conversionMap[unitLower];
+    if (!conversion) return match;
+
+    const rawValue = parsed * conversion.factor;
+
+    let finalAmount: number;
+    let finalUnit: string;
+
+    if (targetSystem === "metric") {
+      if (conversion.unit === "ml") {
+        const smart = smartMetricUnit(rawValue);
+        finalAmount = smart.amount;
+        finalUnit = smart.unit;
+      } else if (conversion.unit === "g") {
+        const smart = smartMetricWeight(rawValue);
+        finalAmount = smart.amount;
+        finalUnit = smart.unit;
+      } else {
+        finalAmount = rawValue;
+        finalUnit = conversion.unit;
+      }
+    } else {
+      if (conversion.unit === "tsp") {
+        const smart = smartImperialVolume(rawValue);
+        finalAmount = smart.amount;
+        finalUnit = smart.unit;
+      } else if (conversion.unit === "oz") {
+        const smart = smartImperialWeight(rawValue);
+        finalAmount = smart.amount;
+        finalUnit = smart.unit;
+      } else {
+        finalAmount = rawValue;
+        finalUnit = conversion.unit;
+      }
+    }
+
+    return `${formatMetricAmount(finalAmount)} ${finalUnit}`;
+  });
+}
+
+export function convertInstructionText(
+  text: string,
+  targetSystem: UnitSystem,
+  sourceSystem: UnitSystem
+): string {
+  if (targetSystem === sourceSystem) return text;
+  let result = convertTemperatures(text, targetSystem, sourceSystem);
+  result = convertMeasurements(result, targetSystem);
+  return result;
+}
+
+export function convertInstructions(
+  instructions: InstructionStep[],
+  targetSystem: UnitSystem,
+  sourceSystem: UnitSystem
+): InstructionStep[] {
+  if (targetSystem === sourceSystem) return instructions;
+  return instructions.map((step) => ({
+    ...step,
+    detail: convertInstructionText(step.detail, targetSystem, sourceSystem),
+    ...(step.tips && {
+      tips: convertInstructionText(step.tips, targetSystem, sourceSystem),
+    }),
   }));
 }

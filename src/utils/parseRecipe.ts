@@ -8,7 +8,6 @@ import type {
   ParserResult,
   IngredientGroup,
   InstructionStep,
-  TimeMarker,
 } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
@@ -77,7 +76,6 @@ function normalizeInstructionSteps(instructions: unknown): InstructionStep[] {
           title,
           detail,
           timeMinutes: obj.timeMinutes as number | undefined,
-          timers: Array.isArray(obj.timers) ? obj.timers as TimeMarker[] : undefined,
           ingredients: obj.ingredients as string[] | undefined,
           tips: obj.tips as string | undefined,
           imageUrl: obj.imageUrl as string | undefined,
