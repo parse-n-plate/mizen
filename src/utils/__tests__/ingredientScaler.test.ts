@@ -63,9 +63,12 @@ describe("parseAmount", () => {
     expect(parseAmount("some")).toBeNull();
   });
 
-  it("returns 1 for 1/0 (parseFloat fallback)", () => {
-    // den !== 0 guard rejects the fraction, but parseFloat("1/0") = 1
-    expect(parseAmount("1/0")).toBe(1);
+  it("returns null for amounts with trailing units", () => {
+    expect(parseAmount("1 cup")).toBeNull();
+  });
+
+  it("returns null for invalid fractions", () => {
+    expect(parseAmount("1/0")).toBeNull();
   });
 });
 
@@ -154,6 +157,28 @@ describe("scaleIngredient", () => {
   it("returns ingredient unchanged when amount is empty and ingredient cannot be parsed", () => {
     const ing: Ingredient = { amount: "", units: "", ingredient: "salt" };
     expect(scaleIngredient(ing, 2)).toEqual(ing);
+  });
+
+  it("preserves units embedded in amount strings when rounding", () => {
+    const ing: Ingredient = { amount: "2.25 cups", units: "", ingredient: "flour" };
+    const result = scaleIngredient(ing, 1, true);
+
+    expect(result).toEqual({
+      amount: "2½",
+      units: "cups",
+      ingredient: "flour",
+    });
+  });
+
+  it("preserves units embedded in ranged amount strings", () => {
+    const ing: Ingredient = { amount: "2 to 3 tbsp", units: "", ingredient: "olive oil" };
+    const result = scaleIngredient(ing, 2);
+
+    expect(result).toEqual({
+      amount: "4 to 6",
+      units: "tbsp",
+      ingredient: "olive oil",
+    });
   });
 });
 
