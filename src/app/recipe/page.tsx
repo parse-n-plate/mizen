@@ -11,6 +11,7 @@ import { scaleIngredients } from "@/utils/ingredientScaler";
 import { convertIngredients, convertInstructions, detectUnitSystem, type UnitSystem } from "@/utils/unitConverter";
 import Link from "next/link";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { HeartButton } from "@/components/HeartButton";
 
 export default function RecipePage() {
   const { recipe, savedMeta, setSavedMeta } = useRecipe();
@@ -151,12 +152,27 @@ export default function RecipePage() {
       {/* Header section with cream background */}
       <div className="px-6 pt-8 pb-0">
         <div className="max-w-3xl mx-auto w-full pb-8">
-          <RecipeHeader
-            recipe={recipe}
-            servings={servings}
-            originalServings={originalServings}
-            onServingsChange={setServings}
-          />
+          <div className="flex items-start gap-4">
+            <div className="flex-1 min-w-0">
+              <RecipeHeader
+                recipe={recipe}
+                servings={servings}
+                originalServings={originalServings}
+                onServingsChange={setServings}
+              />
+            </div>
+
+            {/* Save heart button */}
+            {user && (
+              <HeartButton
+                isSaved={!!savedMeta}
+                saving={saving}
+                unsaving={unsaving}
+                onSave={handleSave}
+                onUnsave={handleUnsave}
+              />
+            )}
+          </div>
         </div>
       </div>
 
@@ -226,80 +242,34 @@ export default function RecipePage() {
 
             {/* Quick actions — right-aligned */}
             <div className="ml-auto flex items-center gap-1 pb-2">
-              {/* Save / Share */}
-              <div className="flex items-center gap-1">
-                {/* Save / Saved */}
-                {user && !savedMeta && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={handleSave}
-                        disabled={saving}
-                        aria-label="Save recipe"
-                        className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors disabled:opacity-50"
-                      >
+              {/* Share / Copy link */}
+              {savedMeta && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={handleCopy}
+                      aria-label={copied ? "Share link copied" : "Copy share link"}
+                      className={`press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors ${
+                        copied
+                          ? "text-emerald-500 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950"
+                          : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
+                      }`}
+                    >
+                      {copied ? (
                         <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                          <polyline points="20 6 9 17 4 12" />
                         </svg>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Save recipe</TooltipContent>
-                  </Tooltip>
-                )}
-                {savedMeta && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={handleUnsave}
-                        disabled={unsaving}
-                        aria-label="Remove from saved"
-                        className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-emerald-500 dark:text-emerald-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors disabled:opacity-50"
-                      >
-                        <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                      ) : (
+                        <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                         </svg>
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Remove from saved</TooltipContent>
-                  </Tooltip>
-                )}
-
-                {/* Share / Copy link */}
-                {savedMeta && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={handleCopy}
-                        aria-label={copied ? "Share link copied" : "Copy share link"}
-                        className={`press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors ${
-                          copied
-                            ? "text-emerald-500 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950"
-                            : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
-                        }`}
-                      >
-                        {copied ? (
-                          <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        ) : (
-                          <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                          </svg>
-                        )}
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>{copied ? "Copied!" : "Copy share link"}</TooltipContent>
-                  </Tooltip>
-                )}
-              </div>
-
-              {/* Divider — visible when save actions exist */}
-              {user && (
-                <div className="h-4 w-px bg-stone-200 dark:bg-stone-700 mx-0.5" />
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>{copied ? "Copied!" : "Copy share link"}</TooltipContent>
+                </Tooltip>
               )}
 
               {/* Convert units */}
@@ -375,14 +345,14 @@ export default function RecipePage() {
                     </svg>
                   </button>
                 </TooltipTrigger>
-                <TooltipContent>Share recipe</TooltipContent>
+                <TooltipContent>Share the original recipe</TooltipContent>
               </Tooltip>
             </div>
           </div>
 
           {/* Content card */}
-          <div className="bg-white dark:bg-stone-900 sm:rounded-b-lg rounded-lg sm:rounded-t-none border border-stone-200 dark:border-stone-700 sm:border-t-0 flex-1">
-            <div className="max-w-3xl mx-auto px-5 sm:px-6 pt-5 pb-24 sm:pb-6">
+          <div className="sm:bg-white sm:dark:bg-stone-900 sm:rounded-b-lg sm:rounded-lg sm:rounded-t-none sm:border sm:border-stone-200 sm:dark:border-stone-700 sm:border-t-0 flex-1">
+            <div className="max-w-3xl mx-auto sm:px-6 sm:pt-5 pb-24 sm:pb-6">
               {activeTab === "prep" ? (
                 <div key="prep" className="tab-content-animate">
                   <PrepSection ingredients={displayIngredients} steps={displayInstructions} />
