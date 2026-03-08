@@ -1,23 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import type { InstructionStep } from "@/lib/types";
+import { type NumberFormat, getNumberFormat } from "@/lib/numberFormat";
+import { displayText } from "@/utils/ingredientScaler";
+
+function subscribeToStorage(cb: () => void) {
+  window.addEventListener("storage", cb);
+  return () => window.removeEventListener("storage", cb);
+}
+
+function useNumberFormat(): NumberFormat {
+  return useSyncExternalStore(subscribeToStorage, getNumberFormat, () => "fractions" as NumberFormat);
+}
 
 interface StepListProps {
   steps: InstructionStep[];
 }
 
 export function StepList({ steps }: StepListProps) {
+  const numberFormat = useNumberFormat();
+
   return (
     <div>
       {steps.map((step, i) => (
-        <StepRow
-          key={i}
-          step={step}
-          index={i}
-          isLast={i === steps.length - 1}
-        />
+        <StepRow key={i} step={step} index={i} isLast={i === steps.length - 1} numberFormat={numberFormat} />
       ))}
     </div>
   );
@@ -27,10 +35,12 @@ function StepRow({
   step,
   index,
   isLast,
+  numberFormat,
 }: {
   step: InstructionStep;
   index: number;
   isLast: boolean;
+  numberFormat: NumberFormat;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -38,25 +48,21 @@ function StepRow({
   const hasImage = step.imageUrl && !imgError;
 
   return (
-    <div
-      className="relative flex gap-4 py-4 px-2 rounded-lg group hover:bg-[var(--color-cream)]"
-    >
+    <div className="relative flex gap-4 py-4 px-2 rounded-lg group hover:bg-[var(--color-cream)]">
       {!isLast && (
         <div className="step-list-divider absolute bottom-0 left-2 right-2 h-px bg-stone-100 dark:bg-stone-800 transition-opacity duration-150 group-hover:opacity-0" />
       )}
       {/* Content */}
       <div className="flex-1 min-w-0 space-y-1">
         {step.title && (
-          <h4 className="font-sans text-body-md-sm font-medium text-heading">
-            {step.title}
-          </h4>
+          <h4 className="font-sans text-body-md-sm font-medium text-heading">{step.title}</h4>
         )}
         <p className="font-sans text-base leading-relaxed text-stone-600 dark:text-stone-300">
-          {step.detail}
+          {displayText(step.detail, numberFormat)}
         </p>
         {step.tips && (
           <p className="font-sans text-xs italic text-stone-400 dark:text-stone-500">
-            Tip: {step.tips}
+            Tip: {displayText(step.tips, numberFormat)}
           </p>
         )}
 

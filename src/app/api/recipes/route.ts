@@ -1,7 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
+import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 import type { ParsedRecipe } from "@/lib/types";
+
+const log = logger.child({ module: "api/recipes" });
 
 function slugify(title: string): string {
   return title
@@ -81,7 +84,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     return NextResponse.json(data);
-  } catch {
+  } catch (err) {
+    log.error({ err }, "Failed to save recipe");
     return NextResponse.json(
       { error: "Saving recipes is temporarily unavailable" },
       { status: 503 }
@@ -91,10 +95,7 @@ export async function POST(request: Request) {
 
 export async function GET() {
   if (!isSupabaseConfigured) {
-    return NextResponse.json(
-      { error: "Recipe list is not available right now" },
-      { status: 503 }
-    );
+    return NextResponse.json({ error: "Recipe list is not available right now" }, { status: 503 });
   }
 
   try {
@@ -119,10 +120,8 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
     return NextResponse.json(data);
-  } catch {
-    return NextResponse.json(
-      { error: "Recipe list is temporarily unavailable" },
-      { status: 503 }
-    );
+  } catch (err) {
+    log.error({ err }, "Failed to fetch recipe list");
+    return NextResponse.json({ error: "Recipe list is temporarily unavailable" }, { status: 503 });
   }
 }

@@ -19,7 +19,7 @@ export function PrepSection({ ingredients, steps }: PrepSectionProps) {
       {tips.length > 0 && <TipsCallout tips={tips} />}
 
       <div>
-        <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-3 pl-2">
+        <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-6 pl-2">
           Ingredients
         </h3>
         <IngredientList groups={ingredients} />
@@ -28,11 +28,7 @@ export function PrepSection({ ingredients, steps }: PrepSectionProps) {
   );
 }
 
-function TipsCallout({
-  tips,
-}: {
-  tips: { tip: string; stepTitle: string; index: number }[];
-}) {
+function TipsCallout({ tips }: { tips: { tip: string; stepTitle: string; index: number }[] }) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (

@@ -24,9 +24,7 @@ export function Footer() {
     <footer className="hidden sm:block w-full px-6 py-12">
       <div className="mx-auto flex max-w-3xl items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <p className="font-sans text-sm text-stone-400">
-            Cooked with love by
-          </p>
+          <p className="font-sans text-sm text-stone-400">Cooked with love by</p>
           <div className="flex -space-x-2">
             {team.map((person) => (
               <Link

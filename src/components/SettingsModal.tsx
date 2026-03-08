@@ -1,19 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { useUser } from "@/hooks/useUser";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { type Theme, getTheme, setTheme } from "@/lib/theme";
+import { type NumberFormat, getNumberFormat, setNumberFormat } from "@/lib/numberFormat";
+import { getRoundAmounts, setRoundAmounts } from "@/lib/preferences";
 
 type Section = "account" | "appearance" | "about";
 
@@ -32,10 +30,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const { user, signOut } = useUser();
   const [activeSection, setActiveSection] = useState<Section>("account");
 
-  const name =
-    user?.user_metadata?.full_name ||
-    user?.email?.split("@")[0] ||
-    "Guest";
+  const name = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Guest";
 
   const handleSignOut = async () => {
     await signOut();
@@ -44,10 +39,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        showCloseButton={false}
-        className="sm:max-w-2xl p-0 gap-0 overflow-hidden"
-      >
+      <DialogContent showCloseButton={false} className="sm:max-w-2xl p-0 gap-0 overflow-hidden">
         <DialogTitle className="sr-only">Settings</DialogTitle>
         <div className="flex min-h-[420px]">
           {/* Sidebar */}
@@ -116,7 +108,9 @@ function SettingRow({
     <div>
       <div className="flex items-center justify-between gap-4 py-3">
         <div className="min-w-0">
-          <p className="font-sans text-sm font-medium text-stone-800 dark:text-stone-200">{label}</p>
+          <p className="font-sans text-sm font-medium text-stone-800 dark:text-stone-200">
+            {label}
+          </p>
           {description && (
             <p className="font-sans text-xs text-stone-400 dark:text-stone-500 mt-0.5">
               {description}
@@ -160,18 +154,14 @@ function AccountSection({
             {name}
           </p>
           {email && (
-            <p className="font-sans text-xs text-stone-400 dark:text-stone-500 truncate">
-              {email}
-            </p>
+            <p className="font-sans text-xs text-stone-400 dark:text-stone-500 truncate">{email}</p>
           )}
         </div>
       </div>
       <Separator className="bg-stone-100 dark:bg-stone-800" />
 
       <SettingRow label="Email" description="Your account email address">
-        <span className="font-sans text-sm text-stone-500 dark:text-stone-400">
-          {email || "—"}
-        </span>
+        <span className="font-sans text-sm text-stone-500 dark:text-stone-400">{email || "—"}</span>
       </SettingRow>
 
       <div className="mt-6">
@@ -196,12 +186,29 @@ const THEME_OPTIONS: { value: Theme; label: string }[] = [
   { value: "system", label: "System" },
 ];
 
+const NUMBER_FORMAT_OPTIONS: { value: NumberFormat; label: string }[] = [
+  { value: "fractions", label: "⅓" },
+  { value: "decimals", label: "0.33" },
+];
+
 function AppearanceSection() {
   const [theme, setThemeState] = useState<Theme>(getTheme);
+  const [numberFormat, setNumberFormatState] = useState<NumberFormat>(getNumberFormat);
+  const [roundAmounts, setRoundAmountsState] = useState(getRoundAmounts);
 
   const handleThemeChange = (t: Theme) => {
     setThemeState(t);
     setTheme(t);
+  };
+
+  const handleNumberFormatChange = (f: NumberFormat) => {
+    setNumberFormatState(f);
+    setNumberFormat(f);
+  };
+
+  const handleRoundAmountsChange = (checked: boolean) => {
+    setRoundAmountsState(checked);
+    setRoundAmounts(checked);
   };
 
   return (
@@ -213,7 +220,9 @@ function AppearanceSection() {
           type="single"
           variant="outline"
           value={theme}
-          onValueChange={(v) => { if (v) handleThemeChange(v as Theme); }}
+          onValueChange={(v) => {
+            if (v) handleThemeChange(v as Theme);
+          }}
           className="rounded-lg"
         >
           {THEME_OPTIONS.map((opt) => (
@@ -228,8 +237,37 @@ function AppearanceSection() {
         </ToggleGroup>
       </SettingRow>
 
+      <SettingRow label="Numbers" description="Show amounts as fractions or decimals">
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          value={numberFormat}
+          onValueChange={(v) => {
+            if (v) handleNumberFormatChange(v as NumberFormat);
+          }}
+          className="rounded-lg"
+        >
+          {NUMBER_FORMAT_OPTIONS.map((opt) => (
+            <ToggleGroupItem
+              key={opt.value}
+              value={opt.value}
+              className="font-sans text-sm px-3 py-1 h-auto data-[state=on]:bg-stone-900 data-[state=on]:text-white dark:data-[state=on]:bg-stone-100 dark:data-[state=on]:text-stone-900"
+            >
+              {opt.label}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </SettingRow>
+
+      <SettingRow label="Round amounts" description="Round ingredient amounts to the nearest ½">
+        <Switch checked={roundAmounts} onCheckedChange={handleRoundAmountsChange} />
+      </SettingRow>
+
       <SettingRow label="Font" description="Serif font used for headings">
-        <Badge variant="outline" className="rounded-md px-3 py-1 font-serif text-sm text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800">
+        <Badge
+          variant="outline"
+          className="rounded-md px-3 py-1 font-serif text-sm text-stone-500 dark:text-stone-400 border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800"
+        >
           Domine
         </Badge>
       </SettingRow>
@@ -251,7 +289,10 @@ function AboutSection() {
       </SettingRow>
 
       <SettingRow label="Stack">
-        <Badge variant="outline" className="font-sans text-xs text-stone-400 dark:text-stone-500 border-stone-200 dark:border-stone-700">
+        <Badge
+          variant="outline"
+          className="font-sans text-xs text-stone-400 dark:text-stone-500 border-stone-200 dark:border-stone-700"
+        >
           Next.js, Supabase, Groq
         </Badge>
       </SettingRow>

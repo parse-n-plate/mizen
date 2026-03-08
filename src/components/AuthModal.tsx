@@ -10,6 +10,7 @@ import {
   useTransform,
 } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { resolveEmailAuthFeedback } from "@/lib/auth-feedback";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,8 @@ import Login from "@solar-icons/react/csr/arrows-action/Login";
 import UserPlus from "@solar-icons/react/csr/users/UserPlus";
 import Eye from "@solar-icons/react/csr/security/Eye";
 import EyeClosed from "@solar-icons/react/csr/security/EyeClosed";
+import Restart from "@solar-icons/react/csr/arrows/Restart";
+import Letter from "@solar-icons/react/csr/messages/Letter";
 
 type Mode = "login" | "signup" | "forgot";
 
@@ -35,11 +38,7 @@ interface AuthModalProps {
 const TRANSITION = { duration: 0.15, ease: [0.4, 0, 0.2, 1] as const };
 const INSTANT = { duration: 0 };
 
-export function AuthModal({
-  open,
-  onOpenChange,
-  initialMode = "login",
-}: AuthModalProps) {
+export function AuthModal({ open, onOpenChange, initialMode = "login" }: AuthModalProps) {
   const shouldReduceMotion = useReducedMotion();
   const t = shouldReduceMotion ? INSTANT : TRANSITION;
 
@@ -50,6 +49,7 @@ export function AuthModal({
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [confirmationSent, setConfirmationSent] = useState(false);
   const mode = modeOverride ?? initialMode;
   const openRef = useRef(open);
   const closeResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -73,6 +73,7 @@ export function AuthModal({
   const clearMessages = () => {
     setError(null);
     setMessage(null);
+    setConfirmationSent(false);
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -93,16 +94,24 @@ export function AuthModal({
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleAuth = async () => {
+    clearMessages();
     const supabase = createClient();
-    if (!supabase) return;
+    if (!supabase) {
+      setError("Authentication is unavailable right now. Please try again.");
+      return;
+    }
     const returnTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(returnTo || "/")}`,
       },
     });
+
+    if (error) {
+      setError(error.message);
+    }
   };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
@@ -122,23 +131,31 @@ export function AuthModal({
         email,
         password,
       });
-      if (error) {
-        setError(error.message);
-      } else {
+
+      const feedback = resolveEmailAuthFeedback("login", { error });
+      if (feedback.error) {
+        setError(feedback.error);
+      } else if (feedback.shouldClose) {
         handleOpenChange(false);
       }
     } else {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
-      if (error) {
-        setError(error.message);
+
+      const feedback = resolveEmailAuthFeedback("signup", {
+        error,
+        user: data.user,
+      });
+      if (feedback.error) {
+        setError(feedback.error);
       } else {
-        setMessage("Check your email for a confirmation link.");
+        setConfirmationSent(feedback.confirmationSent);
+        setMessage(feedback.message);
       }
     }
 
@@ -174,6 +191,36 @@ export function AuthModal({
     setLoading(false);
   };
 
+  const handleResend = async () => {
+    setLoading(true);
+    clearMessages();
+    setConfirmationSent(true);
+
+    const supabase = createClient();
+    if (!supabase) {
+      setError("Authentication is unavailable right now. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      setError(error.message);
+      setMessage("The original confirmation was sent. Try resending again.");
+    } else {
+      setMessage("Confirmation email resent. Check your inbox and spam folder.");
+    }
+
+    setLoading(false);
+  };
+
   const switchMode = (next: Mode) => {
     setModeOverride(next);
     clearMessages();
@@ -188,10 +235,7 @@ export function AuthModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent
-        showCloseButton
-        className="sm:max-w-4xl p-0 gap-0 overflow-hidden rounded-xl"
-      >
+      <DialogContent showCloseButton className="sm:max-w-4xl p-0 gap-0 overflow-hidden rounded-xl">
         <div className="grid grid-cols-1 sm:grid-cols-2">
           {/* ─── Left panel: Form ─── */}
           <div className="p-8 sm:p-10">
@@ -204,12 +248,8 @@ export function AuthModal({
                   exit={{ opacity: 0, y: -6 }}
                   transition={t}
                 >
-                  <DialogTitle className="font-serif text-2xl">
-                    {titles[mode].title}
-                  </DialogTitle>
-                  <DialogDescription className="mt-1">
-                    {titles[mode].description}
-                  </DialogDescription>
+                  <DialogTitle className="font-serif text-2xl">{titles[mode].title}</DialogTitle>
+                  <DialogDescription className="mt-1">{titles[mode].description}</DialogDescription>
                 </motion.div>
               </AnimatePresence>
             </DialogHeader>
@@ -220,13 +260,9 @@ export function AuthModal({
                 <Button
                   variant="outline"
                   className="w-full justify-start gap-3"
-                  onClick={handleGoogleLogin}
+                  onClick={handleGoogleAuth}
                 >
-                  <svg
-                    className="h-4 w-4 shrink-0"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
+                  <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                     <path
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
                       fill="#4285F4"
@@ -253,9 +289,7 @@ export function AuthModal({
                     <span className="w-full border-t" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-3 font-sans text-muted-foreground">
-                      or
-                    </span>
+                    <span className="bg-background px-3 font-sans text-muted-foreground">or</span>
                   </div>
                 </div>
               </>
@@ -312,11 +346,7 @@ export function AuthModal({
                   className="w-full bg-mizen-blue text-white hover:bg-mizen-blue/90 focus-visible:ring-mizen-blue/50"
                   size="lg"
                 >
-                  {loading ? (
-                    <Spinner />
-                  ) : (
-                    "Send Reset Link"
-                  )}
+                  {loading ? <Spinner /> : "Send Reset Link"}
                 </Button>
 
                 <p className="font-sans text-center text-sm text-muted-foreground">
@@ -383,9 +413,7 @@ export function AuthModal({
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      autoComplete={
-                        mode === "signup" ? "new-password" : "current-password"
-                      }
+                      autoComplete={mode === "signup" ? "new-password" : "current-password"}
                       minLength={6}
                       className="pr-10"
                     />
@@ -393,9 +421,7 @@ export function AuthModal({
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      aria-label={
-                        showPassword ? "Hide password" : "Show password"
-                      }
+                      aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? (
                         <EyeClosed className="h-4 w-4" />
@@ -418,14 +444,31 @@ export function AuthModal({
                     </motion.p>
                   )}
                   {message && (
-                    <motion.p
+                    <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="font-sans text-sm text-green-600 dark:text-green-400"
+                      className="space-y-2"
                     >
-                      {message}
-                    </motion.p>
+                      <p className="font-sans text-sm text-green-600 dark:text-green-400 flex items-start gap-2">
+                        <Letter className="h-4 w-4 mt-0.5 shrink-0" />
+                        <span>{message}</span>
+                      </p>
+                      {confirmationSent && (
+                        <p className="font-sans text-xs text-muted-foreground">
+                          Don&apos;t see it? Check your spam folder.{" "}
+                          <button
+                            type="button"
+                            onClick={handleResend}
+                            disabled={loading}
+                            className="inline-flex items-center gap-1 font-semibold text-foreground hover:underline underline-offset-2 disabled:opacity-50"
+                          >
+                            <Restart className="h-3 w-3" />
+                            Resend email
+                          </button>
+                        </p>
+                      )}
+                    </motion.div>
                   )}
                 </AnimatePresence>
 
@@ -437,13 +480,7 @@ export function AuthModal({
                 >
                   <AnimatePresence mode="wait" initial={false}>
                     <motion.span
-                      key={
-                        loading
-                          ? "loading"
-                          : mode === "login"
-                            ? "login-btn"
-                            : "signup-btn"
-                      }
+                      key={loading ? "loading" : mode === "login" ? "login-btn" : "signup-btn"}
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
@@ -480,14 +517,10 @@ export function AuthModal({
                     exit={{ opacity: 0 }}
                     transition={{ duration: shouldReduceMotion ? 0 : 0.12 }}
                   >
-                    {mode === "login"
-                      ? "No account?"
-                      : "Already have an account?"}{" "}
+                    {mode === "login" ? "No account?" : "Already have an account?"}{" "}
                     <button
                       type="button"
-                      onClick={() =>
-                        switchMode(mode === "login" ? "signup" : "login")
-                      }
+                      onClick={() => switchMode(mode === "login" ? "signup" : "login")}
                       className="font-sans font-semibold text-foreground hover:underline underline-offset-2"
                     >
                       {mode === "login" ? "Sign up" : "Sign in"}
@@ -553,10 +586,7 @@ function InteractivePanel() {
       }}
     >
       {/* Cursor-tracking radial glow */}
-      <motion.div
-        className="absolute inset-0 opacity-40"
-        style={{ background: glowBg }}
-      />
+      <motion.div className="absolute inset-0 opacity-40" style={{ background: glowBg }} />
       {/* Subtle grid pattern */}
       <div
         className="absolute inset-0 opacity-[0.04]"
@@ -576,20 +606,8 @@ function InteractivePanel() {
 
 function Spinner() {
   return (
-    <svg
-      className="h-4 w-4 animate-spin"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      />
+    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path
         className="opacity-75"
         fill="currentColor"

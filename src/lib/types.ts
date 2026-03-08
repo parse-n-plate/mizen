@@ -11,6 +11,11 @@ export interface IngredientGroup {
   ingredients: Ingredient[];
 }
 
+export interface TimeMarker {
+  text: string; // exact substring from detail, e.g. "15 minutes"
+  seconds: number; // duration in seconds
+}
+
 export interface InstructionStep {
   title: string;
   detail: string;

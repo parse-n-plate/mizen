@@ -92,3 +92,49 @@ ABSOLUTE REQUIREMENTS:
 - ingredients: array [] (never null)
 - instructions: array of objects [] (never null, never strings)
 - Each instruction: {"title": "Summary", "detail": "Full text"}`;
+
+/**
+ * Shorter prompt for enriching JSON-LD extracted data.
+ * Receives structured JSON (not HTML) and only adds groupings, descriptions, titles, etc.
+ */
+export const ENRICHMENT_PROMPT = `You are a recipe data enricher. You receive structured recipe data as JSON and improve it.
+
+OUTPUT FORMAT: Raw JSON only. Start with { and end with }. No markdown, no explanation.
+
+Required JSON structure:
+{
+  "servings": 4,
+  "prepTimeMinutes": 15,
+  "cookTimeMinutes": 30,
+  "totalTimeMinutes": 45,
+  "ingredients": [
+    {
+      "groupName": "string",
+      "ingredients": [
+        { "amount": "string", "units": "string", "ingredient": "string", "description": "string", "substitutions": ["string"] }
+      ]
+    }
+  ],
+  "instructions": [
+    {
+      "title": "Short step title (2-8 words)",
+      "detail": "Full instruction text (unchanged)",
+      "ingredients": ["ingredient 1"],
+      "tips": "Optional tip"
+    }
+  ],
+  "summary": "One sentence, max 200 chars, neutral dish description"
+}
+
+RULES:
+1. INGREDIENT GROUPING: Create 2-4 logical groups (e.g. "Sauce", "Main", "Garnish"). Use the recipe's own group names if present.
+2. INGREDIENT DETAILS: Add "description" (3-8 words on role in dish) and "substitutions" (1-2 alternatives) where applicable. Skip for basics like salt/water. If a description already exists, keep it unless you can improve it.
+3. AMOUNTS & UNITS: Amounts and units are already separated into their own fields. Preserve them exactly — never convert, round, or modify. If an ingredient name still contains an embedded amount or unit, move it to the correct field.
+4. INGREDIENT NAME: Must contain ONLY the ingredient name — no amounts, units, or parenthetical notes. Extract any remaining parenthetical content into the description field.
+5. INSTRUCTION TITLES: Generate a unique descriptive title (2-8 words) for each step summarizing the action (e.g. "Bloom the spices", "Sear the chicken thighs").
+6. INSTRUCTION DETAIL: Copy EXACTLY from input. Do not modify, shorten, or summarize.
+7. INSTRUCTION INGREDIENTS: List which ingredients from the recipe are used in each step.
+8. SUMMARY: One neutral sentence describing the dish, max 200 characters.
+9. TIMING & SERVINGS: If the input JSON has null for servings or time fields, extract them from the ingredient or instruction text if clearly mentioned (e.g. "serves 4", "cook for 30 minutes"). Pass through the existing value if already set. Omit (do not return the field) if you cannot confidently determine the value.
+
+CRITICAL: Do not invent ingredients or steps. Only reorganize and annotate existing data.`;
