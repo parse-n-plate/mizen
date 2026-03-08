@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useSyncExternalStore } from "react";
 import { useRecipe } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
 import { toast } from "sonner";
 import { RecipeHeader, formatTime } from "@/components/RecipeHeader";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
-import { scaleIngredients } from "@/utils/ingredientScaler";
+import { scaleIngredients, displayAmount, displayText } from "@/utils/ingredientScaler";
+import { getNumberFormat } from "@/lib/numberFormat";
 import Link from "next/link";
 
 export default function RecipePage() {
@@ -17,6 +18,11 @@ export default function RecipePage() {
   const [unsaving, setUnsaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"prep" | "cook">("prep");
+  const numberFormat = useSyncExternalStore(
+    (cb) => { window.addEventListener("storage", cb); return () => window.removeEventListener("storage", cb); },
+    getNumberFormat,
+    () => "fractions" as const,
+  );
 
   const originalServings = useMemo(() => recipe?.servings, [recipe?.servings]);
   const [servings, setServings] = useState<number | undefined>(recipe?.servings);
@@ -126,7 +132,7 @@ export default function RecipePage() {
                     {ing.ingredient}
                     {(ing.amount || ing.units) && (
                       <span className="text-stone-500 ml-1">
-                        — {`${ing.amount || ""} ${ing.units || ""}`.trim()}
+                        — {`${displayAmount(ing.amount, numberFormat)} ${ing.units || ""}`.trim()}
                       </span>
                     )}
                   </li>
@@ -142,7 +148,7 @@ export default function RecipePage() {
               <li key={i} className="text-sm leading-relaxed">
                 <strong>{step.title}</strong>
                 <br />
-                {step.detail}
+                {displayText(step.detail, numberFormat)}
               </li>
             ))}
           </ol>
