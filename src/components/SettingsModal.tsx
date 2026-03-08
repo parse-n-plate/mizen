@@ -10,6 +10,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { type Theme, getTheme, setTheme } from "@/lib/theme";
+import { type NumberFormat, getNumberFormat, setNumberFormat } from "@/lib/numberFormat";
 
 type Section = "account" | "appearance" | "about";
 
@@ -184,12 +185,23 @@ const THEME_OPTIONS: { value: Theme; label: string }[] = [
   { value: "system", label: "System" },
 ];
 
+const NUMBER_FORMAT_OPTIONS: { value: NumberFormat; label: string }[] = [
+  { value: "fractions", label: "⅓" },
+  { value: "decimals", label: "0.33" },
+];
+
 function AppearanceSection() {
   const [theme, setThemeState] = useState<Theme>(getTheme);
+  const [numberFormat, setNumberFormatState] = useState<NumberFormat>(getNumberFormat);
 
   const handleThemeChange = (t: Theme) => {
     setThemeState(t);
     setTheme(t);
+  };
+
+  const handleNumberFormatChange = (f: NumberFormat) => {
+    setNumberFormatState(f);
+    setNumberFormat(f);
   };
 
   return (
@@ -207,6 +219,28 @@ function AppearanceSection() {
           className="rounded-lg"
         >
           {THEME_OPTIONS.map((opt) => (
+            <ToggleGroupItem
+              key={opt.value}
+              value={opt.value}
+              className="font-sans text-sm px-3 py-1 h-auto data-[state=on]:bg-stone-900 data-[state=on]:text-white dark:data-[state=on]:bg-stone-100 dark:data-[state=on]:text-stone-900"
+            >
+              {opt.label}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+      </SettingRow>
+
+      <SettingRow label="Numbers" description="Show amounts as fractions or decimals">
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          value={numberFormat}
+          onValueChange={(v) => {
+            if (v) handleNumberFormatChange(v as NumberFormat);
+          }}
+          className="rounded-lg"
+        >
+          {NUMBER_FORMAT_OPTIONS.map((opt) => (
             <ToggleGroupItem
               key={opt.value}
               value={opt.value}
