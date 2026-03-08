@@ -1,14 +1,28 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRecipe } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
+import { usePreference } from "@/hooks/usePreference";
+import {
+  annotateIngredientGroups,
+  convertIngredientGroups,
+  convertInstructionTemperatures,
+  getPreferredServings,
+} from "@/lib/recipe-preferences";
 import { toast } from "sonner";
 import { RecipeHeader, formatTime } from "@/components/RecipeHeader";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
 import { scaleIngredients } from "@/utils/ingredientScaler";
-import { getRoundAmounts } from "@/lib/preferences";
+import {
+  getDefaultServings,
+  getDietaryProfile,
+  getRoundAmounts,
+  getSubstitutions,
+  getTemperatureUnit,
+  getUnitSystem,
+} from "@/lib/preferences";
 import Link from "next/link";
 
 export default function RecipePage() {
@@ -21,25 +35,38 @@ export default function RecipePage() {
 
   const originalServings = useMemo(() => recipe?.servings, [recipe?.servings]);
   const [servings, setServings] = useState<number | undefined>(recipe?.servings);
+  const roundAmounts = usePreference(getRoundAmounts);
+  const defaultServings = usePreference(getDefaultServings);
+  const unitSystem = usePreference(getUnitSystem);
+  const temperatureUnit = usePreference(getTemperatureUnit);
+  const dietaryProfile = usePreference(getDietaryProfile);
+  const substitutions = usePreference(getSubstitutions);
 
-  // Sync servings when recipe object changes (e.g. new parse with same servings count)
   useEffect(() => {
-    setServings(recipe?.servings);
-  }, [recipe]);
+    setServings(getPreferredServings(recipe?.servings, defaultServings));
+  }, [defaultServings, recipe?.servings]);
 
-  const roundAmounts = useSyncExternalStore(
-    useCallback((cb: () => void) => {
-      window.addEventListener("round-amounts-changed", cb);
-      return () => window.removeEventListener("round-amounts-changed", cb);
-    }, []),
-    getRoundAmounts,
-    () => false
-  );
+  const preparedIngredients = useMemo(() => {
+    if (!recipe) return [];
+
+    return annotateIngredientGroups(recipe.ingredients, dietaryProfile, substitutions);
+  }, [dietaryProfile, recipe, substitutions]);
 
   const scaledIngredients = useMemo(() => {
-    if (!recipe || !originalServings || !servings) return recipe?.ingredients ?? [];
-    return scaleIngredients(recipe.ingredients, originalServings, servings, roundAmounts);
-  }, [recipe, originalServings, servings, roundAmounts]);
+    if (!recipe) return [];
+
+    const ingredients =
+      originalServings && servings
+        ? scaleIngredients(preparedIngredients, originalServings, servings, roundAmounts)
+        : preparedIngredients;
+
+    return convertIngredientGroups(ingredients, unitSystem);
+  }, [originalServings, preparedIngredients, recipe, roundAmounts, servings, unitSystem]);
+
+  const displayedInstructions = useMemo(() => {
+    if (!recipe) return [];
+    return convertInstructionTemperatures(recipe.instructions, temperatureUnit);
+  }, [recipe, temperatureUnit]);
 
   const shareUrl = savedMeta
     ? `${typeof window !== "undefined" ? window.location.origin : ""}/r/${savedMeta.slug}`
@@ -148,7 +175,7 @@ export default function RecipePage() {
             Instructions
           </h3>
           <ol className="list-decimal pl-5 space-y-3">
-            {recipe.instructions.map((step, i) => (
+            {displayedInstructions.map((step, i) => (
               <li key={i} className="text-sm leading-relaxed">
                 <strong>{step.title}</strong>
                 <br />
@@ -350,11 +377,11 @@ export default function RecipePage() {
             <div className="max-w-3xl mx-auto px-5 sm:px-6 pt-5 pb-24 sm:pb-6">
               {activeTab === "prep" ? (
                 <div key="prep" className="tab-content-animate">
-                  <PrepSection ingredients={scaledIngredients} steps={recipe.instructions} />
+                  <PrepSection ingredients={scaledIngredients} steps={displayedInstructions} />
                 </div>
               ) : (
                 <div key="cook" className="tab-content-animate">
-                  <StepList steps={recipe.instructions} />
+                  <StepList steps={displayedInstructions} />
                 </div>
               )}
             </div>
