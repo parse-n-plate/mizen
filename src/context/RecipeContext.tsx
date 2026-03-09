@@ -23,6 +23,7 @@ interface RecipeContextType {
   error: string | null;
   setError: (error: string | null) => void;
   history: HistoryEntry[];
+  hasHydrated: boolean;
 }
 
 const RecipeContext = createContext<RecipeContextType | undefined>(undefined);
@@ -54,6 +55,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
       if (storedHistory) setHistory(JSON.parse(storedHistory));
     } catch { /* ignore */ }
   }, []);
+  const [hasHydrated] = useState(true);
 
   const setRecipe = (newRecipe: ParsedRecipe | null) => {
     setRecipeState(newRecipe);
@@ -109,6 +111,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
         error,
         setError,
         history,
+        hasHydrated,
       }}
     >
       {children}

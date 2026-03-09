@@ -13,18 +13,12 @@ export const IngredientGroupSchema = z.object({
   ingredients: z.array(IngredientSchema).min(1),
 });
 
-export const TimeMarkerSchema = z.object({
-  text: z.string(),
-  seconds: z.number(),
-});
-
 export const InstructionStepSchema = z.object({
   title: z.string().optional().default(""),
   detail: z.string().optional().default(""),
   text: z.string().optional(),
   name: z.string().optional(),
   timeMinutes: z.number().optional(),
-  timers: z.array(TimeMarkerSchema).optional(),
   ingredients: z.array(z.string()).optional(),
   tips: z.string().optional(),
   imageUrl: z.string().optional(),

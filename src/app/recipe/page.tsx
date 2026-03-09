@@ -25,6 +25,8 @@ import {
   getUnitSystem,
 } from "@/lib/preferences";
 import Link from "next/link";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { HeartButton } from "@/components/HeartButton";
 
 export default function RecipePage() {
   const { recipe, savedMeta, setSavedMeta } = useRecipe();
@@ -129,6 +131,29 @@ export default function RecipePage() {
     }
   };
 
+  const handleShare = async () => {
+    if (!recipe) return;
+    const url = shareUrl || recipe.sourceUrl || "";
+    const shareData = {
+      title: recipe.title,
+      ...(recipe.summary && { text: recipe.summary }),
+      ...(url && { url }),
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        const text = url || recipe.title;
+        await navigator.clipboard.writeText(text);
+        toast.success("Link copied to clipboard");
+      }
+    } catch (err) {
+      // User cancelled the share sheet — not an error
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      toast.error("Failed to share");
+    }
+  };
+
   if (!recipe) {
     return (
       <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center gap-4 px-6">
@@ -145,12 +170,27 @@ export default function RecipePage() {
       {/* Header section with cream background */}
       <div className="px-6 pt-8 pb-0">
         <div className="max-w-3xl mx-auto w-full pb-8">
-          <RecipeHeader
-            recipe={recipe}
-            servings={servings}
-            originalServings={originalServings}
-            onServingsChange={setServings}
-          />
+          <div className="flex items-start gap-4">
+            <div className="flex-1 min-w-0">
+              <RecipeHeader
+                recipe={recipe}
+                servings={servings}
+                originalServings={originalServings}
+                onServingsChange={setServings}
+              />
+            </div>
+
+            {/* Save heart button */}
+            {user && (
+              <HeartButton
+                isSaved={!!savedMeta}
+                saving={saving}
+                unsaving={unsaving}
+                onSave={handleSave}
+                onUnsave={handleUnsave}
+              />
+            )}
+          </div>
         </div>
       </div>
 
@@ -196,7 +236,7 @@ export default function RecipePage() {
       <div className="flex-1 flex flex-col px-6 print:hidden">
         <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col">
           {/* Desktop: top folder tabs + quick actions (hidden on mobile) */}
-          <div className="group/tabs hidden sm:flex items-end w-full relative border-b border-stone-200 dark:border-stone-700 gap-0">
+          <div className="hidden sm:flex items-end w-full relative border-b border-stone-200 dark:border-stone-700 gap-0">
             <button
               onClick={() => setActiveTab("prep")}
               className="folder-tab-trigger h-11 px-8 font-sans text-[14px] font-medium"
@@ -284,8 +324,9 @@ export default function RecipePage() {
                 {savedMeta && (
                   <div className="relative">
                     <button
+                      type="button"
                       onClick={handleCopy}
-                      title={copied ? "Copied!" : "Copy share link"}
+                      aria-label={copied ? "Share link copied" : "Copy share link"}
                       className={`press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors ${
                         copied
                           ? "text-emerald-500 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950"
@@ -379,8 +420,8 @@ export default function RecipePage() {
           </div>
 
           {/* Content card */}
-          <div className="bg-white dark:bg-stone-900 sm:rounded-b-lg rounded-lg sm:rounded-t-none border border-stone-200 dark:border-stone-700 sm:border-t-0 flex-1">
-            <div className="max-w-3xl mx-auto px-5 sm:px-6 pt-5 pb-24 sm:pb-6">
+          <div className="sm:bg-white sm:dark:bg-stone-900 sm:rounded-b-lg sm:rounded-lg sm:rounded-t-none sm:border sm:border-stone-200 sm:dark:border-stone-700 sm:border-t-0 flex-1">
+            <div className="max-w-3xl mx-auto sm:px-6 sm:pt-5 pb-24 sm:pb-6">
               {activeTab === "prep" ? (
                 <div key="prep" className="tab-content-animate">
                   <PrepSection ingredients={scaledIngredients} steps={displayedInstructions} />

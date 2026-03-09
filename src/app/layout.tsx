@@ -3,6 +3,7 @@ import { Domine, Albert_Sans } from "next/font/google";
 import { Agentation } from "agentation";
 import { AppShell } from "@/components/AppShell";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
 const domine = Domine({
@@ -45,7 +46,9 @@ export default function RootLayout({
         />
       </head>
       <body className={`${domine.variable} ${albertSans.variable} antialiased`}>
-        <AppShell>{children}</AppShell>
+        <TooltipProvider>
+          <AppShell>{children}</AppShell>
+        </TooltipProvider>
         <Toaster />
         {process.env.NODE_ENV === "development" && <Agentation />}
       </body>
