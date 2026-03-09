@@ -21,6 +21,7 @@ export interface InstructionStep {
   title: string;
   detail: string;
   timeMinutes?: number;
+  timers?: TimeMarker[];
   ingredients?: string[];
   tips?: string;
   imageUrl?: string;
