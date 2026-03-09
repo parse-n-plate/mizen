@@ -4,6 +4,7 @@ export interface Ingredient {
   ingredient: string;
   description?: string;
   substitutions?: string[];
+  alerts?: string[];
 }
 
 export interface IngredientGroup {
