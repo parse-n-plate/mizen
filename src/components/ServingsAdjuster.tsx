@@ -27,9 +27,8 @@ export function ServingsAdjuster({
   const [inputValue, setInputValue] = useState<string>(String(servings));
   const [isEditingInput, setIsEditingInput] = useState(false);
 
-  // Slider range: originalServings ± 5, min 1
-  const sliderMin = Math.max(1, originalServings - 5);
-  const sliderMax = originalServings + 5;
+  const sliderMin = Math.max(1, Math.min(originalServings - 5, servings));
+  const sliderMax = Math.max(originalServings + 5, servings);
   const displayedValue = dragValue ?? servings;
 
   const sliderRange = sliderMax - sliderMin;

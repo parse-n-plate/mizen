@@ -235,6 +235,7 @@ function IngredientGroupSection({
             const amount = `${displayAmount(ing.amount, numberFormat)} ${ing.units || ""}`.trim();
             const hasSubstitutions = ing.substitutions && ing.substitutions.length > 0;
             const isExpanded = expanded === key;
+            const hasAlerts = Boolean(ing.alerts && ing.alerts.length > 0);
 
             return (
               <div
@@ -309,6 +310,21 @@ function IngredientGroupSection({
                         )}
                       </div>
                     </div>
+                    {hasAlerts && (
+                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                        <span className="font-sans text-[11px] text-amber-600 dark:text-amber-400">
+                          Conflicts:
+                        </span>
+                        {ing.alerts?.map((alert) => (
+                          <span
+                            key={alert}
+                            className="rounded-md bg-amber-50 px-1.5 py-0.5 font-sans text-[11px] text-amber-700 dark:bg-amber-950/50 dark:text-amber-300"
+                          >
+                            {alert}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
