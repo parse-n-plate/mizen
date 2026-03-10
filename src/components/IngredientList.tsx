@@ -8,6 +8,7 @@ import type { Ingredient, IngredientGroup } from "@/lib/types";
 import { ProgressPie } from "@/components/shared/progress-pie";
 import { type NumberFormat, getNumberFormat } from "@/lib/numberFormat";
 import { displayAmount } from "@/utils/ingredientScaler";
+import type { DiffMap } from "@/hooks/useIngredientDiff";
 
 function subscribeToStorage(cb: () => void) {
   window.addEventListener("storage", cb);
@@ -15,11 +16,17 @@ function subscribeToStorage(cb: () => void) {
 }
 
 function useNumberFormat(): NumberFormat {
-  return useSyncExternalStore(subscribeToStorage, getNumberFormat, () => "fractions" as NumberFormat);
+  return useSyncExternalStore(
+    subscribeToStorage,
+    getNumberFormat,
+    () => "fractions" as NumberFormat
+  );
 }
 
 interface IngredientListProps {
   groups: IngredientGroup[];
+  diffMap?: DiffMap;
+  diffGeneration?: number;
 }
 
 interface FilteredIngredient {
@@ -32,7 +39,7 @@ interface FilteredIngredientGroup {
   ingredients: FilteredIngredient[];
 }
 
-export function IngredientList({ groups }: IngredientListProps) {
+export function IngredientList({ groups, diffMap, diffGeneration }: IngredientListProps) {
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -129,6 +136,8 @@ export function IngredientList({ groups }: IngredientListProps) {
             onExpand={(key) => setExpanded(expanded === key ? null : key)}
             onToggleAll={toggleAll}
             numberFormat={numberFormat}
+            diffMap={diffMap}
+            diffGeneration={diffGeneration}
           />
         ))
       )}
@@ -144,6 +153,8 @@ function IngredientGroupSection({
   onExpand,
   onToggleAll,
   numberFormat,
+  diffMap,
+  diffGeneration,
 }: {
   group: FilteredIngredientGroup;
   checked: Set<string>;
@@ -152,6 +163,8 @@ function IngredientGroupSection({
   onExpand: (key: string) => void;
   onToggleAll: (keys: string[]) => void;
   numberFormat: NumberFormat;
+  diffMap?: DiffMap;
+  diffGeneration?: number;
 }) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -233,6 +246,7 @@ function IngredientGroupSection({
             const isChecked = checked.has(key);
             const isLast = i === group.ingredients.length - 1;
             const amount = `${displayAmount(ing.amount, numberFormat)} ${ing.units || ""}`.trim();
+            const diffEntry = diffMap?.get(key);
             const hasSubstitutions = ing.substitutions && ing.substitutions.length > 0;
             const isExpanded = expanded === key;
             const hasAlerts = Boolean(ing.alerts && ing.alerts.length > 0);
@@ -250,6 +264,7 @@ function IngredientGroupSection({
                     <input
                       type="checkbox"
                       className="ingredient-checkbox-input cursor-pointer"
+                      aria-label={ing.ingredient}
                       checked={isChecked}
                       onChange={(e) => {
                         e.stopPropagation();
@@ -274,14 +289,22 @@ function IngredientGroupSection({
                         </p>
                         {ing.description && (
                           <p className="font-sans text-sm text-stone-400 dark:text-stone-500 truncate">
-                            {ing.description.charAt(0).toUpperCase() + ing.description.slice(1).toLowerCase()}
+                            {ing.description.charAt(0).toUpperCase() +
+                              ing.description.slice(1).toLowerCase()}
                           </p>
                         )}
                       </div>
                       <div className="flex items-baseline gap-2 ml-3 flex-shrink-0">
                         {amount && (
                           <p className="font-sans text-sm text-stone-400 dark:text-stone-500">
-                            {amount}
+                            {diffEntry ? (
+                              <span key={diffGeneration}>
+                                <span className="amount-diff-old">{diffEntry.oldAmount}</span>{" "}
+                                <span className="amount-diff-new">{amount}</span>
+                              </span>
+                            ) : (
+                              amount
+                            )}
                           </p>
                         )}
                         {hasSubstitutions && !isChecked && (
@@ -338,7 +361,9 @@ function IngredientGroupSection({
                     <div className="overflow-hidden">
                       <div className="pl-10 pr-2 pb-3">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-sans text-[11px] text-stone-400 dark:text-stone-500">Sub:</span>
+                          <span className="font-sans text-[11px] text-stone-400 dark:text-stone-500">
+                            Sub:
+                          </span>
                           {ing.substitutions!.map((sub) => (
                             <span
                               key={sub}
