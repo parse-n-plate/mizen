@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useMemo, useSyncExternalStore } from "react";
+import { useState, useMemo, useSyncExternalStore } from "react";
 import Magnifer from "@solar-icons/react/csr/search/Magnifer";
 import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -90,32 +90,8 @@ export function IngredientList({ groups }: IngredientListProps) {
     });
   };
 
-  const [showDials, setShowDials] = useState(false);
-  const [pressScale, setPressScale] = useState(0.98);
-  const [pressDuration, setPressDuration] = useState(150);
-  const [pressEasing, setPressEasing] = useState("ease");
-  const listRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = listRef.current;
-    if (!el) return;
-    el.style.setProperty("--press-scale", String(pressScale));
-    el.style.setProperty("--press-duration", `${pressDuration}ms`);
-    el.style.setProperty("--press-easing", pressEasing);
-  }, [pressScale, pressDuration, pressEasing]);
-
   return (
-    <div className="space-y-6" ref={listRef}>
-      <PressDialKit
-        show={showDials}
-        onToggle={() => setShowDials(!showDials)}
-        scale={pressScale}
-        onScaleChange={setPressScale}
-        duration={pressDuration}
-        onDurationChange={setPressDuration}
-        easing={pressEasing}
-        onEasingChange={setPressEasing}
-      />
+    <div className="space-y-6">
       <div className="relative w-full max-w-[700px] mx-auto">
         <Magnifer className="absolute left-3 top-1/2 -translate-y-1/2 size-[18px] text-muted-foreground pointer-events-none" />
         <Input
@@ -389,122 +365,3 @@ function IngredientGroupSection({
   );
 }
 
-const EASING_OPTIONS = [
-  { label: "ease", value: "ease" },
-  { label: "ease-out", value: "ease-out" },
-  { label: "ease-out (quad)", value: "cubic-bezier(0.25, 0.46, 0.45, 0.94)" },
-  { label: "ease-out (cubic)", value: "cubic-bezier(0.215, 0.61, 0.355, 1)" },
-  { label: "ease-out (quart)", value: "cubic-bezier(0.165, 0.84, 0.44, 1)" },
-  { label: "ease-in-out", value: "ease-in-out" },
-  { label: "linear", value: "linear" },
-];
-
-function PressDialKit({
-  show,
-  onToggle,
-  scale,
-  onScaleChange,
-  duration,
-  onDurationChange,
-  easing,
-  onEasingChange,
-}: {
-  show: boolean;
-  onToggle: () => void;
-  scale: number;
-  onScaleChange: (v: number) => void;
-  duration: number;
-  onDurationChange: (v: number) => void;
-  easing: string;
-  onEasingChange: (v: string) => void;
-}) {
-  return (
-    <div className="fixed bottom-4 right-4 z-50 font-sans text-[13px]">
-      <button
-        type="button"
-        onClick={onToggle}
-        className="absolute bottom-0 right-0 size-8 rounded-full bg-stone-900 text-white flex items-center justify-center shadow-lg hover:bg-stone-700 transition-colors"
-        aria-label="Toggle press animation dials"
-      >
-        <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="3" />
-          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-        </svg>
-      </button>
-
-      {show && (
-        <div className="absolute bottom-10 right-0 w-64 rounded-xl bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 shadow-xl p-4 space-y-4">
-          <p className="font-semibold text-stone-800 dark:text-stone-200 text-[13px] tracking-wide uppercase">
-            Press Animation
-          </p>
-
-          {/* Scale */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-stone-500 dark:text-stone-400">Scale</label>
-              <span className="tabular-nums text-stone-800 dark:text-stone-200 font-medium">{scale.toFixed(3)}</span>
-            </div>
-            <input
-              type="range"
-              min="0.9"
-              max="1"
-              step="0.005"
-              value={scale}
-              onChange={(e) => onScaleChange(Number(e.target.value))}
-              className="w-full accent-stone-900 dark:accent-stone-100"
-            />
-            <div className="flex justify-between text-[11px] text-stone-400">
-              <span>0.9</span>
-              <span>1.0</span>
-            </div>
-          </div>
-
-          {/* Duration */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-stone-500 dark:text-stone-400">Duration</label>
-              <span className="tabular-nums text-stone-800 dark:text-stone-200 font-medium">{duration}ms</span>
-            </div>
-            <input
-              type="range"
-              min="50"
-              max="400"
-              step="10"
-              value={duration}
-              onChange={(e) => onDurationChange(Number(e.target.value))}
-              className="w-full accent-stone-900 dark:accent-stone-100"
-            />
-            <div className="flex justify-between text-[11px] text-stone-400">
-              <span>50ms</span>
-              <span>400ms</span>
-            </div>
-          </div>
-
-          {/* Easing */}
-          <div className="space-y-1.5">
-            <label className="text-stone-500 dark:text-stone-400">Easing</label>
-            <select
-              value={easing}
-              onChange={(e) => onEasingChange(e.target.value)}
-              className="w-full rounded-md border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 px-2 py-1.5 text-[13px] text-stone-800 dark:text-stone-200"
-            >
-              {EASING_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* CSS output */}
-          <div className="pt-2 border-t border-stone-100 dark:border-stone-800">
-            <p className="text-[11px] text-stone-400 mb-1">CSS output</p>
-            <code className="block text-[11px] bg-stone-50 dark:bg-stone-800 rounded-md p-2 text-stone-600 dark:text-stone-300 break-all leading-relaxed select-all">
-              {`scale(${scale}) · ${duration}ms ${easing}`}
-            </code>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
