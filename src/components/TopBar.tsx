@@ -37,9 +37,8 @@ export function TopBar() {
   const name = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Guest";
 
   const isRecipePage = pathname === "/recipe";
-  const isProfilePage = pathname === "/profile";
   const isCookbookPage = pathname === "/cookbook";
-  const showBackArrow = isRecipePage || isProfilePage || isCookbookPage;
+  const showBackArrow = isRecipePage || isCookbookPage;
 
   const closeQuickAdd = () => {
     setQuickAddOpen(false);
@@ -513,13 +512,6 @@ export function TopBar() {
                         className="block px-3 py-2 font-sans text-sm text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
                       >
                         Cookbook
-                      </Link>
-                      <Link
-                        href="/profile"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-3 py-2 font-sans text-sm text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
-                      >
-                        Profile
                       </Link>
                       <button
                         onClick={() => {
