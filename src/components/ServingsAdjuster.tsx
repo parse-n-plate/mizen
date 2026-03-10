@@ -154,12 +154,12 @@ export function ServingsAdjuster({
             <div className="flex items-center gap-3">
               {/* Indicator pill */}
               <div
-                className={`relative flex items-center gap-1.5 bg-stone-50 dark:bg-stone-800 rounded-lg pl-3 py-1.5 border border-stone-200 dark:border-stone-700 focus-within:border-primary focus-within:outline focus-within:outline-1 focus-within:outline-primary transition-[padding] duration-150 ${hasChanged ? "pr-8" : "pr-3"}`}
+                className={`relative flex items-center gap-1.5 rounded-lg pl-3 py-1.5 border focus-within:outline focus-within:outline-1 transition-[padding] duration-150 ${hasChanged ? "pr-8 bg-[var(--color-blue)]/5 border-[var(--color-blue)]/25 focus-within:border-[var(--color-blue)] focus-within:outline-[var(--color-blue)]" : "pr-3 bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 focus-within:border-primary focus-within:outline-primary"}`}
               >
-                <span className="flex items-center justify-center w-4 h-4 text-stone-500 dark:text-stone-400">
+                <span className={`flex items-center justify-center w-4 h-4 ${hasChanged ? "text-[var(--color-blue)]" : "text-stone-500 dark:text-stone-400"}`}>
                   <User weight="Bold" className="w-4 h-4" />
                 </span>
-                <span className="text-[13px] text-stone-500 dark:text-stone-400 whitespace-nowrap flex items-center gap-0.5">
+                <span className={`text-[13px] whitespace-nowrap flex items-center gap-0.5 ${hasChanged ? "text-[var(--color-blue)]" : "text-stone-500 dark:text-stone-400"}`}>
                   Serves
                   <input
                     type="text"
@@ -169,7 +169,7 @@ export function ServingsAdjuster({
                     onChange={handleInputChange}
                     onFocus={() => setIsEditingInput(true)}
                     onBlur={handleInputBlur}
-                    className="w-[3ch] text-[13px] font-semibold text-stone-800 dark:text-stone-200 bg-transparent border-none outline-none text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:text-primary"
+                    className={`w-[3ch] text-[13px] font-semibold bg-transparent border-none outline-none text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${hasChanged ? "text-[var(--color-blue)]" : "text-stone-800 dark:text-stone-200 focus:text-primary"}`}
                     aria-label="Number of servings"
                   />
                 </span>
@@ -202,7 +202,7 @@ export function ServingsAdjuster({
               >
                 <div className="w-full h-[5px] bg-stone-200 dark:bg-stone-700 rounded-full relative overflow-hidden">
                   <div
-                    className="h-full bg-primary rounded-full"
+                    className={`h-full rounded-full ${hasChanged ? "bg-[var(--color-blue)]" : "bg-primary"}`}
                     style={{
                       width: `${percentage}%`,
                       transition: isDragging ? "none" : "width 50ms ease-out",
@@ -217,12 +217,12 @@ export function ServingsAdjuster({
                   }}
                 >
                   <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                    <circle cx="14" cy="14" r="11" fill="var(--primary)" />
+                    <circle cx="14" cy="14" r="11" fill={hasChanged ? "var(--color-blue)" : "var(--primary)"} />
                     <circle
                       cx="14"
                       cy="14"
                       r="9.5"
-                      fill="var(--primary)"
+                      fill={hasChanged ? "var(--color-blue)" : "var(--primary)"}
                       stroke="white"
                       strokeWidth="1.5"
                     />
@@ -230,6 +230,12 @@ export function ServingsAdjuster({
                 </div>
               </div>
             </div>
+
+            {hasChanged && (
+              <p className="text-[12px] text-[var(--color-blue)] mt-1">
+                Recipe originally serves {originalServings}
+              </p>
+            )}
           </div>
         </motion.div>
       )}
