@@ -510,10 +510,24 @@ body {
     width: 100%;
     cursor: pointer;
     border-radius: var(--radius-md);
+    transition: transform var(--press-duration, 150ms) var(--press-easing, ease), background-color 150ms ease;
   }
 
   .ingredient-list-item:hover {
     background-color: var(--color-cream);
+  }
+
+  .ingredient-list-item:active {
+    transform: scale(var(--press-scale, 0.98));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ingredient-list-item {
+      transition: none;
+    }
+    .ingredient-list-item:active {
+      transform: none;
+    }
   }
 
   /* Hide the previous item's divider when the next item is hovered */
