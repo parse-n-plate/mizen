@@ -7,8 +7,6 @@ const TEMPERATURE_UNIT_KEY = "temperature-unit";
 const DIETARY_PROFILE_KEY = "dietary-profile";
 const MY_SUBSTITUTIONS_KEY = "my-substitutions";
 
-const DEFAULT_SERVINGS_FALLBACK = 4;
-
 export type PreferenceKey =
   | typeof ROUND_AMOUNTS_KEY
   | typeof DEFAULT_SERVINGS_KEY
@@ -55,12 +53,18 @@ export function setRoundAmounts(enabled: boolean) {
   emitPreferenceChange(ROUND_AMOUNTS_KEY);
 }
 
-export function getDefaultServings(): number {
-  if (typeof window === "undefined") return DEFAULT_SERVINGS_FALLBACK;
+export function getDefaultServings(): number | null {
+  if (typeof window === "undefined") return null;
   const raw = localStorage.getItem(DEFAULT_SERVINGS_KEY);
-  if (!raw) return DEFAULT_SERVINGS_FALLBACK;
+  if (!raw) return null;
   const n = parseInt(raw, 10);
-  return Number.isFinite(n) && n >= 1 && n <= 99 ? n : DEFAULT_SERVINGS_FALLBACK;
+  return Number.isFinite(n) && n >= 1 && n <= 99 ? n : null;
+}
+
+export function clearDefaultServings() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(DEFAULT_SERVINGS_KEY);
+  emitPreferenceChange(DEFAULT_SERVINGS_KEY);
 }
 
 export function setDefaultServings(n: number) {

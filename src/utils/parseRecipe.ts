@@ -51,37 +51,88 @@ function decodeHtmlEntities(text: string): string {
 // ---------------------------------------------------------------------------
 
 const UNITS = new Set([
-  "cup", "cups", "c",
-  "tablespoon", "tablespoons", "tbsp", "tbs", "tb",
-  "teaspoon", "teaspoons", "tsp", "ts",
-  "ounce", "ounces", "oz",
-  "pound", "pounds", "lb", "lbs",
-  "gram", "grams", "g",
-  "kilogram", "kilograms", "kg",
-  "milliliter", "milliliters", "ml",
-  "liter", "liters", "l",
-  "gallon", "gallons", "gal",
-  "quart", "quarts", "qt",
-  "pint", "pints", "pt",
-  "fluid ounce", "fluid ounces", "fl oz",
-  "pinch", "pinches", "dash", "dashes",
-  "clove", "cloves",
-  "sprig", "sprigs",
-  "slice", "slices",
-  "piece", "pieces",
-  "can", "cans",
-  "bunch", "bunches",
-  "head", "heads",
-  "stalk", "stalks",
-  "serving", "servings",
-  "package", "packages", "pkg",
-  "stick", "sticks",
-  "bag", "bags",
-  "bottle", "bottles",
-  "jar", "jars",
-  "sheet", "sheets",
-  "drop", "drops",
-  "handful", "handfuls",
+  "cup",
+  "cups",
+  "c",
+  "tablespoon",
+  "tablespoons",
+  "tbsp",
+  "tbs",
+  "tb",
+  "teaspoon",
+  "teaspoons",
+  "tsp",
+  "ts",
+  "ounce",
+  "ounces",
+  "oz",
+  "pound",
+  "pounds",
+  "lb",
+  "lbs",
+  "gram",
+  "grams",
+  "g",
+  "kilogram",
+  "kilograms",
+  "kg",
+  "milliliter",
+  "milliliters",
+  "ml",
+  "liter",
+  "liters",
+  "l",
+  "gallon",
+  "gallons",
+  "gal",
+  "quart",
+  "quarts",
+  "qt",
+  "pint",
+  "pints",
+  "pt",
+  "fluid ounce",
+  "fluid ounces",
+  "fl oz",
+  "pinch",
+  "pinches",
+  "dash",
+  "dashes",
+  "clove",
+  "cloves",
+  "sprig",
+  "sprigs",
+  "slice",
+  "slices",
+  "piece",
+  "pieces",
+  "can",
+  "cans",
+  "bunch",
+  "bunches",
+  "head",
+  "heads",
+  "stalk",
+  "stalks",
+  "serving",
+  "servings",
+  "package",
+  "packages",
+  "pkg",
+  "stick",
+  "sticks",
+  "bag",
+  "bags",
+  "bottle",
+  "bottles",
+  "jar",
+  "jars",
+  "sheet",
+  "sheets",
+  "drop",
+  "drops",
+  "handful",
+  "handfuls",
 ]);
 
 // Matches leading amounts: "2", "2½", "1/2", "2 1/2", "6-8", "6–8"
@@ -317,11 +368,7 @@ function extractStepImagesFromHtml(rawHtml: string): string[] {
 // Collection Page Detection (JSON-LD)
 // ---------------------------------------------------------------------------
 
-const COLLECTION_TYPES = new Set([
-  "ItemList",
-  "CollectionPage",
-  "SearchResultsPage",
-]);
+const COLLECTION_TYPES = new Set(["ItemList", "CollectionPage", "SearchResultsPage"]);
 
 function detectCollectionSchema($: cheerio.CheerioAPI): boolean {
   try {
@@ -337,22 +384,16 @@ function detectCollectionSchema($: cheerio.CheerioAPI): boolean {
         const items = Array.isArray(data) ? data : [data];
 
         for (const item of items) {
-          const types = Array.isArray(item["@type"])
-            ? item["@type"]
-            : [item["@type"]];
+          const types = Array.isArray(item["@type"]) ? item["@type"] : [item["@type"]];
 
           if (types.includes("Recipe")) hasRecipe = true;
-          if (types.some((t: string) => COLLECTION_TYPES.has(t)))
-            hasCollection = true;
+          if (types.some((t: string) => COLLECTION_TYPES.has(t))) hasCollection = true;
 
           if (Array.isArray(item["@graph"])) {
             for (const g of item["@graph"]) {
-              const gTypes = Array.isArray(g["@type"])
-                ? g["@type"]
-                : [g["@type"]];
+              const gTypes = Array.isArray(g["@type"]) ? g["@type"] : [g["@type"]];
               if (gTypes.includes("Recipe")) hasRecipe = true;
-              if (gTypes.some((t: string) => COLLECTION_TYPES.has(t)))
-                hasCollection = true;
+              if (gTypes.some((t: string) => COLLECTION_TYPES.has(t))) hasCollection = true;
             }
           }
         }
@@ -416,7 +457,9 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             const ingredients: IngredientGroup[] = [
               {
                 groupName: "Main",
-                ingredients: ingredientStrings.map(parseIngredientString),
+                ingredients: ingredientStrings.map((s) =>
+                  parseIngredientString(decodeHtmlEntities(s))
+                ),
               },
             ];
 
@@ -603,9 +646,7 @@ async function extractWithAI(cleanedHtml: string): Promise<ParsedRecipe | null> 
 // Layer 2b: AI Enrichment (Groq) — for JSON-LD data
 // ---------------------------------------------------------------------------
 
-async function enrichWithAI(
-  jsonLdData: ParsedRecipe
-): Promise<Partial<ParsedRecipe> | null> {
+async function enrichWithAI(jsonLdData: ParsedRecipe): Promise<Partial<ParsedRecipe> | null> {
   const groq = getGroqClient();
 
   const inputPayload = JSON.stringify({
@@ -652,14 +693,10 @@ async function enrichWithAI(
   }
 
   const summary =
-    typeof data.summary === "string" && data.summary.trim()
-      ? data.summary.trim()
-      : undefined;
+    typeof data.summary === "string" && data.summary.trim() ? data.summary.trim() : undefined;
 
   const enrichedServings =
-    typeof data.servings === "number" && data.servings > 0
-      ? data.servings
-      : undefined;
+    typeof data.servings === "number" && data.servings > 0 ? data.servings : undefined;
   const enrichedPrepTime =
     typeof data.prepTimeMinutes === "number" && data.prepTimeMinutes > 0
       ? data.prepTimeMinutes
@@ -704,9 +741,7 @@ function pickContentForAI(cleaned: CleanedHTML): string {
 // Image Extraction (Groq Vision)
 // ---------------------------------------------------------------------------
 
-export async function parseRecipeFromImage(
-  dataUrl: string
-): Promise<ParserResult> {
+export async function parseRecipeFromImage(dataUrl: string): Promise<ParserResult> {
   try {
     const groq = getGroqClient();
 
@@ -885,16 +920,13 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
         hasOnlyMainGroup &&
         enrichment?.ingredients &&
         enrichment.ingredients.length > 0 &&
-        (enrichment.ingredients.length > 1 ||
-          enrichment.ingredients[0].groupName !== "Main");
+        (enrichment.ingredients.length > 1 || enrichment.ingredients[0].groupName !== "Main");
 
       // Use enriched instructions if same count and has real titles
       const useEnrichedInstructions =
         enrichment?.instructions &&
         enrichment.instructions.length === jsonLdResult.instructions.length &&
-        enrichment.instructions.every(
-          (s) => s.title && !s.title.startsWith("Step ")
-        );
+        enrichment.instructions.every((s) => s.title && !s.title.startsWith("Step "));
 
       const mergedRecipe: ParsedRecipe = {
         ...jsonLdResult,
@@ -909,21 +941,20 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
         ...(enrichment?.summary && { summary: enrichment.summary }),
         // Backfill time/servings from AI enrichment only when JSON-LD didn't have them
         ...(!jsonLdResult.servings && enrichment?.servings && { servings: enrichment.servings }),
-        ...(!jsonLdResult.prepTimeMinutes && enrichment?.prepTimeMinutes && { prepTimeMinutes: enrichment.prepTimeMinutes }),
-        ...(!jsonLdResult.cookTimeMinutes && enrichment?.cookTimeMinutes && { cookTimeMinutes: enrichment.cookTimeMinutes }),
-        ...(!jsonLdResult.totalTimeMinutes && enrichment?.totalTimeMinutes && { totalTimeMinutes: enrichment.totalTimeMinutes }),
+        ...(!jsonLdResult.prepTimeMinutes &&
+          enrichment?.prepTimeMinutes && { prepTimeMinutes: enrichment.prepTimeMinutes }),
+        ...(!jsonLdResult.cookTimeMinutes &&
+          enrichment?.cookTimeMinutes && { cookTimeMinutes: enrichment.cookTimeMinutes }),
+        ...(!jsonLdResult.totalTimeMinutes &&
+          enrichment?.totalTimeMinutes && { totalTimeMinutes: enrichment.totalTimeMinutes }),
         sourceUrl: url,
       };
 
       // Re-apply imageUrls from JSON-LD if enrichment replaced instructions
       if (useEnrichedInstructions) {
         for (let i = 0; i < jsonLdResult.instructions.length; i++) {
-          if (
-            jsonLdResult.instructions[i].imageUrl &&
-            !mergedRecipe.instructions[i].imageUrl
-          ) {
-            mergedRecipe.instructions[i].imageUrl =
-              jsonLdResult.instructions[i].imageUrl;
+          if (jsonLdResult.instructions[i].imageUrl && !mergedRecipe.instructions[i].imageUrl) {
+            mergedRecipe.instructions[i].imageUrl = jsonLdResult.instructions[i].imageUrl;
           }
         }
       }
@@ -956,9 +987,7 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
 
     return {
       success: false,
-      error: looksLikeCollection
-        ? COLLECTION_MESSAGE
-        : "Could not extract recipe data",
+      error: looksLikeCollection ? COLLECTION_MESSAGE : "Could not extract recipe data",
       method: "none",
     };
   } catch (error) {

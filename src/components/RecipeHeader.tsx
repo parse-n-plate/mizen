@@ -39,6 +39,7 @@ export function RecipeHeader({
 
   const canAdjustServings = !!(originalServings && originalServings > 0 && onServingsChange);
   const displayServings = servings ?? originalServings ?? recipe.servings;
+  const isAdjusted = !!(servings && originalServings && servings !== originalServings);
 
   // Non-servings metadata items
   const meta: { label: string; value: string }[] = [];
@@ -99,19 +100,29 @@ export function RecipeHeader({
           (canAdjustServings ? (
             <button
               onClick={() => setIsSliderOpen(!isSliderOpen)}
-              className="inline-flex items-center gap-1 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-md hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors cursor-pointer"
+              className={`inline-flex items-center gap-1 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-md transition-colors cursor-pointer ${isAdjusted ? "hover:bg-[var(--color-blue)]/8" : "hover:bg-stone-100 dark:hover:bg-stone-800"}`}
               aria-expanded={isSliderOpen}
               aria-label="Adjust servings"
             >
-              <span className="flex items-center justify-center w-3.5 h-3.5 text-stone-400 dark:text-stone-500">
+              <span
+                className={`flex items-center justify-center w-3.5 h-3.5 ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"}`}
+              >
                 <User weight="Bold" className="w-3.5 h-3.5" />
               </span>
-              <span className="text-stone-400 dark:text-stone-500">Serves</span>{" "}
-              <span className="font-medium text-stone-600 dark:text-stone-300">
+              <span
+                className={
+                  isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"
+                }
+              >
+                Serves
+              </span>{" "}
+              <span
+                className={`font-medium ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-600 dark:text-stone-300"}`}
+              >
                 {displayServings}
               </span>
               <AltArrowDown
-                className={`w-3 h-3 text-stone-400 dark:text-stone-500 transition-transform duration-200 ${isSliderOpen ? "rotate-180" : ""}`}
+                className={`w-3 h-3 transition-transform duration-200 ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"} ${isSliderOpen ? "rotate-180" : ""}`}
               />
             </button>
           ) : (

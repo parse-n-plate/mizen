@@ -17,6 +17,7 @@ import {
   type Substitution,
   type TemperatureUnit,
   type UnitSystem,
+  clearDefaultServings,
   getDefaultServings,
   getDietaryProfile,
   getRoundAmounts,
@@ -32,10 +33,7 @@ import {
 } from "@/lib/preferences";
 import { type NumberFormat, getNumberFormat, setNumberFormat } from "@/lib/numberFormat";
 import { useRecipe } from "@/context/RecipeContext";
-import {
-  applySubstitutionsToGroups,
-  countApplicableSubstitutions,
-} from "@/lib/recipe-preferences";
+import { applySubstitutionsToGroups, countApplicableSubstitutions } from "@/lib/recipe-preferences";
 import { toast } from "sonner";
 import AddCircle from "@solar-icons/react/csr/ui/AddCircle";
 import ChefHat from "@solar-icons/react/csr/food/ChefHat";
@@ -103,10 +101,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent
-        showCloseButton={false}
-        className="gap-0 overflow-hidden p-0 sm:max-w-[760px]"
-      >
+      <DialogContent showCloseButton={false} className="gap-0 overflow-hidden p-0 sm:max-w-[760px]">
         <DialogTitle className="sr-only">Settings</DialogTitle>
 
         <div className="flex h-[min(86dvh,680px)] flex-col">
@@ -121,12 +116,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
             </div>
 
             <DialogClose asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0"
-                aria-label="Close settings"
-              >
+              <Button variant="ghost" size="icon" className="shrink-0" aria-label="Close settings">
                 <CloseSquare className="size-4" />
               </Button>
             </DialogClose>
@@ -179,13 +169,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   );
 }
 
-function SectionHeader({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
+function SectionHeader({ title, description }: { title: string; description: string }) {
   return (
     <div className="mb-6">
       <h3 className="font-serif text-xl font-semibold text-stone-900 dark:text-stone-100 text-balance">
@@ -255,9 +239,7 @@ function AccountSection({
             {name}
           </p>
           {email && (
-            <p className="truncate font-sans text-sm text-stone-500 dark:text-stone-400">
-              {email}
-            </p>
+            <p className="truncate font-sans text-sm text-stone-500 dark:text-stone-400">{email}</p>
           )}
         </div>
       </div>
@@ -336,9 +318,10 @@ function CookingSection() {
   const [numberFormat, setNumberFormatState] = useState<NumberFormat>(getNumberFormat);
   const [roundAmounts, setRoundAmountsState] = useState(getRoundAmounts);
   const [savedDefaultServings, setSavedDefaultServingsState] = useState(getDefaultServings);
-  const [defaultServingsInput, setDefaultServingsInput] = useState(() =>
-    String(getDefaultServings())
-  );
+  const [defaultServingsInput, setDefaultServingsInput] = useState(() => {
+    const val = getDefaultServings();
+    return val !== null ? String(val) : "";
+  });
   const [defaultServingsError, setDefaultServingsError] = useState<string | null>(null);
   const [dietaryProfile, setDietaryProfileState] = useState<DietaryOption[]>(getDietaryProfile);
   const [substitutions, setSubstitutionsState] = useState<Substitution[]>(getSubstitutions);
@@ -358,6 +341,14 @@ function CookingSection() {
   };
 
   const commitDefaultServings = () => {
+    if (defaultServingsInput.trim() === "") {
+      clearDefaultServings();
+      setSavedDefaultServingsState(null);
+      setDefaultServingsInput("");
+      setDefaultServingsError(null);
+      return;
+    }
+
     const parsed = Number.parseInt(defaultServingsInput, 10);
 
     if (!Number.isFinite(parsed) || parsed < 1 || parsed > 99) {
@@ -524,7 +515,8 @@ function CookingSection() {
               Default servings
             </p>
             <p className="mt-1 font-sans text-[13px] text-stone-500 dark:text-stone-400 text-pretty">
-              New recipes open at this serving count when the source recipe includes one.
+              Override the recipe&apos;s serving size. Leave empty to use each recipe&apos;s
+              original.
             </p>
           </div>
 
@@ -534,6 +526,7 @@ function CookingSection() {
               inputMode="numeric"
               pattern="[0-9]*"
               value={defaultServingsInput}
+              placeholder="Off"
               onChange={handleDefaultServingsChange}
               onBlur={commitDefaultServings}
               onKeyDown={(event) => {
@@ -547,7 +540,7 @@ function CookingSection() {
               className="h-9 w-20 text-center font-sans text-[13px]"
             />
             <Badge variant="secondary" className="font-sans text-[12px] tabular-nums">
-              Saved: {savedDefaultServings}
+              {savedDefaultServings !== null ? `Saved: ${savedDefaultServings}` : "Not set"}
             </Badge>
           </div>
         </div>
@@ -649,15 +642,10 @@ function CookingSection() {
               <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950">
                 <p className="font-sans text-[13px] text-amber-800 dark:text-amber-200 text-pretty">
                   This will permanently rename {applicableCount} ingredient
-                  {applicableCount !== 1 ? "s" : ""} in the current recipe. This
-                  cannot be undone.
+                  {applicableCount !== 1 ? "s" : ""} in the current recipe. This cannot be undone.
                 </p>
                 <div className="mt-3 flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowApplyConfirm(false)}
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => setShowApplyConfirm(false)}>
                     Cancel
                   </Button>
                   <Button
@@ -727,7 +715,10 @@ function AboutSection() {
         </a>
       </SettingRow>
 
-      <SettingRow label="Terms of Service" description="Review the product terms for using the app.">
+      <SettingRow
+        label="Terms of Service"
+        description="Review the product terms for using the app."
+      >
         <a
           href="/terms"
           target="_blank"

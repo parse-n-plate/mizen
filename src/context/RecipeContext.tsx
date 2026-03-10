@@ -24,6 +24,7 @@ interface RecipeContextType {
   setError: (error: string | null) => void;
   history: HistoryEntry[];
   hasHydrated: boolean;
+  removeFromHistory: () => void;
 }
 
 const RecipeContext = createContext<RecipeContextType | undefined>(undefined);
@@ -40,20 +41,31 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
 
-  // Hydrate from localStorage after mount to avoid SSR/client mismatch
+  // Hydrate from localStorage after mount to avoid SSR/client mismatch.
+  // setState in this mount-only effect is intentional — localStorage is
+  // unavailable during SSR, so we must defer hydration to the client.
   useEffect(() => {
     try {
       const storedRecipe = localStorage.getItem(STORAGE_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (storedRecipe) setRecipeState(JSON.parse(storedRecipe));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     try {
       const storedMeta = localStorage.getItem(META_STORAGE_KEY);
+       
       if (storedMeta) setSavedMetaState(JSON.parse(storedMeta));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     try {
       const storedHistory = localStorage.getItem(HISTORY_KEY);
+       
       if (storedHistory) setHistory(JSON.parse(storedHistory));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, []);
   const [hasHydrated] = useState(true);
 
@@ -86,6 +98,22 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const removeFromHistory = () => {
+    if (!recipe) return;
+    try {
+      const updated = history.filter((h) => h.recipe.title !== recipe.title);
+      setHistory(updated);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+      // Clear current recipe state
+      setRecipeState(null);
+      setSavedMetaState(null);
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(META_STORAGE_KEY);
+    } catch {
+      // Ignore storage errors
+    }
+  };
+
   const setSavedMeta = (meta: SavedMeta | null) => {
     setSavedMetaState(meta);
     try {
@@ -112,6 +140,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
         setError,
         history,
         hasHydrated,
+        removeFromHistory,
       }}
     >
       {children}
