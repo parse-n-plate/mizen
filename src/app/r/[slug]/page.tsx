@@ -7,10 +7,19 @@ import { StepList } from "@/components/StepList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ParsedRecipe } from "@/lib/types";
 
-export default async function SharedRecipePage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function SharedRecipePage({
+  params,
+  searchParams: searchParamsPromise,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ tab?: string }>;
+}) {
   if (!isSupabaseConfigured) {
     notFound();
   }
+
+  const searchParams = await searchParamsPromise;
+  const defaultTab = searchParams.tab === "cook" ? "cook" : "prep";
 
   let recipe: ParsedRecipe | null = null;
   try {
@@ -48,7 +57,7 @@ export default async function SharedRecipePage({ params }: { params: Promise<{ s
       {/* Tabs navigation */}
       <div className="flex-1 flex flex-col px-6">
         <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col">
-          <Tabs defaultValue="prep" className="flex-1 flex flex-col">
+          <Tabs defaultValue={defaultTab} className="flex-1 flex flex-col">
             <TabsList className="flex items-end w-full relative rounded-none border-b border-stone-200 dark:border-stone-700 bg-transparent p-0 gap-0">
               <TabsTrigger
                 value="prep"

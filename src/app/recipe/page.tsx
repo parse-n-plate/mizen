@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useCallback, useSyncExternalStore } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useRecipe } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
 import { usePreference } from "@/hooks/usePreference";
@@ -34,7 +35,19 @@ export default function RecipePage() {
   const [saving, setSaving] = useState(false);
   const [unsaving, setUnsaving] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<"prep" | "cook">("prep");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const activeTab = searchParams.get("tab") === "cook" ? "cook" : "prep";
+  const setActiveTab = useCallback(
+    (tab: "prep" | "cook") => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (tab === "prep") params.delete("tab");
+      else params.set("tab", tab);
+      const qs = params.toString();
+      router.replace(qs ? `?${qs}` : "/recipe", { scroll: false });
+    },
+    [searchParams, router],
+  );
   const numberFormat = useSyncExternalStore(
     (cb) => { window.addEventListener("storage", cb); return () => window.removeEventListener("storage", cb); },
     getNumberFormat,
