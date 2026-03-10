@@ -17,6 +17,7 @@ import {
   type Substitution,
   type TemperatureUnit,
   type UnitSystem,
+  clearDefaultServings,
   getDefaultServings,
   getDietaryProfile,
   getRoundAmounts,
@@ -336,9 +337,10 @@ function CookingSection() {
   const [numberFormat, setNumberFormatState] = useState<NumberFormat>(getNumberFormat);
   const [roundAmounts, setRoundAmountsState] = useState(getRoundAmounts);
   const [savedDefaultServings, setSavedDefaultServingsState] = useState(getDefaultServings);
-  const [defaultServingsInput, setDefaultServingsInput] = useState(() =>
-    String(getDefaultServings())
-  );
+  const [defaultServingsInput, setDefaultServingsInput] = useState(() => {
+    const val = getDefaultServings();
+    return val !== null ? String(val) : "";
+  });
   const [defaultServingsError, setDefaultServingsError] = useState<string | null>(null);
   const [dietaryProfile, setDietaryProfileState] = useState<DietaryOption[]>(getDietaryProfile);
   const [substitutions, setSubstitutionsState] = useState<Substitution[]>(getSubstitutions);
@@ -358,6 +360,14 @@ function CookingSection() {
   };
 
   const commitDefaultServings = () => {
+    if (defaultServingsInput.trim() === "") {
+      clearDefaultServings();
+      setSavedDefaultServingsState(null);
+      setDefaultServingsInput("");
+      setDefaultServingsError(null);
+      return;
+    }
+
     const parsed = Number.parseInt(defaultServingsInput, 10);
 
     if (!Number.isFinite(parsed) || parsed < 1 || parsed > 99) {
@@ -524,7 +534,7 @@ function CookingSection() {
               Default servings
             </p>
             <p className="mt-1 font-sans text-[13px] text-stone-500 dark:text-stone-400 text-pretty">
-              New recipes open at this serving count when the source recipe includes one.
+              Override the recipe&apos;s serving size. Leave empty to use each recipe&apos;s original.
             </p>
           </div>
 
@@ -534,6 +544,7 @@ function CookingSection() {
               inputMode="numeric"
               pattern="[0-9]*"
               value={defaultServingsInput}
+              placeholder="Off"
               onChange={handleDefaultServingsChange}
               onBlur={commitDefaultServings}
               onKeyDown={(event) => {
@@ -547,7 +558,7 @@ function CookingSection() {
               className="h-9 w-20 text-center font-sans text-[13px]"
             />
             <Badge variant="secondary" className="font-sans text-[12px] tabular-nums">
-              Saved: {savedDefaultServings}
+              {savedDefaultServings !== null ? `Saved: ${savedDefaultServings}` : "Not set"}
             </Badge>
           </div>
         </div>

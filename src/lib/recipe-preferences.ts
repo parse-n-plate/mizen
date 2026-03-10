@@ -402,8 +402,10 @@ export function convertInstructionTemperatures(
 
 export function getPreferredServings(
   originalServings: number | undefined,
-  defaultServings: number
+  defaultServings: number | null
 ) {
-  if (!originalServings || originalServings < 1) return originalServings;
-  return Math.max(1, Math.min(99, defaultServings));
+  if (defaultServings !== null && originalServings && originalServings > 0) {
+    return Math.max(1, Math.min(99, defaultServings));
+  }
+  return originalServings;
 }
