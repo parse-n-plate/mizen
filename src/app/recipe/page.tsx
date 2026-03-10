@@ -715,18 +715,34 @@ export default function RecipePage() {
             <div className="flex items-center justify-around">
               {/* Save / Unsave */}
               {user && (
-                <div className="flex flex-col items-center gap-1">
-                  <HeartButton
-                    isSaved={!!savedMeta}
-                    saving={saving}
-                    unsaving={unsaving}
-                    onSave={handleSave}
-                    onUnsave={handleUnsave}
-                  />
-                  <span className="text-[11px] font-sans font-medium text-stone-500 dark:text-stone-400">
+                <button
+                  type="button"
+                  onClick={savedMeta ? handleUnsave : handleSave}
+                  disabled={saving || unsaving}
+                  aria-label={savedMeta ? "Remove from saved" : "Save recipe"}
+                  className={`flex flex-col items-center gap-1 transition-colors disabled:opacity-50 ${
+                    savedMeta
+                      ? "text-red-500 dark:text-red-400"
+                      : "text-stone-500 dark:text-stone-400 active:text-stone-800 dark:active:text-stone-200"
+                  }`}
+                >
+                  <svg
+                    className="h-5 w-5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill={savedMeta ? "currentColor" : "none"}
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                  </svg>
+                  <span className="text-[11px] font-sans font-medium">
                     {savedMeta ? "Saved" : "Save"}
                   </span>
-                </div>
+                </button>
               )}
 
               {/* Unit toggle */}
