@@ -146,7 +146,7 @@ export default function RecipePage() {
       }, 250);
       return () => clearTimeout(timer);
     }
-  }, [mobileVaultOpen]);  
+  }, [mobileVaultOpen]);
 
   function dismissBanner() {
     setBannerDismissed(true);
@@ -317,7 +317,7 @@ export default function RecipePage() {
       <div className="flex-1 flex flex-col px-6 print:hidden">
         <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col">
           {/* Desktop: top folder tabs + quick actions (hidden on mobile) */}
-          <div className="group/tabs hidden sm:flex items-end w-full relative border-b border-stone-200 dark:border-stone-700 gap-0">
+          <div className="group/tabs hidden sm:flex items-end w-full relative gap-0">
             <button
               onClick={() => setActiveTab("prep")}
               className={`folder-tab-trigger press-scale h-12 px-10 font-sans text-[15px] ${
@@ -506,7 +506,9 @@ export default function RecipePage() {
           </div>
 
           {/* Content card */}
-          <div className="sm:bg-white sm:dark:bg-stone-900 sm:rounded-b-lg sm:rounded-lg sm:rounded-t-none sm:border sm:border-stone-200 sm:dark:border-stone-700 sm:border-t-0 flex-1">
+          <div
+            className={`sm:bg-white sm:dark:bg-stone-900 sm:rounded-b-lg ${activeTab === "prep" ? "sm:rounded-tr-lg" : "sm:rounded-t-lg"} sm:border sm:border-stone-200 sm:dark:border-stone-700 flex-1`}
+          >
             <div className="max-w-3xl mx-auto sm:px-6 sm:pt-5 pb-24 sm:pb-6">
               {/* Unit conversion banner */}
               {bannerMounted && activeTab === "prep" && (
