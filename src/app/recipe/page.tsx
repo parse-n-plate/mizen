@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback, useSyncExternalStore } from "react";
+import { Suspense, useEffect, useMemo, useState, useCallback, useSyncExternalStore } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useRecipe } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
@@ -26,10 +26,17 @@ import {
   getUnitSystem,
 } from "@/lib/preferences";
 import Link from "next/link";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { HeartButton } from "@/components/HeartButton";
 
 export default function RecipePage() {
+  return (
+    <Suspense>
+      <RecipePageContent />
+    </Suspense>
+  );
+}
+
+function RecipePageContent() {
   const { recipe, savedMeta, setSavedMeta } = useRecipe();
   const { user } = useUser();
   const [saving, setSaving] = useState(false);
@@ -46,12 +53,15 @@ export default function RecipePage() {
       const qs = params.toString();
       router.replace(qs ? `?${qs}` : "/recipe", { scroll: false });
     },
-    [searchParams, router],
+    [searchParams, router]
   );
   const numberFormat = useSyncExternalStore(
-    (cb) => { window.addEventListener("storage", cb); return () => window.removeEventListener("storage", cb); },
+    (cb) => {
+      window.addEventListener("storage", cb);
+      return () => window.removeEventListener("storage", cb);
+    },
     getNumberFormat,
-    () => "fractions" as const,
+    () => "fractions" as const
   );
 
   const originalServings = useMemo(() => recipe?.servings, [recipe?.servings]);
@@ -141,29 +151,6 @@ export default function RecipePage() {
       toast.success("Link copied");
     } catch {
       toast.error("Failed to copy link");
-    }
-  };
-
-  const handleShare = async () => {
-    if (!recipe) return;
-    const url = shareUrl || recipe.sourceUrl || "";
-    const shareData = {
-      title: recipe.title,
-      ...(recipe.summary && { text: recipe.summary }),
-      ...(url && { url }),
-    };
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        const text = url || recipe.title;
-        await navigator.clipboard.writeText(text);
-        toast.success("Link copied to clipboard");
-      }
-    } catch (err) {
-      // User cancelled the share sheet — not an error
-      if (err instanceof DOMException && err.name === "AbortError") return;
-      toast.error("Failed to share");
     }
   };
 
