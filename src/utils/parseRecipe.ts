@@ -416,7 +416,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             const ingredients: IngredientGroup[] = [
               {
                 groupName: "Main",
-                ingredients: ingredientStrings.map(parseIngredientString),
+                ingredients: ingredientStrings.map((s) => parseIngredientString(decodeHtmlEntities(s))),
               },
             ];
 
