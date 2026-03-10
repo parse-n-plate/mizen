@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
 import { useRecipe } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
 import { usePreference } from "@/hooks/usePreference";
@@ -34,11 +35,13 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { HeartButton } from "@/components/HeartButton";
 
 export default function RecipePage() {
-  const { recipe, savedMeta, setSavedMeta } = useRecipe();
+  const router = useRouter();
+  const { recipe, savedMeta, setSavedMeta, removeFromHistory } = useRecipe();
   const { user } = useUser();
   const [saving, setSaving] = useState(false);
   const [unsaving, setUnsaving] = useState(false);
@@ -232,6 +235,20 @@ export default function RecipePage() {
       // User cancelled the share sheet — not an error
       if (err instanceof DOMException && err.name === "AbortError") return;
       toast.error("Failed to share");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm("Delete this recipe? This can't be undone.")) return;
+    try {
+      if (savedMeta) {
+        await fetch(`/api/recipes/${savedMeta.id}`, { method: "DELETE" });
+      }
+      removeFromHistory();
+      toast.success("Recipe deleted");
+      router.push("/");
+    } catch {
+      toast.error("Failed to delete recipe");
     }
   };
 
@@ -431,30 +448,25 @@ export default function RecipePage() {
 
               {/* More actions (Print, Share) */}
               <DropdownMenu>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        aria-label="More actions"
-                        className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                          aria-hidden="true"
-                        >
-                          <circle cx="5" cy="12" r="1.5" />
-                          <circle cx="12" cy="12" r="1.5" />
-                          <circle cx="19" cy="12" r="1.5" />
-                        </svg>
-                      </button>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent>More actions</TooltipContent>
-                </Tooltip>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="More actions"
+                    className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <circle cx="5" cy="12" r="1.5" />
+                      <circle cx="12" cy="12" r="1.5" />
+                      <circle cx="19" cy="12" r="1.5" />
+                    </svg>
+                  </button>
+                </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
                   side="top"
@@ -499,6 +511,28 @@ export default function RecipePage() {
                       <line x1="12" x2="12" y1="2" y2="15" />
                     </svg>
                     Share
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />
+                  <DropdownMenuItem
+                    onSelect={handleDelete}
+                    className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-red-600 dark:focus:text-red-400"
+                  >
+                    <svg
+                      className="h-4 w-4 mr-2 text-red-500 dark:text-red-400"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      <line x1="10" x2="10" y1="11" y2="17" />
+                      <line x1="14" x2="14" y1="11" y2="17" />
+                    </svg>
+                    Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -821,6 +855,32 @@ export default function RecipePage() {
                   </span>
                 </button>
               )}
+
+              {/* Delete */}
+              <button
+                type="button"
+                onClick={handleDelete}
+                aria-label="Delete recipe"
+                className="flex flex-col items-center gap-1 text-stone-500 dark:text-stone-400 hover:text-red-500 dark:hover:text-red-400 active:text-red-700 dark:active:text-red-300 transition-colors"
+              >
+                <svg
+                  className="h-5 w-5 text-red-500 dark:text-red-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <polyline points="3 6 5 6 21 6" />
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  <line x1="10" x2="10" y1="11" y2="17" />
+                  <line x1="14" x2="14" y1="11" y2="17" />
+                </svg>
+                <span className="text-[11px] font-sans font-medium">Delete</span>
+              </button>
             </div>
           </div>
         )}

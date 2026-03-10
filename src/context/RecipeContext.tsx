@@ -24,6 +24,7 @@ interface RecipeContextType {
   setError: (error: string | null) => void;
   history: HistoryEntry[];
   hasHydrated: boolean;
+  removeFromHistory: () => void;
 }
 
 const RecipeContext = createContext<RecipeContextType | undefined>(undefined);
@@ -86,6 +87,22 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const removeFromHistory = () => {
+    if (!recipe) return;
+    try {
+      const updated = history.filter((h) => h.recipe.title !== recipe.title);
+      setHistory(updated);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+      // Clear current recipe state
+      setRecipeState(null);
+      setSavedMetaState(null);
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(META_STORAGE_KEY);
+    } catch {
+      // Ignore storage errors
+    }
+  };
+
   const setSavedMeta = (meta: SavedMeta | null) => {
     setSavedMetaState(meta);
     try {
@@ -112,6 +129,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
         setError,
         history,
         hasHydrated,
+        removeFromHistory,
       }}
     >
       {children}
