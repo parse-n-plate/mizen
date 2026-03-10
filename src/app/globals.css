@@ -371,6 +371,11 @@ body {
     box-shadow: none !important;
   }
 
+  .folder-tab-trigger:focus-visible {
+    outline: 2px solid var(--color-blue);
+    outline-offset: -2px;
+  }
+
   .folder-tab-trigger:hover:not([data-state="active"]) {
     background-color: color-mix(in srgb, var(--color-gray-light) 40%, transparent) !important;
     color: var(--color-black);
@@ -408,7 +413,7 @@ body {
     justify-content: center;
     gap: 8px;
     padding: 0 8px;
-    border-radius: 0 0 16px 16px !important;
+    border-radius: 16px 16px 0 0 !important;
     transition:
       color 150ms ease,
       background-color 150ms ease;
@@ -418,9 +423,14 @@ body {
     position: relative;
     cursor: pointer;
     outline: none;
-    margin-top: -1px;
+    margin-bottom: -1px;
     z-index: 1;
     box-shadow: none !important;
+  }
+
+  .folder-tab-trigger-bottom:focus-visible {
+    outline: 2px solid var(--color-blue);
+    outline-offset: -2px;
   }
 
   .folder-tab-trigger-bottom:hover:not([data-state="active"]) {
@@ -432,10 +442,9 @@ body {
     background-color: var(--color-surface) !important;
     color: var(--color-black);
     border-color: var(--color-border-light) !important;
-    border-top-color: var(--color-surface) !important;
-    border-bottom: 2px solid var(--color-orange) !important;
+    border-bottom-color: var(--color-surface) !important;
     z-index: 3;
-    box-shadow: var(--shadow-soft) !important;
+    box-shadow: none !important;
   }
 
   @media (max-width: 640px) {
@@ -858,6 +867,21 @@ body {
     animation: vault-slide-up 200ms var(--ease-out-quart) forwards;
   }
 
+  @keyframes vault-slide-down {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+
+  .vault-exit {
+    animation: vault-slide-down 200ms var(--ease-out-quad) forwards;
+  }
+
   /* ═══════════════════════════════════════════════════════════════════════════
      TIMER DONE — Gentle pulse to draw attention
   ═══════════════════════════════════════════════════════════════════════════ */
@@ -937,6 +961,85 @@ body {
       transform: translateY(0) rotate(0deg);
     }
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UNIT DIFF — Inline strikethrough old → highlighted new on unit change
+   Outside @layer so it wins over Tailwind utilities on the parent element.
+═══════════════════════════════════════════════════════════════════════════ */
+
+.amount-diff-old {
+  text-decoration: line-through;
+  opacity: 0.5;
+  font-size: 0.85em;
+  color: #a8a29e;
+}
+
+.amount-diff-new {
+  color: var(--color-blue);
+  font-weight: 500;
+}
+
+.dark .amount-diff-old {
+  color: #78716c;
+}
+
+/* Unit conversion banner — enter/exit */
+
+.unit-banner-wrapper {
+  display: grid;
+}
+
+@keyframes banner-rows-expand {
+  from {
+    grid-template-rows: 0fr;
+  }
+  to {
+    grid-template-rows: 1fr;
+  }
+}
+
+@keyframes banner-rows-collapse {
+  from {
+    grid-template-rows: 1fr;
+  }
+  to {
+    grid-template-rows: 0fr;
+  }
+}
+
+@keyframes banner-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes banner-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.unit-banner-expand {
+  animation: banner-rows-expand 250ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.unit-banner-collapse {
+  animation: banner-rows-collapse 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.unit-banner-enter {
+  animation: banner-fade-in 200ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.unit-banner-exit {
+  animation: banner-fade-out 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
