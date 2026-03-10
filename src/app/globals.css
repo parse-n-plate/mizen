@@ -909,17 +909,33 @@ body {
   }
 
   @keyframes icon-chop {
-    0% { transform: rotate(0deg); }
-    30% { transform: rotate(-12deg); }
-    60% { transform: rotate(4deg); }
-    100% { transform: rotate(0deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    30% {
+      transform: rotate(-12deg);
+    }
+    60% {
+      transform: rotate(4deg);
+    }
+    100% {
+      transform: rotate(0deg);
+    }
   }
 
   @keyframes icon-toss {
-    0% { transform: translateY(0) rotate(0deg); }
-    40% { transform: translateY(-3px) rotate(6deg); }
-    70% { transform: translateY(0px) rotate(-2deg); }
-    100% { transform: translateY(0) rotate(0deg); }
+    0% {
+      transform: translateY(0) rotate(0deg);
+    }
+    40% {
+      transform: translateY(-3px) rotate(6deg);
+    }
+    70% {
+      transform: translateY(0px) rotate(-2deg);
+    }
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
   }
 }
 
