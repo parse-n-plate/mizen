@@ -211,11 +211,19 @@ describe("applySubstitutionsToGroups", () => {
 });
 
 describe("getPreferredServings", () => {
-  it("uses the saved default when a recipe includes servings", () => {
+  it("uses the saved default when user has set a preference", () => {
     expect(getPreferredServings(6, 4)).toBe(4);
   });
 
-  it("preserves missing source servings", () => {
+  it("uses recipe original when no preference is set", () => {
+    expect(getPreferredServings(6, null)).toBe(6);
+  });
+
+  it("preserves missing source servings when preference is set", () => {
     expect(getPreferredServings(undefined, 4)).toBeUndefined();
+  });
+
+  it("preserves missing source servings when no preference is set", () => {
+    expect(getPreferredServings(undefined, null)).toBeUndefined();
   });
 });
