@@ -18,9 +18,16 @@ import { cn, convertTextFractionsToSymbols } from '@/lib/utils';
  */
 function toTitleCase(text: string): string {
   if (!text) return text;
+  const decoded = text
+    .replace(/&quot;/gi, '"')
+    .replace(/&apos;/gi, "'")
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&nbsp;/gi, ' ');
   
   // Split by word boundaries, preserving spaces and punctuation
-  return text.replace(/\b\w+\b/g, (word) => {
+  return decoded.replace(/\b\w+\b/g, (word) => {
     // Skip if it's a number or starts with a number/fraction symbol
     if (/^[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]/.test(word)) {
       return word;
@@ -91,9 +98,11 @@ export default function IngredientCard({
 
   // Helper function to parse amount/unit from ingredient string
   const parseIngredientString = (ingredientStr: string): { amount: string; unit: string; name: string } => {
+    const normalizedIngredient = ingredientStr.trim();
+
     // Pattern 1: matches amount (can include fractions like 1½, 2½, ⅛) + unit + ingredient name
     // Examples: "1½ Tbsp soy sauce", "2½ cups dashi", "1 tsp sugar"
-    const match = ingredientStr.match(/^([\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+(?:\s*[–-]\s*[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)?)\s+([a-zA-Z]+)\s+(.+)$/);
+    const match = normalizedIngredient.match(/^([\d]+(?:\/[\d]+)?(?:\s+[\d]+\/[\d]+)?|[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+(?:\s*[–-]\s*[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)?)\s+([a-zA-Z]+)\s+(.+)$/);
     if (match) {
       return {
         amount: match[1].trim(),
@@ -101,8 +110,17 @@ export default function IngredientCard({
         name: match[3].trim()
       };
     }
+    // Pattern 1b: compact measurements like "500g/1.1lb pork belly"
+    const compactMeasurementMatch = normalizedIngredient.match(/^((?:\d+(?:\.\d+)?|[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)(?:[a-zA-Z]+(?:\/(?:\d+(?:\.\d+)?[a-zA-Z]+|[a-zA-Z]+))*)(?:\s+\([^)]*\))?)\s+(.+)$/);
+    if (compactMeasurementMatch) {
+      return {
+        amount: compactMeasurementMatch[1].trim(),
+        unit: '',
+        name: compactMeasurementMatch[2].trim()
+      };
+    }
     // Pattern 2: try simpler pattern without fractions (amount + unit + ingredient name)
-    const simpleMatch = ingredientStr.match(/^(\d+(?:\s*[–-]\s*\d+)?)\s+([a-zA-Z]+)\s+(.+)$/);
+    const simpleMatch = normalizedIngredient.match(/^(\d+(?:\s*[–-]\s*\d+)?)\s+([a-zA-Z]+)\s+(.+)$/);
     if (simpleMatch) {
       return {
         amount: simpleMatch[1].trim(),
@@ -111,7 +129,7 @@ export default function IngredientCard({
       };
     }
     // Pattern 3: matches amount + ingredient name (no unit) - e.g., "3 eggs", "2 apples"
-    const noUnitMatch = ingredientStr.match(/^([\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+(?:\s*[–-]\s*[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)?)\s+(.+)$/);
+    const noUnitMatch = normalizedIngredient.match(/^([\d]+(?:\/[\d]+)?(?:\s+[\d]+\/[\d]+)?|[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+(?:\s*[–-]\s*[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)?)\s+(.+)$/);
     if (noUnitMatch) {
       return {
         amount: noUnitMatch[1].trim(),
@@ -120,7 +138,7 @@ export default function IngredientCard({
       };
     }
     // Pattern 4: simpler pattern for amount + ingredient name without fractions
-    const simpleNoUnitMatch = ingredientStr.match(/^(\d+(?:\s*[–-]\s*\d+)?)\s+(.+)$/);
+    const simpleNoUnitMatch = normalizedIngredient.match(/^(\d+(?:\s*[–-]\s*\d+)?)\s+(.+)$/);
     if (simpleNoUnitMatch) {
       return {
         amount: simpleNoUnitMatch[1].trim(),
@@ -129,7 +147,7 @@ export default function IngredientCard({
       };
     }
     // No match found, return empty amount/unit
-    return { amount: '', unit: '', name: ingredientStr };
+    return { amount: '', unit: '', name: normalizedIngredient };
   };
 
   // Extract just the ingredient name for matching

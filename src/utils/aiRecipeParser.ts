@@ -171,12 +171,12 @@ function decodeHtmlEntities(text: string): string {
     .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)))
     .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
     // common named entities
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'")
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&nbsp;/g, ' ');
+    .replace(/&quot;/gi, '"')
+    .replace(/&apos;/gi, "'")
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&nbsp;/gi, ' ');
 }
 
 function parseISODuration(duration: string): number | undefined {
@@ -273,7 +273,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             // more readable fractions so that logging and downstream data look like
             // the HTML rather than machine‑generated JSON-LD numbers.
             ingredientStrings = ingredientStrings.map((ing) => {
-              const normalized = normalizeDoubleParens(ing);
+              const normalized = normalizeDoubleParens(decodeHtmlEntities(ing));
               // look for a leading number followed by whitespace (amount + rest)
               const m = normalized.match(/^(\d+(?:\.\d+)?)(\s+)(.*)$/);
               if (m) {

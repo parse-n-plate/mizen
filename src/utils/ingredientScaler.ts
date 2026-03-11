@@ -193,11 +193,13 @@ function isRecognizedUnit(unit: string): boolean {
  * Handles patterns like "1½ Tbsp soy sauce", "2 cups dashi", etc.
  */
 export function parseIngredientString(ingredientStr: string): { amount: string; unit: string; name: string } | null {
+  const normalizedIngredient = ingredientStr.trim();
+
   // Pattern: matches amount (can include fractions like 1½, 2½, ⅛, 1/4, 2/3) + unit + ingredient name
   // Examples: "1½ Tbsp soy sauce", "2½ cups dashi", "1/4 cup red wine", "1 tsp sugar"
   // Fraction notation: plain digits with optional slash for fractions (1/4, 2/3) or Unicode fractions (½, ¼)
   const fractionPattern = /^([\d]+(?:\/[\d]+)?(?:\s+[\d]+\/[\d]+)?|[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+(?:\s*[–-]\s*[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)?)\s+([a-zA-Z]+)\s+(.+)$/;
-  const match = ingredientStr.match(fractionPattern);
+  const match = normalizedIngredient.match(fractionPattern);
   if (match) {
     const unit = match[2].trim();
     // Validate that the captured unit is actually a recognized cooking unit
@@ -209,6 +211,31 @@ export function parseIngredientString(ingredientStr: string): { amount: string; 
       };
     }
   }
+
+  // Handles compact measurement tokens where the unit is attached to the number,
+  // e.g. "500g/1.1lb pork belly", "30g/1.1oz green onion",
+  // or "150ml/5.1oz (approx.) broth".
+  const compactMeasurementMatch = normalizedIngredient.match(
+    /^((?:\d+(?:\.\d+)?|[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)(?:[a-zA-Z]+(?:\/(?:\d+(?:\.\d+)?[a-zA-Z]+|[a-zA-Z]+))*)(?:\s+\([^)]*\))?)\s+(.+)$/,
+  );
+  if (compactMeasurementMatch) {
+    return {
+      amount: compactMeasurementMatch[1].trim(),
+      unit: '',
+      name: compactMeasurementMatch[2].trim(),
+    };
+  }
+
+  const noUnitPattern = /^([\d]+(?:\/[\d]+)?(?:\s+[\d]+\/[\d]+)?|[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+(?:\s*[–-]\s*[\d½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]+)?)\s+(.+)$/;
+  const noUnitMatch = normalizedIngredient.match(noUnitPattern);
+  if (noUnitMatch) {
+    return {
+      amount: noUnitMatch[1].trim(),
+      unit: '',
+      name: noUnitMatch[2].trim(),
+    };
+  }
+
   return null;
 }
 
