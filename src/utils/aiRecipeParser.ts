@@ -21,8 +21,11 @@ import { removeQuantitiesFromInstructions } from './recipe-helpers';
 // Simplified: Trust AI-generated titles, use generic fallback only for legacy string inputs
 const normalizeInstructionSteps = (
   instructions: any,
+  options?: { stripIngredientQuantities?: boolean },
 ): InstructionStep[] => {
   if (!Array.isArray(instructions)) return [];
+
+  const shouldStripQuantities = options?.stripIngredientQuantities ?? false;
 
   const cleanLeading = (text: string): string =>
     (text || '').replace(/^[\s.:;,\-–—]+/, '').trim();
@@ -38,8 +41,10 @@ const stripHtmlTags = (s: string): string => s.replace(/<[^>]+>/g, '');
         const raw = stripHtmlTags(item);
         let detail = cleanLeading(raw.trim());
         if (!detail) return null;
-        // Remove ingredient quantities from instruction text
-        detail = removeQuantitiesFromInstructions(detail);
+        if (shouldStripQuantities) {
+          // Optional cleanup path for callers that explicitly want concise instruction text.
+          detail = removeQuantitiesFromInstructions(detail);
+        }
         // Use generic title for legacy string inputs
         return {
           title: `Step ${index + 1}`,
@@ -74,8 +79,10 @@ const stripHtmlTags = (s: string): string => s.replace(/<[^>]+>/g, '');
         const title = aiTitle ? cleanLeading(aiTitle) : `Step ${index + 1}`;
         // strip any HTML tags that may have slipped through
         let detail = cleanLeading(stripHtmlTags(rawDetail).trim());
-        // Remove ingredient quantities from instruction text
-        detail = removeQuantitiesFromInstructions(detail);
+        if (shouldStripQuantities) {
+          // Optional cleanup path for callers that explicitly want concise instruction text.
+          detail = removeQuantitiesFromInstructions(detail);
+        }
 
         return {
           title,

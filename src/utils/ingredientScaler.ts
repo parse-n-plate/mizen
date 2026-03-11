@@ -195,6 +195,10 @@ function isRecognizedUnit(unit: string): boolean {
 export function parseIngredientString(ingredientStr: string): { amount: string; unit: string; name: string } | null {
   const normalizedIngredient = ingredientStr.trim();
 
+  // Descriptive size adjectives should usually stay with ingredient text, not unit.
+  // Example: "1 large bunch fresh thyme" -> amount: "1", unit: "", name: "large bunch fresh thyme"
+  const descriptorWords = new Set(['large', 'medium', 'small']);
+
   // Pattern: matches amount (can include fractions like 1½, 2½, ⅛, 1/4, 2/3) + unit + ingredient name
   // Examples: "1½ Tbsp soy sauce", "2½ cups dashi", "1/4 cup red wine", "1 tsp sugar"
   // Fraction notation: plain digits with optional slash for fractions (1/4, 2/3) or Unicode fractions (½, ¼)
@@ -204,6 +208,13 @@ export function parseIngredientString(ingredientStr: string): { amount: string; 
     const unit = match[2].trim();
     // Validate that the captured unit is actually a recognized cooking unit
     if (isRecognizedUnit(unit)) {
+      if (descriptorWords.has(unit.toLowerCase())) {
+        return {
+          amount: match[1].trim(),
+          unit: '',
+          name: `${unit} ${match[3].trim()}`.trim(),
+        };
+      }
       return {
         amount: match[1].trim(),
         unit: unit,
@@ -233,6 +244,17 @@ export function parseIngredientString(ingredientStr: string): { amount: string; 
       amount: noUnitMatch[1].trim(),
       unit: '',
       name: noUnitMatch[2].trim(),
+    };
+  }
+
+  // Handle count + descriptor-range patterns where the semantic quantity is not a true scalar,
+  // e.g. "1 5- to 6-pound roasting chicken". Preserve entire string as ingredient text.
+  const countWithRangeDescriptorPattern = /^\d+\s+\d+\s*[–-]\s*(?:to\s+)?\d+[-\s]*[a-zA-Z].*$/;
+  if (countWithRangeDescriptorPattern.test(normalizedIngredient)) {
+    return {
+      amount: '',
+      unit: '',
+      name: normalizedIngredient,
     };
   }
 
