@@ -135,9 +135,6 @@ export function formatAmount(amount: number, round?: boolean): string {
   return formattedDecimal;
 }
 
-// Regex matching any unicode fraction character
-const FRACTION_CHARS_RE = /[½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]/;
-
 /**
  * Normalize a string amount by converting LLM-generated decimal representations
  * back to unicode fractions. E.g. "0.33333334326744" → "⅓".
@@ -319,9 +316,7 @@ function parseIngredientString(
 function normalizeIngredient(ingredient: Ingredient): Ingredient {
   if (!ingredient.amount || ingredient.units) return ingredient;
 
-  const parsed = parseIngredientString(
-    `${ingredient.amount} ${ingredient.ingredient}`.trim()
-  );
+  const parsed = parseIngredientString(`${ingredient.amount} ${ingredient.ingredient}`.trim());
   if (!parsed?.amount) return ingredient;
 
   const amountChanged = parsed.amount !== ingredient.amount.trim();
@@ -387,10 +382,7 @@ export function scaleIngredient(
   }
 
   // Check for "to" range (e.g. "2 to 3")
-  if (
-    normalizedIngredient.amount &&
-    normalizedIngredient.amount.toLowerCase().includes(" to ")
-  ) {
+  if (normalizedIngredient.amount && normalizedIngredient.amount.toLowerCase().includes(" to ")) {
     const parts = normalizedIngredient.amount.toLowerCase().split(" to ");
     if (parts.length === 2) {
       const min = parseAmount(parts[0]);

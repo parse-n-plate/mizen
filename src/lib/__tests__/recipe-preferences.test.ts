@@ -60,9 +60,11 @@ describe("annotateIngredientGroups", () => {
     ];
 
     expect(
-      annotateIngredientGroups(groups, ["Dairy-free", "Vegan"], [
-        { from: "milk", to: "almond milk" },
-      ])
+      annotateIngredientGroups(
+        groups,
+        ["Dairy-free", "Vegan"],
+        [{ from: "milk", to: "almond milk" }]
+      )
     ).toEqual([
       {
         groupName: "main",
@@ -178,8 +180,13 @@ describe("applySubstitutionsToGroups", () => {
       },
     ];
 
-    expect(applySubstitutionsToGroups(groups, [{ from: "", to: "oat milk" }])[0].ingredients[0].ingredient).toBe("milk");
-    expect(applySubstitutionsToGroups(groups, [{ from: "milk", to: "" }])[0].ingredients[0].ingredient).toBe("milk");
+    expect(
+      applySubstitutionsToGroups(groups, [{ from: "", to: "oat milk" }])[0].ingredients[0]
+        .ingredient
+    ).toBe("milk");
+    expect(
+      applySubstitutionsToGroups(groups, [{ from: "milk", to: "" }])[0].ingredients[0].ingredient
+    ).toBe("milk");
   });
 
   it("applies multiple substitutions to different ingredients", () => {

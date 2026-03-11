@@ -16,14 +16,14 @@ import { logger } from "@/lib/logger";
  * no blog prose. Checked in order of prevalence.
  */
 const RECIPE_CARD_SELECTORS = [
-  '.wprm-recipe-container',          // WP Recipe Maker (most common)
-  '.tasty-recipes',                   // Tasty Recipes
-  '.easyrecipe',                      // EasyRecipe
-  '.mv-recipe-card',                  // Mediavine Create
-  '.recipe-card',                     // Generic
-  '.yumprint-recipe',                 // Yummly
-  '.zip-recipe-plugin',              // Zip Recipes
-  '[itemtype*="schema.org/Recipe"]',  // Schema.org microdata containers
+  ".wprm-recipe-container", // WP Recipe Maker (most common)
+  ".tasty-recipes", // Tasty Recipes
+  ".easyrecipe", // EasyRecipe
+  ".mv-recipe-card", // Mediavine Create
+  ".recipe-card", // Generic
+  ".yumprint-recipe", // Yummly
+  ".zip-recipe-plugin", // Zip Recipes
+  '[itemtype*="schema.org/Recipe"]', // Schema.org microdata containers
 ] as const;
 
 /**
@@ -204,32 +204,30 @@ export function cleanRecipeHTML(rawHtml: string): CleanedHTML {
       const $card = $(selector);
       if ($card.length) {
         const $clone = $card.first().clone();
-        $clone.find('img, style, button, form, input, svg, video, audio, iframe').remove();
-        $clone.find('script').each((_, el) => {
-          if ($(el).attr('type') !== 'application/ld+json') $(el).remove();
+        $clone.find("img, style, button, form, input, svg, video, audio, iframe").remove();
+        $clone.find("script").each((_, el) => {
+          if ($(el).attr("type") !== "application/ld+json") $(el).remove();
         });
         const cardContent = $clone.html();
         // Validate the card actually contains recipe content.
         // Avoid generic list-only widgets by requiring strong ingredient+instruction signals
         // or explicit section headings.
-        const hasIngredientSignal = $clone.find(
-          '[class*="ingredient"], [itemprop="recipeIngredient"]'
-        ).length > 0;
-        const hasInstructionSignal = $clone.find(
-          '[class*="instruction"], [class*="direction"], [class*="step"], [itemprop="recipeInstructions"]'
-        ).length > 0;
-        const headingText = $clone.find('h1, h2, h3, h4, h5, h6').text().toLowerCase();
+        const hasIngredientSignal =
+          $clone.find('[class*="ingredient"], [itemprop="recipeIngredient"]').length > 0;
+        const hasInstructionSignal =
+          $clone.find(
+            '[class*="instruction"], [class*="direction"], [class*="step"], [itemprop="recipeInstructions"]'
+          ).length > 0;
+        const headingText = $clone.find("h1, h2, h3, h4, h5, h6").text().toLowerCase();
         const hasIngredientHeading = /\bingredients?\b/.test(headingText);
-        const hasInstructionHeading = /\binstructions?\b|\bdirections?\b|\bsteps?\b/.test(headingText);
+        const hasInstructionHeading = /\binstructions?\b|\bdirections?\b|\bsteps?\b/.test(
+          headingText
+        );
         const hasStrongRecipeSignals =
           (hasIngredientSignal && hasInstructionSignal) ||
           (hasIngredientHeading && hasInstructionHeading);
-        if (
-          cardContent &&
-          cardContent.trim().length > 200 &&
-          hasStrongRecipeSignals
-        ) {
-          recipeCardHtml = cardContent.replace(/\s+/g, ' ').replace(/>\s+</g, '><').trim();
+        if (cardContent && cardContent.trim().length > 200 && hasStrongRecipeSignals) {
+          recipeCardHtml = cardContent.replace(/\s+/g, " ").replace(/>\s+</g, "><").trim();
           break;
         }
       }
@@ -495,5 +493,3 @@ export function extractTextContent(rawHtml: string): string {
     return "";
   }
 }
-
-

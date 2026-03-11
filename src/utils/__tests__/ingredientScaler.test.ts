@@ -1,5 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { parseAmount, formatAmount, normalizeAmount, normalizeDecimalsInText, displayAmount, displayText, scaleIngredient, scaleIngredients } from "../ingredientScaler";
+import {
+  parseAmount,
+  formatAmount,
+  normalizeAmount,
+  normalizeDecimalsInText,
+  displayAmount,
+  displayText,
+  scaleIngredient,
+  scaleIngredients,
+} from "../ingredientScaler";
 import type { Ingredient, IngredientGroup } from "@/lib/types";
 
 describe("parseAmount", () => {
@@ -182,7 +191,9 @@ describe("normalizeDecimalsInText", () => {
   });
 
   it("handles multiple decimals in text", () => {
-    expect(normalizeDecimalsInText("Add 0.25 cup sugar and 0.5 tsp salt")).toBe("Add ¼ cup sugar and ½ tsp salt");
+    expect(normalizeDecimalsInText("Add 0.25 cup sugar and 0.5 tsp salt")).toBe(
+      "Add ¼ cup sugar and ½ tsp salt"
+    );
   });
 });
 

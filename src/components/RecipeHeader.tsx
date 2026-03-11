@@ -104,11 +104,21 @@ export function RecipeHeader({
               aria-expanded={isSliderOpen}
               aria-label="Adjust servings"
             >
-              <span className={`flex items-center justify-center w-3.5 h-3.5 ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"}`}>
+              <span
+                className={`flex items-center justify-center w-3.5 h-3.5 ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"}`}
+              >
                 <User weight="Bold" className="w-3.5 h-3.5" />
               </span>
-              <span className={isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"}>Serves</span>{" "}
-              <span className={`font-medium ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-600 dark:text-stone-300"}`}>
+              <span
+                className={
+                  isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"
+                }
+              >
+                Serves
+              </span>{" "}
+              <span
+                className={`font-medium ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-600 dark:text-stone-300"}`}
+              >
                 {displayServings}
               </span>
               <AltArrowDown

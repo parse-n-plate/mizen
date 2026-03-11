@@ -2,9 +2,7 @@ import { type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 import { NextResponse } from "next/server";
 
-export function shouldRedirectOAuthRootCallback(
-  request: Pick<NextRequest, "method" | "nextUrl">,
-) {
+export function shouldRedirectOAuthRootCallback(request: Pick<NextRequest, "method" | "nextUrl">) {
   return (
     request.method === "GET" &&
     request.nextUrl.pathname === "/" &&

@@ -124,8 +124,7 @@ function convertIngredient(
   const parsed = parseAmount(ingredient.amount);
   if (parsed === null) return ingredient;
 
-  const conversionMap =
-    targetSystem === "metric" ? IMPERIAL_TO_METRIC : METRIC_TO_IMPERIAL;
+  const conversionMap = targetSystem === "metric" ? IMPERIAL_TO_METRIC : METRIC_TO_IMPERIAL;
   const conversion = conversionMap[unitLower];
   if (!conversion) return ingredient;
 
@@ -179,9 +178,7 @@ export function convertIngredients(
   if (targetSystem === sourceSystem) return groups;
   return groups.map((group) => ({
     ...group,
-    ingredients: group.ingredients.map((ing) =>
-      convertIngredient(ing, targetSystem, sourceSystem)
-    ),
+    ingredients: group.ingredients.map((ing) => convertIngredient(ing, targetSystem, sourceSystem)),
   }));
 }
 
@@ -237,8 +234,7 @@ function convertTemperatures(
   const cToF = targetSystem === "imperial" && sourceSystem === "metric";
   if (!fToC && !cToF) return text;
 
-  const tempRegex =
-    /(\d+)\s*(?:°\s*|degrees?\s+)(F(?:ahrenheit)?|C(?:elsius)?)\b/gi;
+  const tempRegex = /(\d+)\s*(?:°\s*|degrees?\s+)(F(?:ahrenheit)?|C(?:elsius)?)\b/gi;
 
   return text.replace(tempRegex, (match, numStr, unit) => {
     const temp = parseInt(numStr, 10);
@@ -257,17 +253,11 @@ function convertTemperatures(
   });
 }
 
-function convertMeasurements(
-  text: string,
-  targetSystem: UnitSystem
-): string {
-  const conversionMap =
-    targetSystem === "metric" ? IMPERIAL_TO_METRIC : METRIC_TO_IMPERIAL;
+function convertMeasurements(text: string, targetSystem: UnitSystem): string {
+  const conversionMap = targetSystem === "metric" ? IMPERIAL_TO_METRIC : METRIC_TO_IMPERIAL;
 
   // Build unit pattern from map keys, longest-first to avoid partial matches
-  const unitKeys = Object.keys(conversionMap).sort(
-    (a, b) => b.length - a.length
-  );
+  const unitKeys = Object.keys(conversionMap).sort((a, b) => b.length - a.length);
   const unitPattern = unitKeys.map(escapeRegExp).join("|");
 
   // Unicode fraction chars for the number pattern
@@ -277,10 +267,7 @@ function convertMeasurements(
   // decimals with optional unicode frac (1½), or standalone unicode frac (½)
   const numberPattern = String.raw`(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:\.\d+)?(?:\s*[${unicodeFracs}])?|[${unicodeFracs}])`;
 
-  const regex = new RegExp(
-    `${numberPattern}\\s*(${unitPattern})(?=\\s|[.,;:!?)]|$)`,
-    "gi"
-  );
+  const regex = new RegExp(`${numberPattern}\\s*(${unitPattern})(?=\\s|[.,;:!?)]|$)`, "gi");
 
   return text.replace(regex, (match, numPart, unitPart, offset, fullText) => {
     if (typeof offset !== "number" || typeof fullText !== "string") {

@@ -44,7 +44,7 @@ export interface ParserResult {
   success: boolean;
   data?: ParsedRecipe;
   error?: string;
-  method: "json-ld" | "json-ld+ai" | "ai" | "image" | "none";
+  method: "json-ld" | "json-ld+ai" | "ai" | "image" | "text" | "none";
 }
 
 export interface SavedRecipe {

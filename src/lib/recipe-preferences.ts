@@ -1,9 +1,4 @@
-import type {
-  DietaryOption,
-  Substitution,
-  TemperatureUnit,
-  UnitSystem,
-} from "@/lib/preferences";
+import type { DietaryOption, Substitution, TemperatureUnit, UnitSystem } from "@/lib/preferences";
 import type { Ingredient, IngredientGroup, InstructionStep } from "@/lib/types";
 import { formatAmount, parseAmount } from "@/utils/ingredientScaler";
 
@@ -20,13 +15,9 @@ const DIETARY_CONFLICT_PATTERNS: Record<DietaryOption, RegExp[]> = {
   Vegan: [
     /\b(?:anchovy|bacon|beef|butter|cheese|chicken|cream|egg|eggs|fish sauce|gelatin|ghee|ham|honey|lamb|milk|pork|prosciutto|sausage|shrimp|turkey|tuna|whey|yogurt)\b/i,
   ],
-  "Nut-free": [
-    /\b(?:almond|cashew|hazelnut|macadamia|nut|peanut|pecan|pistachio|walnut)\b/i,
-  ],
+  "Nut-free": [/\b(?:almond|cashew|hazelnut|macadamia|nut|peanut|pecan|pistachio|walnut)\b/i],
   "Low-sodium": [/\b(?:salt|soy sauce|tamari|miso|broth|stock|bouillon)\b/i],
-  "Shellfish-free": [
-    /\b(?:clam|crab|lobster|mussel|oyster|prawn|scallop|shellfish|shrimp)\b/i,
-  ],
+  "Shellfish-free": [/\b(?:clam|crab|lobster|mussel|oyster|prawn|scallop|shellfish|shrimp)\b/i],
 };
 
 type UnitFamily = "volume" | "weight";
@@ -160,8 +151,7 @@ function roundToQuarter(value: number) {
 }
 
 function formatMetricAmount(value: number, unit: "g" | "kg" | "mL" | "L") {
-  const rounded =
-    unit === "g" || unit === "mL" ? Math.round(value) : Math.round(value * 10) / 10;
+  const rounded = unit === "g" || unit === "mL" ? Math.round(value) : Math.round(value * 10) / 10;
 
   if (Number.isInteger(rounded)) return String(rounded);
   return rounded.toFixed(1).replace(/\.0$/, "");
@@ -310,9 +300,7 @@ export function annotateIngredientGroups(
 }
 
 function getValidSubstitutions(substitutions: Substitution[]) {
-  return substitutions.filter(
-    (substitution) => substitution.from.trim() && substitution.to.trim()
-  );
+  return substitutions.filter((substitution) => substitution.from.trim() && substitution.to.trim());
 }
 
 export function countApplicableSubstitutions(
@@ -368,25 +356,22 @@ export function convertIngredientGroups(groups: IngredientGroup[], unitSystem: U
 
 function convertSingleTemperature(value: number, targetUnit: TemperatureUnit) {
   if (targetUnit === "c") {
-    return Math.round((((value - 32) * 5) / 9) / 5) * 5;
+    return Math.round(((value - 32) * 5) / 9 / 5) * 5;
   }
 
-  return Math.round((((value * 9) / 5 + 32) / 5)) * 5;
+  return Math.round(((value * 9) / 5 + 32) / 5) * 5;
 }
 
 function replaceTemperatures(text: string, targetUnit: TemperatureUnit) {
-  return text.replace(
-    /(\d{2,3})\s*(?:°|degrees?\s+)\s*([fc])\b/gi,
-    (match, rawValue, rawUnit) => {
-      const unit = rawUnit.toLowerCase() as TemperatureUnit;
-      if (unit === targetUnit) return match;
+  return text.replace(/(\d{2,3})\s*(?:°|degrees?\s+)\s*([fc])\b/gi, (match, rawValue, rawUnit) => {
+    const unit = rawUnit.toLowerCase() as TemperatureUnit;
+    if (unit === targetUnit) return match;
 
-      const value = Number(rawValue);
-      if (!Number.isFinite(value)) return match;
+    const value = Number(rawValue);
+    if (!Number.isFinite(value)) return match;
 
-      return `${convertSingleTemperature(value, targetUnit)}°${targetUnit.toUpperCase()}`;
-    }
-  );
+    return `${convertSingleTemperature(value, targetUnit)}°${targetUnit.toUpperCase()}`;
+  });
 }
 
 export function convertInstructionTemperatures(

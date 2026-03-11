@@ -389,4 +389,3 @@ function IngredientGroupSection({
     </div>
   );
 }
-

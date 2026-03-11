@@ -124,12 +124,6 @@ html body[data-scroll-locked] {
   --color-green: #1a8521;
   --color-wheat: #fdeecc;
   --color-orange: #fb9c00;
-
-  /* Accent tints — soft pastel backgrounds */
-  --color-wheat-tint: #fef8eb;
-  --color-mint-tint: #edfaf7;
-  --color-orange-tint: #fff5e0;
-
   /* Semantic aliases */
   --color-text-heading: #1c1917;
   --color-text-body: #333333;
@@ -214,11 +208,6 @@ html body[data-scroll-locked] {
   /* Accents — brighter for dark backgrounds */
   --color-green: #2ecc55;
   --color-olive: #8ec420;
-
-  /* Accent tints — dark mode variants */
-  --color-wheat-tint: #2a2520;
-  --color-mint-tint: #1e2926;
-  --color-orange-tint: #2a2218;
 
   --color-dark-surface: #0b0a0a;
   --shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.2);
@@ -519,7 +508,9 @@ body {
     width: 100%;
     cursor: pointer;
     border-radius: var(--radius-md);
-    transition: transform var(--press-duration, 150ms) var(--press-easing, ease), background-color 150ms ease;
+    transition:
+      transform var(--press-duration, 150ms) var(--press-easing, ease),
+      background-color 150ms ease;
   }
 
   .ingredient-list-item:hover {
@@ -789,62 +780,75 @@ body {
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
-     CLIPBOARD PILL — Slide-down entry animation
+     SMART BAR — Morphing container transitions
   ═══════════════════════════════════════════════════════════════════════════ */
 
-  @keyframes clipboard-pill-in {
-    from {
-      opacity: 0;
-      transform: translateY(8px) scale(0.96);
-    }
+  .smart-bar {
+    transition:
+      height 200ms var(--ease-out-quart),
+      border-color 150ms ease,
+      background-color 150ms ease,
+      box-shadow 150ms ease;
+    overflow: hidden;
+  }
+
+  .smart-bar-focus-ring {
+    border-color: var(--color-blue);
+    box-shadow: 0 0 0 3px rgba(24, 161, 247, 0.2);
+  }
+
+  .smart-bar-loading-ring {
+    border-color: var(--color-blue);
+    box-shadow:
+      0 0 0 4px rgba(24, 161, 247, 0.12),
+      0 0 16px rgba(24, 161, 247, 0.08);
+    position: relative;
+  }
+
+  @keyframes smart-bar-spin {
     to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
+      transform: rotate(360deg);
     }
   }
 
-  .clipboard-pill-animate {
-    animation: clipboard-pill-in 250ms var(--ease-out-quint) forwards;
+  .smart-bar-spinner {
+    animation: smart-bar-spin 1s linear infinite;
   }
 
-  /* ═══════════════════════════════════════════════════════════════════════════
-     IMAGE PILL — Pop-in entry animation
-  ═══════════════════════════════════════════════════════════════════════════ */
-
-  @keyframes image-pill-in {
-    from {
-      opacity: 0;
-      transform: translateX(-8px) scale(0.96);
+  @keyframes smart-bar-progress {
+    0% {
+      width: 0%;
     }
-    to {
-      opacity: 1;
-      transform: translateX(0) scale(1);
+    50% {
+      width: 70%;
+    }
+    100% {
+      width: 95%;
     }
   }
 
-  @keyframes image-pill-out {
-    from {
-      opacity: 1;
-      transform: translateX(0) scale(1);
-    }
-    to {
-      opacity: 0;
-      transform: translateX(-8px) scale(0.96);
-    }
+  .smart-bar-progress-track {
+    height: 3px;
+    background: rgba(24, 161, 247, 0.1);
+    border-radius: 100px;
+    overflow: hidden;
+    margin: 0 6px;
   }
 
-  .image-pill-animate {
-    animation: image-pill-in 280ms var(--ease-out-quint) forwards;
-  }
-
-  .image-pill-exit {
-    animation: image-pill-out 180ms var(--ease-out-quint) forwards;
+  .smart-bar-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-blue) 0%, #60c5fa 100%);
+    border-radius: 100px;
+    animation: smart-bar-progress 8s var(--ease-in-out-cubic) forwards;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .image-pill-animate,
-    .image-pill-exit {
+    .smart-bar {
+      transition: none;
+    }
+    .smart-bar-progress-bar {
       animation: none;
+      width: 60%;
     }
   }
 
@@ -906,11 +910,42 @@ body {
 
   .press-scale {
     transition: transform 100ms ease;
-    will-change: transform;
   }
 
   .press-scale:active {
     transform: scale(0.97);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     IMAGE LIGHTBOX — Zoom-in overlay
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  @keyframes lightbox-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .lightbox-overlay {
+    animation: lightbox-in 200ms var(--ease-out-quint);
+  }
+
+  @keyframes lightbox-img-in {
+    from {
+      opacity: 0;
+      transform: scale(0.92);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .lightbox-img {
+    animation: lightbox-img-in 200ms var(--ease-out-quint);
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
