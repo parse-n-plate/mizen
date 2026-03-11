@@ -45,3 +45,18 @@ next-env.d.ts
 /logs/
 
 .idea
+
+# editor/workspace metadata
+.cursor/
+*.code-workspace
+.vscode/
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Python caches / virtual environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
