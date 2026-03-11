@@ -3,9 +3,10 @@
  */
 
 import type { Ingredient, IngredientGroup } from "@/lib/types";
+import type { NumberFormat } from "@/lib/numberFormat";
 
 // Common fraction characters to decimal map
-const FRACTION_MAP: Record<string, number> = {
+export const FRACTION_MAP: Record<string, number> = {
   "½": 0.5,
   "⅓": 1 / 3,
   "⅔": 2 / 3,
@@ -94,8 +95,8 @@ export function parseAmount(amountStr: string): number | null {
     }
   }
 
-  const num = parseFloat(cleanStr);
-  return isNaN(num) ? null : num;
+  const num = Number(cleanStr);
+  return Number.isFinite(num) ? num : null;
 }
 
 /**
@@ -135,35 +136,204 @@ export function formatAmount(amount: number, round?: boolean): string {
 }
 
 /**
+ * Normalize a string amount by converting LLM-generated decimal representations
+ * back to unicode fractions. E.g. "0.33333334326744" → "⅓".
+ * Only touches strings that are purely a decimal number.
+ */
+export function normalizeAmount(amountStr: string): string {
+  if (!amountStr) return amountStr;
+  const trimmed = amountStr.trim();
+  if (!/^\d+\.\d+$/.test(trimmed)) return amountStr;
+  const num = parseFloat(trimmed);
+  if (isNaN(num)) return amountStr;
+  return formatAmount(num);
+}
+
+/**
+ * Replace decimal numbers embedded in running text with unicode fractions.
+ * E.g. "Add 0.333 cup of sugar" → "Add ⅓ cup of sugar"
+ */
+export function normalizeDecimalsInText(text: string): string {
+  if (!text) return text;
+  return text.replace(/\b(\d+\.\d+)\b/g, (match) => {
+    const num = parseFloat(match);
+    if (isNaN(num)) return match;
+    const formatted = formatAmount(num);
+    // Only replace if formatAmount produced a cleaner result (not another decimal)
+    return formatted.includes(".") ? match : formatted;
+  });
+}
+
+/**
+ * Format a standalone amount string for display based on user preference.
+ * - "fractions": "0.5" → "½", "⅓" stays "⅓"
+ * - "decimals": "½" → "0.5", "⅓" → "0.33"
+ */
+export function displayAmount(amountStr: string, format: NumberFormat): string {
+  if (!amountStr) return amountStr;
+  const trimmed = amountStr.trim();
+  if (!trimmed || trimmed.toLowerCase() === "as needed" || trimmed.toLowerCase() === "to taste") {
+    return amountStr;
+  }
+
+  // Handle ranges — format each part
+  const normalized = trimmed.replace(/[–—]/g, "-");
+  if (normalized.includes("-")) {
+    const parts = normalized.split("-");
+    if (parts.length === 2) {
+      return `${displayAmount(parts[0], format)}-${displayAmount(parts[1], format)}`;
+    }
+  }
+  if (trimmed.toLowerCase().includes(" to ")) {
+    const parts = trimmed.split(/\s+to\s+/i);
+    if (parts.length === 2) {
+      return `${displayAmount(parts[0], format)} to ${displayAmount(parts[1], format)}`;
+    }
+  }
+
+  const val = parseAmount(trimmed);
+  if (val === null) return amountStr;
+
+  if (format === "decimals") {
+    return parseFloat(val.toFixed(2)).toString();
+  }
+  return formatAmount(val);
+}
+
+/**
+ * Format instruction/detail text for display based on user preference.
+ * Replaces inline fractions ↔ decimals within prose text.
+ */
+export function displayText(text: string, format: NumberFormat): string {
+  if (!text) return text;
+
+  if (format === "decimals") {
+    // Replace unicode fraction characters with decimals
+    // Handle mixed numbers like "1⅓" → "1.33" and standalone "⅓" → "0.33"
+    let result = text;
+    for (const [char, val] of Object.entries(FRACTION_MAP)) {
+      // Mixed: "2⅓" → "2.33"
+      result = result.replace(new RegExp(`(\\d+)\\s*${char}`, "g"), (_, whole) => {
+        const total = parseInt(whole) + val;
+        return parseFloat(total.toFixed(2)).toString();
+      });
+      // Standalone: "⅓" → "0.33"
+      result = result.replace(new RegExp(char, "g"), parseFloat(val.toFixed(2)).toString());
+    }
+    return result;
+  }
+
+  // Fractions mode: replace inline decimals with fraction characters
+  return normalizeDecimalsInText(text);
+}
+
+/**
  * Parse amount/unit from ingredient string when amount/units fields are empty
  */
 function parseIngredientString(
   ingredientStr: string
-): { amount: string; unit: string; name: string } | null {
-  const tokens = ingredientStr.trim().split(/\s+/);
-  if (tokens.length < 3) return null;
+): { amount: string; units: string; ingredient: string } | null {
+  const s = ingredientStr.trim();
+  if (!s) return null;
 
-  const maxAmountTokens = Math.min(4, tokens.length - 2);
-  for (let i = 1; i <= maxAmountTokens; i += 1) {
-    const amountCandidate = tokens.slice(0, i).join(" ");
-    const normalized = amountCandidate.replace(/[–—]/g, "-");
-    const couldBeAmount =
-      parseAmount(normalized) !== null ||
-      normalized.includes("-") ||
-      normalized.toLowerCase().includes(" to ");
+  const unicodeFractions = "½⅓⅔¼¾⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞";
+  const numberToken = `(?:\\d+\\s+\\d+/\\d+|\\d+[${unicodeFractions}]|\\d+/\\d+|\\d*\\.\\d+|\\d+|[${unicodeFractions}])`;
+  const amountRe = new RegExp(
+    `^((?:${numberToken})(?:\\s*(?:[\\-–—]|to)\\s*(?:${numberToken}))?)\\s*`,
+    "i"
+  );
+  const amountMatch = s.match(amountRe);
+  if (!amountMatch) return null;
 
-    if (!couldBeAmount) continue;
+  const amount = amountMatch[1].trim();
+  const rest = s.slice(amountMatch[0].length).trim();
 
-    const unit = tokens[i];
-    if (!/^[a-zA-Z]+$/.test(unit)) continue;
+  const unitPatterns = [
+    "cups?",
+    "tablespoons?",
+    "tbsps?\\.?",
+    "teaspoons?",
+    "tsps?\\.?",
+    "ounces?",
+    "oz\\.?",
+    "pounds?",
+    "lbs?\\.?",
+    "grams?",
+    "g",
+    "kilograms?",
+    "kg",
+    "millilit(?:er|re)s?",
+    "ml",
+    "lit(?:er|re)s?",
+    "l",
+    "pints?",
+    "quarts?",
+    "gallons?",
+    "pinch(?:es)?",
+    "dash(?:es)?",
+    "cloves?",
+    "slices?",
+    "pieces?",
+    "stalks?",
+    "sprigs?",
+    "bunche?s?",
+    "cans?",
+    "packages?",
+    "pkgs?\\.?",
+    "sticks?",
+    "heads?",
+    "ears?",
+    "large",
+    "medium",
+    "small",
+    "whole",
+  ];
+  const unitRe = new RegExp(`^(${unitPatterns.join("|")})(?:\\b|\\.)\\s*`, "i");
+  const unitMatch = rest.match(unitRe);
 
-    const name = tokens.slice(i + 1).join(" ");
-    if (!name) continue;
-
-    return { amount: amountCandidate.trim(), unit: unit.trim(), name: name.trim() };
+  if (unitMatch) {
+    return {
+      amount,
+      units: unitMatch[1].replace(/\.$/, ""),
+      ingredient: rest
+        .slice(unitMatch[0].length)
+        .replace(/^of\s+/i, "")
+        .trim(),
+    };
   }
 
-  return null;
+  if (/^[\-–—]/.test(rest)) {
+    return null;
+  }
+
+  return {
+    amount,
+    units: "",
+    ingredient: rest,
+  };
+}
+
+function normalizeIngredient(ingredient: Ingredient): Ingredient {
+  if (!ingredient.amount || ingredient.units) return ingredient;
+
+  const parsed = parseIngredientString(`${ingredient.amount} ${ingredient.ingredient}`.trim());
+  if (!parsed?.amount) return ingredient;
+
+  const amountChanged = parsed.amount !== ingredient.amount.trim();
+  const unitsChanged = Boolean(parsed.units);
+  const ingredientChanged =
+    Boolean(parsed.ingredient) && parsed.ingredient !== ingredient.ingredient.trim();
+
+  if (!amountChanged && !unitsChanged && !ingredientChanged) {
+    return ingredient;
+  }
+
+  return {
+    ...ingredient,
+    amount: parsed.amount,
+    units: parsed.units || ingredient.units,
+    ingredient: ingredientChanged ? parsed.ingredient : ingredient.ingredient,
+  };
 }
 
 /**
@@ -174,26 +344,28 @@ export function scaleIngredient(
   scaleFactor: number,
   round?: boolean
 ): Ingredient {
+  const normalizedIngredient = normalizeIngredient(ingredient);
+
   // If missing amount, try to parse from ingredient string
-  if (!ingredient.amount && ingredient.ingredient) {
-    const parsed = parseIngredientString(ingredient.ingredient);
+  if (!normalizedIngredient.amount && normalizedIngredient.ingredient) {
+    const parsed = parseIngredientString(normalizedIngredient.ingredient);
     if (parsed && parsed.amount) {
       const val = parseAmount(parsed.amount);
       if (val !== null) {
         return {
-          ...ingredient,
+          ...normalizedIngredient,
           amount: formatAmount(val * scaleFactor, round),
-          units: parsed.unit,
-          ingredient: parsed.name,
+          units: parsed.units,
+          ingredient: parsed.ingredient,
         };
       }
     }
-    return ingredient;
+    return normalizedIngredient;
   }
 
   // Check for range (e.g., "2-3")
-  if (ingredient.amount) {
-    const normalizedAmount = ingredient.amount.replace(/[–—]/g, "-");
+  if (normalizedIngredient.amount) {
+    const normalizedAmount = normalizedIngredient.amount.replace(/[–—]/g, "-");
     if (normalizedAmount.includes("-")) {
       const parts = normalizedAmount.split("-");
       if (parts.length === 2) {
@@ -201,7 +373,7 @@ export function scaleIngredient(
         const max = parseAmount(parts[1]);
         if (min !== null && max !== null) {
           return {
-            ...ingredient,
+            ...normalizedIngredient,
             amount: `${formatAmount(min * scaleFactor, round)}-${formatAmount(max * scaleFactor, round)}`,
           };
         }
@@ -210,28 +382,28 @@ export function scaleIngredient(
   }
 
   // Check for "to" range (e.g. "2 to 3")
-  if (ingredient.amount && ingredient.amount.toLowerCase().includes(" to ")) {
-    const parts = ingredient.amount.toLowerCase().split(" to ");
+  if (normalizedIngredient.amount && normalizedIngredient.amount.toLowerCase().includes(" to ")) {
+    const parts = normalizedIngredient.amount.toLowerCase().split(" to ");
     if (parts.length === 2) {
       const min = parseAmount(parts[0]);
       const max = parseAmount(parts[1]);
       if (min !== null && max !== null) {
         return {
-          ...ingredient,
+          ...normalizedIngredient,
           amount: `${formatAmount(min * scaleFactor, round)} to ${formatAmount(max * scaleFactor, round)}`,
         };
       }
     }
   }
 
-  if (!ingredient.amount) return ingredient;
+  if (!normalizedIngredient.amount) return normalizedIngredient;
 
-  const val = parseAmount(ingredient.amount);
+  const val = parseAmount(normalizedIngredient.amount);
   if (val !== null) {
-    return { ...ingredient, amount: formatAmount(val * scaleFactor, round) };
+    return { ...normalizedIngredient, amount: formatAmount(val * scaleFactor, round) };
   }
 
-  return ingredient;
+  return normalizedIngredient;
 }
 
 /**

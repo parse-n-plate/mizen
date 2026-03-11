@@ -402,7 +402,7 @@ body {
     justify-content: center;
     gap: 8px;
     padding: 0 8px;
-    border-radius: 0 0 16px 16px !important;
+    border-radius: 16px 16px 0 0 !important;
     transition:
       color 150ms ease,
       background-color 150ms ease;
@@ -412,7 +412,7 @@ body {
     position: relative;
     cursor: pointer;
     outline: none;
-    margin-top: -1px;
+    margin-bottom: -1px;
     z-index: 1;
     box-shadow: none !important;
   }
@@ -431,10 +431,9 @@ body {
     background-color: var(--color-surface) !important;
     color: var(--color-black);
     border-color: var(--color-border-light) !important;
-    border-top-color: var(--color-surface) !important;
-    border-bottom: 2px solid var(--color-orange) !important;
+    border-bottom-color: var(--color-surface) !important;
     z-index: 3;
-    box-shadow: var(--shadow-soft) !important;
+    box-shadow: none !important;
   }
 
   @media (max-width: 640px) {
@@ -509,10 +508,26 @@ body {
     width: 100%;
     cursor: pointer;
     border-radius: var(--radius-md);
+    transition:
+      transform var(--press-duration, 150ms) var(--press-easing, ease),
+      background-color 150ms ease;
   }
 
   .ingredient-list-item:hover {
     background-color: var(--color-cream);
+  }
+
+  .ingredient-list-item:active {
+    transform: scale(var(--press-scale, 0.98));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ingredient-list-item {
+      transition: none;
+    }
+    .ingredient-list-item:active {
+      transform: none;
+    }
   }
 
   /* Hide the previous item's divider when the next item is hovered */
@@ -784,7 +799,9 @@ body {
 
   .smart-bar-loading-ring {
     border-color: var(--color-blue);
-    box-shadow: 0 0 0 4px rgba(24, 161, 247, 0.12), 0 0 16px rgba(24, 161, 247, 0.08);
+    box-shadow:
+      0 0 0 4px rgba(24, 161, 247, 0.12),
+      0 0 16px rgba(24, 161, 247, 0.08);
     position: relative;
   }
 
@@ -820,7 +837,7 @@ body {
 
   .smart-bar-progress-bar {
     height: 100%;
-    background: linear-gradient(90deg, var(--color-blue) 0%, #60C5FA 100%);
+    background: linear-gradient(90deg, var(--color-blue) 0%, #60c5fa 100%);
     border-radius: 100px;
     animation: smart-bar-progress 8s var(--ease-in-out-cubic) forwards;
   }
@@ -852,6 +869,21 @@ body {
 
   .vault-animate {
     animation: vault-slide-up 200ms var(--ease-out-quart) forwards;
+  }
+
+  @keyframes vault-slide-down {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+
+  .vault-exit {
+    animation: vault-slide-down 200ms var(--ease-out-quad) forwards;
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
@@ -915,6 +947,134 @@ body {
   .lightbox-img {
     animation: lightbox-img-in 200ms var(--ease-out-quint);
   }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     TAB ICON HOVER — Playful micro-animations on desktop tab icons
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  .tab-icon-prep,
+  .tab-icon-cook {
+    transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Knife: subtle chop rock */
+  button:hover .tab-icon-prep {
+    animation: icon-chop 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Pan: gentle toss */
+  button:hover .tab-icon-cook {
+    animation: icon-toss 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes icon-chop {
+    0% {
+      transform: rotate(0deg);
+    }
+    30% {
+      transform: rotate(-12deg);
+    }
+    60% {
+      transform: rotate(4deg);
+    }
+    100% {
+      transform: rotate(0deg);
+    }
+  }
+
+  @keyframes icon-toss {
+    0% {
+      transform: translateY(0) rotate(0deg);
+    }
+    40% {
+      transform: translateY(-3px) rotate(6deg);
+    }
+    70% {
+      transform: translateY(0px) rotate(-2deg);
+    }
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UNIT DIFF — Inline strikethrough old → highlighted new on unit change
+   Outside @layer so it wins over Tailwind utilities on the parent element.
+═══════════════════════════════════════════════════════════════════════════ */
+
+.amount-diff-old {
+  text-decoration: line-through;
+  opacity: 0.5;
+  font-size: 0.85em;
+  color: #a8a29e;
+}
+
+.amount-diff-new {
+  color: var(--color-blue);
+  font-weight: 500;
+}
+
+.dark .amount-diff-old {
+  color: #78716c;
+}
+
+/* Unit conversion banner — enter/exit */
+
+.unit-banner-wrapper {
+  display: grid;
+}
+
+@keyframes banner-rows-expand {
+  from {
+    grid-template-rows: 0fr;
+  }
+  to {
+    grid-template-rows: 1fr;
+  }
+}
+
+@keyframes banner-rows-collapse {
+  from {
+    grid-template-rows: 1fr;
+  }
+  to {
+    grid-template-rows: 0fr;
+  }
+}
+
+@keyframes banner-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes banner-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.unit-banner-expand {
+  animation: banner-rows-expand 250ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.unit-banner-collapse {
+  animation: banner-rows-collapse 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.unit-banner-enter {
+  animation: banner-fade-in 200ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.unit-banner-exit {
+  animation: banner-fade-out 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

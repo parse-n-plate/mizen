@@ -1,5 +1,14 @@
 import { describe, it, expect } from "vitest";
-import { parseAmount, formatAmount, scaleIngredient, scaleIngredients } from "../ingredientScaler";
+import {
+  parseAmount,
+  formatAmount,
+  normalizeAmount,
+  normalizeDecimalsInText,
+  displayAmount,
+  displayText,
+  scaleIngredient,
+  scaleIngredients,
+} from "../ingredientScaler";
 import type { Ingredient, IngredientGroup } from "@/lib/types";
 
 describe("parseAmount", () => {
@@ -63,9 +72,12 @@ describe("parseAmount", () => {
     expect(parseAmount("some")).toBeNull();
   });
 
-  it("returns 1 for 1/0 (parseFloat fallback)", () => {
-    // den !== 0 guard rejects the fraction, but parseFloat("1/0") = 1
-    expect(parseAmount("1/0")).toBe(1);
+  it("returns null for amounts with trailing units", () => {
+    expect(parseAmount("1 cup")).toBeNull();
+  });
+
+  it("returns null for invalid fractions", () => {
+    expect(parseAmount("1/0")).toBeNull();
   });
 });
 
@@ -108,6 +120,143 @@ describe("formatAmount", () => {
 
   it("rounds near-whole numbers up", () => {
     expect(formatAmount(1.99)).toBe("2");
+  });
+});
+
+describe("normalizeAmount", () => {
+  it('converts "0.33333334326744" to "⅓"', () => {
+    expect(normalizeAmount("0.33333334326744")).toBe("⅓");
+  });
+
+  it('converts "0.5" to "½"', () => {
+    expect(normalizeAmount("0.5")).toBe("½");
+  });
+
+  it('converts "0.25" to "¼"', () => {
+    expect(normalizeAmount("0.25")).toBe("¼");
+  });
+
+  it('converts "0.75" to "¾"', () => {
+    expect(normalizeAmount("0.75")).toBe("¾");
+  });
+
+  it('converts "0.666" to "⅔"', () => {
+    expect(normalizeAmount("0.666")).toBe("⅔");
+  });
+
+  it('converts "1.5" to "1½"', () => {
+    expect(normalizeAmount("1.5")).toBe("1½");
+  });
+
+  it('converts "1.333" to "1⅓"', () => {
+    expect(normalizeAmount("1.333")).toBe("1⅓");
+  });
+
+  it('leaves "½" unchanged', () => {
+    expect(normalizeAmount("½")).toBe("½");
+  });
+
+  it('leaves "1/2" unchanged', () => {
+    expect(normalizeAmount("1/2")).toBe("1/2");
+  });
+
+  it('leaves "2" unchanged', () => {
+    expect(normalizeAmount("2")).toBe("2");
+  });
+
+  it('leaves "2-3" unchanged', () => {
+    expect(normalizeAmount("2-3")).toBe("2-3");
+  });
+
+  it('leaves "as needed" unchanged', () => {
+    expect(normalizeAmount("as needed")).toBe("as needed");
+  });
+
+  it("leaves empty string unchanged", () => {
+    expect(normalizeAmount("")).toBe("");
+  });
+});
+
+describe("normalizeDecimalsInText", () => {
+  it("converts inline decimals to fractions", () => {
+    expect(normalizeDecimalsInText("Add 0.333 cup of sugar")).toBe("Add ⅓ cup of sugar");
+  });
+
+  it("converts 0.5 in text", () => {
+    expect(normalizeDecimalsInText("Use 0.5 tsp vanilla")).toBe("Use ½ tsp vanilla");
+  });
+
+  it("leaves text without decimals unchanged", () => {
+    expect(normalizeDecimalsInText("Mix for 2 minutes")).toBe("Mix for 2 minutes");
+  });
+
+  it("handles multiple decimals in text", () => {
+    expect(normalizeDecimalsInText("Add 0.25 cup sugar and 0.5 tsp salt")).toBe(
+      "Add ¼ cup sugar and ½ tsp salt"
+    );
+  });
+});
+
+describe("displayAmount", () => {
+  it("shows fractions in fraction mode", () => {
+    expect(displayAmount("½", "fractions")).toBe("½");
+  });
+
+  it("converts to decimal in decimal mode", () => {
+    expect(displayAmount("½", "decimals")).toBe("0.5");
+  });
+
+  it("converts ⅓ to decimal", () => {
+    expect(displayAmount("⅓", "decimals")).toBe("0.33");
+  });
+
+  it("converts 1/2 to fraction", () => {
+    expect(displayAmount("1/2", "fractions")).toBe("½");
+  });
+
+  it("converts 1/2 to decimal", () => {
+    expect(displayAmount("1/2", "decimals")).toBe("0.5");
+  });
+
+  it('passes through "as needed"', () => {
+    expect(displayAmount("as needed", "fractions")).toBe("as needed");
+    expect(displayAmount("as needed", "decimals")).toBe("as needed");
+  });
+
+  it("handles ranges in decimal mode", () => {
+    expect(displayAmount("2-3", "decimals")).toBe("2-3");
+  });
+
+  it("handles empty string", () => {
+    expect(displayAmount("", "fractions")).toBe("");
+    expect(displayAmount("", "decimals")).toBe("");
+  });
+});
+
+describe("displayText", () => {
+  it("shows fractions in fraction mode", () => {
+    expect(displayText("Add ⅓ cup sugar", "fractions")).toBe("Add ⅓ cup sugar");
+  });
+
+  it("converts fractions to decimals in decimal mode", () => {
+    expect(displayText("Add ⅓ cup sugar", "decimals")).toBe("Add 0.33 cup sugar");
+  });
+
+  it("converts ½ to 0.5 in decimal mode", () => {
+    expect(displayText("Use ½ tsp vanilla", "decimals")).toBe("Use 0.5 tsp vanilla");
+  });
+
+  it("converts mixed numbers in decimal mode", () => {
+    expect(displayText("Add 1⅓ cups flour", "decimals")).toBe("Add 1.33 cups flour");
+  });
+
+  it("converts inline decimals to fractions in fraction mode", () => {
+    expect(displayText("Add 0.333 cup sugar", "fractions")).toBe("Add ⅓ cup sugar");
+  });
+
+  it("leaves plain text unchanged", () => {
+    expect(displayText("Stir well", "fractions")).toBe("Stir well");
+    expect(displayText("Stir well", "decimals")).toBe("Stir well");
   });
 });
 
@@ -154,6 +303,28 @@ describe("scaleIngredient", () => {
   it("returns ingredient unchanged when amount is empty and ingredient cannot be parsed", () => {
     const ing: Ingredient = { amount: "", units: "", ingredient: "salt" };
     expect(scaleIngredient(ing, 2)).toEqual(ing);
+  });
+
+  it("preserves units embedded in amount strings when rounding", () => {
+    const ing: Ingredient = { amount: "2.25 cups", units: "", ingredient: "flour" };
+    const result = scaleIngredient(ing, 1, true);
+
+    expect(result).toEqual({
+      amount: "2½",
+      units: "cups",
+      ingredient: "flour",
+    });
+  });
+
+  it("preserves units embedded in ranged amount strings", () => {
+    const ing: Ingredient = { amount: "2 to 3 tbsp", units: "", ingredient: "olive oil" };
+    const result = scaleIngredient(ing, 2);
+
+    expect(result).toEqual({
+      amount: "4 to 6",
+      units: "tbsp",
+      ingredient: "olive oil",
+    });
   });
 });
 

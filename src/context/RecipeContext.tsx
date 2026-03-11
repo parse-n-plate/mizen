@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { ParsedRecipe } from "@/lib/types";
 
 interface SavedMeta {
@@ -23,6 +23,8 @@ interface RecipeContextType {
   error: string | null;
   setError: (error: string | null) => void;
   history: HistoryEntry[];
+  hasHydrated: boolean;
+  removeFromHistory: () => void;
 }
 
 const RecipeContext = createContext<RecipeContextType | undefined>(undefined);
@@ -33,35 +35,36 @@ const HISTORY_KEY = "baby-mizen-history";
 const MAX_HISTORY = 10;
 
 export function RecipeProvider({ children }: { children: ReactNode }) {
-  const [recipe, setRecipeState] = useState<ParsedRecipe | null>(() => {
-    if (typeof window === "undefined") return null;
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
-  const [savedMeta, setSavedMetaState] = useState<SavedMeta | null>(() => {
-    if (typeof window === "undefined") return null;
-    try {
-      const stored = localStorage.getItem(META_STORAGE_KEY);
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [recipe, setRecipeState] = useState<ParsedRecipe | null>(null);
+  const [savedMeta, setSavedMetaState] = useState<SavedMeta | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [history, setHistory] = useState<HistoryEntry[]>(() => {
-    if (typeof window === "undefined") return [];
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+
+  // Hydrate from localStorage after mount to avoid SSR/client mismatch
+  /* eslint-disable react-hooks/set-state-in-effect -- one-time hydration from localStorage */
+  useEffect(() => {
     try {
-      const stored = localStorage.getItem(HISTORY_KEY);
-      return stored ? JSON.parse(stored) : [];
+      const storedRecipe = localStorage.getItem(STORAGE_KEY);
+      if (storedRecipe) setRecipeState(JSON.parse(storedRecipe));
     } catch {
-      return [];
+      /* ignore */
     }
-  });
+    try {
+      const storedMeta = localStorage.getItem(META_STORAGE_KEY);
+      if (storedMeta) setSavedMetaState(JSON.parse(storedMeta));
+    } catch {
+      /* ignore */
+    }
+    try {
+      const storedHistory = localStorage.getItem(HISTORY_KEY);
+      if (storedHistory) setHistory(JSON.parse(storedHistory));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
+  const [hasHydrated] = useState(true);
 
   const setRecipe = (newRecipe: ParsedRecipe | null) => {
     setRecipeState(newRecipe);
@@ -92,6 +95,22 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const removeFromHistory = () => {
+    if (!recipe) return;
+    try {
+      const updated = history.filter((h) => h.recipe.title !== recipe.title);
+      setHistory(updated);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+      // Clear current recipe state
+      setRecipeState(null);
+      setSavedMetaState(null);
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(META_STORAGE_KEY);
+    } catch {
+      // Ignore storage errors
+    }
+  };
+
   const setSavedMeta = (meta: SavedMeta | null) => {
     setSavedMetaState(meta);
     try {
@@ -117,6 +136,8 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
         error,
         setError,
         history,
+        hasHydrated,
+        removeFromHistory,
       }}
     >
       {children}
