@@ -659,6 +659,94 @@ export async function parseRecipeFromImage(
 }
 
 // ---------------------------------------------------------------------------
+// Text Extraction (pasted recipe text)
+// ---------------------------------------------------------------------------
+
+export async function parseRecipeFromText(
+  text: string
+): Promise<ParserResult> {
+  try {
+    const groq = getGroqClient();
+
+    const response = await groq.chat.completions.create({
+      model: "llama-3.2-90b-vision-preview",
+      messages: [
+        { role: "system", content: EXTRACTION_PROMPT },
+        {
+          role: "user",
+          content: `Extract the recipe from the following text:\n\n${text}`,
+        },
+      ],
+      temperature: 0.1,
+      max_tokens: 5000,
+    });
+
+    const result = response.choices[0]?.message?.content;
+    if (!result || result.trim().length === 0) {
+      return {
+        success: false,
+        error: "No recipe data extracted from text",
+        method: "none",
+      };
+    }
+    if (result.toLowerCase().includes("no recipe found")) {
+      return {
+        success: false,
+        error: "No recipe found in text",
+        method: "none",
+      };
+    }
+
+    const parsedData = extractJsonFromAiResponse(result);
+    const validated = CoreRecipeSchema.safeParse(parsedData);
+
+    if (!validated.success) {
+      log.error({ issues: validated.error.issues }, "Text parser Zod validation failed");
+      return {
+        success: false,
+        error: "Could not parse recipe from text",
+        method: "none",
+      };
+    }
+
+    const data = validated.data;
+    const normalizedInstructions = normalizeInstructionSteps(data.instructions);
+    if (normalizedInstructions.length === 0) {
+      return {
+        success: false,
+        error: "No instructions found in text",
+        method: "none",
+      };
+    }
+
+    let servings: number | undefined;
+    if (typeof data.servings === "number" && data.servings > 0) {
+      servings = data.servings;
+    } else if (typeof data.servings === "string") {
+      const m = data.servings.match(/\d+/);
+      if (m) servings = parseInt(m[0], 10);
+    }
+
+    const recipe: ParsedRecipe = {
+      title: data.title,
+      ingredients: deduplicateUnits(data.ingredients),
+      instructions: normalizedInstructions,
+      ...(data.author && { author: data.author }),
+      ...(data.summary && { summary: data.summary }),
+      ...(servings && { servings }),
+      ...(data.prepTimeMinutes && { prepTimeMinutes: data.prepTimeMinutes }),
+      ...(data.cookTimeMinutes && { cookTimeMinutes: data.cookTimeMinutes }),
+      ...(data.totalTimeMinutes && { totalTimeMinutes: data.totalTimeMinutes }),
+    };
+
+    return { success: true, data: recipe, method: "text" };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return { success: false, error: message, method: "none" };
+  }
+}
+
+// ---------------------------------------------------------------------------
 // URL Orchestrator
 // ---------------------------------------------------------------------------
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { parseRecipeFromUrl, parseRecipeFromImage } from "@/utils/parseRecipe";
+import { parseRecipeFromUrl, parseRecipeFromImage, parseRecipeFromText } from "@/utils/parseRecipe";
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -10,6 +10,7 @@ export async function POST(request: Request) {
     const contentType = request.headers.get("content-type") ?? "";
     let file: File | null = null;
     let url: string | null = null;
+    let text: string | null = null;
     let legacyImage: string | null = null;
     let legacyMimeType: string | null = null;
 
@@ -37,6 +38,11 @@ export async function POST(request: Request) {
           { success: false, error: "Invalid URL payload" },
           { status: 400 }
         );
+      }
+
+      const textField = formData.get("text");
+      if (typeof textField === "string" && textField.length > 0) {
+        text = textField;
       }
     } else if (contentType.includes("application/json")) {
       let body: unknown;
@@ -144,6 +150,21 @@ export async function POST(request: Request) {
       }
 
       const result = await parseRecipeFromImage(dataUrl);
+      return NextResponse.json(result, {
+        status: result.success ? 200 : 422,
+      });
+    }
+
+    // Text path
+    if (text) {
+      if (text.length > 50_000) {
+        return NextResponse.json(
+          { success: false, error: "Text too long (max 50,000 characters)" },
+          { status: 400 }
+        );
+      }
+
+      const result = await parseRecipeFromText(text);
       return NextResponse.json(result, {
         status: result.success ? 200 : 422,
       });
