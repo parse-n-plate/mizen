@@ -35,7 +35,7 @@ export function CookbookGrid({ initialRecipes }: CookbookGridProps) {
   if (recipes.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-wheat-tint)]">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-wheat)]">
           <svg
             className="h-7 w-7 text-[var(--color-orange)]"
             xmlns="http://www.w3.org/2000/svg"
@@ -45,6 +45,7 @@ export function CookbookGrid({ initialRecipes }: CookbookGridProps) {
             strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden="true"
           >
             <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
           </svg>
@@ -86,10 +87,10 @@ function CookbookCard({
 
   const domain = source_url ? new URL(source_url).hostname.replace("www.", "") : null;
 
-  const date = new Date(created_at).toLocaleDateString("en-US", {
+  const date = new Intl.DateTimeFormat(undefined, {
     month: "short",
     day: "numeric",
-  });
+  }).format(new Date(created_at));
 
   const timeLabel = recipe.totalTimeMinutes
     ? formatTime(recipe.totalTimeMinutes)
@@ -98,14 +99,23 @@ function CookbookCard({
       : null;
 
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
-      className="group relative flex flex-col rounded-2xl border border-stone-150 dark:border-stone-800 bg-[var(--color-white)] p-5 text-left transition-colors hover:border-stone-300 dark:hover:border-stone-700 hover:bg-stone-50/50 dark:hover:bg-stone-800/50"
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className="group relative flex flex-col rounded-2xl border border-stone-150 dark:border-stone-800 bg-[var(--color-white)] p-5 text-left transition-colors hover:border-stone-300 dark:hover:border-stone-700 hover:bg-stone-50/50 dark:hover:bg-stone-800/50 cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--color-blue)] focus-visible:ring-offset-2 outline-none"
     >
       {/* Delete button */}
       <button
+        type="button"
         onClick={onDelete}
-        className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-lg text-stone-300 dark:text-stone-600 opacity-0 transition-all hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-500 dark:hover:text-stone-400 group-hover:opacity-100"
+        className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-lg text-stone-300 dark:text-stone-600 opacity-0 transition-all hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-500 dark:hover:text-stone-400 group-hover:opacity-100 focus-visible:opacity-100"
         aria-label="Delete recipe"
       >
         <svg
@@ -117,6 +127,7 @@ function CookbookCard({
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
+          aria-hidden="true"
         >
           <path d="M3 6h18" />
           <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
@@ -145,7 +156,7 @@ function CookbookCard({
           </>
         )}
       </div>
-    </button>
+    </div>
   );
 }
 
