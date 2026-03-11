@@ -735,7 +735,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                 <input
                   ref={inputRef}
                   type="text"
-                  placeholder="Paste a URL, text, or image\u2026"
+                  placeholder="Paste a URL, text, or image…"
                   name="recipe-url"
                   autoComplete="off"
                   value={url}
