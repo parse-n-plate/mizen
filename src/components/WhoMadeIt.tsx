@@ -19,7 +19,13 @@ const team = [
   },
 ];
 
-export function WhoMadeIt() {
+interface WhoMadeItProps {
+  borderColor?: string;
+}
+
+export function WhoMadeIt({ borderColor }: WhoMadeItProps) {
+  const borderClass = borderColor || "border-white dark:border-stone-950";
+
   return (
     <div className="flex items-center gap-1.5">
       <p className="font-sans text-xs text-stone-400 dark:text-stone-500">Cooked with love by</p>
@@ -30,7 +36,7 @@ export function WhoMadeIt() {
             href={person.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="relative h-6 w-6 flex-shrink-0 overflow-hidden rounded-full border border-white transition-transform hover:scale-110 dark:border-stone-950"
+            className={`relative h-6 w-6 flex-shrink-0 overflow-hidden rounded-full border transition-transform hover:scale-110 ${borderClass}`}
             aria-label={`Visit ${person.name}'s profile`}
           >
             <Image

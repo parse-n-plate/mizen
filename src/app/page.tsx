@@ -217,7 +217,7 @@ export default function HomePage() {
     <>
       <div className="flex flex-col lg:flex-row min-h-screen lg:h-screen lg:overflow-hidden">
         {/* Left panel */}
-        <div className="relative flex flex-col justify-between lg:w-[40%] px-8 lg:px-12 pt-5 pb-8 lg:pb-10 bg-white dark:bg-stone-950">
+        <div className="relative flex flex-col justify-between lg:w-[38%] px-8 lg:px-12 xl:px-16 pt-12 lg:pt-5 pb-8 lg:pb-10 bg-white dark:bg-stone-950">
           {/* Top: Logo */}
           <div className="page-fade-in-up flex items-center justify-between">
             <Link href="/" className="font-serif text-lg font-semibold text-stone-900 dark:text-stone-100">
@@ -229,7 +229,7 @@ export default function HomePage() {
                   setAuthMode("login");
                   setAuthOpen(true);
                 }}
-                className="lg:hidden font-sans text-sm font-medium text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
+                className="lg:hidden px-3 py-1.5 rounded-lg bg-stone-100 dark:bg-stone-800 font-sans text-sm font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
               >
                 Sign in
               </button>
@@ -237,21 +237,21 @@ export default function HomePage() {
           </div>
 
           {/* Center: Hero content */}
-          <div className="flex-1 flex flex-col justify-center py-12 lg:py-0">
-            <div className="max-w-md">
+          <div className="flex-1 flex flex-col justify-center py-12 lg:py-0 lg:pb-16 lg:items-start items-center">
+            <div className="max-w-md text-center lg:text-left">
               <div className="page-fade-in-up page-fade-delay-1 mb-6">
                 <span className="inline-block px-3 py-1 rounded-full border border-stone-200 dark:border-stone-700 font-sans text-xs text-stone-500 dark:text-stone-400">
                   Now in early access
                 </span>
               </div>
 
-              <h1 className="page-fade-in-up page-fade-delay-1 font-serif text-[clamp(36px,5vw,52px)] font-bold leading-[1.1] text-stone-900 dark:text-stone-100 mb-4">
+              <h1 className="page-fade-in-up page-fade-delay-1 font-serif text-[clamp(36px,5vw,52px)] lg:text-[clamp(44px,3.5vw,56px)] font-bold leading-[1.08] tracking-[-0.02em] text-stone-900 dark:text-stone-100 mb-5">
                 Save any recipe.
                 <br />
                 Cook it your way.
               </h1>
 
-              <p className="page-fade-in-up page-fade-delay-2 font-sans text-base text-stone-500 dark:text-stone-400 leading-relaxed mb-8 max-w-sm">
+              <p className="page-fade-in-up page-fade-delay-2 font-sans text-base lg:text-[17px] text-stone-500 dark:text-stone-400 leading-relaxed mb-8 max-w-sm">
                 Bring a link, photo, or text. Get clean ingredients, clear steps, and nothing else.
               </p>
 
@@ -289,8 +289,8 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Bottom: Free + Who made it */}
-          <div className="page-fade-in-up page-fade-delay-3 flex items-center justify-between">
+          {/* Bottom: Free + Who made it (desktop only — on mobile this is a page footer) */}
+          <div className="page-fade-in-up page-fade-delay-3 hidden lg:flex items-center justify-between">
             <span className="font-sans text-xs text-stone-400 dark:text-stone-500">
               Closed Beta v0.1.0
             </span>
@@ -299,7 +299,7 @@ export default function HomePage() {
         </div>
 
         {/* Right panel */}
-        <div className="relative flex-1 flex flex-col bg-[#f5f5f0] dark:bg-stone-900 overflow-hidden">
+        <div className="relative flex-1 flex flex-col pt-6 lg:pt-0 bg-[#f5f5f0] dark:bg-stone-900 overflow-hidden">
           {/* Top nav */}
           <div className="page-fade-in-up hidden lg:flex items-center justify-between px-8 lg:px-10 py-5 relative z-20">
             <div className="relative" ref={dropdownRef}>
@@ -349,7 +349,7 @@ export default function HomePage() {
           </div>
 
           {/* Source tabs */}
-          <div className="page-fade-in-up page-fade-delay-1 flex flex-col items-center gap-3 px-8 lg:px-10 pb-5">
+          <div className="page-fade-in-up page-fade-delay-1 flex flex-col items-center gap-3 px-8 lg:px-10 pt-2 lg:pt-0 pb-8 lg:pb-5">
             <span className="font-sans text-sm text-stone-400 dark:text-stone-500">
               Works with any source
             </span>
@@ -372,8 +372,8 @@ export default function HomePage() {
           </div>
 
           {/* Recipe card */}
-          <div className="page-fade-in-up page-fade-delay-2 flex-1 flex justify-center px-6 lg:px-10 pb-6">
-            <div className="w-full max-w-2xl bg-white dark:bg-stone-950 rounded-xl shadow-lg border border-stone-200/60 dark:border-stone-700 overflow-hidden">
+          <div className="page-fade-in-up page-fade-delay-2 flex-1 flex justify-center px-6 lg:px-10 pb-6 lg:pb-0">
+            <div className="w-full max-w-2xl lg:max-w-3xl bg-white dark:bg-stone-950 rounded-xl lg:rounded-b-none shadow-lg border border-stone-200/60 dark:border-stone-700 lg:border-b-0 overflow-hidden">
               {/* Browser chrome — static, outside animation */}
               <div className="flex overflow-clip w-full h-[41px] rounded-tl-[10px] rounded-tr-[10px] items-center gap-2 py-2.5 px-5 bg-white shrink-0">
                 <div className="flex items-center gap-1.5 shrink-0">
@@ -390,6 +390,14 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Mobile footer */}
+        <div className="page-fade-in-up page-fade-delay-3 flex lg:hidden items-center justify-between px-8 py-6 bg-[#f5f5f0] dark:bg-stone-900">
+          <span className="font-sans text-xs text-stone-400 dark:text-stone-500">
+            Closed Beta v0.1.0
+          </span>
+          <WhoMadeIt borderColor="border-[#f5f5f0] dark:border-stone-900" />
         </div>
       </div>
 

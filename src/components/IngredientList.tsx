@@ -99,7 +99,7 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
 
   return (
     <div className="space-y-6">
-      <div className="relative w-full max-w-[700px] mx-auto">
+      <div className="relative w-full">
         <Magnifer className="absolute left-3 top-1/2 -translate-y-1/2 size-[18px] text-muted-foreground pointer-events-none" />
         <Input
           type="text"
