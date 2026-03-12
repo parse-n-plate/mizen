@@ -482,6 +482,40 @@ body {
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
+     WAITLIST RECIPE CARD — Enter/exit animations for source tab switching
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  @keyframes waitlist-recipe-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes waitlist-recipe-fade-out {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+  }
+
+  .waitlist-recipe-enter {
+    animation: waitlist-recipe-fade-in 280ms var(--ease-out-quint) forwards;
+  }
+
+  .waitlist-recipe-exit {
+    animation: waitlist-recipe-fade-out 180ms var(--ease-out-quad) forwards;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
      INGREDIENT GROUP — Collapsible group with chevron animation
   ═══════════════════════════════════════════════════════════════════════════ */
 
