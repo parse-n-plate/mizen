@@ -36,9 +36,13 @@ export function TopBar() {
 
   const name = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Guest";
 
+  const isHomePage = pathname === "/";
   const isRecipePage = pathname === "/recipe";
   const isCookbookPage = pathname === "/cookbook";
   const showBackArrow = isRecipePage || isCookbookPage;
+
+  // Home page has its own nav in the waitlist layout
+  if (isHomePage) return null;
 
   const closeQuickAdd = () => {
     setQuickAddOpen(false);
