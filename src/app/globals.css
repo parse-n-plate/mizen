@@ -519,7 +519,7 @@ body {
     width: 100%;
     cursor: pointer;
     border-radius: var(--radius-md);
-    transition: transform var(--press-duration, 150ms) var(--press-easing, ease), background-color 150ms ease;
+    transition: transform var(--press-duration, 120ms) var(--press-easing, ease-out), background-color 150ms ease;
   }
 
   .ingredient-list-item:hover {
@@ -527,7 +527,7 @@ body {
   }
 
   .ingredient-list-item:active {
-    transform: scale(var(--press-scale, 0.98));
+    transform: scale(var(--press-scale, 0.995));
   }
 
   @media (prefers-reduced-motion: reduce) {
