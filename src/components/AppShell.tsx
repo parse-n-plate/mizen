@@ -9,9 +9,9 @@ import type { ReactNode } from "react";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { user } = useUser();
+  const { user, loading } = useUser();
   const isHomePage = pathname === "/";
-  const isLanding = isHomePage && !user;
+  const isLanding = isHomePage && !loading && !user;
 
   return (
     <RecipeProvider>

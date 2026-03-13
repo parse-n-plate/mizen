@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Search } from "@/components/Search";
@@ -50,10 +51,26 @@ const EXAMPLE_RECIPES: ParsedRecipe[] = [
       },
     ],
     instructions: [
-      { title: "Boil pasta", detail: "Bring a large pot of salted water to a rolling boil. Cook spaghetti according to package directions until al dente. Reserve 1 cup of pasta water before draining." },
-      { title: "Crisp the guanciale", detail: "While pasta cooks, add guanciale to a cold skillet. Cook over medium heat, stirring occasionally, until the fat renders and pieces are golden and crispy, about 7 minutes." },
-      { title: "Make the sauce", detail: "In a bowl, whisk together eggs and Pecorino Romano until smooth. Season generously with black pepper." },
-      { title: "Combine", detail: "Add drained pasta to the skillet with guanciale (off heat). Pour egg mixture over pasta and toss vigorously, adding splashes of pasta water until you get a creamy, glossy coating. Serve immediately." },
+      {
+        title: "Boil pasta",
+        detail:
+          "Bring a large pot of salted water to a rolling boil. Cook spaghetti according to package directions until al dente. Reserve 1 cup of pasta water before draining.",
+      },
+      {
+        title: "Crisp the guanciale",
+        detail:
+          "While pasta cooks, add guanciale to a cold skillet. Cook over medium heat, stirring occasionally, until the fat renders and pieces are golden and crispy, about 7 minutes.",
+      },
+      {
+        title: "Make the sauce",
+        detail:
+          "In a bowl, whisk together eggs and Pecorino Romano until smooth. Season generously with black pepper.",
+      },
+      {
+        title: "Combine",
+        detail:
+          "Add drained pasta to the skillet with guanciale (off heat). Pour egg mixture over pasta and toss vigorously, adding splashes of pasta water until you get a creamy, glossy coating. Serve immediately.",
+      },
     ],
   },
   {
@@ -87,10 +104,26 @@ const EXAMPLE_RECIPES: ParsedRecipe[] = [
       },
     ],
     instructions: [
-      { title: "Saut\u00e9 the paste", detail: "Heat a large pot or wok over medium-high heat. Add 2 tablespoons of coconut cream (the thick part from the top of the can) and fry the curry paste for 1\u20132 minutes until fragrant." },
-      { title: "Cook the chicken", detail: "Add sliced chicken thighs and stir to coat in the paste. Cook for 3\u20134 minutes until the outsides are sealed." },
-      { title: "Simmer with coconut", detail: "Pour in the remaining coconut milk and fish sauce. Add the sliced bell pepper. Bring to a gentle boil, then reduce heat and simmer for 15 minutes until chicken is cooked through." },
-      { title: "Finish and serve", detail: "Stir in Thai basil leaves and remove from heat. Serve over steamed jasmine rice with lime wedges on the side." },
+      {
+        title: "Saut\u00e9 the paste",
+        detail:
+          "Heat a large pot or wok over medium-high heat. Add 2 tablespoons of coconut cream (the thick part from the top of the can) and fry the curry paste for 1\u20132 minutes until fragrant.",
+      },
+      {
+        title: "Cook the chicken",
+        detail:
+          "Add sliced chicken thighs and stir to coat in the paste. Cook for 3\u20134 minutes until the outsides are sealed.",
+      },
+      {
+        title: "Simmer with coconut",
+        detail:
+          "Pour in the remaining coconut milk and fish sauce. Add the sliced bell pepper. Bring to a gentle boil, then reduce heat and simmer for 15 minutes until chicken is cooked through.",
+      },
+      {
+        title: "Finish and serve",
+        detail:
+          "Stir in Thai basil leaves and remove from heat. Serve over steamed jasmine rice with lime wedges on the side.",
+      },
     ],
   },
   {
@@ -125,10 +158,26 @@ const EXAMPLE_RECIPES: ParsedRecipe[] = [
       },
     ],
     instructions: [
-      { title: "Mix dry ingredients", detail: "Whisk together flour, baking soda, salt, and cornstarch in a medium bowl. Set aside." },
-      { title: "Make the dough", detail: "In a large bowl, whisk the melted butter, brown sugar, and granulated sugar until smooth. Beat in the egg and vanilla extract until combined." },
-      { title: "Combine and chill", detail: "Slowly mix the dry ingredients into the wet ingredients until just combined. Fold in the chocolate chips. Cover dough and refrigerate for at least 30 minutes (or up to 2 days)." },
-      { title: "Bake", detail: "Preheat oven to 325\u00b0F (163\u00b0C). Scoop 1.5 tablespoon balls of dough onto lined baking sheets, spaced 2 inches apart. Bake for 12 minutes until edges are set but centers look undone. Cool on the pan for 10 minutes." },
+      {
+        title: "Mix dry ingredients",
+        detail:
+          "Whisk together flour, baking soda, salt, and cornstarch in a medium bowl. Set aside.",
+      },
+      {
+        title: "Make the dough",
+        detail:
+          "In a large bowl, whisk the melted butter, brown sugar, and granulated sugar until smooth. Beat in the egg and vanilla extract until combined.",
+      },
+      {
+        title: "Combine and chill",
+        detail:
+          "Slowly mix the dry ingredients into the wet ingredients until just combined. Fold in the chocolate chips. Cover dough and refrigerate for at least 30 minutes (or up to 2 days).",
+      },
+      {
+        title: "Bake",
+        detail:
+          "Preheat oven to 325\u00b0F (163\u00b0C). Scoop 1.5 tablespoon balls of dough onto lined baking sheets, spaced 2 inches apart. Bake for 12 minutes until edges are set but centers look undone. Cool on the pan for 10 minutes.",
+      },
     ],
   },
 ];
@@ -136,7 +185,15 @@ const EXAMPLE_RECIPES: ParsedRecipe[] = [
 function UrlSourcePreview() {
   return (
     <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 shadow-sm max-w-sm">
-      <svg className="w-3.5 h-3.5 text-stone-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        className="w-3.5 h-3.5 text-stone-400 flex-shrink-0"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
         <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
       </svg>
@@ -163,11 +220,21 @@ function PhotoSourcePreview() {
           <div className="h-2 w-3/4 rounded-full bg-stone-300 dark:bg-stone-600" />
         </div>
         <div className="absolute bottom-2 left-3 flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/80 dark:bg-stone-900/80 backdrop-blur-sm">
-          <svg className="w-3 h-3 text-stone-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            className="w-3 h-3 text-stone-500"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
             <circle cx="12" cy="13" r="3" />
           </svg>
-          <span className="font-sans text-[11px] text-stone-500 dark:text-stone-400">Cookbook photo</span>
+          <span className="font-sans text-[11px] text-stone-500 dark:text-stone-400">
+            Cookbook photo
+          </span>
         </div>
       </div>
       <span className="font-serif text-xl italic text-stone-700 dark:text-stone-300 rotate-[-1deg]">
@@ -192,7 +259,8 @@ function TextSourcePreview() {
       <div className="self-start max-w-[85%]">
         <div className="px-3.5 py-2.5 rounded-2xl rounded-bl-md bg-stone-200 dark:bg-stone-700">
           <p className="font-sans text-[13px] text-stone-800 dark:text-stone-200 leading-snug">
-            ok so you need 1 lb spaghetti, 4 eggs, 6 oz guanciale or pancetta, 1 cup pecorino romano, black pepper.
+            ok so you need 1 lb spaghetti, 4 eggs, 6 oz guanciale or pancetta, 1 cup pecorino
+            romano, black pepper.
           </p>
         </div>
       </div>
@@ -213,7 +281,15 @@ const SOURCE_PREVIEWS = [UrlSourcePreview, PhotoSourcePreview, TextSourcePreview
 function SourceIcon({ type }: { type: "link" | "camera" | "chat" }) {
   if (type === "link") {
     return (
-      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        className="w-3.5 h-3.5"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
         <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
       </svg>
@@ -221,14 +297,30 @@ function SourceIcon({ type }: { type: "link" | "camera" | "chat" }) {
   }
   if (type === "camera") {
     return (
-      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        className="w-3.5 h-3.5"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
         <circle cx="12" cy="13" r="3" />
       </svg>
     );
   }
   return (
-    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      className="w-3.5 h-3.5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
     </svg>
   );
@@ -277,10 +369,8 @@ function AuthenticatedHome() {
 export default function HomePage() {
   const { user, loading } = useUser();
 
-  if (!loading && user) {
-    return <AuthenticatedHome />;
-  }
-
+  if (loading) return null;
+  if (user) return <AuthenticatedHome />;
   return <WaitlistLanding />;
 }
 
@@ -290,7 +380,9 @@ function WaitlistLanding() {
   const [displayedPreview, setDisplayedPreview] = useState(0);
   // Animation phases: "preview" → "absorb" → "populate" → "idle"
   // On exit: "exit" → then swap to "preview"
-  const [phase, setPhase] = useState<"preview" | "absorb" | "populate" | "idle" | "exit">("preview");
+  const [phase, setPhase] = useState<"preview" | "absorb" | "populate" | "idle" | "exit">(
+    "preview"
+  );
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -305,32 +397,36 @@ function WaitlistLanding() {
     if (phase === "preview") {
       // Source preview is visible, after a beat it absorbs into the card
       // On initial load, wait longer to account for page-fade-in delay
-      timer = setTimeout(() => setPhase("absorb"), isInitialLoad ? 1800 : 800);
+      timer = setTimeout(() => setPhase("absorb"), isInitialLoad ? 1400 : 650);
     } else if (phase === "absorb") {
       // Absorb animation plays, then recipe populates
-      timer = setTimeout(() => setPhase("populate"), 400);
+      timer = setTimeout(() => setPhase("populate"), 300);
     } else if (phase === "populate") {
       // Stagger animation plays, then settle to idle
       timer = setTimeout(() => {
         setPhase("idle");
         setIsInitialLoad(false);
-      }, 600);
+      }, 450);
     }
     return () => clearTimeout(timer);
   }, [phase, isInitialLoad]);
 
-  const handleSourceChange = useCallback((index: number) => {
-    if (index === activeSource || phase === "exit") return;
-    setPhase("exit");
-    setActiveSource(index);
-
-    // After exit animation, swap content and restart sequence
-    setTimeout(() => {
-      setDisplayedSource(index);
+  const handleSourceChange = useCallback(
+    (index: number) => {
+      if (index === activeSource || phase === "exit") return;
+      setPhase("exit");
+      setActiveSource(index);
+      // Swap source preview immediately — new one cross-fades in on top
       setDisplayedPreview(index);
-      setPhase("preview");
-    }, 200);
-  }, [activeSource, phase]);
+
+      // Swap recipe content after exit animation completes (hidden behind overlay)
+      setTimeout(() => {
+        setDisplayedSource(index);
+        setPhase("preview");
+      }, 180);
+    },
+    [activeSource, phase]
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -368,8 +464,18 @@ function WaitlistLanding() {
         <div className="relative flex flex-col justify-between lg:w-[38%] px-8 lg:px-12 xl:px-16 pt-12 lg:pt-5 pb-8 lg:pb-10 bg-white dark:bg-stone-950">
           {/* Top: Logo */}
           <div className="page-fade-in-up flex items-center justify-between">
-            <Link href="/" className="group flex items-center gap-2 font-serif text-lg font-semibold text-stone-900 dark:text-stone-100">
-              <img src="/assets/icons/Fish Logo.svg" alt="" aria-hidden="true" className="w-7 h-7 transition-transform duration-200 ease-out group-hover:rotate-[-8deg] group-hover:scale-110 motion-reduce:transition-none" />
+            <Link
+              href="/"
+              className="group flex items-center gap-2 font-serif text-lg font-semibold text-stone-900 dark:text-stone-100"
+            >
+              <Image
+                src="/assets/icons/Fish Logo.svg"
+                alt=""
+                aria-hidden
+                width={28}
+                height={28}
+                className="w-7 h-7 transition-transform duration-200 ease-out group-hover:rotate-[-8deg] group-hover:scale-110 motion-reduce:transition-none"
+              />
               Mizen
             </Link>
             {isSupabaseConfigured && (
@@ -404,21 +510,27 @@ function WaitlistLanding() {
                   onMouseEnter={() => setHoveredSource(0)}
                   onMouseLeave={() => setHoveredSource(null)}
                   onClick={() => handleSourceChange(0)}
-                >link</span>
+                >
+                  link
+                </span>
                 ,{" "}
                 <span
                   className="cursor-pointer underline decoration-transparent hover:decoration-stone-400 transition-colors"
                   onMouseEnter={() => setHoveredSource(1)}
                   onMouseLeave={() => setHoveredSource(null)}
                   onClick={() => handleSourceChange(1)}
-                >photo</span>
+                >
+                  photo
+                </span>
                 , or{" "}
                 <span
                   className="cursor-pointer underline decoration-transparent hover:decoration-stone-400 transition-colors"
                   onMouseEnter={() => setHoveredSource(2)}
                   onMouseLeave={() => setHoveredSource(null)}
                   onClick={() => handleSourceChange(2)}
-                >text</span>
+                >
+                  text
+                </span>
                 . Get clean ingredients, clear steps, and nothing else.
               </p>
 
@@ -426,7 +538,15 @@ function WaitlistLanding() {
               <form onSubmit={handleSubmit} className="page-fade-in-up page-fade-delay-2">
                 {submitted || alreadyOnList ? (
                   <div className="flex items-center gap-2 h-[52px] px-4 rounded-full border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-900">
-                    <svg className="w-5 h-5 text-green-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      className="w-5 h-5 text-green-500 flex-shrink-0"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <path d="M20 6 9 17l-5-5" />
                     </svg>
                     <span className="font-sans text-sm text-stone-600 dark:text-stone-300">
@@ -514,13 +634,11 @@ function WaitlistLanding() {
                 <div
                   key={`preview-${displayedPreview}`}
                   className={`flex justify-center items-center ${
-                    phase === "exit"
-                      ? "source-preview-exit"
-                      : phase === "absorb"
-                        ? "source-absorb"
-                        : isInitialLoad
-                          ? "source-preview-enter-initial"
-                          : "source-preview-enter"
+                    phase === "absorb"
+                      ? "source-absorb"
+                      : isInitialLoad
+                        ? "source-preview-enter-initial"
+                        : "source-preview-enter"
                   }`}
                 >
                   {(() => {
@@ -540,7 +658,6 @@ function WaitlistLanding() {
                 </div>
               </div>
               <div
-                key={displayedSource}
                 className={`flex-1 ${
                   phase === "exit"
                     ? "waitlist-recipe-exit"
@@ -551,7 +668,10 @@ function WaitlistLanding() {
                         : "opacity-0"
                 }`}
               >
-                <WaitlistRecipePreview recipe={EXAMPLE_RECIPES[displayedSource]} />
+                <WaitlistRecipePreview
+                  key={displayedSource}
+                  recipe={EXAMPLE_RECIPES[displayedSource]}
+                />
               </div>
             </div>
           </div>
@@ -570,7 +690,9 @@ function WaitlistLanding() {
         <BetaAuthModal
           open={authOpen}
           onOpenChange={setAuthOpen}
-          onSuccess={() => { window.location.href = "/"; }}
+          onSuccess={() => {
+            window.location.href = "/";
+          }}
         />
       )}
     </>

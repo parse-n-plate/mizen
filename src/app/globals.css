@@ -450,7 +450,7 @@ body {
   @keyframes page-fade-in-up {
     from {
       opacity: 0;
-      transform: translateY(16px);
+      transform: translateY(12px);
     }
     to {
       opacity: 1;
@@ -460,18 +460,18 @@ body {
 
   .page-fade-in-up {
     opacity: 0;
-    animation: page-fade-in-up 400ms var(--ease-out-quint) forwards;
+    animation: page-fade-in-up 350ms var(--ease-out-quint) forwards;
     will-change: transform;
   }
 
   .page-fade-delay-1 {
-    animation-delay: 100ms;
+    animation-delay: 80ms;
   }
   .page-fade-delay-2 {
-    animation-delay: 200ms;
+    animation-delay: 170ms;
   }
   .page-fade-delay-3 {
-    animation-delay: 300ms;
+    animation-delay: 280ms;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -518,6 +518,7 @@ body {
 
   .waitlist-recipe-exit {
     animation: waitlist-recipe-fade-out 180ms var(--ease-out-quad) forwards;
+    will-change: transform, opacity;
   }
 
   /* Source preview enter/exit — mirrors recipe card but slides down instead of up */
@@ -545,11 +546,12 @@ body {
 
   .source-preview-enter {
     animation: source-preview-enter 280ms var(--ease-out-quint) forwards;
+    will-change: transform, opacity;
   }
 
   .source-preview-enter-initial {
     opacity: 0;
-    animation: source-preview-enter 400ms var(--ease-out-quint) 750ms forwards;
+    animation: source-preview-enter 350ms var(--ease-out-quint) 500ms forwards;
   }
 
   .source-preview-exit {
@@ -569,7 +571,8 @@ body {
   }
 
   .source-absorb {
-    animation: source-absorb 300ms var(--ease-in-out-quart) forwards;
+    animation: source-absorb 250ms var(--ease-out-quart) forwards;
+    will-change: transform, opacity;
   }
 
   /* Recipe populate — staggered fade-in for recipe content children */
@@ -586,20 +589,20 @@ body {
 
   .recipe-populate > div > * {
     opacity: 0;
-    animation: recipe-child-enter 300ms var(--ease-out-quint) forwards;
+    animation: recipe-child-enter 260ms var(--ease-out-quint) forwards;
   }
 
   .recipe-populate > div > *:nth-child(1) {
     animation-delay: 0ms;
   }
   .recipe-populate > div > *:nth-child(2) {
-    animation-delay: 100ms;
+    animation-delay: 60ms;
   }
   .recipe-populate > div > *:nth-child(3) {
-    animation-delay: 200ms;
+    animation-delay: 130ms;
   }
   .recipe-populate > div > *:nth-child(4) {
-    animation-delay: 300ms;
+    animation-delay: 210ms;
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
