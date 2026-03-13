@@ -41,9 +41,6 @@ export function TopBar() {
   const isCookbookPage = pathname === "/cookbook";
   const showBackArrow = isRecipePage || isCookbookPage;
 
-  // Home page has its own nav in the waitlist layout
-  if (isHomePage) return null;
-
   const closeQuickAdd = () => {
     setQuickAddOpen(false);
     setQuickAddMode("menu");
@@ -144,6 +141,9 @@ export function TopBar() {
     }
     toast.dismiss("supabase-down");
   }, [supabaseDown]);
+
+  // Home page has its own nav in the waitlist layout
+  if (isHomePage) return null;
 
   return (
     <>
