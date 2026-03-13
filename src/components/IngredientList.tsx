@@ -41,7 +41,6 @@ interface FilteredIngredientGroup {
 
 export function IngredientList({ groups, diffMap, diffGeneration }: IngredientListProps) {
   const [checked, setChecked] = useState<Set<string>>(new Set());
-  const [expanded, setExpanded] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const numberFormat = useNumberFormat();
 
@@ -74,10 +73,7 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
         ...group,
         ingredients: group.ingredients.filter(
           ({ ingredient }) =>
-            ingredient.ingredient.toLowerCase().includes(query) ||
-            (ingredient.description && ingredient.description.toLowerCase().includes(query)) ||
-            (ingredient.substitutions &&
-              ingredient.substitutions.some((sub) => sub.toLowerCase().includes(query)))
+            ingredient.ingredient.toLowerCase().includes(query)
         ),
       }))
       .filter((group) => group.ingredients.length > 0);
@@ -131,9 +127,7 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
             key={group.groupName}
             group={group}
             checked={checked}
-            expanded={expanded}
             onToggle={toggleCheck}
-            onExpand={(key) => setExpanded(expanded === key ? null : key)}
             onToggleAll={toggleAll}
             numberFormat={numberFormat}
             diffMap={diffMap}
@@ -148,9 +142,7 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
 function IngredientGroupSection({
   group,
   checked,
-  expanded,
   onToggle,
-  onExpand,
   onToggleAll,
   numberFormat,
   diffMap,
@@ -158,9 +150,7 @@ function IngredientGroupSection({
 }: {
   group: FilteredIngredientGroup;
   checked: Set<string>;
-  expanded: string | null;
   onToggle: (key: string) => void;
-  onExpand: (key: string) => void;
   onToggleAll: (keys: string[]) => void;
   numberFormat: NumberFormat;
   diffMap?: DiffMap;
@@ -247,8 +237,6 @@ function IngredientGroupSection({
             const isLast = i === group.ingredients.length - 1;
             const amount = `${displayAmount(ing.amount, numberFormat)} ${ing.units || ""}`.trim();
             const diffEntry = diffMap?.get(key);
-            const hasSubstitutions = ing.substitutions && ing.substitutions.length > 0;
-            const isExpanded = expanded === key;
             const hasAlerts = Boolean(ing.alerts && ing.alerts.length > 0);
 
             return (
@@ -287,12 +275,6 @@ function IngredientGroupSection({
                         >
                           {ing.ingredient}
                         </p>
-                        {ing.description && (
-                          <p className="font-sans text-sm text-stone-400 dark:text-stone-500 truncate">
-                            {ing.description.charAt(0).toUpperCase() +
-                              ing.description.slice(1).toLowerCase()}
-                          </p>
-                        )}
                       </div>
                       <div className="flex items-baseline gap-2 ml-3 flex-shrink-0">
                         {amount && (
@@ -306,30 +288,6 @@ function IngredientGroupSection({
                               amount
                             )}
                           </p>
-                        )}
-                        {hasSubstitutions && !isChecked && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onExpand(key);
-                            }}
-                            className="text-stone-300 dark:text-stone-600 hover:text-stone-500 dark:hover:text-stone-400 transition-colors"
-                            aria-label={isExpanded ? "Hide details" : "Show details"}
-                          >
-                            <svg
-                              className={`w-3 h-3 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="m6 9 6 6 6-6" />
-                            </svg>
-                          </button>
                         )}
                       </div>
                     </div>
@@ -350,33 +308,6 @@ function IngredientGroupSection({
                     )}
                   </div>
                 </div>
-
-                {/* Expandable substitutions row */}
-                {hasSubstitutions && (
-                  <div
-                    className={`grid transition-[grid-template-rows] duration-200 ease-out ${
-                      isExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-                    }`}
-                  >
-                    <div className="overflow-hidden">
-                      <div className="pl-10 pr-2 pb-3">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-sans text-[11px] text-stone-400 dark:text-stone-500">
-                            Sub:
-                          </span>
-                          {ing.substitutions!.map((sub) => (
-                            <span
-                              key={sub}
-                              className="font-sans text-[11px] px-1.5 py-0.5 rounded-md bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300"
-                            >
-                              {sub}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {!isLast && (
                   <div className="ingredient-list-divider absolute bottom-0 left-2 right-2 h-px bg-stone-100 dark:bg-stone-800 transition-opacity duration-150 group-hover:opacity-0" />
