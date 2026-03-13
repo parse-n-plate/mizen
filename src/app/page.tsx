@@ -3,9 +3,14 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { Search } from "@/components/Search";
+import { RecentRecipes } from "@/components/RecentRecipes";
+import { GettingStarted } from "@/components/GettingStarted";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { WhoMadeIt } from "@/components/WhoMadeIt";
+import { useRecipe } from "@/context/RecipeContext";
+import { useUser } from "@/hooks/useUser";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import type { ParsedRecipe } from "@/lib/types";
 
@@ -229,7 +234,57 @@ function SourceIcon({ type }: { type: "link" | "camera" | "chat" }) {
   );
 }
 
+function AuthenticatedHome() {
+  const { error, isLoading } = useRecipe();
+  const { user } = useUser();
+
+  return (
+    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col">
+      <main className="flex flex-1 flex-col items-center justify-center px-6 pb-6">
+        <div className="page-fade-in-up w-full max-w-3xl space-y-8 text-center">
+          <h1 className="font-serif text-[clamp(40px,8vw,72px)] font-bold leading-[1.1] text-stone-900 dark:text-stone-100">
+            Clean recipes,
+            <br />
+            calm cooking.
+          </h1>
+          <p className="page-fade-in-up page-fade-delay-1 mx-auto max-w-md font-sans text-lg text-balance text-stone-500 dark:text-stone-400">
+            Paste a recipe URL. Get a focused cooking experience.
+          </p>
+        </div>
+
+        <div className="page-fade-in-up page-fade-delay-2 mt-10 w-full flex justify-center">
+          <Search />
+        </div>
+
+        {isLoading && (
+          <p className="mt-6 font-sans text-sm text-stone-400 dark:text-stone-500 animate-pulse">
+            Parsing recipe...
+          </p>
+        )}
+
+        {error && (
+          <p className="mt-6 max-w-md text-center font-sans text-sm text-red-500">{error}</p>
+        )}
+
+        <div className="mt-12 w-full flex justify-center">
+          {user ? <RecentRecipes /> : <GettingStarted />}
+        </div>
+      </main>
+    </div>
+  );
+}
+
 export default function HomePage() {
+  const { user, loading } = useUser();
+
+  if (!loading && user) {
+    return <AuthenticatedHome />;
+  }
+
+  return <WaitlistLanding />;
+}
+
+function WaitlistLanding() {
   const [activeSource, setActiveSource] = useState(0);
   const [displayedSource, setDisplayedSource] = useState(0);
   const [displayedPreview, setDisplayedPreview] = useState(0);
