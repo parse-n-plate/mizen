@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { detectCollectionUrl } from "@/utils/urlPatterns";
 import { useUser } from "@/hooks/useUser";
 import { useRecipe } from "@/context/RecipeContext";
-import { AuthModal } from "@/components/AuthModal";
+import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { SettingsModal } from "@/components/SettingsModal";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 
@@ -22,7 +22,6 @@ export function TopBar() {
   const router = useRouter();
 
   const [authOpen, setAuthOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [menuOpen, setMenuOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [recipeSwitcherOpen, setRecipeSwitcherOpen] = useState(false);
@@ -471,26 +470,12 @@ export function TopBar() {
                     )}
                   </button>
                 ) : (
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => {
-                        setAuthMode("login");
-                        setAuthOpen(true);
-                      }}
-                      className="font-sans text-sm font-medium text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100 transition-colors"
-                    >
-                      Sign in
-                    </button>
-                    <button
-                      onClick={() => {
-                        setAuthMode("signup");
-                        setAuthOpen(true);
-                      }}
-                      className="rounded-lg bg-stone-900 px-3.5 py-1.5 font-sans text-sm font-medium text-white hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200 transition-colors"
-                    >
-                      Sign up
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => setAuthOpen(true)}
+                    className="rounded-lg bg-stone-900 px-3.5 py-1.5 font-sans text-sm font-medium text-white hover:bg-stone-800 dark:bg-stone-100 dark:text-stone-900 dark:hover:bg-stone-200 transition-colors"
+                  >
+                    Sign in
+                  </button>
                 )}
 
                 {/* Dropdown menu */}
@@ -539,7 +524,7 @@ export function TopBar() {
         </div>
       </header>
 
-      <AuthModal open={authOpen} onOpenChange={setAuthOpen} initialMode={authMode} />
+      <BetaAuthModal open={authOpen} onOpenChange={setAuthOpen} />
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </>
   );

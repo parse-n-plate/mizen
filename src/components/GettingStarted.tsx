@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AuthModal } from "@/components/AuthModal";
+import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { useRecipe } from "@/context/RecipeContext";
 import type { ParsedRecipe } from "@/lib/types";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
@@ -278,7 +278,7 @@ export function GettingStarted() {
               onClick={() => setAuthOpen(true)}
               className="press-scale rounded-xl bg-stone-900 dark:bg-stone-100 px-5 py-2.5 font-sans text-sm font-medium text-white dark:text-stone-900 transition-colors hover:bg-stone-800 dark:hover:bg-stone-200"
             >
-              Create free account
+              Sign in
             </button>
             <span className="font-sans text-sm text-stone-400 dark:text-stone-500">
               to save your recipes
@@ -288,7 +288,7 @@ export function GettingStarted() {
       </section>
 
       {isSupabaseConfigured && (
-        <AuthModal open={authOpen} onOpenChange={setAuthOpen} initialMode="signup" />
+        <BetaAuthModal open={authOpen} onOpenChange={setAuthOpen} />
       )}
     </>
   );

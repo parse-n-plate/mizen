@@ -7,8 +7,6 @@ const TEMPERATURE_UNIT_KEY = "temperature-unit";
 const DIETARY_PROFILE_KEY = "dietary-profile";
 const MY_SUBSTITUTIONS_KEY = "my-substitutions";
 
-const DEFAULT_SERVINGS_FALLBACK = 4;
-
 export type PreferenceKey =
   | typeof ROUND_AMOUNTS_KEY
   | typeof DEFAULT_SERVINGS_KEY

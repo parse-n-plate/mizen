@@ -80,12 +80,10 @@ export function useIngredientDiff(
     }
 
     if (newDiff.size === 0) {
-       
       setDiffMap(new Map());
       return;
     }
 
-     
     setDiffMap(newDiff);
     setDiffGeneration((g) => g + 1);
   }, [groups, unitSystem, numberFormat]);

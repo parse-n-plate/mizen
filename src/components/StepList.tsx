@@ -12,7 +12,11 @@ function subscribeToStorage(cb: () => void) {
 }
 
 function useNumberFormat(): NumberFormat {
-  return useSyncExternalStore(subscribeToStorage, getNumberFormat, () => "fractions" as NumberFormat);
+  return useSyncExternalStore(
+    subscribeToStorage,
+    getNumberFormat,
+    () => "fractions" as NumberFormat
+  );
 }
 
 interface StepListProps {
@@ -25,7 +29,13 @@ export function StepList({ steps }: StepListProps) {
   return (
     <div>
       {steps.map((step, i) => (
-        <StepRow key={i} step={step} index={i} isLast={i === steps.length - 1} numberFormat={numberFormat} />
+        <StepRow
+          key={i}
+          step={step}
+          index={i}
+          isLast={i === steps.length - 1}
+          numberFormat={numberFormat}
+        />
       ))}
     </div>
   );

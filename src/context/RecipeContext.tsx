@@ -42,20 +42,28 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
 
   // Hydrate from localStorage after mount to avoid SSR/client mismatch
+  /* eslint-disable react-hooks/set-state-in-effect -- one-time hydration from localStorage */
   useEffect(() => {
     try {
       const storedRecipe = localStorage.getItem(STORAGE_KEY);
       if (storedRecipe) setRecipeState(JSON.parse(storedRecipe));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     try {
       const storedMeta = localStorage.getItem(META_STORAGE_KEY);
       if (storedMeta) setSavedMetaState(JSON.parse(storedMeta));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     try {
       const storedHistory = localStorage.getItem(HISTORY_KEY);
       if (storedHistory) setHistory(JSON.parse(storedHistory));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
   const [hasHydrated] = useState(true);
 
   const setRecipe = (newRecipe: ParsedRecipe | null) => {

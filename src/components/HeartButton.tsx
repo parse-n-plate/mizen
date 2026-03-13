@@ -1,20 +1,28 @@
 "use client";
 
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 /** Detect coarse pointer (touch) to skip hover animations that cause false positives */
+const hoverQuery =
+  typeof window !== "undefined" ? window.matchMedia("(hover: hover) and (pointer: fine)") : null;
+
+function subscribeToHoverQuery(callback: () => void) {
+  hoverQuery?.addEventListener("change", callback);
+  return () => hoverQuery?.removeEventListener("change", callback);
+}
+
+function getCanHover() {
+  return hoverQuery?.matches ?? true;
+}
+
+function getCanHoverServer() {
+  return true;
+}
+
 function useCanHover() {
-  const [canHover, setCanHover] = useState(true);
-  useEffect(() => {
-    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
-    setCanHover(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setCanHover(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-  return canHover;
+  return useSyncExternalStore(subscribeToHoverQuery, getCanHover, getCanHoverServer);
 }
 
 interface HeartButtonProps {
@@ -54,13 +62,7 @@ function generateParticles(): Particle[] {
   });
 }
 
-export function HeartButton({
-  isSaved,
-  saving,
-  unsaving,
-  onSave,
-  onUnsave,
-}: HeartButtonProps) {
+export function HeartButton({ isSaved, saving, unsaving, onSave, onUnsave }: HeartButtonProps) {
   const shouldReduceMotion = useReducedMotion();
   const canHover = useCanHover();
   const prevSavedRef = useRef(isSaved);
@@ -83,8 +85,8 @@ export function HeartButton({
 
     // Save: false → true → particle burst
     if (!wasSaved && isSaved) {
-      setJustSaved(true);
-      setParticles(generateParticles());
+      setJustSaved(true); // eslint-disable-line react-hooks/set-state-in-effect -- animation reaction to prop change
+      setParticles(generateParticles());  
       const t = setTimeout(() => {
         setParticles([]);
         setJustSaved(false);
@@ -161,11 +163,7 @@ export function HeartButton({
           stroke="currentColor"
           initial={justSaved ? { scale: 0.5 } : false}
           animate={justSaved ? { scale: [0.5, 1.35, 0.9, 1.08, 1] } : { scale: 1 }}
-          transition={
-            justSaved
-              ? { duration: 0.35, ease: EASE_OUT_QUINT }
-              : { duration: 0.15 }
-          }
+          transition={justSaved ? { duration: 0.35, ease: EASE_OUT_QUINT } : { duration: 0.15 }}
           whileHover={hoverAnimation}
         >
           <path d={HEART_PATH} />
@@ -175,12 +173,7 @@ export function HeartButton({
 
     // Unsaved state: outline heart
     return (
-      <motion.svg
-        {...heartSvgProps}
-        fill="none"
-        stroke="currentColor"
-        whileHover={hoverAnimation}
-      >
+      <motion.svg {...heartSvgProps} fill="none" stroke="currentColor" whileHover={hoverAnimation}>
         <path d={HEART_PATH} />
       </motion.svg>
     );

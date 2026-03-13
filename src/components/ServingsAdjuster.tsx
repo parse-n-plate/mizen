@@ -156,10 +156,14 @@ export function ServingsAdjuster({
               <div
                 className={`relative flex items-center gap-1.5 rounded-lg pl-3 py-1.5 border focus-within:outline focus-within:outline-1 transition-[padding] duration-150 ${hasChanged ? "pr-8 bg-[var(--color-blue)]/5 border-[var(--color-blue)]/25 focus-within:border-[var(--color-blue)] focus-within:outline-[var(--color-blue)]" : "pr-3 bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 focus-within:border-primary focus-within:outline-primary"}`}
               >
-                <span className={`flex items-center justify-center w-4 h-4 ${hasChanged ? "text-[var(--color-blue)]" : "text-stone-500 dark:text-stone-400"}`}>
+                <span
+                  className={`flex items-center justify-center w-4 h-4 ${hasChanged ? "text-[var(--color-blue)]" : "text-stone-500 dark:text-stone-400"}`}
+                >
                   <User weight="Bold" className="w-4 h-4" />
                 </span>
-                <span className={`text-[13px] whitespace-nowrap flex items-center gap-0.5 ${hasChanged ? "text-[var(--color-blue)]" : "text-stone-500 dark:text-stone-400"}`}>
+                <span
+                  className={`text-[13px] whitespace-nowrap flex items-center gap-0.5 ${hasChanged ? "text-[var(--color-blue)]" : "text-stone-500 dark:text-stone-400"}`}
+                >
                   Serves
                   <input
                     type="text"
@@ -217,7 +221,12 @@ export function ServingsAdjuster({
                   }}
                 >
                   <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                    <circle cx="14" cy="14" r="11" fill={hasChanged ? "var(--color-blue)" : "var(--primary)"} />
+                    <circle
+                      cx="14"
+                      cy="14"
+                      r="11"
+                      fill={hasChanged ? "var(--color-blue)" : "var(--primary)"}
+                    />
                     <circle
                       cx="14"
                       cy="14"
