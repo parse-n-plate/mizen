@@ -37,7 +37,7 @@ export function WaitlistRecipePreview({ recipe }: WaitlistRecipePreviewProps) {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-end w-full relative gap-0 px-5 sm:px-8">
+      <div className="flex items-end w-full relative gap-0 px-5 sm:px-8 border-b border-stone-200 dark:border-stone-700">
         <button
           onClick={() => setActiveTab("prep")}
           className={`folder-tab-trigger press-scale h-12 px-5 sm:px-10 font-sans text-[15px] ${
@@ -76,7 +76,7 @@ export function WaitlistRecipePreview({ recipe }: WaitlistRecipePreviewProps) {
 
       {/* Tab content — scrollable */}
       <div
-        className={`flex-1 overflow-y-auto bg-white dark:bg-stone-900 border-t border-stone-200 dark:border-stone-700 ${
+        className={`flex-1 overflow-y-auto bg-white dark:bg-stone-900 ${
           activeTab === "prep" ? "rounded-tr-lg" : "rounded-t-lg"
         }`}
       >

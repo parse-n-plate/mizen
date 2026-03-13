@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
@@ -12,7 +12,7 @@ import type { ParsedRecipe } from "@/lib/types";
 const SOURCES = [
   { label: "URLs", icon: "link", hint: "Paste any recipe URL" },
   { label: "Recipe Photos", icon: "camera", hint: "Snap a photo of any recipe" },
-  { label: "Text messages", icon: "chat", hint: "Forward a recipe from a text" },
+  { label: "Text", icon: "chat", hint: "Forward a recipe from a text" },
 ] as const;
 
 const EXAMPLE_RECIPES: ParsedRecipe[] = [
@@ -128,6 +128,83 @@ const EXAMPLE_RECIPES: ParsedRecipe[] = [
   },
 ];
 
+function UrlSourcePreview() {
+  return (
+    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 shadow-sm max-w-sm">
+      <svg className="w-3.5 h-3.5 text-stone-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+      </svg>
+      <span className="font-sans text-[13px] text-stone-500 dark:text-stone-400 truncate">
+        bonappetit.com/recipe/simple-spaghetti-carbonara
+      </span>
+    </div>
+  );
+}
+
+function PhotoSourcePreview() {
+  return (
+    <div className="flex flex-col items-center gap-3 max-w-[280px]">
+      <div className="relative w-[240px] h-[160px] rounded-xl bg-stone-200 dark:bg-stone-700 shadow-md overflow-hidden rotate-[-2deg]">
+        {/* Stylized cookbook page */}
+        <div className="absolute inset-0 p-4 flex flex-col gap-1.5">
+          <div className="h-2 w-3/4 rounded-full bg-stone-300 dark:bg-stone-600" />
+          <div className="h-2 w-full rounded-full bg-stone-300 dark:bg-stone-600" />
+          <div className="h-2 w-5/6 rounded-full bg-stone-300 dark:bg-stone-600" />
+          <div className="mt-2 h-2 w-2/3 rounded-full bg-stone-300 dark:bg-stone-600" />
+          <div className="h-2 w-full rounded-full bg-stone-300 dark:bg-stone-600" />
+          <div className="h-2 w-4/5 rounded-full bg-stone-300 dark:bg-stone-600" />
+          <div className="mt-2 h-2 w-1/2 rounded-full bg-stone-300 dark:bg-stone-600" />
+          <div className="h-2 w-3/4 rounded-full bg-stone-300 dark:bg-stone-600" />
+        </div>
+        <div className="absolute bottom-2 left-3 flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/80 dark:bg-stone-900/80 backdrop-blur-sm">
+          <svg className="w-3 h-3 text-stone-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+            <circle cx="12" cy="13" r="3" />
+          </svg>
+          <span className="font-sans text-[11px] text-stone-500 dark:text-stone-400">Cookbook photo</span>
+        </div>
+      </div>
+      <span className="font-serif text-xl italic text-stone-700 dark:text-stone-300 rotate-[-1deg]">
+        Pork Tsukemen
+      </span>
+    </div>
+  );
+}
+
+function TextSourcePreview() {
+  return (
+    <div className="flex flex-col gap-2 max-w-xs w-full">
+      {/* Incoming message */}
+      <div className="self-start">
+        <div className="px-3.5 py-2.5 rounded-2xl rounded-bl-md bg-stone-200 dark:bg-stone-700">
+          <p className="font-sans text-[13px] text-stone-800 dark:text-stone-200 leading-snug">
+            You HAVE to make this carbonara
+          </p>
+        </div>
+      </div>
+      {/* Incoming message — long */}
+      <div className="self-start max-w-[85%]">
+        <div className="px-3.5 py-2.5 rounded-2xl rounded-bl-md bg-stone-200 dark:bg-stone-700">
+          <p className="font-sans text-[13px] text-stone-800 dark:text-stone-200 leading-snug">
+            ok so you need 1 lb spaghetti, 4 eggs, 6 oz guanciale or pancetta, 1 cup pecorino romano, black pepper.
+          </p>
+        </div>
+      </div>
+      {/* Outgoing message */}
+      <div className="self-end">
+        <div className="px-3.5 py-2.5 rounded-2xl rounded-br-md bg-[#007AFF]">
+          <p className="font-sans text-[13px] text-white leading-snug">
+            perfect, saving this to mizen
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const SOURCE_PREVIEWS = [UrlSourcePreview, PhotoSourcePreview, TextSourcePreview];
+
 function SourceIcon({ type }: { type: "link" | "camera" | "chat" }) {
   if (type === "link") {
     return (
@@ -155,37 +232,51 @@ function SourceIcon({ type }: { type: "link" | "camera" | "chat" }) {
 export default function HomePage() {
   const [activeSource, setActiveSource] = useState(0);
   const [displayedSource, setDisplayedSource] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [displayedPreview, setDisplayedPreview] = useState(0);
+  // Animation phases: "preview" → "absorb" → "populate" → "idle"
+  // On exit: "exit" → then swap to "preview"
+  const [phase, setPhase] = useState<"preview" | "absorb" | "populate" | "idle" | "exit">("preview");
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [alreadyOnList, setAlreadyOnList] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
-  const [sourceDropdownOpen, setSourceDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [hoveredSource, setHoveredSource] = useState<number | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
+  // Run the animation sequence whenever phase changes
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setSourceDropdownOpen(false);
-      }
+    let timer: ReturnType<typeof setTimeout>;
+    if (phase === "preview") {
+      // Source preview is visible, after a beat it absorbs into the card
+      // On initial load, wait longer to account for page-fade-in delay
+      timer = setTimeout(() => setPhase("absorb"), isInitialLoad ? 1800 : 800);
+    } else if (phase === "absorb") {
+      // Absorb animation plays, then recipe populates
+      timer = setTimeout(() => setPhase("populate"), 400);
+    } else if (phase === "populate") {
+      // Stagger animation plays, then settle to idle
+      timer = setTimeout(() => {
+        setPhase("idle");
+        setIsInitialLoad(false);
+      }, 600);
     }
-    if (sourceDropdownOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [sourceDropdownOpen]);
-  const handleSourceChange = (index: number) => {
-    if (index === activeSource || isAnimating) return;
-    setIsAnimating(true);
+    return () => clearTimeout(timer);
+  }, [phase, isInitialLoad]);
+
+  const handleSourceChange = useCallback((index: number) => {
+    if (index === activeSource || phase === "exit") return;
+    setPhase("exit");
     setActiveSource(index);
 
-    // After exit animation, swap content and enter
+    // After exit animation, swap content and restart sequence
     setTimeout(() => {
       setDisplayedSource(index);
-      setIsAnimating(false);
+      setDisplayedPreview(index);
+      setPhase("preview");
     }, 200);
-  };
+  }, [activeSource, phase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -200,9 +291,12 @@ export default function HomePage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setSubmitted(true);
+        if (data.message === "Already on the waitlist") {
+          setAlreadyOnList(true);
+        } else {
+          setSubmitted(true);
+        }
         setEmail("");
-        toast.success(data.message || "You're on the list!");
       } else {
         toast.error(data.error || "Something went wrong");
       }
@@ -220,7 +314,8 @@ export default function HomePage() {
         <div className="relative flex flex-col justify-between lg:w-[38%] px-8 lg:px-12 xl:px-16 pt-12 lg:pt-5 pb-8 lg:pb-10 bg-white dark:bg-stone-950">
           {/* Top: Logo */}
           <div className="page-fade-in-up flex items-center justify-between">
-            <Link href="/" className="font-serif text-lg font-semibold text-stone-900 dark:text-stone-100">
+            <Link href="/" className="group flex items-center gap-2 font-serif text-lg font-semibold text-stone-900 dark:text-stone-100">
+              <img src="/assets/icons/Fish Logo.svg" alt="" aria-hidden="true" className="w-7 h-7 transition-transform duration-200 ease-out group-hover:rotate-[-8deg] group-hover:scale-110 motion-reduce:transition-none" />
               Mizen
             </Link>
             {isSupabaseConfigured && (
@@ -252,18 +347,41 @@ export default function HomePage() {
               </h1>
 
               <p className="page-fade-in-up page-fade-delay-2 font-sans text-base lg:text-[17px] text-stone-500 dark:text-stone-400 leading-relaxed mb-8 max-w-sm">
-                Bring a link, photo, or text. Get clean ingredients, clear steps, and nothing else.
+                Bring a{" "}
+                <span
+                  className="cursor-pointer underline decoration-transparent hover:decoration-stone-400 transition-colors"
+                  onMouseEnter={() => setHoveredSource(0)}
+                  onMouseLeave={() => setHoveredSource(null)}
+                  onClick={() => handleSourceChange(0)}
+                >link</span>
+                ,{" "}
+                <span
+                  className="cursor-pointer underline decoration-transparent hover:decoration-stone-400 transition-colors"
+                  onMouseEnter={() => setHoveredSource(1)}
+                  onMouseLeave={() => setHoveredSource(null)}
+                  onClick={() => handleSourceChange(1)}
+                >photo</span>
+                , or{" "}
+                <span
+                  className="cursor-pointer underline decoration-transparent hover:decoration-stone-400 transition-colors"
+                  onMouseEnter={() => setHoveredSource(2)}
+                  onMouseLeave={() => setHoveredSource(null)}
+                  onClick={() => handleSourceChange(2)}
+                >text</span>
+                . Get clean ingredients, clear steps, and nothing else.
               </p>
 
               {/* Email form */}
               <form onSubmit={handleSubmit} className="page-fade-in-up page-fade-delay-2">
-                {submitted ? (
+                {submitted || alreadyOnList ? (
                   <div className="flex items-center gap-2 h-[52px] px-4 rounded-full border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-900">
                     <svg className="w-5 h-5 text-green-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M20 6 9 17l-5-5" />
                     </svg>
                     <span className="font-sans text-sm text-stone-600 dark:text-stone-300">
-                      You&apos;re on the list! We&apos;ll be in touch.
+                      {alreadyOnList
+                        ? "You\u2019re already on the list! We\u2019ll be in touch."
+                        : "You\u2019re on the list! We\u2019ll be in touch."}
                     </span>
                   </div>
                 ) : (
@@ -279,7 +397,7 @@ export default function HomePage() {
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="press-scale flex-shrink-0 h-10 px-6 rounded-lg bg-[#18A1F7] text-white font-sans text-[14px] font-semibold leading-[18px] transition-colors hover:bg-[#1590de] disabled:opacity-60 m-1.5"
+                      className="press-scale flex-shrink-0 h-10 px-6 rounded-lg bg-[#18A1F7] text-[#ffffff] font-sans text-[14px] font-semibold leading-[18px] transition-colors hover:bg-[#1590de] disabled:opacity-60 m-1.5"
                     >
                       {submitting ? "Joining..." : "Join Waitlist"}
                     </button>
@@ -301,40 +419,7 @@ export default function HomePage() {
         {/* Right panel */}
         <div className="relative flex-1 flex flex-col pt-6 lg:pt-0 bg-[#f5f5f0] dark:bg-stone-900 overflow-hidden">
           {/* Top nav */}
-          <div className="page-fade-in-up hidden lg:flex items-center justify-between px-8 lg:px-10 py-5 relative z-20">
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setSourceDropdownOpen(!sourceDropdownOpen)}
-                className="flex items-center gap-1.5 font-sans text-sm text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-300 transition-colors"
-              >
-                <SourceIcon type={SOURCES[displayedSource].icon} />
-                {SOURCES[displayedSource].hint}
-                <svg className={`w-3.5 h-3.5 transition-transform ${sourceDropdownOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </button>
-              {sourceDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 py-1 bg-white dark:bg-stone-800 rounded-lg shadow-lg border border-stone-200 dark:border-stone-700 z-50 whitespace-nowrap">
-                  {SOURCES.map((source, i) => (
-                    <button
-                      key={source.label}
-                      onClick={() => {
-                        handleSourceChange(i);
-                        setSourceDropdownOpen(false);
-                      }}
-                      className={`flex items-center gap-2.5 w-full text-left px-4 pr-8 py-2.5 font-sans text-sm transition-colors ${
-                        displayedSource === i
-                          ? "text-stone-900 dark:text-stone-100 bg-stone-50 dark:bg-stone-700/50"
-                          : "text-stone-500 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-700/30"
-                      }`}
-                    >
-                      <SourceIcon type={source.icon} />
-                      {source.hint}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+          <div className="page-fade-in-up hidden lg:flex items-center justify-end px-8 lg:px-10 pt-5 pb-2 relative z-20">
             {isSupabaseConfigured && (
               <button
                 onClick={() => {
@@ -349,7 +434,7 @@ export default function HomePage() {
           </div>
 
           {/* Source tabs */}
-          <div className="page-fade-in-up page-fade-delay-1 flex flex-col items-center gap-3 px-8 lg:px-10 pt-2 lg:pt-0 pb-8 lg:pb-5">
+          <div className="page-fade-in-up page-fade-delay-1 flex flex-col items-center gap-3 px-8 lg:px-10 pt-2 lg:pt-0 pb-5">
             <span className="font-sans text-sm text-stone-400 dark:text-stone-500">
               Works with any source
             </span>
@@ -361,7 +446,9 @@ export default function HomePage() {
                   className={`press-scale flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-sans text-sm transition-all ${
                     activeSource === i
                       ? "bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 font-medium"
-                      : "bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600"
+                      : hoveredSource === i
+                        ? "bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 border border-stone-400 dark:border-stone-400 shadow-sm"
+                        : "bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600"
                   }`}
                 >
                   <SourceIcon type={source.icon} />
@@ -371,20 +458,50 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Recipe card */}
-          <div className="page-fade-in-up page-fade-delay-2 flex-1 flex justify-center px-6 lg:px-10 pb-6 lg:pb-0">
-            <div className="w-full max-w-2xl lg:max-w-3xl bg-white dark:bg-stone-950 rounded-xl lg:rounded-b-none shadow-lg border border-stone-200/60 dark:border-stone-700 lg:border-b-0 overflow-hidden">
-              {/* Browser chrome — static, outside animation */}
-              <div className="flex overflow-clip w-full h-[41px] rounded-tl-[10px] rounded-tr-[10px] items-center gap-2 py-2.5 px-5 bg-white shrink-0">
+          {/* Recipe card + source overlay */}
+          <div className="page-fade-in-up page-fade-delay-3 relative flex-1 flex justify-center px-6 lg:px-10 pb-6 lg:pb-5">
+            {/* Source input preview — overlaid on the recipe card */}
+            {(phase === "preview" || phase === "absorb" || phase === "exit") && (
+              <div className="absolute inset-x-6 lg:inset-x-10 top-0 bottom-6 lg:bottom-5 z-10 flex justify-center items-start pt-20 pointer-events-none">
+                <div
+                  key={`preview-${displayedPreview}`}
+                  className={`flex justify-center items-center ${
+                    phase === "exit"
+                      ? "source-preview-exit"
+                      : phase === "absorb"
+                        ? "source-absorb"
+                        : isInitialLoad
+                          ? "source-preview-enter-initial"
+                          : "source-preview-enter"
+                  }`}
+                >
+                  {(() => {
+                    const Preview = SOURCE_PREVIEWS[displayedPreview];
+                    return <Preview />;
+                  })()}
+                </div>
+              </div>
+            )}
+            <div className="w-full max-w-2xl lg:max-w-3xl flex flex-col bg-white dark:bg-stone-950 rounded-xl lg:rounded-b-none shadow-lg border border-stone-200/60 dark:border-stone-700 lg:border-b-0 overflow-hidden">
+              {/* Browser chrome — always visible */}
+              <div className="flex overflow-clip w-full h-[41px] rounded-tl-[10px] rounded-tr-[10px] items-center gap-2 py-2.5 px-5 bg-white dark:bg-stone-900 shrink-0">
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <div className="rounded-full bg-[#DDDDDD] shrink-0 size-3" />
-                  <div className="rounded-full bg-[#DDDDDD] shrink-0 size-3" />
-                  <div className="rounded-full bg-[#DDDDDD] shrink-0 size-3" />
+                  <div className="rounded-full bg-[#DDDDDD] dark:bg-stone-700 shrink-0 size-3" />
+                  <div className="rounded-full bg-[#DDDDDD] dark:bg-stone-700 shrink-0 size-3" />
+                  <div className="rounded-full bg-[#DDDDDD] dark:bg-stone-700 shrink-0 size-3" />
                 </div>
               </div>
               <div
                 key={displayedSource}
-                className={isAnimating ? "waitlist-recipe-exit" : "waitlist-recipe-enter"}
+                className={`flex-1 ${
+                  phase === "exit"
+                    ? "waitlist-recipe-exit"
+                    : phase === "populate"
+                      ? "recipe-populate"
+                      : phase === "idle"
+                        ? ""
+                        : "opacity-0"
+                }`}
               >
                 <WaitlistRecipePreview recipe={EXAMPLE_RECIPES[displayedSource]} />
               </div>
