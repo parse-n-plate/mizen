@@ -633,7 +633,7 @@ body {
     cursor: pointer;
     border-radius: var(--radius-md);
     transition:
-      transform var(--press-duration, 150ms) var(--press-easing, ease),
+      transform var(--press-duration, 120ms) var(--press-easing, ease-out),
       background-color 150ms ease;
   }
 
@@ -642,7 +642,7 @@ body {
   }
 
   .ingredient-list-item:active {
-    transform: scale(var(--press-scale, 0.98));
+    transform: scale(var(--press-scale, 0.995));
   }
 
   @media (prefers-reduced-motion: reduce) {
