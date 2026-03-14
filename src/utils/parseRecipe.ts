@@ -609,6 +609,15 @@ async function extractWithAI(cleanedHtml: string): Promise<ParsedRecipe | null> 
   if (result.toLowerCase().includes("no recipe found")) return null;
 
   const parsedData = extractJsonFromAiResponse(result);
+  // Normalize flat ingredient arrays into grouped format before validation
+  if (parsedData && typeof parsedData === "object" && Array.isArray((parsedData as Record<string, unknown>).ingredients)) {
+    const ingredients = (parsedData as Record<string, unknown>).ingredients as unknown[];
+    if (ingredients.length > 0 && !("groupName" in (ingredients[0] as Record<string, unknown>))) {
+      (parsedData as Record<string, unknown>).ingredients = [
+        { groupName: "Main", ingredients },
+      ];
+    }
+  }
   const validated = CoreRecipeSchema.safeParse(parsedData);
 
   if (!validated.success) {
@@ -746,7 +755,7 @@ export async function parseRecipeFromImage(dataUrl: string): Promise<ParserResul
     const groq = getGroqClient();
 
     const response = await groq.chat.completions.create({
-      model: "llama-3.2-90b-vision-preview",
+      model: "meta-llama/llama-4-scout-17b-16e-instruct",
       messages: [
         { role: "system", content: EXTRACTION_PROMPT },
         {
@@ -784,10 +793,19 @@ export async function parseRecipeFromImage(dataUrl: string): Promise<ParserResul
     }
 
     const parsedData = extractJsonFromAiResponse(result);
+    // Normalize flat ingredient arrays into grouped format before validation
+    if (parsedData && typeof parsedData === "object" && Array.isArray((parsedData as Record<string, unknown>).ingredients)) {
+      const ingredients = (parsedData as Record<string, unknown>).ingredients as unknown[];
+      if (ingredients.length > 0 && !("groupName" in (ingredients[0] as Record<string, unknown>))) {
+        (parsedData as Record<string, unknown>).ingredients = [
+          { groupName: "Main", ingredients },
+        ];
+      }
+    }
     const validated = CoreRecipeSchema.safeParse(parsedData);
 
     if (!validated.success) {
-      log.error({ issues: validated.error.issues }, "Image parser Zod validation failed");
+      log.error({ issues: validated.error.issues, raw: result }, "Image parser Zod validation failed");
       return {
         success: false,
         error: "Could not parse recipe from image",
@@ -841,7 +859,7 @@ export async function parseRecipeFromText(text: string): Promise<ParserResult> {
     const groq = getGroqClient();
 
     const response = await groq.chat.completions.create({
-      model: "llama-3.2-90b-vision-preview",
+      model: "llama-3.3-70b-versatile",
       messages: [
         { role: "system", content: EXTRACTION_PROMPT },
         {
@@ -870,10 +888,19 @@ export async function parseRecipeFromText(text: string): Promise<ParserResult> {
     }
 
     const parsedData = extractJsonFromAiResponse(result);
+    // Normalize flat ingredient arrays into grouped format before validation
+    if (parsedData && typeof parsedData === "object" && Array.isArray((parsedData as Record<string, unknown>).ingredients)) {
+      const ingredients = (parsedData as Record<string, unknown>).ingredients as unknown[];
+      if (ingredients.length > 0 && !("groupName" in (ingredients[0] as Record<string, unknown>))) {
+        (parsedData as Record<string, unknown>).ingredients = [
+          { groupName: "Main", ingredients },
+        ];
+      }
+    }
     const validated = CoreRecipeSchema.safeParse(parsedData);
 
     if (!validated.success) {
-      log.error({ issues: validated.error.issues }, "Text parser Zod validation failed");
+      log.error({ issues: validated.error.issues, raw: result }, "Text parser Zod validation failed");
       return {
         success: false,
         error: "Could not parse recipe from text",
