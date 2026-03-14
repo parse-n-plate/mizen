@@ -577,7 +577,7 @@ function WaitlistLanding() {
 
               {/* Email form */}
               <form onSubmit={handleSubmit} className="page-fade-in-up page-fade-delay-2">
-                <div className="flex items-center h-[52px] rounded-xl border border-[#E7E5E4] bg-[#F5F5F4] dark:border-stone-700 dark:bg-stone-900 overflow-clip shrink-0 focus-within:border-stone-400 dark:focus-within:border-stone-500 transition-colors">
+                <div className="flex items-center h-[52px] rounded-xl border border-[#E7E5E4] bg-[#F5F5F4] dark:border-stone-700 dark:bg-stone-900 overflow-clip shrink-0 focus-within:border-[#18a1f7] focus-within:ring-[3px] focus-within:ring-[#18a1f7]/30 transition-[border-color,box-shadow]">
                   {/* Input — collapses on success */}
                   <motion.div
                     initial={false}
@@ -585,7 +585,7 @@ function WaitlistLanding() {
                       flex: submitted || alreadyOnList ? "0 0 0px" : "1 1 0%",
                       opacity: submitted || alreadyOnList ? 0 : 1,
                     }}
-                    transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                    transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
                     className="overflow-hidden min-w-0"
                   >
                     <input
@@ -603,21 +603,33 @@ function WaitlistLanding() {
                   <motion.button
                     type="submit"
                     disabled={submitting || submitted || alreadyOnList}
-                    layout
-                    transition={{ layout: { duration: 0.3, ease: [0.23, 1, 0.32, 1] } }}
-                    className={`flex-none px-5 h-10 rounded-lg bg-[#18A1F7] font-sans text-[14px] text-[#ffffff] font-semibold leading-[18px] m-1.5 flex items-center justify-center gap-1.5 transition-[opacity] overflow-hidden ${
+                    initial={false}
+                    animate={{
+                      flex: submitted || alreadyOnList ? "1 1 0%" : "0 0 auto",
+                    }}
+                    whileTap={
+                      submitted || alreadyOnList || submitting
+                        ? undefined
+                        : { scale: 0.96 }
+                    }
+                    transition={{ duration: 0.25, ease: [0.77, 0, 0.175, 1] }}
+                    className={`px-5 h-10 rounded-lg bg-[#18A1F7] font-sans text-[14px] text-[#ffffff] font-semibold leading-[18px] m-1.5 flex items-center justify-center gap-1.5 transition-[opacity] overflow-hidden ${
                       submitted || alreadyOnList
                         ? "!opacity-100 pointer-events-none"
-                        : "press-scale hover:bg-[#1590de] disabled:opacity-60"
+                        : "hover:bg-[#1590de] disabled:opacity-60"
                     }`}
                   >
                     <AnimatePresence mode="wait" initial={false}>
                       {submitted || alreadyOnList ? (
                         <motion.span
                           key="success"
-                          initial={{ opacity: 0, scale: 0.97 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
+                          initial={{ opacity: 0, scale: 0.96, y: 4 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          transition={{
+                            delay: 0.1,
+                            duration: 0.2,
+                            ease: [0.23, 1, 0.32, 1],
+                          }}
                           className="flex items-center gap-2 whitespace-nowrap"
                         >
                           <svg
@@ -642,16 +654,16 @@ function WaitlistLanding() {
                           key="sending"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          exit={{ opacity: 0, scale: 0.97 }}
-                          transition={{ duration: 0.1 }}
+                          exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
+                          transition={{ duration: 0.1, ease: [0.23, 1, 0.32, 1] }}
                         >
                           Sending...
                         </motion.span>
                       ) : (
                         <motion.span
                           key="cta"
-                          exit={{ opacity: 0, scale: 0.97 }}
-                          transition={{ duration: 0.1 }}
+                          exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
+                          transition={{ duration: 0.1, ease: [0.23, 1, 0.32, 1] }}
                           className="flex items-center gap-1.5"
                         >
                           <Plain size={16} weight="Bold" className="shrink-0" /> Notify Me
