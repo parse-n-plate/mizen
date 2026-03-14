@@ -2,11 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSubmitGuard } from "@/hooks/useSubmitGuard";
-import {
-  AnimatePresence,
-  motion,
-  useReducedMotion,
-} from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import {
   Dialog,
@@ -17,10 +13,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { resolveEmailAuthFeedback } from "@/lib/auth-feedback";
 import Login from "@solar-icons/react/csr/arrows-action/Login";
 import UserPlus from "@solar-icons/react/csr/users/UserPlus";
 import Letter from "@solar-icons/react/csr/messages/Letter";
 import Restart from "@solar-icons/react/csr/arrows/Restart";
+import Eye from "@solar-icons/react/csr/security/Eye";
+import EyeClosed from "@solar-icons/react/csr/security/EyeClosed";
 import { Spinner } from "@/components/ui/spinner";
 
 type EmailStatus = "idle" | "checking" | "approved" | "not-found";
@@ -39,7 +38,11 @@ export function BetaAuthModal({ open, onOpenChange }: BetaAuthModalProps) {
   const t = shouldReduceMotion ? INSTANT : TRANSITION;
 
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [usePassword, setUsePassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const [emailStatus, setEmailStatus] = useState<EmailStatus>("idle");
   const [view, setView] = useState<View>("form");
   const [loading, setLoading] = useState(false);
@@ -123,7 +126,11 @@ export function BetaAuthModal({ open, onOpenChange }: BetaAuthModalProps) {
       closeResetTimeoutRef.current = setTimeout(() => {
         if (openRef.current) return;
         setEmail("");
+        setPassword("");
+        setShowPassword(false);
+        setUsePassword(false);
         setError(null);
+        setMessage(null);
         setEmailStatus("idle");
         setView("form");
         setLoading(false);
@@ -160,6 +167,65 @@ export function BetaAuthModal({ open, onOpenChange }: BetaAuthModalProps) {
       }
     } else {
       setView("link-sent");
+    }
+
+    setLoading(false);
+  };
+
+  const handlePasswordSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!allowSubmit()) return;
+    setLoading(true);
+    setError(null);
+    setMessage(null);
+
+    const supabase = createClient();
+    if (!supabase) {
+      setError("Authentication is unavailable right now. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    const feedback = resolveEmailAuthFeedback("login", { error });
+    if (feedback.error) {
+      setError(feedback.error);
+    } else if (feedback.shouldClose) {
+      handleOpenChange(false);
+    }
+
+    setLoading(false);
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      setError("Please enter your email address.");
+      return;
+    }
+    if (!allowSubmit()) return;
+    setLoading(true);
+    setError(null);
+    setMessage(null);
+
+    const supabase = createClient();
+    if (!supabase) {
+      setError("Authentication is unavailable right now. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback`,
+    });
+
+    if (error) {
+      setError("Something went wrong. Please try again.");
+    } else {
+      setMessage("Check your email for a password reset link.");
     }
 
     setLoading(false);
@@ -218,7 +284,12 @@ export function BetaAuthModal({ open, onOpenChange }: BetaAuthModalProps) {
     setLoading(false);
   };
 
-  const handleSubmit = emailStatus === "not-found" ? handleJoinWaitlist : handleSendLink;
+  const handleSubmit =
+    emailStatus === "not-found"
+      ? handleJoinWaitlist
+      : usePassword && emailStatus === "approved"
+        ? handlePasswordSignIn
+        : handleSendLink;
 
   // Determine button label
   const buttonKey = loading
@@ -282,7 +353,8 @@ export function BetaAuthModal({ open, onOpenChange }: BetaAuthModalProps) {
                       Sign-in link sent to <span className="font-medium">{email}</span>
                     </p>
                     <p className="font-sans text-xs text-green-600/80 dark:text-green-400/70 mt-1">
-                      Click the link in the email to sign in. Check your spam folder if you don&apos;t see it.
+                      Click the link in the email to sign in. Check your spam folder if you
+                      don&apos;t see it.
                     </p>
                   </div>
                 </div>
@@ -378,6 +450,55 @@ export function BetaAuthModal({ open, onOpenChange }: BetaAuthModalProps) {
                 </div>
 
                 <AnimatePresence>
+                  {usePassword && emailStatus === "approved" && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <label
+                          htmlFor="beta-auth-password"
+                          className="font-sans text-sm font-medium text-foreground"
+                        >
+                          Password
+                        </label>
+                        <button
+                          type="button"
+                          onClick={handleForgotPassword}
+                          className="font-sans text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          Forgot password?
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          id="beta-auth-password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"
+                          required
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          autoComplete="current-password"
+                          minLength={6}
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? (
+                            <EyeClosed className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
                   {emailStatus === "not-found" && (
                     <motion.p
                       initial={{ opacity: 0, height: 0 }}
@@ -396,6 +517,16 @@ export function BetaAuthModal({ open, onOpenChange }: BetaAuthModalProps) {
                       className="font-sans text-sm text-red-500 dark:text-red-400"
                     >
                       {error}
+                    </motion.p>
+                  )}
+                  {message && (
+                    <motion.p
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="font-sans text-sm text-green-600 dark:text-green-400"
+                    >
+                      {message}
                     </motion.p>
                   )}
                 </AnimatePresence>
@@ -441,7 +572,25 @@ export function BetaAuthModal({ open, onOpenChange }: BetaAuthModalProps) {
             )}
           </AnimatePresence>
 
-          {view === "form" && (
+          {view === "form" && emailStatus === "approved" && (
+            <p className="mt-4 font-sans text-center text-sm text-muted-foreground">
+              <button
+                type="button"
+                onClick={() => {
+                  setUsePassword(!usePassword);
+                  setPassword("");
+                  setShowPassword(false);
+                  setError(null);
+                  setMessage(null);
+                }}
+                className="font-semibold text-foreground hover:underline underline-offset-2"
+              >
+                {usePassword ? "Use magic link instead" : "Use password instead"}
+              </button>
+            </p>
+          )}
+
+          {view === "form" && emailStatus !== "approved" && (
             <p className="mt-4 font-sans text-center text-xs text-muted-foreground">
               Mizen is in private beta. You need an invite to sign in.
             </p>
