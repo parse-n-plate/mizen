@@ -459,7 +459,7 @@ function WaitlistLanding() {
 
   return (
     <>
-      <div className="flex flex-col lg:flex-row min-h-screen lg:h-screen lg:overflow-hidden">
+      <div className="flex flex-col lg:flex-row min-h-screen lg:min-h-0 lg:h-screen lg:overflow-hidden flex-1">
         {/* Left panel */}
         <div className="relative flex flex-col justify-between lg:w-[38%] px-8 lg:px-12 xl:px-16 pt-12 lg:pt-5 pb-8 lg:pb-10 bg-white dark:bg-stone-950">
           {/* Top: Logo */}
@@ -627,10 +627,10 @@ function WaitlistLanding() {
           </div>
 
           {/* Recipe card + source overlay */}
-          <div className="page-fade-in-up page-fade-delay-3 relative flex-1 flex justify-center px-6 lg:px-10 pb-6 lg:pb-5">
+          <div className="page-fade-in-up page-fade-delay-3 relative flex-1 flex justify-center px-6 lg:px-10 pb-6 lg:pb-0">
             {/* Source input preview — overlaid on the recipe card */}
             {(phase === "preview" || phase === "absorb" || phase === "exit") && (
-              <div className="absolute inset-x-6 lg:inset-x-10 top-0 bottom-6 lg:bottom-5 z-10 flex justify-center items-start pt-20 pointer-events-none">
+              <div className="absolute inset-x-6 lg:inset-x-10 top-0 bottom-6 lg:bottom-0 z-10 flex justify-center items-start pt-20 pointer-events-none">
                 <div
                   key={`preview-${displayedPreview}`}
                   className={`flex justify-center items-center ${

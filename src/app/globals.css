@@ -345,6 +345,7 @@ body {
     justify-content: center;
     gap: 8px;
     padding: 0 8px;
+    white-space: nowrap;
     border-radius: 16px 16px 0 0 !important;
     transition:
       color 150ms ease,
@@ -402,6 +403,7 @@ body {
     justify-content: center;
     gap: 8px;
     padding: 0 8px;
+    white-space: nowrap;
     border-radius: 16px 16px 0 0 !important;
     transition:
       color 150ms ease,
