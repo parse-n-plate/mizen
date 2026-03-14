@@ -531,7 +531,7 @@ function WaitlistLanding() {
 
           {/* Center: Hero content */}
           <div className="flex-1 flex flex-col justify-center py-12 lg:py-0 lg:pb-16 lg:items-start items-center">
-            <div className="max-w-md text-center lg:text-left">
+            <div className="max-w-[30rem] text-center lg:text-left">
               <div className="page-fade-in-up page-fade-delay-1 mb-6">
                 <span className="inline-block px-3 py-1 rounded-full border border-stone-200 dark:border-stone-700 font-sans text-xs text-stone-500 dark:text-stone-400">
                   Now in early access
@@ -605,7 +605,7 @@ function WaitlistLanding() {
                     disabled={submitting || submitted || alreadyOnList}
                     layout
                     transition={{ layout: { duration: 0.3, ease: [0.23, 1, 0.32, 1] } }}
-                    className={`flex-1 h-10 rounded-lg bg-[#18A1F7] font-sans text-[14px] text-[#ffffff] font-semibold leading-[18px] m-1.5 flex items-center justify-center gap-1.5 transition-[opacity] overflow-hidden ${
+                    className={`flex-none px-5 h-10 rounded-lg bg-[#18A1F7] font-sans text-[14px] text-[#ffffff] font-semibold leading-[18px] m-1.5 flex items-center justify-center gap-1.5 transition-[opacity] overflow-hidden ${
                       submitted || alreadyOnList
                         ? "!opacity-100 pointer-events-none"
                         : "press-scale hover:bg-[#1590de] disabled:opacity-60"
