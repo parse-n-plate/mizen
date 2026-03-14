@@ -30,10 +30,21 @@ export function useUser() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       setSupabaseDown(false);
       setLoading(false);
+
+      if (event === "SIGNED_IN" && window.location.hash.includes("access_token")) {
+        // Strip tokens from URL after implicit-flow auth (e.g. invite links)
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      }
+
+      if (event === "TOKEN_REFRESHED" && !session) {
+        // Token refresh failed — session expired; force-clear since the
+        // unconditional setUser above may still see a stale session object.
+        setUser(null);
+      }
     });
 
     return () => subscription.unsubscribe();

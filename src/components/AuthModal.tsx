@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
 import {
   AnimatePresence,
   motion,
@@ -26,6 +27,7 @@ import Eye from "@solar-icons/react/csr/security/Eye";
 import EyeClosed from "@solar-icons/react/csr/security/EyeClosed";
 import Restart from "@solar-icons/react/csr/arrows/Restart";
 import Letter from "@solar-icons/react/csr/messages/Letter";
+import { Spinner } from "@/components/ui/spinner";
 
 type Mode = "login" | "signup" | "forgot";
 
@@ -50,6 +52,7 @@ export function AuthModal({ open, onOpenChange, initialMode = "login" }: AuthMod
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [confirmationSent, setConfirmationSent] = useState(false);
+  const allowSubmit = useSubmitGuard();
   const mode = modeOverride ?? initialMode;
   const openRef = useRef(open);
   const closeResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -110,12 +113,13 @@ export function AuthModal({ open, onOpenChange, initialMode = "login" }: AuthMod
     });
 
     if (error) {
-      setError(error.message);
+      setError("Something went wrong. Please try again.");
     }
   };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!allowSubmit()) return;
     setLoading(true);
     clearMessages();
 
@@ -168,6 +172,7 @@ export function AuthModal({ open, onOpenChange, initialMode = "login" }: AuthMod
       setError("Please enter your email address.");
       return;
     }
+    if (!allowSubmit()) return;
     setLoading(true);
     clearMessages();
 
@@ -183,7 +188,7 @@ export function AuthModal({ open, onOpenChange, initialMode = "login" }: AuthMod
     });
 
     if (error) {
-      setError(error.message);
+      setError("Something went wrong. Please try again.");
     } else {
       setMessage("Check your email for a password reset link.");
     }
@@ -192,6 +197,7 @@ export function AuthModal({ open, onOpenChange, initialMode = "login" }: AuthMod
   };
 
   const handleResend = async () => {
+    if (!allowSubmit()) return;
     setLoading(true);
     clearMessages();
     setConfirmationSent(true);
@@ -343,7 +349,8 @@ export function AuthModal({ open, onOpenChange, initialMode = "login" }: AuthMod
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-mizen-blue text-white hover:bg-mizen-blue/90 focus-visible:ring-mizen-blue/50"
+                  className="w-full bg-mizen-blue hover:bg-mizen-blue/90 focus-visible:ring-mizen-blue/50"
+                  style={{ color: "white" }}
                   size="lg"
                 >
                   {loading ? <Spinner /> : "Send Reset Link"}
@@ -475,7 +482,8 @@ export function AuthModal({ open, onOpenChange, initialMode = "login" }: AuthMod
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full relative overflow-hidden bg-mizen-blue text-white hover:bg-mizen-blue/90 focus-visible:ring-mizen-blue/50"
+                  className="w-full relative overflow-hidden bg-mizen-blue hover:bg-mizen-blue/90 focus-visible:ring-mizen-blue/50"
+                  style={{ color: "white" }}
                   size="lg"
                 >
                   <AnimatePresence mode="wait" initial={false}>
@@ -604,15 +612,3 @@ function InteractivePanel() {
   );
 }
 
-function Spinner() {
-  return (
-    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-      />
-    </svg>
-  );
-}

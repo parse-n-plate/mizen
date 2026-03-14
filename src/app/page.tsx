@@ -788,9 +788,6 @@ function WaitlistLanding() {
         <BetaAuthModal
           open={authOpen}
           onOpenChange={setAuthOpen}
-          onSuccess={() => {
-            window.location.href = "/";
-          }}
         />
       )}
     </>

@@ -1,13 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import {
-  AnimatePresence,
-  motion,
-  useReducedMotion,
-} from "framer-motion";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSubmitGuard } from "@/hooks/useSubmitGuard";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
-import { resolveEmailAuthFeedback } from "@/lib/auth-feedback";
 import {
   Dialog,
   DialogContent,
@@ -17,34 +13,43 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { resolveEmailAuthFeedback } from "@/lib/auth-feedback";
 import Login from "@solar-icons/react/csr/arrows-action/Login";
+import UserPlus from "@solar-icons/react/csr/users/UserPlus";
+import Letter from "@solar-icons/react/csr/messages/Letter";
+import Restart from "@solar-icons/react/csr/arrows/Restart";
 import Eye from "@solar-icons/react/csr/security/Eye";
 import EyeClosed from "@solar-icons/react/csr/security/EyeClosed";
+import { Spinner } from "@/components/ui/spinner";
 
-type Mode = "login" | "forgot";
+type EmailStatus = "idle" | "checking" | "approved" | "not-found";
+type View = "form" | "link-sent" | "waitlist-joined";
 
 interface BetaAuthModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
 }
 
 const TRANSITION = { duration: 0.15, ease: [0.4, 0, 0.2, 1] as const };
 const INSTANT = { duration: 0 };
 
-export function BetaAuthModal({ open, onOpenChange, onSuccess }: BetaAuthModalProps) {
+export function BetaAuthModal({ open, onOpenChange }: BetaAuthModalProps) {
   const shouldReduceMotion = useReducedMotion();
   const t = shouldReduceMotion ? INSTANT : TRANSITION;
 
-  const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [usePassword, setUsePassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [emailStatus, setEmailStatus] = useState<EmailStatus>("idle");
+  const [view, setView] = useState<View>("form");
   const [loading, setLoading] = useState(false);
+  const allowSubmit = useSubmitGuard();
   const openRef = useRef(open);
   const closeResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const checkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     openRef.current = open;
@@ -59,12 +64,57 @@ export function BetaAuthModal({ open, onOpenChange, onSuccess }: BetaAuthModalPr
       if (closeResetTimeoutRef.current) {
         clearTimeout(closeResetTimeoutRef.current);
       }
+      if (checkTimeoutRef.current) {
+        clearTimeout(checkTimeoutRef.current);
+      }
     };
   }, []);
 
-  const clearMessages = () => {
+  const checkEmail = useCallback(async (emailToCheck: string) => {
+    const trimmed = emailToCheck.trim();
+    if (!trimmed || !trimmed.includes("@")) {
+      setEmailStatus("idle");
+      setError(null);
+      return;
+    }
+
+    setEmailStatus("checking");
+    try {
+      const res = await fetch("/api/auth/check-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: trimmed }),
+      });
+      const { exists } = await res.json();
+      if (exists) {
+        setEmailStatus("approved");
+        setError(null);
+      } else {
+        setEmailStatus("not-found");
+        setError(null);
+      }
+    } catch {
+      // Fail open — let the OTP call handle it
+      setEmailStatus("approved");
+      setError(null);
+    }
+  }, []);
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    setEmailStatus("idle");
     setError(null);
-    setMessage(null);
+
+    if (checkTimeoutRef.current) {
+      clearTimeout(checkTimeoutRef.current);
+    }
+
+    const trimmed = value.trim();
+    if (trimmed && trimmed.includes("@") && trimmed.includes(".")) {
+      checkTimeoutRef.current = setTimeout(() => {
+        checkEmail(trimmed);
+      }, 500);
+    }
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -78,17 +128,56 @@ export function BetaAuthModal({ open, onOpenChange, onSuccess }: BetaAuthModalPr
         setEmail("");
         setPassword("");
         setShowPassword(false);
-        setMode("login");
-        clearMessages();
+        setUsePassword(false);
+        setError(null);
+        setMessage(null);
+        setEmailStatus("idle");
+        setView("form");
         setLoading(false);
       }, 200);
     }
   };
 
-  const handleEmailAuth = async (e: React.FormEvent) => {
+  const handleSendLink = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!allowSubmit()) return;
     setLoading(true);
-    clearMessages();
+    setError(null);
+
+    const supabase = createClient();
+    if (!supabase) {
+      setError("Authentication is unavailable right now. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      if (error.message.toLowerCase().includes("signups not allowed")) {
+        setEmailStatus("not-found");
+      } else {
+        setError(error.message);
+      }
+    } else {
+      setView("link-sent");
+    }
+
+    setLoading(false);
+  };
+
+  const handlePasswordSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!allowSubmit()) return;
+    setLoading(true);
+    setError(null);
+    setMessage(null);
 
     const supabase = createClient();
     if (!supabase) {
@@ -107,20 +196,20 @@ export function BetaAuthModal({ open, onOpenChange, onSuccess }: BetaAuthModalPr
       setError(feedback.error);
     } else if (feedback.shouldClose) {
       handleOpenChange(false);
-      onSuccess?.();
     }
 
     setLoading(false);
   };
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleForgotPassword = async () => {
     if (!email.trim()) {
       setError("Please enter your email address.");
       return;
     }
+    if (!allowSubmit()) return;
     setLoading(true);
-    clearMessages();
+    setError(null);
+    setMessage(null);
 
     const supabase = createClient();
     if (!supabase) {
@@ -134,7 +223,7 @@ export function BetaAuthModal({ open, onOpenChange, onSuccess }: BetaAuthModalPr
     });
 
     if (error) {
-      setError(error.message);
+      setError("Something went wrong. Please try again.");
     } else {
       setMessage("Check your email for a password reset link.");
     }
@@ -142,56 +231,132 @@ export function BetaAuthModal({ open, onOpenChange, onSuccess }: BetaAuthModalPr
     setLoading(false);
   };
 
-  const switchMode = (next: Mode) => {
-    setMode(next);
-    clearMessages();
+  const handleJoinWaitlist = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!allowSubmit()) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Something went wrong. Please try again.");
+      } else {
+        setView("waitlist-joined");
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+    }
+
+    setLoading(false);
   };
 
-  const titles: Record<Mode, { title: string; description: string }> = {
-    login: { title: "Sign in to Mizen", description: "Enter your beta credentials to continue" },
-    forgot: { title: "Reset password", description: "We\u2019ll send you a reset link" },
+  const handleResend = async () => {
+    if (!allowSubmit()) return;
+    setLoading(true);
+    setError(null);
+
+    const supabase = createClient();
+    if (!supabase) {
+      setError("Authentication is unavailable right now. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        shouldCreateUser: false,
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      setError(error.message);
+    }
+
+    setLoading(false);
   };
+
+  const handleSubmit =
+    emailStatus === "not-found"
+      ? handleJoinWaitlist
+      : usePassword && emailStatus === "approved"
+        ? handlePasswordSignIn
+        : handleSendLink;
+
+  // Determine button label
+  const buttonKey = loading
+    ? "loading"
+    : emailStatus === "checking"
+      ? "checking"
+      : emailStatus === "approved"
+        ? "signin"
+        : emailStatus === "not-found"
+          ? "waitlist"
+          : "default";
+
+  // Title / description per view
+  const title =
+    view === "link-sent"
+      ? "Check your email"
+      : view === "waitlist-joined"
+        ? "You\u2019re on the list"
+        : "Sign in to Mizen";
+
+  const description =
+    view === "link-sent"
+      ? "We sent a sign-in link to your email"
+      : view === "waitlist-joined"
+        ? "We\u2019ll let you know when your spot is ready"
+        : "Enter the email you were invited with";
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent showCloseButton className="sm:max-w-md p-0 gap-0 overflow-hidden rounded-xl">
-        <div>
-          <div className="p-8 sm:p-10">
-            <DialogHeader className="text-left mb-6 overflow-hidden">
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
-                  key={mode}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={t}
-                >
-                  <DialogTitle className="font-serif text-2xl">{titles[mode].title}</DialogTitle>
-                  <DialogDescription className="mt-1">{titles[mode].description}</DialogDescription>
-                </motion.div>
-              </AnimatePresence>
-            </DialogHeader>
+        <div className="p-8 sm:p-10">
+          <DialogHeader className="text-left mb-6 overflow-hidden">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={view}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={t}
+              >
+                <DialogTitle className="font-serif text-2xl">{title}</DialogTitle>
+                <DialogDescription className="mt-1">{description}</DialogDescription>
+              </motion.div>
+            </AnimatePresence>
+          </DialogHeader>
 
-            {/* ─── Forgot password form ─── */}
-            {mode === "forgot" ? (
-              <form onSubmit={handleForgotPassword} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label
-                    htmlFor="beta-auth-reset-email"
-                    className="font-sans text-sm font-medium text-foreground"
-                  >
-                    Email
-                  </label>
-                  <Input
-                    id="beta-auth-reset-email"
-                    type="email"
-                    placeholder="you@example.com"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    autoComplete="email"
-                    spellCheck={false}
-                  />
+          <AnimatePresence mode="wait" initial={false}>
+            {view === "link-sent" ? (
+              <motion.div
+                key="link-sent"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={t}
+                className="space-y-4"
+              >
+                <div className="flex items-start gap-3 rounded-lg bg-green-50 dark:bg-green-950/30 p-3">
+                  <Letter className="h-5 w-5 mt-0.5 shrink-0 text-green-600 dark:text-green-400" />
+                  <div>
+                    <p className="font-sans text-sm text-green-800 dark:text-green-300">
+                      Sign-in link sent to <span className="font-medium">{email}</span>
+                    </p>
+                    <p className="font-sans text-xs text-green-600/80 dark:text-green-400/70 mt-1">
+                      Click the link in the email to sign in. Check your spam folder if you
+                      don&apos;t see it.
+                    </p>
+                  </div>
                 </div>
 
                 <AnimatePresence>
@@ -205,40 +370,66 @@ export function BetaAuthModal({ open, onOpenChange, onSuccess }: BetaAuthModalPr
                       {error}
                     </motion.p>
                   )}
-                  {message && (
-                    <motion.p
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="font-sans text-sm text-green-600 dark:text-green-400"
-                    >
-                      {message}
-                    </motion.p>
-                  )}
                 </AnimatePresence>
 
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-mizen-blue text-white hover:bg-mizen-blue/90 focus-visible:ring-mizen-blue/50"
-                  size="lg"
-                >
-                  {loading ? <Spinner /> : "Send Reset Link"}
-                </Button>
+                <p className="font-sans text-center text-sm text-muted-foreground">
+                  Didn&apos;t get it?{" "}
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={loading}
+                    className="inline-flex items-center gap-1 font-semibold text-foreground hover:underline underline-offset-2 disabled:opacity-50"
+                  >
+                    <Restart className="h-3 w-3" />
+                    Resend
+                  </button>
+                </p>
 
                 <p className="font-sans text-center text-sm text-muted-foreground">
                   <button
                     type="button"
-                    onClick={() => switchMode("login")}
-                    className="font-sans font-semibold text-foreground hover:underline underline-offset-2"
+                    onClick={() => {
+                      setView("form");
+                      setEmailStatus("idle");
+                      setError(null);
+                    }}
+                    className="font-semibold text-foreground hover:underline underline-offset-2"
                   >
-                    Back to sign in
+                    Use a different email
                   </button>
                 </p>
-              </form>
+              </motion.div>
+            ) : view === "waitlist-joined" ? (
+              <motion.div
+                key="waitlist-joined"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={t}
+                className="space-y-4"
+              >
+                <div className="flex items-start gap-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 p-3">
+                  <Letter className="h-5 w-5 mt-0.5 shrink-0 text-blue-600 dark:text-blue-400" />
+                  <div>
+                    <p className="font-sans text-sm text-blue-800 dark:text-blue-300">
+                      <span className="font-medium">{email}</span> has been added to the waitlist.
+                    </p>
+                    <p className="font-sans text-xs text-blue-600/80 dark:text-blue-400/70 mt-1">
+                      We&apos;ll send you an invite when your spot opens up.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
             ) : (
-              /* ─── Login form ─── */
-              <form onSubmit={handleEmailAuth} className="space-y-4">
+              <motion.form
+                key="form"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={t}
+                onSubmit={handleSubmit}
+                className="space-y-4"
+              >
                 <div className="space-y-1.5">
                   <label
                     htmlFor="beta-auth-email"
@@ -252,56 +443,72 @@ export function BetaAuthModal({ open, onOpenChange, onSuccess }: BetaAuthModalPr
                     placeholder="you@example.com"
                     required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => handleEmailChange(e.target.value)}
                     autoComplete="email"
                     spellCheck={false}
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label
-                      htmlFor="beta-auth-password"
-                      className="font-sans text-sm font-medium text-foreground"
-                    >
-                      Password
-                    </label>
-                    <motion.button
-                      type="button"
-                      onClick={() => switchMode("forgot")}
-                      className="font-sans text-xs text-muted-foreground hover:text-foreground transition-colors"
-                      aria-label="Reset your password"
-                    >
-                      Forgot password?
-                    </motion.button>
-                  </div>
-                  <div className="relative">
-                    <Input
-                      id="beta-auth-password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      autoComplete="current-password"
-                      minLength={6}
-                      className="pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? (
-                        <EyeClosed className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
 
                 <AnimatePresence>
+                  {usePassword && emailStatus === "approved" && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <label
+                          htmlFor="beta-auth-password"
+                          className="font-sans text-sm font-medium text-foreground"
+                        >
+                          Password
+                        </label>
+                        <button
+                          type="button"
+                          onClick={handleForgotPassword}
+                          className="font-sans text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          Forgot password?
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          id="beta-auth-password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"
+                          required
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          autoComplete="current-password"
+                          minLength={6}
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                          {showPassword ? (
+                            <EyeClosed className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                  {emailStatus === "not-found" && (
+                    <motion.p
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="font-sans text-sm text-muted-foreground"
+                    >
+                      This email isn&apos;t part of the beta yet. Join the waitlist to get access.
+                    </motion.p>
+                  )}
                   {error && (
                     <motion.p
                       initial={{ opacity: 0, height: 0 }}
@@ -326,50 +533,70 @@ export function BetaAuthModal({ open, onOpenChange, onSuccess }: BetaAuthModalPr
 
                 <Button
                   type="submit"
-                  disabled={loading}
-                  className="w-full relative overflow-hidden bg-mizen-blue text-white hover:bg-mizen-blue/90 focus-visible:ring-mizen-blue/50"
+                  disabled={loading || emailStatus === "checking" || emailStatus === "idle"}
+                  className="w-full relative overflow-hidden bg-mizen-blue hover:bg-mizen-blue/90 focus-visible:ring-mizen-blue/50"
+                  style={{ color: "white" }}
                   size="lg"
                 >
                   <AnimatePresence mode="wait" initial={false}>
                     <motion.span
-                      key={loading ? "loading" : "login-btn"}
+                      key={buttonKey}
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
                       transition={t}
                       className="flex items-center justify-center gap-2"
                     >
-                      {loading ? (
+                      {loading || emailStatus === "checking" ? (
                         <Spinner />
-                      ) : (
+                      ) : emailStatus === "approved" ? (
                         <>
                           <Login className="h-4 w-4" />
                           Sign in
+                        </>
+                      ) : emailStatus === "not-found" ? (
+                        <>
+                          <UserPlus className="h-4 w-4" />
+                          Join waitlist
+                        </>
+                      ) : (
+                        <>
+                          <Letter className="h-4 w-4" />
+                          Continue
                         </>
                       )}
                     </motion.span>
                   </AnimatePresence>
                 </Button>
-              </form>
+              </motion.form>
             )}
-          </div>
+          </AnimatePresence>
 
+          {view === "form" && emailStatus === "approved" && (
+            <p className="mt-4 font-sans text-center text-sm text-muted-foreground">
+              <button
+                type="button"
+                onClick={() => {
+                  setUsePassword(!usePassword);
+                  setPassword("");
+                  setShowPassword(false);
+                  setError(null);
+                  setMessage(null);
+                }}
+                className="font-semibold text-foreground hover:underline underline-offset-2"
+              >
+                {usePassword ? "Use magic link instead" : "Use password instead"}
+              </button>
+            </p>
+          )}
+
+          {view === "form" && emailStatus !== "approved" && (
+            <p className="mt-4 font-sans text-center text-xs text-muted-foreground">
+              Mizen is in private beta. You need an invite to sign in.
+            </p>
+          )}
         </div>
       </DialogContent>
     </Dialog>
-  );
-}
-
-
-function Spinner() {
-  return (
-    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-      />
-    </svg>
   );
 }
