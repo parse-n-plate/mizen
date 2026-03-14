@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
+import Plain from "@solar-icons/react/csr/messages/Plain";
+import { motion, AnimatePresence } from "motion/react";
+import { useDialKit } from "dialkit";
 import { Search } from "@/components/Search";
 import { RecentRecipes } from "@/components/RecentRecipes";
 import { GettingStarted } from "@/components/GettingStarted";
@@ -251,7 +254,7 @@ function TextSourcePreview() {
       <div className="self-start">
         <div className="px-3.5 py-2.5 rounded-2xl rounded-bl-md bg-stone-200 dark:bg-stone-700">
           <p className="font-sans text-[13px] text-stone-800 dark:text-stone-200 leading-snug">
-            You HAVE to make this carbonara
+            You HAVE to make these cookies
           </p>
         </div>
       </div>
@@ -259,8 +262,8 @@ function TextSourcePreview() {
       <div className="self-start max-w-[85%]">
         <div className="px-3.5 py-2.5 rounded-2xl rounded-bl-md bg-stone-200 dark:bg-stone-700">
           <p className="font-sans text-[13px] text-stone-800 dark:text-stone-200 leading-snug">
-            ok so you need 1 lb spaghetti, 4 eggs, 6 oz guanciale or pancetta, 1 cup pecorino
-            romano, black pepper.
+            2¼ cups flour, 1 tsp baking soda, 1 tsp salt, ¾ cup melted butter, ¾ cup brown sugar, ½
+            cup white sugar, 2 tsp vanilla, 1¼ cups chocolate chips.
           </p>
         </div>
       </div>
@@ -391,6 +394,44 @@ function WaitlistLanding() {
   const [hoveredSource, setHoveredSource] = useState<number | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
+  const dial = useDialKit(
+    "Waitlist",
+    {
+      source: {
+        type: "select",
+        options: ["URLs", "Recipe Photos", "Text"],
+        default: "URLs",
+      },
+      replay: { type: "action", label: "Replay Animation" },
+      "show success": { type: "action", label: "Show Success" },
+      "reset form": { type: "action", label: "Reset Form" },
+    },
+    {
+      onAction: (action) => {
+        if (action === "replay") {
+          setPhase("preview");
+          setIsInitialLoad(false);
+        } else if (action === "show success") {
+          setSubmitted(true);
+          setAlreadyOnList(false);
+        } else if (action === "reset form") {
+          setSubmitted(false);
+          setAlreadyOnList(false);
+          setEmail("");
+        }
+      },
+    }
+  );
+
+  // Sync source selection from dial panel
+  useEffect(() => {
+    const sourceIndex = ["URLs", "Recipe Photos", "Text"].indexOf(dial.source as string);
+    if (sourceIndex !== -1 && sourceIndex !== activeSource) {
+      handleSourceChange(sourceIndex);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dial.source]);
+
   // Run the animation sequence whenever phase changes
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
@@ -459,7 +500,7 @@ function WaitlistLanding() {
 
   return (
     <>
-      <div className="flex flex-col lg:flex-row min-h-screen lg:h-screen lg:overflow-hidden">
+      <div className="flex flex-col lg:flex-row min-h-screen lg:min-h-0 lg:h-screen lg:overflow-hidden flex-1">
         {/* Left panel */}
         <div className="relative flex flex-col justify-between lg:w-[38%] px-8 lg:px-12 xl:px-16 pt-12 lg:pt-5 pb-8 lg:pb-10 bg-white dark:bg-stone-950">
           {/* Top: Logo */}
@@ -536,44 +577,89 @@ function WaitlistLanding() {
 
               {/* Email form */}
               <form onSubmit={handleSubmit} className="page-fade-in-up page-fade-delay-2">
-                {submitted || alreadyOnList ? (
-                  <div className="flex items-center gap-2 h-[52px] px-4 rounded-full border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-900">
-                    <svg
-                      className="w-5 h-5 text-green-500 flex-shrink-0"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M20 6 9 17l-5-5" />
-                    </svg>
-                    <span className="font-sans text-sm text-stone-600 dark:text-stone-300">
-                      {alreadyOnList
-                        ? "You\u2019re already on the list! We\u2019ll be in touch."
-                        : "You\u2019re on the list! We\u2019ll be in touch."}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center h-[52px] rounded-xl border border-[#E7E5E4] bg-[#F5F5F4] dark:border-stone-700 dark:bg-stone-900 gap-3 overflow-clip shrink-0 focus-within:border-stone-400 dark:focus-within:border-stone-500 transition-colors">
+                <div className="flex items-center h-[52px] rounded-xl border border-[#E7E5E4] bg-[#F5F5F4] dark:border-stone-700 dark:bg-stone-900 overflow-clip shrink-0 focus-within:border-stone-400 dark:focus-within:border-stone-500 transition-colors">
+                  {/* Input — collapses on success */}
+                  <motion.div
+                    initial={false}
+                    animate={{
+                      flex: submitted || alreadyOnList ? "0 0 0px" : "1 1 0%",
+                      opacity: submitted || alreadyOnList ? 0 : 1,
+                    }}
+                    transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                    className="overflow-hidden min-w-0"
+                  >
                     <input
                       type="email"
-                      placeholder="Enter email address..."
+                      placeholder="you@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="flex-1 bg-transparent font-sans text-[15px] text-stone-700 dark:text-stone-200 placeholder:text-[#A8A29E] dark:placeholder:text-stone-500 outline-none min-w-0 pl-5 leading-[18px]"
+                      required={!(submitted || alreadyOnList)}
+                      disabled={submitted || alreadyOnList}
+                      className="w-full bg-transparent font-sans text-[15px] text-stone-700 dark:text-stone-200 placeholder:text-[#A8A29E] dark:placeholder:text-stone-500 outline-none pl-5 leading-[18px] whitespace-nowrap"
                     />
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="press-scale flex-shrink-0 h-10 px-6 rounded-lg bg-[#18A1F7] text-[#ffffff] font-sans text-[14px] font-semibold leading-[18px] transition-colors hover:bg-[#1590de] disabled:opacity-60 m-1.5"
-                    >
-                      {submitting ? "Joining..." : "Join Waitlist"}
-                    </button>
-                  </div>
-                )}
+                  </motion.div>
+
+                  {/* Button — expands to fill, then shows success */}
+                  <motion.button
+                    type="submit"
+                    disabled={submitting || submitted || alreadyOnList}
+                    layout
+                    transition={{ layout: { duration: 0.3, ease: [0.23, 1, 0.32, 1] } }}
+                    className={`flex-1 h-10 rounded-lg bg-[#18A1F7] font-sans text-[14px] text-[#ffffff] font-semibold leading-[18px] m-1.5 flex items-center justify-center gap-1.5 transition-[opacity] overflow-hidden ${
+                      submitted || alreadyOnList
+                        ? "!opacity-100 pointer-events-none"
+                        : "press-scale hover:bg-[#1590de] disabled:opacity-60"
+                    }`}
+                  >
+                    <AnimatePresence mode="wait" initial={false}>
+                      {submitted || alreadyOnList ? (
+                        <motion.span
+                          key="success"
+                          initial={{ opacity: 0, scale: 0.97 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
+                          className="flex items-center gap-2 whitespace-nowrap"
+                        >
+                          <svg
+                            className="w-4 h-4 flex-shrink-0"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M20 6 9 17l-5-5" />
+                          </svg>
+                          <span className="font-medium">
+                            {alreadyOnList
+                              ? "You\u2019re already on the list!"
+                              : "You\u2019re on the list!"}
+                          </span>
+                        </motion.span>
+                      ) : submitting ? (
+                        <motion.span
+                          key="sending"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0, scale: 0.97 }}
+                          transition={{ duration: 0.1 }}
+                        >
+                          Sending...
+                        </motion.span>
+                      ) : (
+                        <motion.span
+                          key="cta"
+                          exit={{ opacity: 0, scale: 0.97 }}
+                          transition={{ duration: 0.1 }}
+                          className="flex items-center gap-1.5"
+                        >
+                          <Plain size={16} weight="Bold" className="shrink-0" /> Notify Me
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </motion.button>
+                </div>
               </form>
             </div>
           </div>
@@ -627,10 +713,10 @@ function WaitlistLanding() {
           </div>
 
           {/* Recipe card + source overlay */}
-          <div className="page-fade-in-up page-fade-delay-3 relative flex-1 flex justify-center px-6 lg:px-10 pb-6 lg:pb-5">
+          <div className="page-fade-in-up page-fade-delay-3 relative flex-1 flex justify-center px-6 lg:px-10 pb-6 lg:pb-0">
             {/* Source input preview — overlaid on the recipe card */}
             {(phase === "preview" || phase === "absorb" || phase === "exit") && (
-              <div className="absolute inset-x-6 lg:inset-x-10 top-0 bottom-6 lg:bottom-5 z-10 flex justify-center items-start pt-20 pointer-events-none">
+              <div className="absolute inset-x-6 lg:inset-x-10 top-0 bottom-6 lg:bottom-0 z-10 flex justify-center items-start pt-20 pointer-events-none">
                 <div
                   key={`preview-${displayedPreview}`}
                   className={`flex justify-center items-center ${

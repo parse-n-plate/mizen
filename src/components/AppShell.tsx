@@ -15,7 +15,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <RecipeProvider>
-      <div className={isLanding ? "" : "min-h-screen bg-white dark:bg-stone-950"}>
+      <div className={isLanding ? "min-h-screen lg:min-h-0 lg:h-screen flex flex-col" : "min-h-screen bg-white dark:bg-stone-950"}>
         {!isLanding && <TopBar />}
         {isLanding ? children : <main>{children}</main>}
         {!isLanding && <Footer />}

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { Domine, Albert_Sans } from "next/font/google";
 import { Agentation } from "agentation";
+import { DialRoot } from "dialkit";
 import { AppShell } from "@/components/AppShell";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
+import "dialkit/styles.css";
 
 const domine = Domine({
   variable: "--font-domine",
@@ -51,6 +53,7 @@ export default function RootLayout({
         </TooltipProvider>
         <Toaster />
         {process.env.NODE_ENV === "development" && <Agentation />}
+        {process.env.NODE_ENV === "development" && <DialRoot position="bottom-right" />}
       </body>
     </html>
   );
