@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { parseRecipeFromUrl, parseRecipeFromImage, parseRecipeFromText } from "@/utils/parseRecipe";
 
-const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_IMAGE_BYTES = 4 * 1024 * 1024; // 4 MB (Groq base64 limit)
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const DATA_URL_MIME_PATTERN = /^data:([^;,]+)(?:;[^,]*)?,/i;
 

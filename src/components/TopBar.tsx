@@ -13,7 +13,7 @@ import { SettingsModal } from "@/components/SettingsModal";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+const MAX_IMAGE_SIZE = 4 * 1024 * 1024;
 
 export function TopBar() {
   const { user, loading: authLoading, supabaseDown } = useUser();
