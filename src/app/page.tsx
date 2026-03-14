@@ -605,8 +605,10 @@ function WaitlistLanding() {
                     disabled={submitting || submitted || alreadyOnList}
                     layout
                     transition={{ layout: { duration: 0.3, ease: [0.23, 1, 0.32, 1] } }}
-                    className={`press-scale flex-1 h-10 rounded-lg bg-[#18A1F7] font-sans text-[14px] text-[#ffffff] font-semibold leading-[18px] m-1.5 flex items-center justify-center gap-1.5 hover:bg-[#1590de] transition-[opacity] overflow-hidden ${
-                      submitted || alreadyOnList ? "!opacity-100" : "disabled:opacity-60"
+                    className={`flex-1 h-10 rounded-lg bg-[#18A1F7] font-sans text-[14px] text-[#ffffff] font-semibold leading-[18px] m-1.5 flex items-center justify-center gap-1.5 transition-[opacity] overflow-hidden ${
+                      submitted || alreadyOnList
+                        ? "!opacity-100 pointer-events-none"
+                        : "press-scale hover:bg-[#1590de] disabled:opacity-60"
                     }`}
                   >
                     <AnimatePresence mode="wait" initial={false}>
