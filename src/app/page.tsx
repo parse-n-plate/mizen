@@ -438,7 +438,7 @@ function WaitlistLanding() {
     if (phase === "preview") {
       // Source preview is visible, after a beat it absorbs into the card
       // On initial load, wait longer to account for page-fade-in delay
-      timer = setTimeout(() => setPhase("absorb"), isInitialLoad ? 1400 : 650);
+      timer = setTimeout(() => setPhase("absorb"), isInitialLoad ? 1200 : 650);
     } else if (phase === "absorb") {
       // Absorb animation plays, then recipe populates
       timer = setTimeout(() => setPhase("populate"), 300);
@@ -500,7 +500,7 @@ function WaitlistLanding() {
 
   return (
     <>
-      <div className="flex flex-col lg:flex-row min-h-screen lg:min-h-0 lg:h-screen lg:overflow-hidden flex-1">
+      <div className="page-reveal flex flex-col lg:flex-row min-h-screen lg:min-h-0 lg:h-screen lg:overflow-hidden flex-1">
         {/* Left panel */}
         <div className="relative flex flex-col justify-between lg:w-[38%] px-8 lg:px-12 xl:px-16 pt-12 lg:pt-5 pb-8 lg:pb-10 bg-white dark:bg-stone-950">
           {/* Top: Logo */}
@@ -709,9 +709,9 @@ function WaitlistLanding() {
                 <button
                   key={source.label}
                   onClick={() => handleSourceChange(i)}
-                  className={`press-scale flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-sans text-sm transition-all ${
+                  className={`press-scale flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-sans text-sm font-medium transition-[color,background-color,border-color,box-shadow] ${
                     activeSource === i
-                      ? "bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 font-medium"
+                      ? "bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 border border-transparent"
                       : hoveredSource === i
                         ? "bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 border border-stone-400 dark:border-stone-400 shadow-sm"
                         : "bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600"
