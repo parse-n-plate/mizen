@@ -17,3 +17,16 @@ export function setTheme(theme: Theme) {
     root.classList.toggle("dark", theme === "dark");
   }
 }
+
+export function initThemeListener() {
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+
+  const handler = (e: MediaQueryListEvent) => {
+    if (!localStorage.getItem("theme")) {
+      document.documentElement.classList.toggle("dark", e.matches);
+    }
+  };
+
+  mq.addEventListener("change", handler);
+  return () => mq.removeEventListener("change", handler);
+}
