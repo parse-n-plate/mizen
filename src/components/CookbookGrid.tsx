@@ -115,7 +115,7 @@ function CookbookCard({
       <button
         type="button"
         onClick={onDelete}
-        className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-lg text-stone-300 dark:text-stone-600 opacity-0 transition-all hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-500 dark:hover:text-stone-400 group-hover:opacity-100 focus-visible:opacity-100"
+        className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-lg text-stone-300 dark:text-stone-600 opacity-0 transition-[color,background-color,opacity] hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-500 dark:hover:text-stone-400 group-hover:opacity-100 focus-visible:opacity-100"
         aria-label="Delete recipe"
       >
         <svg

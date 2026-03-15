@@ -590,6 +590,7 @@ function WaitlistLanding() {
                   >
                     <input
                       type="email"
+                      autoComplete="email"
                       placeholder="you@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -608,9 +609,7 @@ function WaitlistLanding() {
                       flex: submitted || alreadyOnList ? "1 1 0%" : "0 0 auto",
                     }}
                     whileTap={
-                      submitted || alreadyOnList || submitting
-                        ? undefined
-                        : { scale: 0.96 }
+                      submitted || alreadyOnList || submitting ? undefined : { scale: 0.96 }
                     }
                     transition={{ duration: 0.25, ease: [0.77, 0, 0.175, 1] }}
                     className={`px-5 h-10 rounded-lg bg-[#18A1F7] font-sans text-[14px] text-[#ffffff] font-semibold leading-[18px] m-1.5 flex items-center justify-center gap-1.5 transition-[opacity] overflow-hidden ${
@@ -692,7 +691,7 @@ function WaitlistLanding() {
             {isSupabaseConfigured && (
               <button
                 onClick={() => setAuthOpen(true)}
-                className="hidden lg:block font-sans text-sm font-medium text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
+                className="hidden lg:block px-3 py-1.5 rounded-lg bg-stone-100 dark:bg-stone-800 font-sans text-sm font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
               >
                 Sign in
               </button>
@@ -784,12 +783,7 @@ function WaitlistLanding() {
         </div>
       </div>
 
-      {isSupabaseConfigured && (
-        <BetaAuthModal
-          open={authOpen}
-          onOpenChange={setAuthOpen}
-        />
-      )}
+      {isSupabaseConfigured && <BetaAuthModal open={authOpen} onOpenChange={setAuthOpen} />}
     </>
   );
 }

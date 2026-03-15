@@ -452,7 +452,7 @@ export function TopBar() {
                 {user ? (
                   <button
                     onClick={() => setMenuOpen(!menuOpen)}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden hover:ring-2 hover:ring-stone-300 dark:hover:ring-stone-700 transition-all"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg overflow-hidden hover:ring-2 hover:ring-stone-300 dark:hover:ring-stone-700 transition-[box-shadow]"
                   >
                     {user.user_metadata?.avatar_url ? (
                       <Image
