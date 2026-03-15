@@ -77,55 +77,50 @@ const EXAMPLE_RECIPES: ParsedRecipe[] = [
     ],
   },
   {
-    title: "Thai Green Curry",
+    title: "Homemade White Bread",
     summary:
-      "A fragrant, coconut-based curry with tender chicken, Thai basil, and vegetables — faster than takeout.",
-    author: "RecipeTin Eats",
-    servings: 4,
-    prepTimeMinutes: 10,
+      "A classic from-scratch white bread with a soft crumb and golden crust — just flour, yeast, and a little patience.",
+    author: "Grandma's Recipe Box",
+    servings: 2,
+    prepTimeMinutes: 30,
     cookTimeMinutes: 25,
-    totalTimeMinutes: 35,
-    sourceUrl: "https://www.recipetineats.com/thai-green-curry/",
+    totalTimeMinutes: 180,
+    sourceUrl: "https://recipecurio.com/handwritten-recipe-for-white-bread/",
+    imageUrl: "/assets/homemade-white-bread-recipe.jpg",
     ingredients: [
       {
-        groupName: "Curry",
+        groupName: "Dough",
         ingredients: [
-          { amount: "1.5", units: "lbs", ingredient: "chicken thighs, sliced" },
-          { amount: "3", units: "tbsp", ingredient: "green curry paste" },
-          { amount: "1", units: "can", ingredient: "coconut milk" },
-          { amount: "2", units: "tbsp", ingredient: "fish sauce" },
-          { amount: "1", units: "cup", ingredient: "Thai basil leaves" },
-          { amount: "1", units: "", ingredient: "red bell pepper, sliced" },
-        ],
-      },
-      {
-        groupName: "To serve",
-        ingredients: [
-          { amount: "3", units: "cups", ingredient: "jasmine rice, cooked" },
-          { amount: "1", units: "", ingredient: "lime, cut into wedges" },
+          { amount: "6.5", units: "cups", ingredient: "all-purpose flour, plus more for kneading" },
+          { amount: "3", units: "tbsp", ingredient: "sugar" },
+          { amount: "1", units: "tbsp", ingredient: "salt" },
+          { amount: "1", units: "pkg", ingredient: "dry yeast" },
+          { amount: "0.25", units: "cup", ingredient: "lukewarm water" },
+          { amount: "2", units: "cups", ingredient: "warm water" },
+          { amount: "2", units: "tbsp", ingredient: "shortening" },
         ],
       },
     ],
     instructions: [
       {
-        title: "Saut\u00e9 the paste",
+        title: "Mix the dough",
         detail:
-          "Heat a large pot or wok over medium-high heat. Add 2 tablespoons of coconut cream (the thick part from the top of the can) and fry the curry paste for 1\u20132 minutes until fragrant.",
+          "Measure 6\u00bd cups flour into a large bowl and make a well in the center. Add sugar and salt. Dissolve yeast in the lukewarm water, then pour into the well along with the warm water. Stir rapidly in a circular motion, working outward until the liquid is absorbed.",
       },
       {
-        title: "Cook the chicken",
+        title: "Add shortening and knead",
         detail:
-          "Add sliced chicken thighs and stir to coat in the paste. Cook for 3\u20134 minutes until the outsides are sealed.",
+          "Work in the shortening in small pieces with your hands. Turn dough onto a floured surface and knead until firm and elastic, about 10 minutes, using up to \u00bd cup more flour as needed.",
       },
       {
-        title: "Simmer with coconut",
+        title: "First and second rise",
         detail:
-          "Pour in the remaining coconut milk and fish sauce. Add the sliced bell pepper. Bring to a gentle boil, then reduce heat and simmer for 15 minutes until chicken is cooked through.",
+          "Place dough in a greased bowl, turn to coat, and cover with waxed paper then a cloth. Let rise in a warm, draft-free spot until doubled in bulk. Punch down and let rise again until almost doubled.",
       },
       {
-        title: "Finish and serve",
+        title: "Shape and bake",
         detail:
-          "Stir in Thai basil leaves and remove from heat. Serve over steamed jasmine rice with lime wedges on the side.",
+          "Divide dough in half and shape into loaves. Pierce each loaf about 4 times to release air. Place in greased loaf pans, cover, and let rise until just over double. Bake in a preheated 400\u00b0F oven for 25 minutes.",
       },
     ],
   },
@@ -210,18 +205,14 @@ function UrlSourcePreview() {
 function PhotoSourcePreview() {
   return (
     <div className="flex flex-col items-center gap-3 max-w-[280px]">
-      <div className="relative w-[240px] h-[160px] rounded-xl bg-stone-200 dark:bg-stone-700 shadow-md overflow-hidden rotate-[-2deg]">
-        {/* Stylized cookbook page */}
-        <div className="absolute inset-0 p-4 flex flex-col gap-1.5">
-          <div className="h-2 w-3/4 rounded-full bg-stone-300 dark:bg-stone-600" />
-          <div className="h-2 w-full rounded-full bg-stone-300 dark:bg-stone-600" />
-          <div className="h-2 w-5/6 rounded-full bg-stone-300 dark:bg-stone-600" />
-          <div className="mt-2 h-2 w-2/3 rounded-full bg-stone-300 dark:bg-stone-600" />
-          <div className="h-2 w-full rounded-full bg-stone-300 dark:bg-stone-600" />
-          <div className="h-2 w-4/5 rounded-full bg-stone-300 dark:bg-stone-600" />
-          <div className="mt-2 h-2 w-1/2 rounded-full bg-stone-300 dark:bg-stone-600" />
-          <div className="h-2 w-3/4 rounded-full bg-stone-300 dark:bg-stone-600" />
-        </div>
+      <div className="relative w-[240px] h-[160px] rounded-xl shadow-md overflow-hidden rotate-[-2deg]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/homemade-white-bread-recipe.jpg"
+          alt="Handwritten recipe card"
+          className="w-full h-full object-cover"
+          draggable={false}
+        />
         <div className="absolute bottom-2 left-3 flex items-center gap-1.5 px-2 py-1 rounded-md bg-white/80 dark:bg-stone-900/80 backdrop-blur-sm">
           <svg
             className="w-3 h-3 text-stone-500"
@@ -236,12 +227,12 @@ function PhotoSourcePreview() {
             <circle cx="12" cy="13" r="3" />
           </svg>
           <span className="font-sans text-[11px] text-stone-500 dark:text-stone-400">
-            Cookbook photo
+            Handwritten recipe
           </span>
         </div>
       </div>
       <span className="font-serif text-xl italic text-stone-700 dark:text-stone-300 rotate-[-1deg]">
-        Pork Tsukemen
+        Homemade White Bread
       </span>
     </div>
   );
@@ -534,7 +525,7 @@ function WaitlistLanding() {
             <div className="max-w-[30rem] text-center lg:text-left">
               <div className="page-fade-in-up page-fade-delay-1 mb-6">
                 <span className="inline-block px-3 py-1 rounded-full border border-stone-200 dark:border-stone-700 font-sans text-xs text-stone-500 dark:text-stone-400">
-                  Now in early access
+                  Now in Early Access
                 </span>
               </div>
 
@@ -768,6 +759,7 @@ function WaitlistLanding() {
                 <WaitlistRecipePreview
                   key={displayedSource}
                   recipe={EXAMPLE_RECIPES[displayedSource]}
+                  sourceType={(["url", "photo", "text"] as const)[displayedSource]}
                 />
               </div>
             </div>

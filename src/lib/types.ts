@@ -38,6 +38,7 @@ export interface ParsedRecipe {
   ingredients: IngredientGroup[];
   instructions: InstructionStep[];
   sourceUrl?: string;
+  imageUrl?: string;
 }
 
 export interface ParserResult {
