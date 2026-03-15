@@ -177,7 +177,7 @@ function UrlChip({
           e.stopPropagation();
           onRemove();
         }}
-        className="flex items-center justify-center rounded-lg shrink-0 size-6 opacity-0 group-hover:opacity-100 hover:bg-stone-200 dark:hover:bg-stone-700 transition-all"
+        className="flex items-center justify-center rounded-lg shrink-0 size-6 opacity-0 group-hover:opacity-100 hover:bg-stone-200 dark:hover:bg-stone-700 transition-opacity"
         aria-label="Remove URL"
       >
         <svg width="10" height="10" viewBox="0 0 16 16" fill="none">
@@ -801,7 +801,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                 <button
                   type="submit"
                   disabled={!hasInput || isLoading}
-                  className={`press-scale flex items-center justify-center rounded-xl shrink-0 size-10 transition-all ${
+                  className={`press-scale flex items-center justify-center rounded-xl shrink-0 size-10 transition-[color,background-color,opacity] ${
                     submitIsBlue
                       ? "bg-[var(--color-blue)] text-white"
                       : "bg-stone-200 dark:bg-stone-700 text-stone-500 dark:text-stone-400"
@@ -833,7 +833,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="press-scale flex items-center justify-center rounded-xl bg-[var(--color-blue)] text-white shrink-0 size-10 transition-all disabled:opacity-60"
+                  className="press-scale flex items-center justify-center rounded-xl bg-[var(--color-blue)] text-white shrink-0 size-10 transition-opacity disabled:opacity-60"
                 >
                   {isLoading ? <SpinnerIcon /> : <UpArrowIcon />}
                 </button>
@@ -867,7 +867,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="press-scale flex items-center justify-center rounded-xl bg-[var(--color-blue)] text-white shrink-0 size-10 transition-all disabled:opacity-60"
+                    className="press-scale flex items-center justify-center rounded-xl bg-[var(--color-blue)] text-white shrink-0 size-10 transition-opacity disabled:opacity-60"
                   >
                     {isLoading ? <SpinnerIcon /> : <UpArrowIcon />}
                   </button>

@@ -180,7 +180,7 @@ function IngredientGroupSection({
 
           {/* Progress Pie - appears when at least one ingredient is checked */}
           <div
-            className={`flex items-center flex-shrink-0 transition-all duration-150 ease-out ${
+            className={`flex items-center flex-shrink-0 transition-[opacity,transform] duration-150 ease-out ${
               checkedCount > 0
                 ? "opacity-100"
                 : "opacity-0 w-0 -ml-3 overflow-hidden pointer-events-none"

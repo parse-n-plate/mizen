@@ -70,6 +70,7 @@
    since gutter already handles it, we neutralize the extra padding. */
 html {
   scrollbar-gutter: stable;
+  touch-action: manipulation;
 }
 
 html body[data-scroll-locked] {
@@ -366,9 +367,11 @@ body {
     outline-offset: -2px;
   }
 
-  .folder-tab-trigger:hover:not([data-state="active"]) {
-    background-color: color-mix(in srgb, var(--color-gray-light) 40%, transparent) !important;
-    color: var(--color-black);
+  @media (hover: hover) and (pointer: fine) {
+    .folder-tab-trigger:hover:not([data-state="active"]) {
+      background-color: color-mix(in srgb, var(--color-gray-light) 40%, transparent) !important;
+      color: var(--color-black);
+    }
   }
 
   .folder-tab-trigger[data-state="active"] {
@@ -424,9 +427,11 @@ body {
     outline-offset: -2px;
   }
 
-  .folder-tab-trigger-bottom:hover:not([data-state="active"]) {
-    background-color: color-mix(in srgb, var(--color-gray-light) 40%, transparent) !important;
-    color: var(--color-black);
+  @media (hover: hover) and (pointer: fine) {
+    .folder-tab-trigger-bottom:hover:not([data-state="active"]) {
+      background-color: color-mix(in srgb, var(--color-gray-light) 40%, transparent) !important;
+      color: var(--color-black);
+    }
   }
 
   .folder-tab-trigger-bottom[data-state="active"] {
@@ -620,9 +625,14 @@ body {
     transition: opacity 150ms ease;
   }
 
-  .group:hover .ingredient-group-chevron,
   [aria-expanded="false"] .ingredient-group-chevron {
     opacity: 1;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .group:hover .ingredient-group-chevron {
+      opacity: 1;
+    }
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
@@ -639,8 +649,10 @@ body {
       background-color 150ms ease;
   }
 
-  .ingredient-list-item:hover {
-    background-color: var(--color-cream);
+  @media (hover: hover) and (pointer: fine) {
+    .ingredient-list-item:hover {
+      background-color: var(--color-cream);
+    }
   }
 
   .ingredient-list-item:active {
@@ -657,9 +669,11 @@ body {
   }
 
   /* Hide the previous item's divider when the next item is hovered */
-  .ingredient-list-item:has(+ .ingredient-list-item:hover) .ingredient-list-divider,
-  .group:has(+ .group:hover) .step-list-divider {
-    opacity: 0;
+  @media (hover: hover) and (pointer: fine) {
+    .ingredient-list-item:has(+ .ingredient-list-item:hover) .ingredient-list-divider,
+    .group:has(+ .group:hover) .step-list-divider {
+      opacity: 0;
+    }
   }
 
   .ingredient-list-content {
@@ -812,8 +826,10 @@ body {
     border-bottom: none;
   }
 
-  .recipe-step-list-item:hover {
-    background-color: color-mix(in srgb, var(--color-background-cream) 50%, transparent);
+  @media (hover: hover) and (pointer: fine) {
+    .recipe-step-list-item:hover {
+      background-color: color-mix(in srgb, var(--color-background-cream) 50%, transparent);
+    }
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
@@ -1083,14 +1099,16 @@ body {
     transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
-  /* Knife: subtle chop rock */
-  button:hover .tab-icon-prep {
-    animation: icon-chop 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
+  @media (hover: hover) and (pointer: fine) {
+    /* Knife: subtle chop rock */
+    button:hover .tab-icon-prep {
+      animation: icon-chop 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
 
-  /* Pan: gentle toss */
-  button:hover .tab-icon-cook {
-    animation: icon-toss 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* Pan: gentle toss */
+    button:hover .tab-icon-cook {
+      animation: icon-toss 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
   }
 
   @keyframes icon-chop {

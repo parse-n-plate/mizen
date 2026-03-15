@@ -590,6 +590,7 @@ function WaitlistLanding() {
                   >
                     <input
                       type="email"
+                      autoComplete="email"
                       placeholder="you@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -709,7 +710,7 @@ function WaitlistLanding() {
                 <button
                   key={source.label}
                   onClick={() => handleSourceChange(i)}
-                  className={`press-scale flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-sans text-sm transition-all ${
+                  className={`press-scale flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-sans text-sm transition-[color,background-color,border-color] ${
                     activeSource === i
                       ? "bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 font-medium"
                       : hoveredSource === i

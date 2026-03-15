@@ -59,7 +59,7 @@ export function RecipeCard({ item, onDelete }: RecipeCardProps) {
       <button
         onClick={handleDelete}
         disabled={deleting}
-        className="ml-3 flex-shrink-0 rounded-lg p-1.5 text-stone-300 dark:text-stone-600 opacity-0 transition-all hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-500 dark:hover:text-stone-400 group-hover:opacity-100"
+        className="ml-3 flex-shrink-0 rounded-lg p-1.5 text-stone-300 dark:text-stone-600 opacity-0 transition-[color,background-color,opacity] hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-500 dark:hover:text-stone-400 group-hover:opacity-100"
         aria-label="Delete recipe"
       >
         <svg
