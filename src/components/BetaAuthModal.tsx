@@ -80,34 +80,10 @@ function AuthContent({
   const [emailStatus, setEmailStatus] = useState<EmailStatus>("idle");
   const [view, setView] = useState<View>("form");
   const [loading, setLoading] = useState(false);
-  const [keyboardOffset, setKeyboardOffset] = useState(0);
   const allowSubmit = useSubmitGuard();
   const openRef = useRef(open);
   const closeResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const checkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  // iOS keyboard handling: shift content up when virtual keyboard opens
-  useEffect(() => {
-    if (!isMobile) return;
-
-    const viewport = window.visualViewport;
-    if (!viewport) return;
-
-    const onResize = () => {
-      // The difference between window height and visual viewport height
-      // is roughly the keyboard height
-      const keyboardHeight = window.innerHeight - viewport.height;
-      setKeyboardOffset(keyboardHeight > 50 ? keyboardHeight : 0);
-    };
-
-    viewport.addEventListener("resize", onResize);
-    viewport.addEventListener("scroll", onResize);
-    return () => {
-      viewport.removeEventListener("resize", onResize);
-      viewport.removeEventListener("scroll", onResize);
-    };
-  }, [isMobile]);
 
   useEffect(() => {
     openRef.current = open;
@@ -375,20 +351,7 @@ function AuthContent({
   const Description = isMobile ? DrawerDescription : DialogDescription;
 
   return (
-    <div
-      ref={contentRef}
-      className="p-6 sm:p-8 overflow-y-auto"
-      style={
-        isMobile && keyboardOffset > 0
-          ? {
-              transform: `translateY(-${keyboardOffset * 0.4}px)`,
-              transition: "transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-            }
-          : isMobile
-            ? { transition: "transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94)" }
-            : undefined
-      }
-    >
+    <div className="p-6 sm:p-8 overflow-y-auto">
       <Header className="text-left mb-6 overflow-hidden">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
