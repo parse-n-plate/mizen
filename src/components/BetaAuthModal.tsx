@@ -47,7 +47,7 @@ export function BetaAuthModal({ open, onOpenChange }: BetaAuthModalProps) {
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="max-h-[92dvh]">
+        <DrawerContent className="max-h-[92dvh] dark:bg-card">
           <AuthContent open={open} onOpenChange={onOpenChange} isMobile />
         </DrawerContent>
       </Drawer>
@@ -56,18 +56,17 @@ export function BetaAuthModal({ open, onOpenChange }: BetaAuthModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton className="sm:max-w-md p-0 gap-0 overflow-hidden rounded-xl">
+      <DialogContent
+        showCloseButton
+        className="sm:max-w-md p-0 gap-0 overflow-hidden rounded-xl dark:bg-card"
+      >
         <AuthContent open={open} onOpenChange={onOpenChange} isMobile={false} />
       </DialogContent>
     </Dialog>
   );
 }
 
-function AuthContent({
-  open,
-  onOpenChange,
-  isMobile,
-}: BetaAuthModalProps & { isMobile: boolean }) {
+function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { isMobile: boolean }) {
   const shouldReduceMotion = useReducedMotion();
   const t = shouldReduceMotion ? INSTANT : TRANSITION;
 
@@ -384,8 +383,8 @@ function AuthContent({
                   Sign-in link sent to <span className="font-medium">{email}</span>
                 </p>
                 <p className="font-sans text-xs text-green-600/80 dark:text-green-400/70 mt-1">
-                  Click the link in the email to sign in. Check your spam folder if you
-                  don&apos;t see it.
+                  Click the link in the email to sign in. Check your spam folder if you don&apos;t
+                  see it.
                 </p>
               </div>
             </div>
@@ -565,8 +564,7 @@ function AuthContent({
             <Button
               type="submit"
               disabled={loading || emailStatus === "checking" || emailStatus === "idle"}
-              className="w-full relative overflow-hidden bg-mizen-blue hover:bg-mizen-blue/90 focus-visible:ring-mizen-blue/50"
-              style={{ color: "white" }}
+              className="w-full relative overflow-hidden bg-mizen-blue hover:bg-mizen-blue/90 focus-visible:ring-mizen-blue/50 text-white"
               size="lg"
             >
               <AnimatePresence mode="wait" initial={false}>
