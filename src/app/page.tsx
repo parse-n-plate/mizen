@@ -522,7 +522,7 @@ function WaitlistLanding() {
             {isSupabaseConfigured && (
               <button
                 onClick={() => setAuthOpen(true)}
-                className="lg:hidden font-sans text-sm font-medium text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
+                className="lg:hidden px-3 py-1.5 rounded-lg bg-stone-100 dark:bg-stone-800 font-sans text-sm font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
               >
                 Sign in
               </button>
@@ -691,7 +691,7 @@ function WaitlistLanding() {
             {isSupabaseConfigured && (
               <button
                 onClick={() => setAuthOpen(true)}
-                className="hidden lg:block font-sans text-sm font-medium text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
+                className="hidden lg:block px-3 py-1.5 rounded-lg bg-stone-100 dark:bg-stone-800 font-sans text-sm font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
               >
                 Sign in
               </button>
