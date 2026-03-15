@@ -454,6 +454,24 @@ body {
      LANDING PAGE ONLOAD ANIMATION
   ═══════════════════════════════════════════════════════════════════════════ */
 
+  /* Whole-page reveal — fades the entire layout in as one unit so
+     nav/footer never appear before the content between them. */
+  @keyframes page-reveal {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .page-reveal {
+    opacity: 0;
+    animation: page-reveal 350ms var(--ease-out-quint) 50ms forwards;
+  }
+
+  /* Per-element slide-up — runs *inside* the already-visible container
+     for a subtle staggered entrance without an independent opacity fight. */
   @keyframes page-fade-in-up {
     from {
       opacity: 0;
@@ -467,21 +485,22 @@ body {
 
   .page-fade-in-up {
     opacity: 0;
-    animation: page-fade-in-up 350ms var(--ease-out-quint) forwards;
+    animation: page-fade-in-up 400ms var(--ease-out-quint) 80ms forwards;
     will-change: transform;
   }
 
   .page-fade-delay-1 {
-    animation-delay: 80ms;
+    animation-delay: 140ms;
   }
   .page-fade-delay-2 {
-    animation-delay: 170ms;
+    animation-delay: 200ms;
   }
   .page-fade-delay-3 {
-    animation-delay: 280ms;
+    animation-delay: 270ms;
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .page-reveal,
     .page-fade-in-up,
     .source-preview-enter,
     .source-preview-enter-initial,
@@ -558,7 +577,7 @@ body {
 
   .source-preview-enter-initial {
     opacity: 0;
-    animation: source-preview-enter 350ms var(--ease-out-quint) 500ms forwards;
+    animation: source-preview-enter 350ms var(--ease-out-quint) 400ms forwards;
   }
 
   .source-preview-exit {
@@ -1052,6 +1071,7 @@ body {
 
   .press-scale {
     transition: transform 100ms ease;
+    will-change: transform;
   }
 
   .press-scale:active {

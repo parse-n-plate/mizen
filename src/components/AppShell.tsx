@@ -11,11 +11,19 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user, loading } = useUser();
   const isHomePage = pathname === "/";
-  const isLanding = isHomePage && !loading && !user;
+  // Treat loading state as landing on homepage so TopBar/Footer don't flash
+  // before auth resolves
+  const isLanding = isHomePage && (loading || !user);
 
   return (
     <RecipeProvider>
-      <div className={isLanding ? "min-h-screen lg:min-h-0 lg:h-screen flex flex-col" : "min-h-screen bg-white dark:bg-stone-950"}>
+      <div
+        className={
+          isLanding
+            ? "min-h-screen lg:min-h-0 lg:h-screen flex flex-col"
+            : "min-h-screen bg-white dark:bg-stone-950"
+        }
+      >
         {!isLanding && <TopBar />}
         {isLanding ? children : <main>{children}</main>}
         {!isLanding && <Footer />}
