@@ -71,9 +71,8 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
     return normalizedGroups
       .map((group) => ({
         ...group,
-        ingredients: group.ingredients.filter(
-          ({ ingredient }) =>
-            ingredient.ingredient.toLowerCase().includes(query)
+        ingredients: group.ingredients.filter(({ ingredient }) =>
+          ingredient.ingredient.toLowerCase().includes(query)
         ),
       }))
       .filter((group) => group.ingredients.length > 0);
