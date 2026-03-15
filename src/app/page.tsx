@@ -35,6 +35,10 @@ const EXAMPLE_RECIPES: ParsedRecipe[] = [
     cookTimeMinutes: 15,
     totalTimeMinutes: 25,
     sourceUrl: "https://www.bonappetit.com/recipe/simple-carbonara",
+    sourceSiteDescription:
+      "Bon Appétit is a monthly food and entertaining magazine founded in 1956. Known for thoroughly tested recipes, restaurant reviews, and cooking videos with a loyal following.",
+    commentConsensus:
+      "Commenters love this recipe for its simplicity and authentic flavor. Many suggest using the full amount of pepper and reserving extra pasta water. A few note that guanciale can be hard to find — pancetta works in a pinch but changes the flavor. Consensus: a reliable weeknight go-to that tastes restaurant-quality.",
     ingredients: [
       {
         groupName: "Pasta",
@@ -87,6 +91,24 @@ const EXAMPLE_RECIPES: ParsedRecipe[] = [
     totalTimeMinutes: 180,
     sourceUrl: "https://recipecurio.com/handwritten-recipe-for-white-bread/",
     imageUrl: "/assets/homemade-white-bread-recipe.jpg",
+    imageTranscription: `White Bread
+
+6½ cups flour
+3 tbsp sugar
+1 tbsp salt
+1 pkg dry yeast dissolved in ¼ cup lukewarm water
+2 cups warm water
+2 tbsp shortening
+
+Measure flour into a bowl and make a well in the center. Add sugar and salt. Dissolve yeast in lukewarm water. Pour yeast and warm water into well. Stir rapidly in circular motion working outward until liquid is absorbed.
+
+Work in shortening in small pieces. Turn onto floured surface. Knead until firm and elastic (about 10 min) using up to ½ cup more flour.
+
+Place in greased bowl — turn to grease top. Cover with waxed paper then cloth. Let rise in warm draft-free place until doubled in bulk. Punch down. Let rise again until almost doubled.
+
+Divide in half. Shape into loaves. Pierce each loaf about 4 times. Place in greased loaf pans. Cover. Let rise until just over double. Bake at 400° for 25 min.
+
+Makes 2 loaves.`,
     ingredients: [
       {
         groupName: "Dough",

@@ -39,6 +39,9 @@ export interface ParsedRecipe {
   instructions: InstructionStep[];
   sourceUrl?: string;
   imageUrl?: string;
+  imageTranscription?: string;
+  sourceSiteDescription?: string;
+  commentConsensus?: string;
 }
 
 export interface ParserResult {
