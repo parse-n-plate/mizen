@@ -71,9 +71,8 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
     return normalizedGroups
       .map((group) => ({
         ...group,
-        ingredients: group.ingredients.filter(
-          ({ ingredient }) =>
-            ingredient.ingredient.toLowerCase().includes(query)
+        ingredients: group.ingredients.filter(({ ingredient }) =>
+          ingredient.ingredient.toLowerCase().includes(query)
         ),
       }))
       .filter((group) => group.ingredients.length > 0);
@@ -269,7 +268,7 @@ function IngredientGroupSection({
                     >
                       <div className="flex items-baseline gap-1.5 min-w-0">
                         <p
-                          className={`font-sans font-medium text-base text-stone-800 dark:text-stone-200 capitalize flex-shrink-0 ${
+                          className={`font-sans font-medium text-base text-stone-800 dark:text-stone-200 capitalize truncate ${
                             isChecked ? "line-through" : ""
                           }`}
                         >
