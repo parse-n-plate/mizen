@@ -382,6 +382,7 @@ body {
     border-top-color: var(--color-border-light) !important;
     z-index: 3;
     box-shadow: none !important;
+    transform-origin: top center;
   }
 
   /* Hide the line-style active indicator */

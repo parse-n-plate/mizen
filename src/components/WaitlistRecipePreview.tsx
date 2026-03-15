@@ -7,6 +7,8 @@ import { IngredientList } from "@/components/IngredientList";
 import { StepList } from "@/components/StepList";
 import { scaleIngredients } from "@/utils/ingredientScaler";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 type SourceType = "url" | "photo" | "text";
 
@@ -43,7 +45,10 @@ function UrlAttachment({ url, onClick }: { url: string; onClick: () => void }) {
 
   return (
     <button
-      onClick={onClick}
+      onClick={(e) => {
+        (e.currentTarget as HTMLElement).blur();
+        onClick();
+      }}
       className="group inline-flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors cursor-pointer"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -72,7 +77,10 @@ function UrlAttachment({ url, onClick }: { url: string; onClick: () => void }) {
 function TextAttachment({ onClick, charCount }: { onClick: () => void; charCount: number }) {
   return (
     <button
-      onClick={onClick}
+      onClick={(e) => {
+        (e.currentTarget as HTMLElement).blur();
+        onClick();
+      }}
       className="group inline-flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors cursor-pointer"
     >
       <svg
@@ -126,6 +134,172 @@ const ZOOM_MIN = 1;
 const ZOOM_MAX = 4;
 const ZOOM_STEP = 0.5;
 
+function ImageLightboxContent({
+  recipe,
+  zoom,
+  pan,
+  containerRef,
+  handleWheel,
+  handlePointerDown,
+  handlePointerMove,
+  handlePointerUp,
+  handleZoomIn,
+  handleZoomOut,
+  resetView,
+  hasTranscription,
+}: {
+  recipe: ParsedRecipe;
+  zoom: number;
+  pan: { x: number; y: number };
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  handleWheel: (e: React.WheelEvent) => void;
+  handlePointerDown: (e: React.PointerEvent) => void;
+  handlePointerMove: (e: React.PointerEvent) => void;
+  handlePointerUp: () => void;
+  handleZoomIn: () => void;
+  handleZoomOut: () => void;
+  resetView: () => void;
+  hasTranscription: boolean;
+}) {
+  if (!hasTranscription) {
+    return (
+      /* eslint-disable-next-line @next/next/no-img-element */
+      <img
+        src={recipe.imageUrl}
+        alt={recipe.title}
+        className="w-full max-h-[80vh] object-contain rounded-lg"
+      />
+    );
+  }
+
+  return (
+    <>
+      {/* Image */}
+      <div
+        ref={containerRef}
+        className="relative shrink-0 bg-stone-100 dark:bg-stone-800 flex items-center justify-center overflow-hidden select-none aspect-[4/3] sm:aspect-auto sm:w-2/3"
+        onWheel={handleWheel}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        style={{ cursor: zoom > 1 ? "grab" : "default", touchAction: "none" }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={recipe.imageUrl}
+          alt={recipe.title}
+          className="w-full h-full object-contain pointer-events-none transition-transform duration-150 ease-out"
+          draggable={false}
+          style={{
+            transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
+          }}
+        />
+        {/* Zoom controls */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-black/60 backdrop-blur-sm rounded-full px-1.5 py-1 z-10">
+          <button
+            onClick={handleZoomOut}
+            disabled={zoom <= ZOOM_MIN}
+            className="w-7 h-7 flex items-center justify-center rounded-full text-white hover:bg-white/20 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+            aria-label="Zoom out"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
+              <path d="M5 12h14" />
+            </svg>
+          </button>
+          <button
+            onClick={resetView}
+            className="px-2 h-7 flex items-center justify-center rounded-full text-white text-xs font-medium tabular-nums hover:bg-white/20 transition-colors min-w-[3rem]"
+            aria-label="Reset zoom"
+          >
+            {Math.round(zoom * 100)}%
+          </button>
+          <button
+            onClick={handleZoomIn}
+            disabled={zoom >= ZOOM_MAX}
+            className="w-7 h-7 flex items-center justify-center rounded-full text-white hover:bg-white/20 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+            aria-label="Zoom in"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      {/* Transcription */}
+      <div className="overflow-y-auto p-5 sm:p-6 sm:w-1/3">
+        <div className="space-y-4">
+          <div>
+            <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-1">
+              Transcription
+            </h3>
+            <p className="font-sans text-[14px] leading-relaxed text-stone-700 dark:text-stone-300 whitespace-pre-wrap">
+              {recipe.imageTranscription}
+            </p>
+          </div>
+          <div className="border-t border-stone-200 dark:border-stone-700 pt-4 space-y-3">
+            <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500">
+              At a glance
+            </h3>
+            <div className="grid grid-cols-2 gap-2 text-[13px]">
+              {recipe.servings && (
+                <div className="flex flex-col gap-0.5 rounded-lg bg-stone-50 dark:bg-stone-800 px-3 py-2">
+                  <span className="text-stone-400 dark:text-stone-500">Yield</span>
+                  <span className="font-medium text-stone-700 dark:text-stone-200">
+                    {recipe.servings} loaves
+                  </span>
+                </div>
+              )}
+              {recipe.totalTimeMinutes && (
+                <div className="flex flex-col gap-0.5 rounded-lg bg-stone-50 dark:bg-stone-800 px-3 py-2">
+                  <span className="text-stone-400 dark:text-stone-500">Total time</span>
+                  <span className="font-medium text-stone-700 dark:text-stone-200">
+                    {formatTime(recipe.totalTimeMinutes)}
+                  </span>
+                </div>
+              )}
+              {recipe.cookTimeMinutes && (
+                <div className="flex flex-col gap-0.5 rounded-lg bg-stone-50 dark:bg-stone-800 px-3 py-2">
+                  <span className="text-stone-400 dark:text-stone-500">Bake</span>
+                  <span className="font-medium text-stone-700 dark:text-stone-200">
+                    400°F / {formatTime(recipe.cookTimeMinutes)}
+                  </span>
+                </div>
+              )}
+              <div className="flex flex-col gap-0.5 rounded-lg bg-stone-50 dark:bg-stone-800 px-3 py-2">
+                <span className="text-stone-400 dark:text-stone-500">Ingredients</span>
+                <span className="font-medium text-stone-700 dark:text-stone-200">
+                  {recipe.ingredients.reduce((sum, g) => sum + g.ingredients.length, 0)} items
+                </span>
+              </div>
+            </div>
+          </div>
+          {recipe.author && (
+            <p className="font-sans text-[12px] text-stone-400 dark:text-stone-500 italic">
+              Source: {recipe.author}
+            </p>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
 function ImageLightbox({
   open,
   onOpenChange,
@@ -135,6 +309,7 @@ function ImageLightbox({
   onOpenChange: (open: boolean) => void;
   recipe: ParsedRecipe;
 }) {
+  const isDesktop = useMediaQuery("(min-width: 640px)");
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const isDragging = useRef(false);
@@ -194,160 +369,176 @@ function ImageLightbox({
 
   const hasTranscription = !!recipe.imageTranscription;
 
+  const contentProps = {
+    recipe,
+    zoom,
+    pan,
+    containerRef,
+    handleWheel,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+    handleZoomIn,
+    handleZoomOut,
+    resetView,
+    hasTranscription,
+  };
+
+  const handleOpenChange = (v: boolean) => {
+    onOpenChange(v);
+    if (!v) resetView();
+  };
+
+  if (!isDesktop) {
+    return (
+      <Drawer open={open} onOpenChange={handleOpenChange}>
+        <DrawerContent
+          aria-describedby={undefined}
+          className="max-h-[90vh] p-0 overflow-hidden bg-white dark:bg-stone-900"
+        >
+          <DrawerTitle className="sr-only">{recipe.title}</DrawerTitle>
+          <div className="overflow-y-auto">
+            <ImageLightboxContent {...contentProps} />
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(v) => {
-        onOpenChange(v);
-        if (!v) resetView();
-      }}
-    >
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
         className={`p-0 border-0 overflow-hidden ${
           hasTranscription
-            ? "max-w-[min(960px,90vw)] bg-white dark:bg-stone-900 rounded-xl"
+            ? "sm:max-w-[min(1400px,94vw)] w-[94vw] max-h-[88vh] bg-white dark:bg-stone-900 rounded-xl"
             : "max-w-2xl w-auto bg-transparent shadow-none"
         } [&>button[data-slot=dialog-close]]:bg-black/50 [&>button[data-slot=dialog-close]]:text-white [&>button[data-slot=dialog-close]]:rounded-full [&>button[data-slot=dialog-close]]:p-1 [&>button[data-slot=dialog-close]]:top-2 [&>button[data-slot=dialog-close]]:right-2 [&>button[data-slot=dialog-close]]:opacity-100 [&>button[data-slot=dialog-close]]:hover:bg-black/70 [&>button[data-slot=dialog-close]]:z-20`}
       >
         <DialogTitle className="sr-only">{recipe.title}</DialogTitle>
-        {hasTranscription ? (
-          <div className="flex flex-col sm:flex-row sm:aspect-[4/3]">
-            {/* Image side */}
-            <div
-              ref={containerRef}
-              className="relative sm:w-1/2 shrink-0 bg-stone-100 dark:bg-stone-800 flex items-center justify-center overflow-hidden select-none aspect-[4/3] sm:aspect-auto"
-              onWheel={handleWheel}
-              onPointerDown={handlePointerDown}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              style={{ cursor: zoom > 1 ? "grab" : "default", touchAction: "none" }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={recipe.imageUrl}
-                alt={recipe.title}
-                className="w-full h-full object-contain pointer-events-none transition-transform duration-150 ease-out"
-                draggable={false}
-                style={{
-                  transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
-                }}
-              />
-              {/* Zoom controls */}
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-black/60 backdrop-blur-sm rounded-full px-1.5 py-1 z-10">
-                <button
-                  onClick={handleZoomOut}
-                  disabled={zoom <= ZOOM_MIN}
-                  className="w-7 h-7 flex items-center justify-center rounded-full text-white hover:bg-white/20 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-                  aria-label="Zoom out"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  >
-                    <path d="M5 12h14" />
-                  </svg>
-                </button>
-                <button
-                  onClick={resetView}
-                  className="px-2 h-7 flex items-center justify-center rounded-full text-white text-xs font-medium tabular-nums hover:bg-white/20 transition-colors min-w-[3rem]"
-                  aria-label="Reset zoom"
-                >
-                  {Math.round(zoom * 100)}%
-                </button>
-                <button
-                  onClick={handleZoomIn}
-                  disabled={zoom >= ZOOM_MAX}
-                  className="w-7 h-7 flex items-center justify-center rounded-full text-white hover:bg-white/20 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-                  aria-label="Zoom in"
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  >
-                    <path d="M12 5v14M5 12h14" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            {/* Transcription side */}
-            <div className="sm:w-1/2 overflow-y-auto p-5 sm:p-6">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-1">
-                    Transcription
-                  </h3>
-                  <p className="font-sans text-[14px] leading-relaxed text-stone-700 dark:text-stone-300 whitespace-pre-wrap">
-                    {recipe.imageTranscription}
-                  </p>
-                </div>
-
-                {/* Useful metadata for the home cook */}
-                <div className="border-t border-stone-200 dark:border-stone-700 pt-4 space-y-3">
-                  <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500">
-                    At a glance
-                  </h3>
-                  <div className="grid grid-cols-2 gap-2 text-[13px]">
-                    {recipe.servings && (
-                      <div className="flex flex-col gap-0.5 rounded-lg bg-stone-50 dark:bg-stone-800 px-3 py-2">
-                        <span className="text-stone-400 dark:text-stone-500">Yield</span>
-                        <span className="font-medium text-stone-700 dark:text-stone-200">
-                          {recipe.servings} loaves
-                        </span>
-                      </div>
-                    )}
-                    {recipe.totalTimeMinutes && (
-                      <div className="flex flex-col gap-0.5 rounded-lg bg-stone-50 dark:bg-stone-800 px-3 py-2">
-                        <span className="text-stone-400 dark:text-stone-500">Total time</span>
-                        <span className="font-medium text-stone-700 dark:text-stone-200">
-                          {formatTime(recipe.totalTimeMinutes)}
-                        </span>
-                      </div>
-                    )}
-                    {recipe.cookTimeMinutes && (
-                      <div className="flex flex-col gap-0.5 rounded-lg bg-stone-50 dark:bg-stone-800 px-3 py-2">
-                        <span className="text-stone-400 dark:text-stone-500">Bake</span>
-                        <span className="font-medium text-stone-700 dark:text-stone-200">
-                          400°F / {formatTime(recipe.cookTimeMinutes)}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex flex-col gap-0.5 rounded-lg bg-stone-50 dark:bg-stone-800 px-3 py-2">
-                      <span className="text-stone-400 dark:text-stone-500">Ingredients</span>
-                      <span className="font-medium text-stone-700 dark:text-stone-200">
-                        {recipe.ingredients.reduce((sum, g) => sum + g.ingredients.length, 0)} items
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {recipe.author && (
-                  <p className="font-sans text-[12px] text-stone-400 dark:text-stone-500 italic">
-                    Source: {recipe.author}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
-            src={recipe.imageUrl}
-            alt={recipe.title}
-            className="w-full max-h-[80vh] object-contain rounded-lg"
-          />
-        )}
+        <div className="flex flex-row h-[min(80vh,calc(94vw*2/3))]">
+          <ImageLightboxContent {...contentProps} />
+        </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function TextDialogBody({ text }: { text: string }) {
+  return (
+    <>
+      <div className="px-5 pb-4 max-h-[50vh] overflow-y-auto">
+        <p className="font-sans text-[14px] leading-relaxed text-stone-600 dark:text-stone-300 whitespace-pre-wrap">
+          {text}
+        </p>
+      </div>
+      <div className="flex items-center gap-2 px-5 py-3 border-t border-stone-200 dark:border-stone-700">
+        <button
+          onClick={() => {
+            navigator.clipboard.writeText(text);
+          }}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-100 dark:bg-stone-800 font-sans text-sm font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+        >
+          <svg
+            className="w-3.5 h-3.5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+          </svg>
+          Copy text
+        </button>
+        <a
+          href={`https://chatgpt.com/?q=${encodeURIComponent(`Here's a recipe someone shared with me:\n\n${text}\n\nCan you help me with this recipe? I'd love tips, substitutions, or any improvements you'd suggest.`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-100 dark:bg-stone-800 font-sans text-sm font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+        >
+          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.872zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z" />
+          </svg>
+          Open in ChatGPT
+        </a>
+      </div>
+    </>
+  );
+}
+
+function UrlDialogBody({ recipe }: { recipe: ParsedRecipe }) {
+  return (
+    <>
+      <div className="px-5 pb-4 max-h-[60vh] overflow-y-auto space-y-4">
+        <div className="space-y-1">
+          <p className="font-sans text-[15px] font-medium text-stone-800 dark:text-stone-200">
+            {recipe.title}
+          </p>
+          {recipe.author && (
+            <p className="font-sans text-[13px] text-stone-500 dark:text-stone-400">
+              by {recipe.author}
+            </p>
+          )}
+        </div>
+        <div className="flex gap-3 text-[13px] text-stone-500 dark:text-stone-400">
+          {recipe.ingredients.length > 0 && (
+            <span>
+              {recipe.ingredients.reduce((sum, g) => sum + g.ingredients.length, 0)} ingredients
+            </span>
+          )}
+          {recipe.instructions.length > 0 && <span>{recipe.instructions.length} steps</span>}
+          {recipe.totalTimeMinutes && <span>{formatTime(recipe.totalTimeMinutes)}</span>}
+        </div>
+        {recipe.summary && (
+          <p className="font-sans text-[14px] leading-relaxed text-stone-600 dark:text-stone-300">
+            {recipe.summary}
+          </p>
+        )}
+        {recipe.sourceSiteDescription && (
+          <div className="space-y-1.5">
+            <h4 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500">
+              About {recipe.author ?? extractDomain(recipe.sourceUrl!)}
+            </h4>
+            <p className="font-sans text-[13px] leading-relaxed text-stone-500 dark:text-stone-400">
+              {recipe.sourceSiteDescription}
+            </p>
+          </div>
+        )}
+        {recipe.commentConsensus && (
+          <div className="space-y-1.5">
+            <h4 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500">
+              What commenters say
+            </h4>
+            <p className="font-sans text-[13px] leading-relaxed text-stone-500 dark:text-stone-400">
+              {recipe.commentConsensus}
+            </p>
+          </div>
+        )}
+      </div>
+      <div className="flex items-center gap-2 px-5 py-3 border-t border-stone-200 dark:border-stone-700">
+        <a
+          href={recipe.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-100 dark:bg-stone-800 font-sans text-sm font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`https://www.google.com/s2/favicons?domain=${encodeURIComponent(extractDomain(recipe.sourceUrl!))}&sz=32`}
+            alt=""
+            width={14}
+            height={14}
+            className="rounded-[2px]"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+          View original
+        </a>
+      </div>
+    </>
   );
 }
 
@@ -362,6 +553,7 @@ export function WaitlistRecipePreview({
   sourceType,
   pastedText,
 }: WaitlistRecipePreviewProps) {
+  const isDesktop = useMediaQuery("(min-width: 640px)");
   const originalServings = recipe.servings ?? 1;
   const [servings, setServings] = useState(originalServings);
   const [activeTab, setActiveTab] = useState<"prep" | "cook">("prep");
@@ -396,7 +588,10 @@ export function WaitlistRecipePreview({
           )}
           {sourceType === "photo" && recipe.imageUrl && (
             <button
-              onClick={() => setLightboxOpen(true)}
+              onClick={(e) => {
+                (e.currentTarget as HTMLElement).blur();
+                setLightboxOpen(true);
+              }}
               className="group flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors cursor-pointer"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -492,142 +687,49 @@ export function WaitlistRecipePreview({
         <ImageLightbox open={lightboxOpen} onOpenChange={setLightboxOpen} recipe={recipe} />
       )}
 
-      <Dialog open={textOpen} onOpenChange={setTextOpen}>
-        <DialogContent className="max-w-md p-0 overflow-hidden">
-          <div className="px-5 pt-5 pb-3">
-            <DialogTitle className="font-sans text-base font-semibold text-stone-900 dark:text-stone-100">
+      {isDesktop ? (
+        <Dialog open={textOpen} onOpenChange={setTextOpen}>
+          <DialogContent className="max-w-md p-0 overflow-hidden">
+            <DialogTitle className="font-sans text-base font-semibold text-stone-900 dark:text-stone-100 px-5 pt-5 pb-3">
               Pasted text
             </DialogTitle>
-          </div>
-          <div className="px-5 pb-4 max-h-[50vh] overflow-y-auto">
-            <p className="font-sans text-[14px] leading-relaxed text-stone-600 dark:text-stone-300 whitespace-pre-wrap">
-              {pastedTextContent}
-            </p>
-          </div>
-          <div className="flex items-center gap-2 px-5 py-3 border-t border-stone-200 dark:border-stone-700">
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(pastedTextContent);
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-100 dark:bg-stone-800 font-sans text-sm font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
-            >
-              <svg
-                className="w-3.5 h-3.5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-              </svg>
-              Copy text
-            </button>
-            <a
-              href={`https://chatgpt.com/?q=${encodeURIComponent(`Here's a recipe someone shared with me:\n\n${pastedTextContent}\n\nCan you help me with this recipe? I'd love tips, substitutions, or any improvements you'd suggest.`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-100 dark:bg-stone-800 font-sans text-sm font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
-            >
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.872zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z" />
-              </svg>
-              Open in ChatGPT
-            </a>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {recipe.sourceUrl && (
-        <Dialog open={urlOpen} onOpenChange={setUrlOpen}>
-          <DialogContent className="max-w-sm p-0 overflow-hidden">
-            <div className="px-5 pt-5 pb-3">
-              <DialogTitle className="font-sans text-base font-semibold text-stone-900 dark:text-stone-100">
-                Source
-              </DialogTitle>
-            </div>
-            <div className="px-5 pb-4 max-h-[60vh] overflow-y-auto space-y-4">
-              {/* Recipe info */}
-              <div className="space-y-1">
-                <p className="font-sans text-[15px] font-medium text-stone-800 dark:text-stone-200">
-                  {recipe.title}
-                </p>
-                {recipe.author && (
-                  <p className="font-sans text-[13px] text-stone-500 dark:text-stone-400">
-                    by {recipe.author}
-                  </p>
-                )}
-              </div>
-
-              {/* Extracted metadata */}
-              <div className="flex gap-3 text-[13px] text-stone-500 dark:text-stone-400">
-                {recipe.ingredients.length > 0 && (
-                  <span>
-                    {recipe.ingredients.reduce((sum, g) => sum + g.ingredients.length, 0)}{" "}
-                    ingredients
-                  </span>
-                )}
-                {recipe.instructions.length > 0 && <span>{recipe.instructions.length} steps</span>}
-                {recipe.totalTimeMinutes && <span>{formatTime(recipe.totalTimeMinutes)}</span>}
-              </div>
-
-              {/* Summary */}
-              {recipe.summary && (
-                <p className="font-sans text-[14px] leading-relaxed text-stone-600 dark:text-stone-300">
-                  {recipe.summary}
-                </p>
-              )}
-
-              {/* About the source site */}
-              {recipe.sourceSiteDescription && (
-                <div className="space-y-1.5">
-                  <h4 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500">
-                    About {recipe.author ?? extractDomain(recipe.sourceUrl!)}
-                  </h4>
-                  <p className="font-sans text-[13px] leading-relaxed text-stone-500 dark:text-stone-400">
-                    {recipe.sourceSiteDescription}
-                  </p>
-                </div>
-              )}
-
-              {/* Comment consensus */}
-              {recipe.commentConsensus && (
-                <div className="space-y-1.5">
-                  <h4 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500">
-                    What commenters say
-                  </h4>
-                  <p className="font-sans text-[13px] leading-relaxed text-stone-500 dark:text-stone-400">
-                    {recipe.commentConsensus}
-                  </p>
-                </div>
-              )}
-            </div>
-            <div className="flex items-center gap-2 px-5 py-3 border-t border-stone-200 dark:border-stone-700">
-              <a
-                href={recipe.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-100 dark:bg-stone-800 font-sans text-sm font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`https://www.google.com/s2/favicons?domain=${encodeURIComponent(extractDomain(recipe.sourceUrl))}&sz=32`}
-                  alt=""
-                  width={14}
-                  height={14}
-                  className="rounded-[2px]"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
-                />
-                View original
-              </a>
-            </div>
+            <TextDialogBody text={pastedTextContent} />
           </DialogContent>
         </Dialog>
+      ) : (
+        <Drawer open={textOpen} onOpenChange={setTextOpen}>
+          <DrawerContent aria-describedby={undefined} className="max-h-[85vh] p-0 overflow-hidden">
+            <DrawerTitle className="font-sans text-base font-semibold text-stone-900 dark:text-stone-100 px-5 pt-4 pb-3">
+              Pasted text
+            </DrawerTitle>
+            <TextDialogBody text={pastedTextContent} />
+          </DrawerContent>
+        </Drawer>
       )}
+
+      {recipe.sourceUrl &&
+        (isDesktop ? (
+          <Dialog open={urlOpen} onOpenChange={setUrlOpen}>
+            <DialogContent className="max-w-sm p-0 overflow-hidden">
+              <DialogTitle className="font-sans text-base font-semibold text-stone-900 dark:text-stone-100 px-5 pt-5 pb-3">
+                Source
+              </DialogTitle>
+              <UrlDialogBody recipe={recipe} />
+            </DialogContent>
+          </Dialog>
+        ) : (
+          <Drawer open={urlOpen} onOpenChange={setUrlOpen}>
+            <DrawerContent
+              aria-describedby={undefined}
+              className="max-h-[85vh] p-0 overflow-hidden"
+            >
+              <DrawerTitle className="font-sans text-base font-semibold text-stone-900 dark:text-stone-100 px-5 pt-4 pb-3">
+                Source
+              </DrawerTitle>
+              <UrlDialogBody recipe={recipe} />
+            </DrawerContent>
+          </Drawer>
+        ))}
     </div>
   );
 }
