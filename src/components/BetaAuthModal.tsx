@@ -564,7 +564,7 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
             <Button
               type="submit"
               disabled={loading || emailStatus === "checking" || emailStatus === "idle"}
-              className="w-full relative overflow-hidden bg-mizen-blue hover:bg-mizen-blue/90 focus-visible:ring-mizen-blue/50 text-white"
+              className="w-full relative overflow-hidden bg-mizen-blue hover:bg-mizen-blue/90 focus-visible:ring-mizen-blue/50 text-white!"
               size="lg"
             >
               <AnimatePresence mode="wait" initial={false}>
