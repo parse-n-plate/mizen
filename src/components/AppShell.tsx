@@ -11,7 +11,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user, loading } = useUser();
   const isHomePage = pathname === "/";
-  const isLanding = isHomePage && !loading && !user;
+  // Treat loading state as landing on homepage so TopBar/Footer don't flash
+  // before auth resolves
+  const isLanding = isHomePage && (loading || !user);
 
   return (
     <RecipeProvider>
