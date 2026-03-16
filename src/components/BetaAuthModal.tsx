@@ -47,7 +47,7 @@ export function BetaAuthModal({ open, onOpenChange }: BetaAuthModalProps) {
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="max-h-[92dvh] dark:bg-card">
+        <DrawerContent className="dark:bg-card">
           <AuthContent open={open} onOpenChange={onOpenChange} isMobile />
         </DrawerContent>
       </Drawer>
