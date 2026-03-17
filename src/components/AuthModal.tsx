@@ -147,7 +147,7 @@ export function AuthModal({ open, onOpenChange, initialMode = "login" }: AuthMod
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/auth/confirm`,
         },
       });
 
@@ -184,7 +184,7 @@ export function AuthModal({ open, onOpenChange, initialMode = "login" }: AuthMod
     }
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback`,
+      redirectTo: `${window.location.origin}/auth/confirm`,
     });
 
     if (error) {
@@ -213,7 +213,7 @@ export function AuthModal({ open, onOpenChange, initialMode = "login" }: AuthMod
       type: "signup",
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/confirm`,
       },
     });
 
