@@ -5,6 +5,7 @@ import { RecipeProvider } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
 import { TopBar } from "@/components/TopBar";
 import { Footer } from "@/components/Footer";
+import { FeedbackDialog } from "@/components/FeedbackDialog";
 import type { ReactNode } from "react";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -27,6 +28,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {!isLanding && <TopBar />}
         {isLanding ? children : <main>{children}</main>}
         {!isLanding && <Footer />}
+        {!isLanding && <FeedbackDialog />}
       </div>
     </RecipeProvider>
   );

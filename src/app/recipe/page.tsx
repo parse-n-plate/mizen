@@ -38,6 +38,9 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { HeartButton } from "@/components/HeartButton";
+import { ReportRecipeDialog } from "@/components/ReportRecipeDialog";
+import Flag from "@solar-icons/react/csr/ui/Flag";
+import ChatRoundDots from "@solar-icons/react/csr/messages/ChatRoundDots";
 
 export default function RecipePage() {
   const router = useRouter();
@@ -48,6 +51,7 @@ export default function RecipePage() {
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"prep" | "cook">("prep");
   const [mobileVaultOpen, setMobileVaultOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const [vaultMounted, setVaultMounted] = useState(false);
   const [vaultExiting, setVaultExiting] = useState(false);
   const numberFormat = useSyncExternalStore(
@@ -536,6 +540,18 @@ export default function RecipePage() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              {/* Report — ghost button (only for logged-in users) */}
+              {user && (
+                <button
+                  type="button"
+                  onClick={() => setReportOpen(true)}
+                  className="press-scale inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors text-xs font-medium font-sans"
+                >
+                  <Flag size={14} aria-hidden="true" />
+                  Report
+                </button>
+              )}
             </div>
           </div>
 
@@ -872,6 +888,23 @@ export default function RecipePage() {
                 </button>
               )}
 
+              {/* Feedback */}
+              {user && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReportOpen(true);
+                    setMobileVaultOpen(false);
+                    setVaultExiting(true);
+                  }}
+                  aria-label="Send feedback"
+                  className="flex flex-col items-center gap-1 text-stone-500 dark:text-stone-400 active:text-stone-800 dark:active:text-stone-200 transition-colors"
+                >
+                  <ChatRoundDots size={20} aria-hidden="true" />
+                  <span className="text-[11px] font-sans font-medium">Feedback</span>
+                </button>
+              )}
+
               {/* Delete */}
               <button
                 type="button"
@@ -901,6 +934,16 @@ export default function RecipePage() {
           </div>
         )}
       </div>
+
+      {/* Report recipe dialog */}
+      <ReportRecipeDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        recipe={recipe}
+        userEmail={user?.email || ""}
+        activeTab={activeTab}
+        unitSystem={unitSystem}
+      />
     </div>
   );
 }
