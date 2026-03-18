@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { proxy, shouldRedirectOAuthRootCallback } from "./proxy";
 import { updateSession } from "@/lib/supabase/middleware";
 
@@ -14,7 +14,7 @@ const createRequest = (url: string, method = "GET") => {
     nextUrl: Object.assign(nextUrl, {
       clone: () => new URL(nextUrl.toString()),
     }),
-  } as const;
+  } as unknown as Pick<NextRequest, "nextUrl" | "method">;
 };
 
 beforeEach(() => {
