@@ -34,10 +34,7 @@ export async function POST(request: Request) {
       if (typeof urlField === "string") {
         url = urlField;
       } else if (urlField instanceof File) {
-        return NextResponse.json(
-          { success: false, error: "Invalid URL payload" },
-          { status: 400 }
-        );
+        return NextResponse.json({ success: false, error: "Invalid URL payload" }, { status: 400 });
       }
 
       const textField = formData.get("text");
@@ -49,17 +46,11 @@ export async function POST(request: Request) {
       try {
         body = await request.json();
       } catch {
-        return NextResponse.json(
-          { success: false, error: "Invalid JSON body" },
-          { status: 400 }
-        );
+        return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
       }
 
       if (!body || typeof body !== "object") {
-        return NextResponse.json(
-          { success: false, error: "Invalid JSON body" },
-          { status: 400 }
-        );
+        return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
       }
 
       const payload = body as {

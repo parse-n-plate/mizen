@@ -86,7 +86,7 @@ export function HeartButton({ isSaved, saving, unsaving, onSave, onUnsave }: Hea
     // Save: false → true → particle burst
     if (!wasSaved && isSaved) {
       setJustSaved(true); // eslint-disable-line react-hooks/set-state-in-effect -- animation reaction to prop change
-      setParticles(generateParticles());  
+      setParticles(generateParticles());
       const t = setTimeout(() => {
         setParticles([]);
         setJustSaved(false);
