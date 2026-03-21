@@ -36,8 +36,18 @@ const CATEGORIES: {
   icon: typeof Bug;
 }[] = [
   { id: "bug", label: "Bug Report", description: "Something isn't working correctly", icon: Bug },
-  { id: "idea", label: "Feature Idea", description: "Suggest a new feature or improvement", icon: Lightbulb },
-  { id: "feedback", label: "General Feedback", description: "Share your thoughts or experience", icon: Heart },
+  {
+    id: "idea",
+    label: "Feature Idea",
+    description: "Suggest a new feature or improvement",
+    icon: Lightbulb,
+  },
+  {
+    id: "feedback",
+    label: "General Feedback",
+    description: "Share your thoughts or experience",
+    icon: Heart,
+  },
 ];
 
 export function FeedbackDialog() {
@@ -79,10 +89,7 @@ export function FeedbackDialog() {
     }
 
     setImages((prev) => [...prev, ...toAdd]);
-    setPreviews((prev) => [
-      ...prev,
-      ...toAdd.map((f) => URL.createObjectURL(f)),
-    ]);
+    setPreviews((prev) => [...prev, ...toAdd.map((f) => URL.createObjectURL(f))]);
 
     if (fileRef.current) fileRef.current.value = "";
   }
@@ -140,9 +147,7 @@ export function FeedbackDialog() {
       resetForm();
       setOpen(false);
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to submit. Please try again."
-      );
+      toast.error(err instanceof Error ? err.message : "Failed to submit. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -174,9 +179,7 @@ export function FeedbackDialog() {
           <div className="flex flex-col gap-4 h-[288px]">
             <DialogHeader>
               <DialogTitle>Send us a message</DialogTitle>
-              <DialogDescription>
-                We&apos;ll respond asap!
-              </DialogDescription>
+              <DialogDescription>We&apos;ll respond asap!</DialogDescription>
             </DialogHeader>
 
             <div className="flex flex-col gap-2 flex-1 justify-center">
@@ -187,14 +190,16 @@ export function FeedbackDialog() {
                   onClick={() => setCategory(id)}
                   className="flex items-center gap-3 rounded-xl bg-[#FAFAF9] dark:bg-stone-800 px-4 py-3.5 text-left transition-colors duration-200 ease-out hover:bg-stone-100 dark:hover:bg-stone-700"
                 >
-                  <Icon size={20} weight="Bold" className="text-stone-600 dark:text-stone-400 shrink-0" />
+                  <Icon
+                    size={20}
+                    weight="Bold"
+                    className="text-stone-600 dark:text-stone-400 shrink-0"
+                  />
                   <div className="min-w-0">
                     <p className="text-sm font-medium font-sans text-stone-800 dark:text-stone-200">
                       {label}
                     </p>
-                    <p className="text-xs font-sans text-stone-500 dark:text-stone-400">
-                      {desc}
-                    </p>
+                    <p className="text-xs font-sans text-stone-500 dark:text-stone-400">{desc}</p>
                   </div>
                 </button>
               ))}
@@ -213,9 +218,7 @@ export function FeedbackDialog() {
                 >
                   <AltArrowLeft size={14} />
                 </button>
-                <DialogTitle>
-                  {CATEGORIES.find((c) => c.id === category)?.label}
-                </DialogTitle>
+                <DialogTitle>{CATEGORIES.find((c) => c.id === category)?.label}</DialogTitle>
               </div>
               <DialogDescription>
                 {category === "bug"
@@ -293,7 +296,6 @@ export function FeedbackDialog() {
                   ))}
                 </div>
               )}
-
             </div>
 
             <div className="flex items-center gap-3 pt-1">

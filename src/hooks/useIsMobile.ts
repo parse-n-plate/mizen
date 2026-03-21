@@ -1,17 +1,20 @@
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 const MOBILE_BREAKPOINT = 640; // matches Tailwind `sm:`
+const MOBILE_QUERY = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`;
+
+function subscribe(callback: () => void) {
+  const mediaQuery = window.matchMedia(MOBILE_QUERY);
+
+  mediaQuery.addEventListener("change", callback);
+
+  return () => mediaQuery.removeEventListener("change", callback);
+}
+
+function getSnapshot() {
+  return window.matchMedia(MOBILE_QUERY).matches;
+}
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
-    const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    setIsMobile(mql.matches);
-    mql.addEventListener("change", onChange);
-    return () => mql.removeEventListener("change", onChange);
-  }, []);
-
-  return isMobile;
+  return useSyncExternalStore(subscribe, getSnapshot, () => false);
 }

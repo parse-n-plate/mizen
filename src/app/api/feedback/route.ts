@@ -14,7 +14,9 @@ export async function POST(req: NextRequest) {
     if (!supabase) {
       return NextResponse.json({ error: "Auth not configured" }, { status: 503 });
     }
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -26,7 +28,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Description is required" }, { status: 400 });
     }
     if (description.length > 1000) {
-      return NextResponse.json({ error: "Description too long (max 1000 characters)" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Description too long (max 1000 characters)" },
+        { status: 400 }
+      );
     }
 
     const feedbackType = (formData.get("feedbackType") as string) || "recipe";
@@ -71,9 +76,7 @@ export async function POST(req: NextRequest) {
             console.error("Feedback image upload failed:", error.message);
             continue;
           }
-          const { data: urlData } = supabase.storage
-            .from("feedback-images")
-            .getPublicUrl(path);
+          const { data: urlData } = supabase.storage.from("feedback-images").getPublicUrl(path);
           imageUrls.push(urlData.publicUrl);
         }
       }
@@ -99,16 +102,17 @@ export async function POST(req: NextRequest) {
     try {
       const raw = formData.get("debugInfo") as string | null;
       if (raw) debugInfo = JSON.parse(raw);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
 
     // Title = user's message, truncated for Notion title field
-    const title = description.trim().length > 100
-      ? description.trim().slice(0, 97) + "..."
-      : description.trim();
+    const title =
+      description.trim().length > 100
+        ? description.trim().slice(0, 97) + "..."
+        : description.trim();
 
-    const notionType = isGeneral
-      ? (typeMap[category] || "User feedback")
-      : "Bug";
+    const notionType = isGeneral ? typeMap[category] || "User feedback" : "Bug";
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const properties: Record<string, any> = {
@@ -123,7 +127,9 @@ export async function POST(req: NextRequest) {
       properties.Reporter = { rich_text: [{ text: { content: reporterEmail } }] };
     }
 
-    properties["App Version"] = { rich_text: [{ text: { content: process.env.npm_package_version || "0.1.0" } }] };
+    properties["App Version"] = {
+      rich_text: [{ text: { content: process.env.npm_package_version || "0.1.0" } }],
+    };
 
     if (deviceOS) {
       properties["Device/OS"] = { rich_text: [{ text: { content: deviceOS } }] };
@@ -145,7 +151,7 @@ export async function POST(req: NextRequest) {
           object: "block",
           type: "paragraph",
           paragraph: { rich_text: [{ text: { content: description.trim() } }] },
-        },
+        }
       );
     }
 
@@ -161,7 +167,7 @@ export async function POST(req: NextRequest) {
           object: "block",
           type: "paragraph",
           paragraph: { rich_text: [{ text: { content: recipeTitle } }] },
-        },
+        }
       );
       if (sourceUrl) {
         children.push({
@@ -173,13 +179,17 @@ export async function POST(req: NextRequest) {
     }
 
     if (Object.keys(debugInfo).length > 0 || activeTab || unitSystem) {
-      const debugContent = JSON.stringify({
-        feedbackType,
-        ...(category && { category }),
-        ...(activeTab && { activeTab }),
-        ...(unitSystem && { unitSystem }),
-        ...debugInfo,
-      }, null, 2);
+      const debugContent = JSON.stringify(
+        {
+          feedbackType,
+          ...(category && { category }),
+          ...(activeTab && { activeTab }),
+          ...(unitSystem && { unitSystem }),
+          ...debugInfo,
+        },
+        null,
+        2
+      );
       children.push(
         {
           object: "block",
@@ -190,7 +200,7 @@ export async function POST(req: NextRequest) {
           object: "block",
           type: "code",
           code: { rich_text: [{ text: { content: debugContent } }], language: "json" },
-        },
+        }
       );
     }
 

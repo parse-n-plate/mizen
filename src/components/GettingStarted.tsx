@@ -287,9 +287,7 @@ export function GettingStarted() {
         )}
       </section>
 
-      {isSupabaseConfigured && (
-        <BetaAuthModal open={authOpen} onOpenChange={setAuthOpen} />
-      )}
+      {isSupabaseConfigured && <BetaAuthModal open={authOpen} onOpenChange={setAuthOpen} />}
     </>
   );
 }
