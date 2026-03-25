@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import Plain from "@solar-icons/react/csr/messages/Plain";
 import { motion, AnimatePresence } from "motion/react";
 import { useDialKit } from "dialkit";
+import { getTheme, setTheme } from "@/lib/theme";
 import { Search } from "@/components/Search";
 import { RecentRecipes } from "@/components/RecentRecipes";
 import { GettingStarted } from "@/components/GettingStarted";
@@ -432,43 +433,24 @@ function WaitlistLanding() {
   const [hoveredSource, setHoveredSource] = useState<number | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  const dial = useDialKit(
-    "Waitlist",
-    {
-      source: {
-        type: "select",
-        options: ["URLs", "Recipe Photos", "Text"],
-        default: "URLs",
-      },
-      replay: { type: "action", label: "Replay Animation" },
-      "show success": { type: "action", label: "Show Success" },
-      "reset form": { type: "action", label: "Reset Form" },
+  const dial = useDialKit("Theme", {
+    mode: {
+      type: "select",
+      options: ["System", "Light", "Dark"],
+      default: getTheme() === "dark" ? "Dark" : getTheme() === "light" ? "Light" : "System",
     },
-    {
-      onAction: (action) => {
-        if (action === "replay") {
-          setPhase("preview");
-          setIsInitialLoad(false);
-        } else if (action === "show success") {
-          setSubmitted(true);
-          setAlreadyOnList(false);
-        } else if (action === "reset form") {
-          setSubmitted(false);
-          setAlreadyOnList(false);
-          setEmail("");
-        }
-      },
-    }
-  );
+  });
 
-  // Sync source selection from dial panel
+  // Sync theme from dial panel
   useEffect(() => {
-    const sourceIndex = ["URLs", "Recipe Photos", "Text"].indexOf(dial.source as string);
-    if (sourceIndex !== -1 && sourceIndex !== activeSource) {
-      handleSourceChange(sourceIndex);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dial.source]);
+    const map: Record<string, "system" | "light" | "dark"> = {
+      System: "system",
+      Light: "light",
+      Dark: "dark",
+    };
+    const theme = map[dial.mode as string];
+    if (theme) setTheme(theme);
+  }, [dial.mode]);
 
   // Run the animation sequence whenever phase changes
   useEffect(() => {
