@@ -82,7 +82,15 @@ function extractDishName(urlStr: string): string | null {
 
 function ImageIcon({ size = 20, stroke = "#A8A29E" }: { size?: number; stroke?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="1.5" aria-hidden="true">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={stroke}
+      strokeWidth="1.5"
+      aria-hidden="true"
+    >
       <rect x="3" y="3" width="18" height="18" rx="3" />
       <circle cx="8.5" cy="8.5" r="1.5" />
       <path d="M3 16l5-5 4 4 3-3 6 6" strokeLinecap="round" strokeLinejoin="round" />
@@ -93,22 +101,51 @@ function ImageIcon({ size = 20, stroke = "#A8A29E" }: { size?: number; stroke?: 
 function UpArrowIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-      <path d="M9 3v12M9 3l-4 4M9 3l4 4" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M9 3v12M9 3l-4 4M9 3l4 4"
+        stroke="#FFFFFF"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
 
 function SpinnerIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="smart-bar-spinner" aria-hidden="true">
-      <circle cx="9" cy="9" r="7" stroke="#FFFFFF" strokeWidth="1.5" strokeDasharray="6 10" strokeLinecap="round" opacity="0.8" />
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 18 18"
+      fill="none"
+      className="smart-bar-spinner"
+      aria-hidden="true"
+    >
+      <circle
+        cx="9"
+        cy="9"
+        r="7"
+        stroke="#FFFFFF"
+        strokeWidth="1.5"
+        strokeDasharray="6 10"
+        strokeLinecap="round"
+        opacity="0.8"
+      />
     </svg>
   );
 }
 
 function CloseIcon({ size = 6 }: { size?: number }) {
   return (
-    <svg width={size + 2} height={size + 2} viewBox="0 0 8 8" fill="none" style={{ width: size, height: size, flexShrink: 0 }} aria-hidden="true">
+    <svg
+      width={size + 2}
+      height={size + 2}
+      viewBox="0 0 8 8"
+      fill="none"
+      style={{ width: size, height: size, flexShrink: 0 }}
+      aria-hidden="true"
+    >
       <path d="M2 2l4 4M6 2l-4 4" stroke="#FFFFFF" strokeWidth="1.3" strokeLinecap="round" />
     </svg>
   );
@@ -116,7 +153,16 @@ function CloseIcon({ size = 6 }: { size?: number }) {
 
 function LinkPillIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#18A1F7" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#18A1F7"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
       <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
       <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
     </svg>
@@ -125,19 +171,22 @@ function LinkPillIcon() {
 
 function PaperclipIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#A8A29E"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
       <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
     </svg>
   );
 }
 
-function UrlChip({
-  url,
-  onRemove,
-}: {
-  url: string;
-  onRemove: () => void;
-}) {
+function UrlChip({ url, onRemove }: { url: string; onRemove: () => void }) {
   const domain = extractDomain(url);
   const dishName = extractDishName(url);
   const faviconUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=32`;
@@ -193,19 +242,29 @@ function ImagePillIcon() {
     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
       <rect x="1.5" y="1.5" width="9" height="9" rx="2" stroke="#18A1F7" strokeWidth="1.2" />
       <circle cx="4.5" cy="4.5" r="1" fill="#18A1F7" />
-      <path d="M1.5 8.5l2.5-2.5 2 2 1.5-1.5 3 3v.5a2 2 0 01-2 2h-5a2 2 0 01-2-2v-.5z" fill="#18A1F7" opacity="0.3" />
+      <path
+        d="M1.5 8.5l2.5-2.5 2 2 1.5-1.5 3 3v.5a2 2 0 01-2 2h-5a2 2 0 01-2-2v-.5z"
+        fill="#18A1F7"
+        opacity="0.3"
+      />
     </svg>
   );
 }
 
 function TextPillIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0 }} aria-hidden="true">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 12 12"
+      fill="none"
+      style={{ flexShrink: 0 }}
+      aria-hidden="true"
+    >
       <path d="M2 3h8M2 6h6M2 9h4" stroke="#18A1F7" strokeWidth="1.2" strokeLinecap="round" />
     </svg>
   );
 }
-
 
 // ── Sub-components ───────────────────────────────────────────────────────
 
@@ -221,7 +280,6 @@ function ThumbnailClose({ onClick }: { onClick: () => void }) {
     </button>
   );
 }
-
 
 function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
   useEffect(() => {
@@ -254,13 +312,7 @@ function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
   );
 }
 
-function ImageThumbnail({
-  src,
-  onRemove,
-}: {
-  src: string;
-  onRemove: () => void;
-}) {
+function ImageThumbnail({ src, onRemove }: { src: string; onRemove: () => void }) {
   const [lightbox, setLightbox] = useState(false);
 
   return (
@@ -280,13 +332,7 @@ function ImageThumbnail({
   );
 }
 
-function TextPreview({
-  text,
-  onChange,
-}: {
-  text: string;
-  onChange: (value: string) => void;
-}) {
+function TextPreview({ text, onChange }: { text: string; onChange: (value: string) => void }) {
   return (
     <div className="pt-2.5 pb-1 px-5 grow min-h-0">
       <textarea
@@ -327,31 +373,6 @@ function TypePill({ mode, text }: { mode: BarMode; text?: string | null }) {
         {isUrl ? "URL" : "Image"}
       </span>
     </div>
-  );
-}
-
-function ScanButton({
-  mode,
-  isLoading,
-  onClick,
-}: {
-  mode: BarMode;
-  isLoading: boolean;
-  onClick: () => void;
-}) {
-  const label =
-    mode === "url" ? "Scan URL" : mode === "image" ? "Scan Image" : "Scan Text";
-
-  return (
-    <button
-      type="submit"
-      onClick={onClick}
-      disabled={isLoading}
-      className="press-scale flex items-center justify-center h-10 rounded-xl px-3 gap-1 bg-[var(--color-blue)] hover:bg-[var(--color-blue)]/90 text-white shrink-0 disabled:opacity-60 transition-opacity"
-    >
-      {isLoading ? <SpinnerIcon /> : <UpArrowIcon />}
-      <span className="text-[12px] font-semibold leading-4">{label}</span>
-    </button>
   );
 }
 
@@ -659,7 +680,12 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
 
   const hasInput = imageFile || pastedText || url.trim();
   const showPill =
-    clipboardUrl && clipboardUrl !== dismissedUrl && !url && !imageFile && !pastedText && !isLoading;
+    clipboardUrl &&
+    clipboardUrl !== dismissedUrl &&
+    !url &&
+    !imageFile &&
+    !pastedText &&
+    !isLoading;
 
   const clipboardDomain = clipboardUrl ? extractDomain(clipboardUrl) : "";
 
@@ -681,10 +707,10 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                   inlineError
                     ? "border-red-500 shadow-[0_0_0_3px_rgba(239,68,68,0.12)]"
                     : !isExpanded && mode === "loading"
-                    ? "smart-bar-loading-ring"
-                    : !isExpanded && mode === "focused"
-                    ? "smart-bar-focus-ring"
-                    : ""
+                      ? "smart-bar-loading-ring"
+                      : !isExpanded && mode === "focused"
+                        ? "smart-bar-focus-ring"
+                        : ""
                 }`
           }`}
           style={{ height: isDragging ? 180 : containerHeight }}
@@ -697,9 +723,26 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
           {isDragging && (
             <div className="flex flex-col items-center justify-center h-full gap-3">
               <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-                <path d="M16 6v14" stroke="var(--color-blue)" strokeWidth="1.5" strokeLinecap="round" />
-                <path d="M11 11l5-5 5 5" stroke="var(--color-blue)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M22 15v8a2 2 0 01-2 2H12a2 2 0 01-2-2v-8" stroke="var(--color-blue)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M16 6v14"
+                  stroke="var(--color-blue)"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M11 11l5-5 5 5"
+                  stroke="var(--color-blue)"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M22 15v8a2 2 0 01-2 2H12a2 2 0 01-2-2v-8"
+                  stroke="var(--color-blue)"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
               <div className="flex flex-col items-center gap-0.5">
                 <span className="text-[15px] font-medium text-stone-700 dark:text-stone-300">
@@ -762,12 +805,20 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                 {showUrlInline && !isLoading && (
                   <button
                     type="button"
-                    onClick={(e) => { e.stopPropagation(); clearContent(); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      clearContent();
+                    }}
                     className="flex items-center justify-center rounded-[10px] bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 shrink-0 size-10 transition-colors"
                     aria-label="Clear"
                   >
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path d="M4 4l8 8M12 4l-8 8" stroke="#78716C" strokeWidth="1.5" strokeLinecap="round" />
+                      <path
+                        d="M4 4l8 8M12 4l-8 8"
+                        stroke="#78716C"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
                     </svg>
                   </button>
                 )}
@@ -826,7 +877,12 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                     aria-label="Clear"
                   >
                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path d="M4 4l8 8M12 4l-8 8" stroke="#78716C" strokeWidth="1.5" strokeLinecap="round" />
+                      <path
+                        d="M4 4l8 8M12 4l-8 8"
+                        stroke="#78716C"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
                     </svg>
                   </button>
                 )}
@@ -844,9 +900,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
           {/* ── Text mode (stacked: preview + bottom bar) ── */}
           {displayMode === "text" && !isDragging && (
             <div ref={textContentRef} className="flex flex-col h-full min-h-0">
-              {pastedText && (
-                <TextPreview text={pastedText} onChange={setPastedText} />
-              )}
+              {pastedText && <TextPreview text={pastedText} onChange={setPastedText} />}
               <div className="flex items-center pt-1.5 pr-2 pb-2 pl-2.5 gap-1.5 mt-auto">
                 <div className="flex items-center grow gap-1.5">
                   <TypePill mode="text" text={pastedText} />
@@ -860,7 +914,12 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                       aria-label="Clear"
                     >
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <path d="M4 4l8 8M12 4l-8 8" stroke="#78716C" strokeWidth="1.5" strokeLinecap="round" />
+                        <path
+                          d="M4 4l8 8M12 4l-8 8"
+                          stroke="#78716C"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
                       </svg>
                     </button>
                   )}
@@ -887,7 +946,14 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
         {/* ── Inline error ── */}
         {inlineError && !isLoading && (
           <div className="flex items-center gap-1.5 mt-2 px-2">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="shrink-0" aria-hidden="true">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 16 16"
+              fill="none"
+              className="shrink-0"
+              aria-hidden="true"
+            >
               <circle cx="8" cy="8" r="6.5" stroke="#EF4444" strokeWidth="1.2" />
               <path d="M8 5v3.5" stroke="#EF4444" strokeWidth="1.3" strokeLinecap="round" />
               <circle cx="8" cy="11" r="0.75" fill="#EF4444" />
@@ -929,7 +995,15 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
             className="ml-0.5 flex size-6 items-center justify-center rounded-full transition-colors hover:bg-stone-100 dark:hover:bg-stone-700"
             aria-label="Dismiss"
           >
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#78716C" strokeWidth="2.5" strokeLinecap="round">
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#78716C"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            >
               <path d="M18 6 6 18" />
               <path d="m6 6 12 12" />
             </svg>

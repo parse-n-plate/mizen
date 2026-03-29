@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import Plain from "@solar-icons/react/csr/messages/Plain";
 import { motion, AnimatePresence } from "motion/react";
 import { useDialKit } from "dialkit";
+import { getTheme, setTheme } from "@/lib/theme";
 import { Search } from "@/components/Search";
 import { RecentRecipes } from "@/components/RecentRecipes";
 import { GettingStarted } from "@/components/GettingStarted";
@@ -432,43 +433,24 @@ function WaitlistLanding() {
   const [hoveredSource, setHoveredSource] = useState<number | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  const dial = useDialKit(
-    "Waitlist",
-    {
-      source: {
-        type: "select",
-        options: ["URLs", "Recipe Photos", "Text"],
-        default: "URLs",
-      },
-      replay: { type: "action", label: "Replay Animation" },
-      "show success": { type: "action", label: "Show Success" },
-      "reset form": { type: "action", label: "Reset Form" },
+  const dial = useDialKit("Theme", {
+    mode: {
+      type: "select",
+      options: ["System", "Light", "Dark"],
+      default: getTheme() === "dark" ? "Dark" : getTheme() === "light" ? "Light" : "System",
     },
-    {
-      onAction: (action) => {
-        if (action === "replay") {
-          setPhase("preview");
-          setIsInitialLoad(false);
-        } else if (action === "show success") {
-          setSubmitted(true);
-          setAlreadyOnList(false);
-        } else if (action === "reset form") {
-          setSubmitted(false);
-          setAlreadyOnList(false);
-          setEmail("");
-        }
-      },
-    }
-  );
+  });
 
-  // Sync source selection from dial panel
+  // Sync theme from dial panel
   useEffect(() => {
-    const sourceIndex = ["URLs", "Recipe Photos", "Text"].indexOf(dial.source as string);
-    if (sourceIndex !== -1 && sourceIndex !== activeSource) {
-      handleSourceChange(sourceIndex);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dial.source]);
+    const map: Record<string, "system" | "light" | "dark"> = {
+      System: "system",
+      Light: "light",
+      Dark: "dark",
+    };
+    const theme = map[dial.mode as string];
+    if (theme) setTheme(theme);
+  }, [dial.mode]);
 
   // Run the animation sequence whenever phase changes
   useEffect(() => {
@@ -569,20 +551,55 @@ function WaitlistLanding() {
 
           {/* Center: Hero content */}
           <div className="flex-1 flex flex-col justify-center py-12 lg:py-0 lg:pb-16 lg:items-start items-center">
-            <div className="max-w-[30rem] text-center lg:text-left">
+            <div className="w-full text-center lg:text-left">
               <div className="page-fade-in-up page-fade-delay-1 mb-6">
                 <span className="inline-block px-3 py-1 rounded-full border border-stone-200 dark:border-stone-700 font-sans text-xs text-stone-500 dark:text-stone-400">
                   Now in Early Access
                 </span>
               </div>
 
-              <h1 className="page-fade-in-up page-fade-delay-1 font-serif text-[clamp(36px,5vw,52px)] lg:text-[clamp(44px,3.5vw,56px)] font-bold leading-[1.08] tracking-[-0.02em] text-stone-900 dark:text-stone-100 mb-5">
-                Save any recipe.
-                <br />
-                Cook it your way.
+              <h1 className="page-fade-in-up page-fade-delay-1 flex flex-col items-center gap-1 lg:items-start font-serif text-[clamp(32px,9vw,56px)] lg:text-[clamp(24px,2.6vw,44px)] xl:text-[clamp(32px,2.8vw,52px)] font-bold leading-[1.3] tracking-[-0.02em] text-stone-900 dark:text-stone-100 mb-5">
+                <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                  <span>Save any recipe.</span>
+                  <motion.img
+                    src="/assets/hero-book.svg"
+                    alt=""
+                    aria-hidden
+                    className="h-[1.05em] w-auto shrink-0 cursor-pointer"
+                    draggable={false}
+                    whileHover={{
+                      rotate: [0, -4, 4, -4, 0],
+                      scale: 1.05,
+                      transition: {
+                        rotate: { duration: 0.6, ease: "easeInOut" },
+                        scale: { duration: 0.2, ease: "easeOut" },
+                      },
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                  />
+                </span>
+                <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                  <span>Cook</span>
+                  <motion.img
+                    src="/assets/hero-pot.svg"
+                    alt=""
+                    aria-hidden
+                    className="h-[1.2em] w-auto shrink-0 cursor-pointer"
+                    draggable={false}
+                    whileHover={{
+                      rotate: [0, -3, 3, -3, 2, -1, 0],
+                      transition: {
+                        duration: 0.5,
+                        ease: "easeInOut",
+                      },
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                  />
+                  <span>it your way.</span>
+                </span>
               </h1>
 
-              <p className="page-fade-in-up page-fade-delay-2 font-sans text-base lg:text-[17px] text-stone-500 dark:text-stone-400 leading-relaxed mb-8 max-w-sm">
+              <p className="page-fade-in-up page-fade-delay-2 font-sans text-base lg:text-[17px] text-stone-500 dark:text-stone-400 leading-relaxed mb-8 max-w-sm mx-auto lg:mx-0">
                 Bring a{" "}
                 <span
                   className="cursor-pointer underline decoration-transparent hover:decoration-stone-400 transition-colors"
@@ -614,7 +631,10 @@ function WaitlistLanding() {
               </p>
 
               {/* Email form */}
-              <form onSubmit={handleSubmit} className="page-fade-in-up page-fade-delay-2">
+              <form
+                onSubmit={handleSubmit}
+                className="page-fade-in-up page-fade-delay-2 max-w-md mx-auto lg:mx-0"
+              >
                 <div className="flex items-center h-[52px] rounded-xl border border-[#E7E5E4] bg-[#F5F5F4] dark:border-stone-700 dark:bg-stone-900 overflow-clip shrink-0 focus-within:border-[#18a1f7] focus-within:ring-[3px] focus-within:ring-[#18a1f7]/30 transition-[border-color,box-shadow]">
                   {/* Input — collapses on success */}
                   <motion.div

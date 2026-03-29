@@ -39,6 +39,8 @@ export async function GET(request: Request) {
         if (isOAuth && user) {
           const hasEmailIdentity = user.identities?.some((i) => i.provider === "email");
           if (!hasEmailIdentity) {
+            // Delete first so the unapproved user record is removed,
+            // then sign out to clear any session cookies.
             const admin = createAdminClient();
             if (admin) {
               await admin.auth.admin.deleteUser(user.id);

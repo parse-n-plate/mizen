@@ -93,10 +93,7 @@ export function ReportRecipeDialog({
 
     const newImages = [...images, ...toAdd];
     setImages(newImages);
-    setPreviews((prev) => [
-      ...prev,
-      ...toAdd.map((f) => URL.createObjectURL(f)),
-    ]);
+    setPreviews((prev) => [...prev, ...toAdd.map((f) => URL.createObjectURL(f))]);
 
     // Reset input so same file can be re-selected
     if (fileRef.current) fileRef.current.value = "";
@@ -148,7 +145,9 @@ export function ReportRecipeDialog({
       resetForm();
       onOpenChange(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to submit report. Please try again.");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to submit report. Please try again."
+      );
     } finally {
       setSubmitting(false);
     }
@@ -165,9 +164,7 @@ export function ReportRecipeDialog({
       <DialogContent className="sm:max-w-md gap-4">
         <DialogHeader>
           <DialogTitle>Report an issue</DialogTitle>
-          <DialogDescription>
-            Let us know what went wrong with this recipe.
-          </DialogDescription>
+          <DialogDescription>Let us know what went wrong with this recipe.</DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-2">
@@ -239,7 +236,10 @@ export function ReportRecipeDialog({
           {recipe && (
             <div className="flex flex-1 items-center gap-3 rounded-lg bg-stone-100 dark:bg-stone-800 px-3 py-2">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-stone-200 dark:bg-stone-700 text-[11px] font-semibold text-stone-500 dark:text-stone-400 uppercase">
-                {(recipe.sourceUrl ? safeHostname(recipe.sourceUrl).split(".").slice(-2, -1)[0] || recipe.title : recipe.title).slice(0, 2)}
+                {(recipe.sourceUrl
+                  ? safeHostname(recipe.sourceUrl).split(".").slice(-2, -1)[0] || recipe.title
+                  : recipe.title
+                ).slice(0, 2)}
               </div>
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-stone-900 dark:text-stone-100">

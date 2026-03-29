@@ -60,9 +60,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Waitlist error:", error);
-    const message = process.env.NODE_ENV === "development" && error instanceof Error
-      ? error.message
-      : "Something went wrong";
+    const message =
+      process.env.NODE_ENV === "development" && error instanceof Error
+        ? error.message
+        : "Something went wrong";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -75,7 +76,7 @@ async function writeToNotion(email: string) {
   const queryRes = await fetch(`https://api.notion.com/v1/databases/${databaseId}/query`, {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${process.env.NOTION_API_KEY}`,
+      Authorization: `Bearer ${process.env.NOTION_API_KEY}`,
       "Notion-Version": "2022-06-28",
       "Content-Type": "application/json",
     },
@@ -92,7 +93,7 @@ async function writeToNotion(email: string) {
     throw new Error(`Notion query failed: ${err.message}`);
   }
 
-  const existing = await queryRes.json() as { results: unknown[] };
+  const existing = (await queryRes.json()) as { results: unknown[] };
 
   if (existing.results.length > 0) {
     return { status: "duplicate" as const };
@@ -113,10 +114,11 @@ async function writeToNotion(email: string) {
   return { status: "created" as const };
 }
 
-async function writeToSupabase(supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>, email: string) {
-  const { error } = await supabase
-    .from("waitlist")
-    .insert({ email, source: "Website" });
+async function writeToSupabase(
+  supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>,
+  email: string
+) {
+  const { error } = await supabase.from("waitlist").insert({ email, source: "Website" });
 
   if (error) {
     // Unique constraint violation = already on waitlist
