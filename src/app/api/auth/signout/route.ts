@@ -5,9 +5,9 @@ import { logger } from "@/lib/logger";
 export async function POST(request: Request) {
   const { origin } = new URL(request.url);
 
-  // CSRF: verify the request originated from our own domain
+  // CSRF: require Origin header and verify it matches our domain
   const requestOrigin = request.headers.get("origin");
-  if (requestOrigin && requestOrigin !== origin) {
+  if (!requestOrigin || requestOrigin !== origin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
