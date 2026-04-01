@@ -219,6 +219,41 @@ export default function RecipePage() {
     }
   };
 
+  const handleCopyRecipe = async () => {
+    if (!recipe) return;
+    const lines: string[] = [recipe.title, ""];
+
+    if (servings) lines.push(`Servings: ${servings}`, "");
+
+    lines.push("Ingredients");
+    for (const group of scaledIngredients) {
+      if (group.groupName) lines.push(`\n${group.groupName}`);
+      for (const ing of group.ingredients) {
+        const amt = ing.amount ? displayAmount(ing.amount, numberFormat) : "";
+        const parts = [amt, ing.units, ing.ingredient].filter(Boolean).join(" ");
+        const line = ing.description ? `${parts}, ${ing.description}` : parts;
+        lines.push(`- ${line}`);
+      }
+    }
+
+    lines.push("", "Instructions");
+    displayedInstructions.forEach((step, i) => {
+      lines.push(`${i + 1}. ${step.title}`);
+      lines.push(displayText(step.detail, numberFormat));
+      if (step.tips) lines.push(`Tip: ${step.tips}`);
+      lines.push("");
+    });
+
+    try {
+      await navigator.clipboard.writeText(lines.join("\n").trim());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      toast.success("Recipe copied");
+    } catch {
+      toast.error("Failed to copy recipe");
+    }
+  };
+
   const handleShare = async () => {
     if (!recipe) return;
     const url = shareUrl || recipe.sourceUrl || "";
@@ -428,9 +463,9 @@ export default function RecipePage() {
                 <TooltipTrigger asChild>
                   <button
                     type="button"
-                    disabled
-                    aria-label="Copy recipe (coming soon)"
-                    className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-300 dark:text-stone-600 transition-colors cursor-not-allowed disabled:opacity-100"
+                    onClick={handleCopyRecipe}
+                    aria-label="Copy recipe"
+                    className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
                   >
                     <svg
                       className="h-4 w-4"
@@ -447,7 +482,7 @@ export default function RecipePage() {
                     </svg>
                   </button>
                 </TooltipTrigger>
-                <TooltipContent>Copy recipe (coming soon)</TooltipContent>
+                <TooltipContent>{copied ? "Copied!" : "Copy recipe"}</TooltipContent>
               </Tooltip>
 
               {/* More actions (Print, Share) */}
