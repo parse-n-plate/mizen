@@ -10,6 +10,7 @@ import { useUser } from "@/hooks/useUser";
 import { useRecipe } from "@/context/RecipeContext";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { SettingsModal } from "@/components/SettingsModal";
+import { SharePopover } from "@/components/SharePopover";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -235,7 +236,7 @@ export function TopBar() {
           </div>
 
           {/* Right: actions */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             {user && (
               <>
                 <Link
@@ -277,6 +278,14 @@ export function TopBar() {
                     </svg>
                   </Link>
                 )}
+
+                {/* Separator between nav and actions */}
+                {isRecipePage && recipe && (
+                  <div className="h-4 w-px bg-stone-200 dark:bg-stone-700 mx-0.5" />
+                )}
+
+                {isRecipePage && recipe && <SharePopover />}
+
                 {/* Quick-add dropdown */}
                 <div className="relative">
                   <button

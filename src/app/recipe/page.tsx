@@ -13,7 +13,8 @@ import {
   getPreferredServings,
 } from "@/lib/recipe-preferences";
 import { toast } from "sonner";
-import { RecipeHeader, formatTime } from "@/components/RecipeHeader";
+import { RecipeHeader } from "@/components/RecipeHeader";
+import { formatTime } from "@/lib/format-time";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
 import { scaleIngredients, displayAmount, displayText } from "@/utils/ingredientScaler";
@@ -45,7 +46,6 @@ export default function RecipePage() {
   const { user } = useUser();
   const [saving, setSaving] = useState(false);
   const [unsaving, setUnsaving] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"prep" | "cook">("prep");
   const [mobileVaultOpen, setMobileVaultOpen] = useState(false);
   const [vaultMounted, setVaultMounted] = useState(false);
@@ -160,10 +160,6 @@ export default function RecipePage() {
     return convertInstructionTemperatures(recipe.instructions, temperatureUnit);
   }, [recipe, temperatureUnit]);
 
-  const shareUrl = savedMeta
-    ? `${typeof window !== "undefined" ? window.location.origin : ""}/r/${savedMeta.slug}`
-    : "";
-
   const handleSave = async () => {
     if (!recipe || !user || saving) return;
     setSaving(true);
@@ -200,41 +196,6 @@ export default function RecipePage() {
       toast.error("Removing recipes is temporarily unavailable. Please try again later.");
     } finally {
       setUnsaving(false);
-    }
-  };
-
-  const handleCopy = async () => {
-    if (!shareUrl) return;
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-      toast.success("Link copied");
-    } catch {
-      toast.error("Failed to copy link");
-    }
-  };
-
-  const handleShare = async () => {
-    if (!recipe) return;
-    const url = shareUrl || recipe.sourceUrl || "";
-    const shareData = {
-      title: recipe.title,
-      ...(recipe.summary && { text: recipe.summary }),
-      ...(url && { url }),
-    };
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        const text = url || recipe.title;
-        await navigator.clipboard.writeText(text);
-        toast.success("Link copied to clipboard");
-      }
-    } catch (err) {
-      // User cancelled the share sheet — not an error
-      if (err instanceof DOMException && err.name === "AbortError") return;
-      toast.error("Failed to share");
     }
   };
 
@@ -491,26 +452,6 @@ export default function RecipePage() {
                       <rect width="12" height="8" x="6" y="14" />
                     </svg>
                     Print
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onSelect={handleShare}
-                    className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
-                  >
-                    <svg
-                      className="h-4 w-4 mr-2"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                      <polyline points="16 6 12 2 8 6" />
-                      <line x1="12" x2="12" y1="2" y2="15" />
-                    </svg>
-                    Share
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />
                   <DropdownMenuItem
@@ -790,31 +731,6 @@ export default function RecipePage() {
                 </span>
               </button>
 
-              {/* Share */}
-              <button
-                type="button"
-                onClick={handleShare}
-                aria-label="Share"
-                className="flex flex-col items-center gap-1 text-stone-500 dark:text-stone-400 active:text-stone-800 dark:active:text-stone-200 transition-colors"
-              >
-                <svg
-                  className="h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                  <polyline points="16 6 12 2 8 6" />
-                  <line x1="12" x2="12" y1="2" y2="15" />
-                </svg>
-                <span className="text-[11px] font-sans font-medium">Share</span>
-              </button>
-
               {/* Print */}
               <button
                 type="button"
@@ -839,38 +755,6 @@ export default function RecipePage() {
                 </svg>
                 <span className="text-[11px] font-sans font-medium">Print</span>
               </button>
-
-              {/* Copy link (only when saved) */}
-              {savedMeta && (
-                <button
-                  type="button"
-                  onClick={handleCopy}
-                  aria-label={copied ? "Link copied" : "Copy link"}
-                  className={`flex flex-col items-center gap-1 transition-colors ${
-                    copied
-                      ? "text-emerald-500 dark:text-emerald-400"
-                      : "text-stone-500 dark:text-stone-400 active:text-stone-800 dark:active:text-stone-200"
-                  }`}
-                >
-                  <svg
-                    className="h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                  </svg>
-                  <span className="text-[11px] font-sans font-medium">
-                    {copied ? "Copied!" : "Copy link"}
-                  </span>
-                </button>
-              )}
 
               {/* Delete */}
               <button

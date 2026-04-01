@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from "react";
 import type { ParsedRecipe } from "@/lib/types";
-import { RecipeHeader, formatTime } from "@/components/RecipeHeader";
+import { RecipeHeader } from "@/components/RecipeHeader";
+import { formatTime } from "@/lib/format-time";
 import { IngredientList } from "@/components/IngredientList";
 import { StepList } from "@/components/StepList";
 import { scaleIngredients } from "@/utils/ingredientScaler";
@@ -46,7 +47,13 @@ export function WaitlistRecipePreview({ recipe }: WaitlistRecipePreviewProps) {
           data-state={activeTab === "prep" ? "active" : "inactive"}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/icon-prep.png" alt="" width={24} height={24} className="tab-icon-prep h-6 w-6" />
+          <img
+            src="/assets/icon-prep.png"
+            alt=""
+            width={24}
+            height={24}
+            className="tab-icon-prep h-6 w-6"
+          />
           Prep
           {recipe.prepTimeMinutes ? (
             <span className="font-normal text-stone-400 dark:text-stone-500 ml-1.5">
@@ -63,7 +70,13 @@ export function WaitlistRecipePreview({ recipe }: WaitlistRecipePreviewProps) {
             data-state={activeTab === "cook" ? "active" : "inactive"}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/icon-cook.svg" alt="" width={24} height={24} className="tab-icon-cook h-6 w-6" />
+            <img
+              src="/assets/icon-cook.svg"
+              alt=""
+              width={24}
+              height={24}
+              className="tab-icon-cook h-6 w-6"
+            />
             Cook
             {recipe.cookTimeMinutes ? (
               <span className="font-normal text-stone-400 dark:text-stone-500 ml-1.5">

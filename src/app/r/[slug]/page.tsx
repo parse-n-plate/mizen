@@ -1,9 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { notFound } from "next/navigation";
-import { RecipeHeader, formatTime } from "@/components/RecipeHeader";
+import { RecipeHeader } from "@/components/RecipeHeader";
+import { formatTime } from "@/lib/format-time";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
+import { ShareLinkButton } from "@/components/ShareLinkButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ParsedRecipe } from "@/lib/types";
 
@@ -12,9 +14,9 @@ export default async function SharedRecipePage({ params }: { params: Promise<{ s
     notFound();
   }
 
+  const { slug } = await params;
   let recipe: ParsedRecipe | null = null;
   try {
-    const { slug } = await params;
     const supabase = await createClient();
     if (!supabase) {
       throw new Error("Supabase unavailable");
@@ -38,10 +40,15 @@ export default async function SharedRecipePage({ params }: { params: Promise<{ s
 
   return (
     <div className="min-h-[calc(100vh-3.5rem)] bg-white dark:bg-stone-950 flex flex-col">
-      {/* Header section with cream background */}
+      {/* Header section */}
       <div className="px-6 pt-6 pb-0">
         <div className="max-w-3xl mx-auto w-full pb-8">
-          <RecipeHeader recipe={recipe} />
+          <div className="flex items-start gap-4">
+            <div className="flex-1 min-w-0">
+              <RecipeHeader recipe={recipe} />
+            </div>
+            <ShareLinkButton slug={slug} title={recipe.title} summary={recipe.summary} />
+          </div>
         </div>
       </div>
 
@@ -54,6 +61,14 @@ export default async function SharedRecipePage({ params }: { params: Promise<{ s
                 value="prep"
                 className="folder-tab-trigger h-11 px-5 sm:px-8 font-sans text-[14px] font-medium"
               >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/assets/icon-prep.png"
+                  alt=""
+                  width={24}
+                  height={24}
+                  className="tab-icon-prep h-6 w-6"
+                />
                 Prep
                 {recipe.prepTimeMinutes ? (
                   <>
@@ -70,6 +85,14 @@ export default async function SharedRecipePage({ params }: { params: Promise<{ s
                 value="cook"
                 className="folder-tab-trigger h-11 px-5 sm:px-8 font-sans text-[14px] font-medium"
               >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/assets/icon-cook.svg"
+                  alt=""
+                  width={24}
+                  height={24}
+                  className="tab-icon-cook h-6 w-6"
+                />
                 Cook
                 {recipe.cookTimeMinutes ? (
                   <>
