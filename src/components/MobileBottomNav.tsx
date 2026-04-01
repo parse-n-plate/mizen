@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import AddCircle from "@solar-icons/react/csr/ui/AddCircle";
+import BookBookmark from "@solar-icons/react/csr/school/BookBookmark";
+import User from "@solar-icons/react/csr/users/User";
 
 type NavItem = {
   id: "add" | "cookbook" | "profile";
@@ -53,49 +56,11 @@ export function MobileBottomNav() {
               }`}
             >
               {item.id === "add" ? (
-                <svg
-                  className="h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.9"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M12 5v14" />
-                  <path d="M5 12h14" />
-                </svg>
+                <AddCircle size={20} aria-hidden="true" />
               ) : item.id === "cookbook" ? (
-                <svg
-                  className="h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.9"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
-                </svg>
+                <BookBookmark size={20} aria-hidden="true" />
               ) : (
-                <svg
-                  className="h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.9"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M20 21a8 8 0 0 0-16 0" />
-                  <circle cx="12" cy="8" r="4" />
-                </svg>
+                <User size={20} aria-hidden="true" />
               )}
               <span>{item.label}</span>
             </Link>
