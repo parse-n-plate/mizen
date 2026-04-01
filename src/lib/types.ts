@@ -25,6 +25,7 @@ export interface InstructionStep {
   ingredients?: string[];
   tips?: string;
   imageUrl?: string;
+  imageUrls?: string[];
 }
 
 export interface ParsedRecipe {

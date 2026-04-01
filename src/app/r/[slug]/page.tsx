@@ -86,7 +86,7 @@ export default async function SharedRecipePage({ params }: { params: Promise<{ s
 
             {/* Tab content */}
             <div className="bg-white dark:bg-stone-900 rounded-b-lg border border-t-0 border-stone-200 dark:border-stone-700 flex-1">
-              <div className="max-w-3xl mx-auto px-6 pt-6 pb-12">
+              <div className="max-w-3xl mx-auto px-5 pt-5 pb-12">
                 <TabsContent value="prep" className="space-y-0">
                   <PrepSection ingredients={recipe.ingredients} steps={recipe.instructions} />
                 </TabsContent>

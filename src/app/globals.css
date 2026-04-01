@@ -700,15 +700,15 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 16px 8px;
+    padding: 14px 12px;
     position: relative;
   }
 
   .ingredient-list-divider {
     position: absolute;
     bottom: 0;
-    left: 8px;
-    right: 8px;
+    left: 42px;
+    right: 12px;
     height: 1px;
     background-color: var(--color-border-light);
   }

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { ImageLightbox } from "@/components/ImageLightbox";
 import { useRecipe } from "@/context/RecipeContext";
 import { toast } from "sonner";
 import { looksLikeRecipeUrl, detectCollectionUrl } from "@/utils/urlPatterns";
@@ -281,43 +281,12 @@ function ThumbnailClose({ onClick }: { onClick: () => void }) {
   );
 }
 
-function ImageLightbox({ src, onClose }: { src: string; onClose: () => void }) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  return createPortal(
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Image preview"
-      className="lightbox-overlay fixed inset-0 z-50 flex items-center justify-center bg-[rgba(0,0,0,0.7)] backdrop-blur-sm cursor-zoom-out"
-      onClick={onClose}
-    >
-      <div className="relative max-w-[85vw] max-h-[85vh]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={src}
-          alt="Attached image"
-          className="lightbox-img max-w-full max-h-[85vh] rounded-2xl object-contain shadow-2xl"
-          onClick={(e) => e.stopPropagation()}
-        />
-      </div>
-    </div>,
-    document.body
-  );
-}
-
 function ImageThumbnail({ src, onRemove }: { src: string; onRemove: () => void }) {
   const [lightbox, setLightbox] = useState(false);
 
   return (
     <>
-      <div className="group/thumb relative flex rounded-xl overflow-visible shrink-0 bg-stone-100 dark:bg-stone-800 outline outline-1 outline-stone-200 dark:outline-stone-700 size-16 cursor-zoom-in">
+      <div className="group/thumb relative flex rounded-xl overflow-visible shrink-0 bg-stone-100 dark:bg-stone-800 outline outline-1 outline-stone-200 dark:outline-stone-700 size-16 ">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
@@ -327,7 +296,9 @@ function ImageThumbnail({ src, onRemove }: { src: string; onRemove: () => void }
         />
         <ThumbnailClose onClick={onRemove} />
       </div>
-      {lightbox && <ImageLightbox src={src} onClose={() => setLightbox(false)} />}
+      {lightbox && (
+        <ImageLightbox src={src} alt="Attached image" onClose={() => setLightbox(false)} />
+      )}
     </>
   );
 }

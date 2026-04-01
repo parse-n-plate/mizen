@@ -169,7 +169,7 @@ function IngredientGroupSection({
       <button
         type="button"
         onClick={() => setCollapsed(!collapsed)}
-        className="w-full flex items-center py-3 pl-2 pr-0 group cursor-pointer transition-colors duration-[180ms] hover:opacity-80"
+        className="w-full flex items-center py-2.5 px-3 group cursor-pointer transition-colors duration-[180ms] hover:opacity-80 rounded-lg"
         aria-expanded={!collapsed}
       >
         <div className="flex items-center gap-3 flex-1">
@@ -309,7 +309,7 @@ function IngredientGroupSection({
                 </div>
 
                 {!isLast && (
-                  <div className="ingredient-list-divider absolute bottom-0 left-2 right-2 h-px bg-stone-100 dark:bg-stone-800 transition-opacity duration-150 group-hover:opacity-0" />
+                  <div className="ingredient-list-divider absolute bottom-0 h-px bg-stone-100 dark:bg-stone-800 transition-opacity duration-150 group-hover:opacity-0" />
                 )}
               </div>
             );
