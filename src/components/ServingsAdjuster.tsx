@@ -11,6 +11,7 @@ interface ServingsAdjusterProps {
   originalServings: number;
   onServingsChange: (servings: number) => void;
   isOpen: boolean;
+  panelClassName?: string;
 }
 
 export function ServingsAdjuster({
@@ -18,6 +19,7 @@ export function ServingsAdjuster({
   originalServings,
   onServingsChange,
   isOpen,
+  panelClassName,
 }: ServingsAdjusterProps) {
   const sliderRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -146,7 +148,9 @@ export function ServingsAdjuster({
           }}
           className="print:hidden overflow-visible"
         >
-          <div className="mt-2 max-w-md bg-white dark:bg-stone-900 rounded-2xl border border-stone-100 dark:border-stone-800 px-4 py-3 shadow-[var(--shadow-soft)]">
+          <div
+            className={`mt-2 max-w-md rounded-2xl border border-stone-100 bg-white px-4 py-3 shadow-[var(--shadow-soft)] dark:border-stone-800 dark:bg-stone-900 ${panelClassName ?? ""}`}
+          >
             <p className="text-[13px] font-semibold text-stone-500 dark:text-stone-400 capitalize mb-2">
               Servings
             </p>

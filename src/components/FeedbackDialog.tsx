@@ -166,7 +166,11 @@ export function FeedbackDialog() {
       <DialogTrigger asChild>
         <button
           type="button"
-          className="fixed bottom-5 right-5 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-[#18A1F7] text-white shadow-lg transition-transform duration-200 hover:scale-110 sm:bottom-6 sm:right-6"
+          className={`fixed right-5 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-[#18A1F7] text-white shadow-lg transition-transform duration-200 hover:scale-110 sm:right-6 ${
+            isOnRecipePage
+              ? "bottom-[calc(env(safe-area-inset-bottom)+5rem)] sm:bottom-6"
+              : "bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] sm:bottom-6"
+          }`}
           aria-label="Send feedback"
         >
           <ChatRoundDots size={20} />

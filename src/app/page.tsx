@@ -345,6 +345,18 @@ function SourceIcon({ type }: { type: "link" | "camera" | "chat" }) {
 function AuthenticatedHome() {
   const { error, isLoading } = useRecipe();
 
+  useEffect(() => {
+    if (window.location.hash !== "#search") return;
+
+    const searchSection = document.getElementById("search");
+    searchSection?.scrollIntoView({ block: "center" });
+
+    const input = searchSection?.querySelector("input");
+    if (input instanceof HTMLInputElement) {
+      input.focus();
+    }
+  }, []);
+
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] flex-col">
       <main className="flex flex-1 flex-col items-center justify-center px-6 pb-6">
@@ -359,7 +371,10 @@ function AuthenticatedHome() {
           </p>
         </div>
 
-        <div className="page-fade-in-up page-fade-delay-2 mt-10 w-full flex justify-center">
+        <div
+          id="search"
+          className="page-fade-in-up page-fade-delay-2 mt-10 w-full scroll-mt-24 flex justify-center"
+        >
           <Search />
         </div>
 

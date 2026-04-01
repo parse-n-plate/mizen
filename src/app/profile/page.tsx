@@ -1,16 +1,14 @@
 import Image from "next/image";
+import { ProfileSettingsPanel } from "@/components/ProfileSettingsPanel";
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { redirect } from "next/navigation";
-import { RecipeList } from "@/components/RecipeList";
-import type { SavedRecipe } from "@/lib/types";
 
 export default async function ProfilePage() {
   if (!isSupabaseConfigured) {
     redirect("/");
   }
 
-  let recipes: SavedRecipe[] = [];
   let name = "User";
   let email = "";
   let avatarUrl: string | undefined;
@@ -28,16 +26,6 @@ export default async function ProfilePage() {
       redirect("/");
     }
 
-    const { data, error } = await supabase
-      .from("recipes")
-      .select("id, slug, recipe, source_url, created_at, updated_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-    if (error) {
-      throw error;
-    }
-    recipes = (data as SavedRecipe[]) || [];
-
     name = user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
     email = user.email || "";
     avatarUrl = user.user_metadata?.avatar_url;
@@ -46,7 +34,7 @@ export default async function ProfilePage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-white dark:bg-stone-950">
+    <div className="min-h-[calc(100vh-3.5rem)]">
       <div className="mx-auto max-w-lg px-6 py-8">
         <div className="space-y-6">
           <div className="flex items-center gap-4">
@@ -80,10 +68,17 @@ export default async function ProfilePage() {
           </form>
         </div>
 
-        <div className="mt-10">
-          <h2 className="font-serif text-lg font-semibold">Saved Recipes</h2>
-          <RecipeList initialRecipes={recipes} />
+        <div className="mt-10 rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 dark:border-amber-900/70 dark:bg-amber-950/50">
+          <p className="font-sans text-sm font-medium text-amber-900 dark:text-amber-100">
+            Mizen is currently in beta.
+          </p>
+          <p className="mt-1 font-sans text-[13px] text-amber-800/90 dark:text-amber-200/80">
+            You may notice changes across the app as we keep refining recipes, navigation, and
+            account tools.
+          </p>
         </div>
+
+        <ProfileSettingsPanel />
       </div>
     </div>
   );
