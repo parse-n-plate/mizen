@@ -10,7 +10,6 @@ import { useDialKit } from "dialkit";
 import { getTheme, setTheme } from "@/lib/theme";
 import { Search } from "@/components/Search";
 import { RecentRecipes } from "@/components/RecentRecipes";
-import { GettingStarted } from "@/components/GettingStarted";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { WhoMadeIt } from "@/components/WhoMadeIt";
@@ -345,7 +344,6 @@ function SourceIcon({ type }: { type: "link" | "camera" | "chat" }) {
 
 function AuthenticatedHome() {
   const { error, isLoading } = useRecipe();
-  const { user } = useUser();
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)] flex-col">
@@ -376,7 +374,7 @@ function AuthenticatedHome() {
         )}
 
         <div className="mt-12 w-full flex justify-center">
-          {user ? <RecentRecipes /> : <GettingStarted />}
+          <RecentRecipes />
         </div>
       </main>
     </div>
