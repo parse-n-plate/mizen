@@ -485,6 +485,18 @@ export default function RecipePage() {
                 <TooltipContent>{copied ? "Copied!" : "Copy recipe"}</TooltipContent>
               </Tooltip>
 
+              {/* Report — ghost button (only for logged-in users) */}
+              {user && (
+                <button
+                  type="button"
+                  onClick={() => setReportOpen(true)}
+                  className="press-scale inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors text-xs font-medium font-sans"
+                >
+                  <Flag size={14} aria-hidden="true" />
+                  Report
+                </button>
+              )}
+
               {/* More actions (Print, Share) */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -575,18 +587,6 @@ export default function RecipePage() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              {/* Report — ghost button (only for logged-in users) */}
-              {user && (
-                <button
-                  type="button"
-                  onClick={() => setReportOpen(true)}
-                  className="press-scale inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors text-xs font-medium font-sans"
-                >
-                  <Flag size={14} aria-hidden="true" />
-                  Report
-                </button>
-              )}
             </div>
           </div>
 
