@@ -22,6 +22,7 @@ export const InstructionStepSchema = z.object({
   ingredients: z.array(z.string()).optional(),
   tips: z.string().optional(),
   imageUrl: z.string().optional(),
+  imageUrls: z.array(z.string()).optional(),
 });
 
 export const CoreRecipeSchema = z.object({
