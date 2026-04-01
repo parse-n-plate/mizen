@@ -11,6 +11,8 @@ interface RecipeHeaderProps {
   servings?: number;
   originalServings?: number;
   onServingsChange?: (n: number) => void;
+  isServingsOpen?: boolean;
+  onServingsOpenChange?: (open: boolean) => void;
 }
 
 export function formatTime(minutes: number): string {
@@ -25,9 +27,20 @@ export function RecipeHeader({
   servings,
   originalServings,
   onServingsChange,
+  isServingsOpen,
+  onServingsOpenChange,
 }: RecipeHeaderProps) {
-  const [isSliderOpen, setIsSliderOpen] = useState(false);
+  const [isSliderOpenLocal, setIsSliderOpenLocal] = useState(false);
   const showPrepAndCook = !!recipe.prepTimeMinutes || !!recipe.cookTimeMinutes;
+  const isSliderOpen = isServingsOpen ?? isSliderOpenLocal;
+
+  const setIsSliderOpen = (open: boolean) => {
+    if (onServingsOpenChange) {
+      onServingsOpenChange(open);
+      return;
+    }
+    setIsSliderOpenLocal(open);
+  };
 
   const canAdjustServings = !!(originalServings && originalServings > 0 && onServingsChange);
   const displayServings = servings ?? originalServings ?? recipe.servings;
@@ -79,33 +92,52 @@ export function RecipeHeader({
         {/* Servings: interactive button if adjustable, static text otherwise */}
         {hasServings &&
           (canAdjustServings ? (
-            <button
-              onClick={() => setIsSliderOpen(!isSliderOpen)}
-              className={`inline-flex items-center gap-1 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-md transition-colors cursor-pointer ${isAdjusted ? "hover:bg-[var(--color-blue)]/8" : "hover:bg-stone-100 dark:hover:bg-stone-800"}`}
-              aria-expanded={isSliderOpen}
-              aria-label="Adjust servings"
-            >
-              <span
-                className={`flex items-center justify-center w-3.5 h-3.5 ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"}`}
+            <>
+              <button
+                onClick={() => setIsSliderOpen(!isSliderOpen)}
+                className={`hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-md transition-colors cursor-pointer ${isAdjusted ? "hover:bg-[var(--color-blue)]/8" : "hover:bg-stone-100 dark:hover:bg-stone-800"}`}
+                aria-expanded={isSliderOpen}
+                aria-label="Adjust servings"
               >
-                <User weight="Bold" className="w-3.5 h-3.5" />
+                <span
+                  className={`flex items-center justify-center w-3.5 h-3.5 ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"}`}
+                >
+                  <User weight="Bold" className="w-3.5 h-3.5" />
+                </span>
+                <span
+                  className={
+                    isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"
+                  }
+                >
+                  Serves
+                </span>{" "}
+                <span
+                  className={`font-medium ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-600 dark:text-stone-300"}`}
+                >
+                  {displayServings}
+                </span>
+                <AltArrowDown
+                  className={`w-3 h-3 transition-transform duration-200 ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"} ${isSliderOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              <span className="flex items-center gap-1.5 sm:hidden">
+                <span>
+                  <span
+                    className={
+                      isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"
+                    }
+                  >
+                    Serves
+                  </span>{" "}
+                  <span
+                    className={`font-medium ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-600 dark:text-stone-300"}`}
+                  >
+                    {displayServings}
+                  </span>
+                </span>
               </span>
-              <span
-                className={
-                  isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"
-                }
-              >
-                Serves
-              </span>{" "}
-              <span
-                className={`font-medium ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-600 dark:text-stone-300"}`}
-              >
-                {displayServings}
-              </span>
-              <AltArrowDown
-                className={`w-3 h-3 transition-transform duration-200 ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"} ${isSliderOpen ? "rotate-180" : ""}`}
-              />
-            </button>
+            </>
           ) : (
             <span className="flex items-center gap-1.5">
               <span>
@@ -120,12 +152,14 @@ export function RecipeHeader({
 
       {/* Servings slider card */}
       {canAdjustServings && (
-        <ServingsAdjuster
-          servings={servings!}
-          originalServings={originalServings!}
-          onServingsChange={onServingsChange!}
-          isOpen={isSliderOpen}
-        />
+        <div className="hidden sm:block">
+          <ServingsAdjuster
+            servings={servings!}
+            originalServings={originalServings!}
+            onServingsChange={onServingsChange!}
+            isOpen={isSliderOpen}
+          />
+        </div>
       )}
     </div>
   );
