@@ -5,13 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 type NavItem = {
-  id: "home" | "add" | "cookbook" | "profile";
+  id: "add" | "cookbook" | "profile";
   href: string;
   label: string;
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { id: "home", href: "/", label: "Home" },
   { id: "add", href: "/#search", label: "Add Recipe" },
   { id: "cookbook", href: "/cookbook", label: "Cookbook" },
   { id: "profile", href: "/profile", label: "Profile" },
@@ -40,9 +39,7 @@ export function MobileBottomNav() {
               ? pathname === "/profile"
               : item.id === "cookbook"
                 ? pathname === "/cookbook"
-                : item.id === "add"
-                  ? pathname === "/" && activeHash === "#search"
-                  : pathname === "/" && activeHash !== "#search";
+                : pathname === "/" && activeHash === "#search";
 
           return (
             <Link
@@ -55,23 +52,7 @@ export function MobileBottomNav() {
                   : "text-[var(--color-text-muted)] active:text-[var(--color-text-heading)]"
               }`}
             >
-              {item.id === "home" ? (
-                <svg
-                  className="h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.9"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M3 10.5 12 3l9 7.5" />
-                  <path d="M5.5 9.5V20a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V9.5" />
-                  <path d="M9.5 21v-6.5h5V21" />
-                </svg>
-              ) : item.id === "add" ? (
+              {item.id === "add" ? (
                 <svg
                   className="h-5 w-5"
                   xmlns="http://www.w3.org/2000/svg"
