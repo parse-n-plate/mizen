@@ -391,6 +391,16 @@ function AuthenticatedHome() {
         <div className="mt-12 w-full flex justify-center">
           <RecentRecipes />
         </div>
+
+        <div className="mt-10 w-full max-w-md rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 dark:border-amber-900/70 dark:bg-amber-950/50 md:hidden">
+          <p className="font-sans text-sm font-medium text-amber-900 dark:text-amber-100">
+            Mizen is currently in beta.
+          </p>
+          <p className="mt-1 font-sans text-[13px] text-amber-800/90 dark:text-amber-200/80">
+            You may notice changes across the app as we keep refining recipes, navigation, and
+            account tools.
+          </p>
+        </div>
       </main>
     </div>
   );
