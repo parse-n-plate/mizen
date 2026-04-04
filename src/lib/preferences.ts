@@ -6,6 +6,7 @@ const UNIT_SYSTEM_KEY = "unit-system";
 const TEMPERATURE_UNIT_KEY = "temperature-unit";
 const DIETARY_PROFILE_KEY = "dietary-profile";
 const MY_SUBSTITUTIONS_KEY = "my-substitutions";
+const SHOW_STEP_IMAGES_KEY = "show-step-images";
 
 export type PreferenceKey =
   | typeof ROUND_AMOUNTS_KEY
@@ -13,7 +14,8 @@ export type PreferenceKey =
   | typeof UNIT_SYSTEM_KEY
   | typeof TEMPERATURE_UNIT_KEY
   | typeof DIETARY_PROFILE_KEY
-  | typeof MY_SUBSTITUTIONS_KEY;
+  | typeof MY_SUBSTITUTIONS_KEY
+  | typeof SHOW_STEP_IMAGES_KEY;
 
 function emitPreferenceChange(key: PreferenceKey) {
   if (typeof window === "undefined") return;
@@ -228,4 +230,24 @@ export function setSubstitutions(subs: Substitution[]) {
   }
 
   emitPreferenceChange(MY_SUBSTITUTIONS_KEY);
+}
+
+/* ─── Show Step Images ───────────────────────────────────────────────────── */
+
+export function getShowStepImages(): boolean {
+  if (typeof window === "undefined") return true;
+  const raw = localStorage.getItem(SHOW_STEP_IMAGES_KEY);
+  return raw !== "false";
+}
+
+export function setShowStepImages(show: boolean) {
+  if (typeof window === "undefined") return;
+
+  if (show) {
+    localStorage.removeItem(SHOW_STEP_IMAGES_KEY);
+  } else {
+    localStorage.setItem(SHOW_STEP_IMAGES_KEY, "false");
+  }
+
+  emitPreferenceChange(SHOW_STEP_IMAGES_KEY);
 }

@@ -233,6 +233,7 @@ function normalizeInstructionSteps(instructions: unknown): InstructionStep[] {
           ingredients: obj.ingredients as string[] | undefined,
           tips: obj.tips as string | undefined,
           imageUrl: obj.imageUrl as string | undefined,
+          imageUrls: obj.imageUrls as string[] | undefined,
         };
       }
       return null;
@@ -298,15 +299,19 @@ function normalizeInstructionText(instructions: InstructionStep[]): InstructionS
  * Merge step images into instructions that don't already have one.
  * Applies positionally — only fills in gaps.
  */
-function mergeStepImages(instructions: InstructionStep[], htmlImages: string[]): void {
+function mergeStepImages(instructions: InstructionStep[], htmlImages: string[][]): void {
   if (htmlImages.length === 0) return;
-  const hasAnyImages = instructions.some((s) => s.imageUrl);
+  const hasAnyImages = instructions.some(
+    (s) => s.imageUrl || (s.imageUrls && s.imageUrls.length > 0)
+  );
   if (hasAnyImages) return;
 
   const limit = Math.min(instructions.length, htmlImages.length);
   for (let i = 0; i < limit; i++) {
-    if (htmlImages[i]) {
-      instructions[i].imageUrl = htmlImages[i];
+    const imgs = htmlImages[i];
+    if (imgs.length > 0) {
+      instructions[i].imageUrl = imgs[0];
+      instructions[i].imageUrls = imgs;
     }
   }
 }
@@ -315,7 +320,7 @@ function mergeStepImages(instructions: InstructionStep[], htmlImages: string[]):
 // Step Image Extraction (HTML fallback)
 // ---------------------------------------------------------------------------
 
-function extractStepImagesFromHtml(rawHtml: string): string[] {
+function extractStepImagesFromHtml(rawHtml: string): string[][] {
   try {
     const $ = cheerio.load(rawHtml);
     const instructionSelectors = [
@@ -347,15 +352,20 @@ function extractStepImagesFromHtml(rawHtml: string): string[] {
 
     if (!$container || !$container.length) return [];
 
-    const images: string[] = [];
+    const images: string[][] = [];
     // Look for step elements within the container
     const $steps = $container.find('li, [class*="step"]');
     if ($steps.length === 0) return [];
 
     $steps.each((_, step) => {
-      const $img = $(step).find("img").first();
-      const src = $img.attr("src") || $img.attr("data-src") || "";
-      images.push(src);
+      const stepImages: string[] = [];
+      $(step)
+        .find("img")
+        .each((__, img) => {
+          const src = $(img).attr("src") || $(img).attr("data-src") || "";
+          if (src) stepImages.push(src);
+        });
+      images.push(stepImages);
     });
 
     return images;
@@ -467,19 +477,20 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             interface StepData {
               text: string;
               imageUrl?: string;
+              imageUrls?: string[];
             }
             let instructionData: StepData[] = [];
             const normalizeText = (text: string) =>
               decodeHtmlEntities(text).replace(/\s+/g, " ").trim();
 
-            const extractImageUrl = (img: unknown): string | undefined => {
-              if (typeof img === "string") return img;
-              if (Array.isArray(img) && img.length > 0) return extractImageUrl(img[0]);
+            const extractImageUrls = (img: unknown): string[] => {
+              if (typeof img === "string") return [img];
+              if (Array.isArray(img)) return img.flatMap((i: unknown) => extractImageUrls(i));
               if (img && typeof img === "object") {
                 const obj = img as Record<string, unknown>;
-                if (typeof obj.url === "string") return obj.url;
+                if (typeof obj.url === "string") return [obj.url];
               }
-              return undefined;
+              return [];
             };
 
             const extractStepData = (node: unknown): StepData[] => {
@@ -492,14 +503,31 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
                 if (Array.isArray(obj.itemListElement)) {
                   return obj.itemListElement.flatMap((i: unknown) => extractStepData(i));
                 }
-                const imageUrl = extractImageUrl(obj.image);
+                const imageUrls = extractImageUrls(obj.image);
+                const imageUrl = imageUrls[0];
                 if (typeof obj.text === "string") {
                   const n = normalizeText(obj.text);
-                  return n ? [{ text: n, imageUrl }] : [];
+                  return n
+                    ? [
+                        {
+                          text: n,
+                          imageUrl,
+                          imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
+                        },
+                      ]
+                    : [];
                 }
                 if (typeof obj.name === "string") {
                   const n = normalizeText(obj.name);
-                  return n ? [{ text: n, imageUrl }] : [];
+                  return n
+                    ? [
+                        {
+                          text: n,
+                          imageUrl,
+                          imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
+                        },
+                      ]
+                    : [];
                 }
               }
               return [];
@@ -554,6 +582,7 @@ function extractFromJsonLd($: cheerio.CheerioAPI): ParsedRecipe | null {
             const instructionInputs = instructionData.map((d) => ({
               detail: d.text,
               ...(d.imageUrl && { imageUrl: d.imageUrl }),
+              ...(d.imageUrls && d.imageUrls.length > 0 && { imageUrls: d.imageUrls }),
             }));
             const normalizedInstructions = normalizeInstructionSteps(instructionInputs);
 
@@ -1081,6 +1110,10 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
           if (jsonLdResult.instructions[i].imageUrl && !mergedRecipe.instructions[i].imageUrl) {
             mergedRecipe.instructions[i].imageUrl = jsonLdResult.instructions[i].imageUrl;
           }
+          const srcUrls = jsonLdResult.instructions[i].imageUrls;
+          if (srcUrls && srcUrls.length > 0 && !mergedRecipe.instructions[i].imageUrls?.length) {
+            mergedRecipe.instructions[i].imageUrls = srcUrls;
+          }
         }
       }
 
@@ -1129,3 +1162,9 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
     return { success: false, error: message, method: "none" };
   }
 }
+
+export const __test__ = {
+  extractFromJsonLd,
+  extractStepImagesFromHtml,
+  mergeStepImages,
+};

@@ -200,7 +200,6 @@ html body[data-scroll-locked] {
   --color-text-body: #d6d3d1;
   --color-text-muted: #a8a29e;
   --color-border-light: #3a3633;
-
   /* Primary — brighter blue for dark backgrounds */
   --color-blue: #18a1f7;
   --color-primary-blue: #18a1f7;
@@ -700,15 +699,15 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 16px 8px;
+    padding: 14px 12px;
     position: relative;
   }
 
   .ingredient-list-divider {
     position: absolute;
     bottom: 0;
-    left: 8px;
-    right: 8px;
+    left: 42px;
+    right: 12px;
     height: 1px;
     background-color: var(--color-border-light);
   }

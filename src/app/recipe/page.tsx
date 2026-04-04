@@ -14,6 +14,7 @@ import {
 } from "@/lib/recipe-preferences";
 import { toast } from "sonner";
 import { RecipeHeader, formatTime } from "@/components/RecipeHeader";
+import { ServingsAdjuster } from "@/components/ServingsAdjuster";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
 import { scaleIngredients, displayAmount, displayText } from "@/utils/ingredientScaler";
@@ -52,10 +53,8 @@ export default function RecipePage() {
   const [unsaving, setUnsaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"prep" | "cook">("prep");
-  const [mobileVaultOpen, setMobileVaultOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
-  const [vaultMounted, setVaultMounted] = useState(false);
-  const [vaultExiting, setVaultExiting] = useState(false);
+  const [mobileServingsOpen, setMobileServingsOpen] = useState(false);
   const numberFormat = useSyncExternalStore(
     (cb) => {
       window.addEventListener("storage", cb);
@@ -67,6 +66,10 @@ export default function RecipePage() {
 
   const originalServings = useMemo(() => recipe?.servings, [recipe?.servings]);
   const [servings, setServings] = useState<number | undefined>(recipe?.servings);
+  const canAdjustServings = !!(originalServings && originalServings > 0);
+  const mobileFooterStackHeight = "7.25rem";
+  const mobileServingsGap = "0.75rem";
+  const mobileServingsOffset = `calc(${mobileFooterStackHeight} + ${mobileServingsGap} + env(safe-area-inset-bottom))`;
   const roundAmounts = usePreference(getRoundAmounts);
   const defaultServings = usePreference(getDefaultServings);
   const unitSystem = usePreference(getUnitSystem);
@@ -138,25 +141,6 @@ export default function RecipePage() {
     }
   }, [showBanner]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Vault enter/exit lifecycle
-  const vaultMountedRef = useRef(false);
-  vaultMountedRef.current = vaultMounted;
-
-  useEffect(() => {
-    if (mobileVaultOpen) {
-      setVaultExiting(false);
-      setVaultMounted(true);
-    } else if (vaultMountedRef.current) {
-      setVaultExiting(true);
-      // Fallback: unmount after animation duration if onAnimationEnd doesn't fire
-      const timer = setTimeout(() => {
-        setVaultMounted(false);
-        setVaultExiting(false);
-      }, 250);
-      return () => clearTimeout(timer);
-    }
-  }, [mobileVaultOpen]);
-
   function dismissBanner() {
     setBannerDismissed(true);
   }
@@ -209,15 +193,38 @@ export default function RecipePage() {
     }
   };
 
-  const handleCopy = async () => {
-    if (!shareUrl) return;
+  const handleCopyRecipe = async () => {
+    if (!recipe) return;
+    const lines: string[] = [recipe.title, ""];
+
+    if (servings) lines.push(`Servings: ${servings}`, "");
+
+    lines.push("Ingredients");
+    for (const group of scaledIngredients) {
+      if (group.groupName) lines.push(`\n${group.groupName}`);
+      for (const ing of group.ingredients) {
+        const amt = ing.amount ? displayAmount(ing.amount, numberFormat) : "";
+        const parts = [amt, ing.units, ing.ingredient].filter(Boolean).join(" ");
+        const line = ing.description ? `${parts}, ${ing.description}` : parts;
+        lines.push(`- ${line}`);
+      }
+    }
+
+    lines.push("", "Instructions");
+    displayedInstructions.forEach((step, i) => {
+      lines.push(`${i + 1}. ${step.title}`);
+      lines.push(displayText(step.detail, numberFormat));
+      if (step.tips) lines.push(`Tip: ${step.tips}`);
+      lines.push("");
+    });
+
     try {
-      await navigator.clipboard.writeText(shareUrl);
+      await navigator.clipboard.writeText(lines.join("\n").trim());
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-      toast.success("Link copied");
+      toast.success("Recipe copied");
     } catch {
-      toast.error("Failed to copy link");
+      toast.error("Failed to copy recipe");
     }
   };
 
@@ -242,6 +249,11 @@ export default function RecipePage() {
       if (err instanceof DOMException && err.name === "AbortError") return;
       toast.error("Failed to share");
     }
+  };
+
+  const handleToggleMobileServings = () => {
+    if (!canAdjustServings) return;
+    setMobileServingsOpen((open) => !open);
   };
 
   const handleDelete = async () => {
@@ -294,6 +306,8 @@ export default function RecipePage() {
                 servings={servings}
                 originalServings={originalServings}
                 onServingsChange={setServings}
+                isServingsOpen={mobileServingsOpen}
+                onServingsOpenChange={setMobileServingsOpen}
               />
             </div>
 
@@ -443,9 +457,9 @@ export default function RecipePage() {
                 <TooltipTrigger asChild>
                   <button
                     type="button"
-                    disabled
-                    aria-label="Copy recipe (coming soon)"
-                    className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-300 dark:text-stone-600 transition-colors cursor-not-allowed disabled:opacity-100"
+                    onClick={handleCopyRecipe}
+                    aria-label="Copy recipe"
+                    className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
                   >
                     <svg
                       className="h-4 w-4"
@@ -462,8 +476,20 @@ export default function RecipePage() {
                     </svg>
                   </button>
                 </TooltipTrigger>
-                <TooltipContent>Copy recipe (coming soon)</TooltipContent>
+                <TooltipContent>{copied ? "Copied!" : "Copy recipe"}</TooltipContent>
               </Tooltip>
+
+              {/* Report — ghost button (only for logged-in users) */}
+              {user && (
+                <button
+                  type="button"
+                  onClick={() => setReportOpen(true)}
+                  className="press-scale inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors text-xs font-medium font-sans"
+                >
+                  <Flag size={14} aria-hidden="true" />
+                  Report
+                </button>
+              )}
 
               {/* More actions (Print, Share) */}
               <DropdownMenu>
@@ -555,18 +581,6 @@ export default function RecipePage() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              {/* Report — ghost button (only for logged-in users) */}
-              {user && (
-                <button
-                  type="button"
-                  onClick={() => setReportOpen(true)}
-                  className="press-scale inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors text-xs font-medium font-sans"
-                >
-                  <Flag size={14} aria-hidden="true" />
-                  Report
-                </button>
-              )}
             </div>
           </div>
 
@@ -679,11 +693,28 @@ export default function RecipePage() {
         </div>
       </div>
 
+      {canAdjustServings && (
+        <div
+          className="sm:hidden print:hidden pointer-events-none fixed inset-x-0 z-30 px-6"
+          style={{ bottom: mobileServingsOffset }}
+        >
+          <div className="pointer-events-auto mx-auto w-full max-w-[20.5rem]">
+            <ServingsAdjuster
+              servings={servings!}
+              originalServings={originalServings!}
+              onServingsChange={setServings}
+              isOpen={mobileServingsOpen}
+              panelClassName="mt-0 border-[var(--color-border-light)]/90 bg-[var(--color-surface)] shadow-[0_18px_40px_rgba(0,0,0,0.16)]"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Mobile: fade above bottom tabs */}
       <div className="sm:hidden print:hidden fixed bottom-12 left-0 right-0 z-[19] h-24 pointer-events-none bg-gradient-to-t from-white dark:from-mizen-dark-surface to-transparent" />
 
-      {/* Mobile: fixed bottom folder tabs (hidden on desktop) */}
-      <div className="sm:hidden print:hidden fixed bottom-0 left-0 right-0 z-20 pb-[env(safe-area-inset-bottom)] bg-white dark:bg-stone-950">
+      {/* Mobile: fixed bottom folder tabs */}
+      <div className="sm:hidden print:hidden fixed bottom-0 left-0 right-0 z-20 pb-[env(safe-area-inset-bottom)] bg-[var(--color-surface)]">
         <div className="px-6">
           <div className="flex items-center w-full relative gap-0">
             <button
@@ -730,248 +761,167 @@ export default function RecipePage() {
                 </span>
               ) : null}
             </button>
-
-            {/* Mobile quick actions — three-dot menu */}
-            <div className="ml-auto shrink-0">
-              <button
-                type="button"
-                onClick={() => setMobileVaultOpen((v) => !v)}
-                aria-label="More actions"
-                aria-expanded={mobileVaultOpen}
-                className="inline-flex items-center justify-center h-9 w-9 rounded-lg text-stone-400 dark:text-stone-500 active:bg-stone-100 dark:active:bg-stone-800 transition-colors"
-              >
-                <svg
-                  className="h-[17px] w-[17px]"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <circle cx="12" cy="5" r="1.5" />
-                  <circle cx="12" cy="12" r="1.5" />
-                  <circle cx="12" cy="19" r="1.5" />
-                </svg>
-              </button>
-            </div>
           </div>
         </div>
 
-        {/* Mobile vault — quick actions */}
-        {vaultMounted && (
-          <div
-            className={`${vaultExiting ? "vault-exit" : "vault-animate"} border-t border-stone-200 dark:border-stone-700 px-6 py-3`}
-            onAnimationEnd={() => {
-              if (vaultExiting) {
-                setVaultMounted(false);
-                setVaultExiting(false);
+        <div className="vault-animate border-t border-[var(--color-border-light)]/90 px-6 py-3">
+          <div className="flex items-center justify-around">
+            <button
+              type="button"
+              aria-label={
+                isConverted
+                  ? "Reset to original units"
+                  : `Convert to ${recipeUnitSystem === "metric" ? "imperial" : "metric"}`
               }
-            }}
-          >
-            <div className="flex items-center justify-around">
-              {/* Save / Unsave */}
-              {user && (
-                <button
-                  type="button"
-                  onClick={savedMeta ? handleUnsave : handleSave}
-                  disabled={saving || unsaving}
-                  aria-label={savedMeta ? "Remove from saved" : "Save recipe"}
-                  className={`flex flex-col items-center gap-1 transition-colors disabled:opacity-50 ${
-                    savedMeta
-                      ? "text-red-500 dark:text-red-400"
-                      : "text-stone-500 dark:text-stone-400 active:text-stone-800 dark:active:text-stone-200"
-                  }`}
-                >
-                  <svg
-                    className="h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill={savedMeta ? "currentColor" : "none"}
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                  </svg>
-                  <span className="text-[11px] font-sans font-medium">
-                    {savedMeta ? "Saved" : "Save"}
-                  </span>
-                </button>
-              )}
-
-              {/* Unit toggle */}
-              <button
-                type="button"
-                aria-label={
-                  isConverted
-                    ? "Reset to original units"
-                    : `Convert to ${recipeUnitSystem === "metric" ? "imperial" : "metric"}`
+              onClick={() => {
+                if (isConverted) {
+                  setUnitSystem("original");
+                } else {
+                  setUnitSystem(recipeUnitSystem === "metric" ? "imperial" : "metric");
                 }
-                onClick={() => {
-                  if (isConverted) {
-                    setUnitSystem("original");
-                  } else {
-                    setUnitSystem(recipeUnitSystem === "metric" ? "imperial" : "metric");
-                  }
-                }}
-                className={`flex flex-col items-center gap-1 transition-colors ${
-                  isConverted
-                    ? "text-[var(--color-blue)]"
-                    : "text-stone-500 dark:text-stone-400 active:text-stone-800 dark:active:text-stone-200"
-                }`}
+              }}
+              className={`flex flex-col items-center gap-1 transition-colors ${
+                isConverted
+                  ? "text-[var(--color-blue)]"
+                  : "text-[var(--color-text-muted)] active:text-[var(--color-text-heading)]"
+              }`}
+            >
+              <svg
+                className="h-5 w-5"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
               >
-                <svg
-                  className="h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-                </svg>
-                <span className="text-[11px] font-sans font-medium">
-                  {isConverted
-                    ? unitSystem === "metric"
-                      ? "Metric"
-                      : "Imperial"
-                    : recipeUnitSystem === "metric"
-                      ? "Metric"
-                      : "Imperial"}
-                </span>
-              </button>
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+              </svg>
+              <span className="text-[11px] font-sans font-medium">
+                {isConverted
+                  ? unitSystem === "metric"
+                    ? "Metric"
+                    : "Imperial"
+                  : recipeUnitSystem === "metric"
+                    ? "Metric"
+                    : "Imperial"}
+              </span>
+            </button>
 
-              {/* Share */}
+            <button
+              type="button"
+              onClick={handleCopyRecipe}
+              aria-label="Copy recipe"
+              className="flex flex-col items-center gap-1 text-[var(--color-text-muted)] active:text-[var(--color-text-heading)] transition-colors"
+            >
+              <svg
+                className="h-5 w-5"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+              </svg>
+              <span className="text-[11px] font-sans font-medium">Copy</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleToggleMobileServings}
+              aria-label="Adjust servings"
+              aria-expanded={mobileServingsOpen}
+              className={`flex flex-col items-center gap-1 transition-colors ${
+                mobileServingsOpen
+                  ? "text-[var(--color-blue)]"
+                  : "text-[var(--color-text-muted)] active:text-[var(--color-text-heading)]"
+              }`}
+            >
+              <svg
+                className="h-5 w-5"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="8" r="4" />
+                <path d="M20 21a8 8 0 0 0-16 0" />
+              </svg>
+              <span className="text-[11px] font-sans font-medium">Servings</span>
+            </button>
+
+            {user && (
               <button
                 type="button"
-                onClick={handleShare}
-                aria-label="Share"
-                className="flex flex-col items-center gap-1 text-stone-500 dark:text-stone-400 active:text-stone-800 dark:active:text-stone-200 transition-colors"
+                onClick={() => setReportOpen(true)}
+                aria-label="Send feedback"
+                className="flex flex-col items-center gap-1 text-[var(--color-text-muted)] active:text-[var(--color-text-heading)] transition-colors"
               >
-                <svg
-                  className="h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                  <polyline points="16 6 12 2 8 6" />
-                  <line x1="12" x2="12" y1="2" y2="15" />
-                </svg>
-                <span className="text-[11px] font-sans font-medium">Share</span>
+                <ChatRoundDots size={20} aria-hidden="true" />
+                <span className="text-[11px] font-sans font-medium">Feedback</span>
               </button>
+            )}
 
-              {/* Print */}
-              <button
-                type="button"
-                onClick={() => window.print()}
-                aria-label="Print"
-                className="flex flex-col items-center gap-1 text-stone-500 dark:text-stone-400 active:text-stone-800 dark:active:text-stone-200 transition-colors"
-              >
-                <svg
-                  className="h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <polyline points="6 9 6 2 18 2 18 9" />
-                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                  <rect width="12" height="8" x="6" y="14" />
-                </svg>
-                <span className="text-[11px] font-sans font-medium">Print</span>
-              </button>
-
-              {/* Copy link (only when saved) */}
-              {savedMeta && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  onClick={handleCopy}
-                  aria-label={copied ? "Link copied" : "Copy link"}
-                  className={`flex flex-col items-center gap-1 transition-colors ${
-                    copied
-                      ? "text-emerald-500 dark:text-emerald-400"
-                      : "text-stone-500 dark:text-stone-400 active:text-stone-800 dark:active:text-stone-200"
-                  }`}
+                  aria-label="More actions"
+                  className="flex flex-col items-center gap-1 text-[var(--color-text-muted)] active:text-[var(--color-text-heading)] transition-colors"
                 >
                   <svg
                     className="h-5 w-5"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                    fill="currentColor"
                     aria-hidden="true"
                   >
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                    <circle cx="12" cy="5" r="1.5" />
+                    <circle cx="12" cy="12" r="1.5" />
+                    <circle cx="12" cy="19" r="1.5" />
                   </svg>
-                  <span className="text-[11px] font-sans font-medium">
-                    {copied ? "Copied!" : "Copy link"}
-                  </span>
+                  <span className="text-[11px] font-sans font-medium">More</span>
                 </button>
-              )}
-
-              {/* Feedback */}
-              {user && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setReportOpen(true);
-                    setMobileVaultOpen(false);
-                    setVaultExiting(true);
-                  }}
-                  aria-label="Send feedback"
-                  className="flex flex-col items-center gap-1 text-stone-500 dark:text-stone-400 active:text-stone-800 dark:active:text-stone-200 transition-colors"
-                >
-                  <ChatRoundDots size={20} aria-hidden="true" />
-                  <span className="text-[11px] font-sans font-medium">Feedback</span>
-                </button>
-              )}
-
-              {/* Delete */}
-              <button
-                type="button"
-                onClick={handleDelete}
-                aria-label="Delete recipe"
-                className="flex flex-col items-center gap-1 text-stone-500 dark:text-stone-400 hover:text-red-500 dark:hover:text-red-400 active:text-red-700 dark:active:text-red-300 transition-colors"
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                side="top"
+                className="bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700"
               >
-                <svg
-                  className="h-5 w-5 text-red-500 dark:text-red-400"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
+                <DropdownMenuItem
+                  onSelect={handleShare}
+                  className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                 >
-                  <polyline points="3 6 5 6 21 6" />
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                  <line x1="10" x2="10" y1="11" y2="17" />
-                  <line x1="14" x2="14" y1="11" y2="17" />
-                </svg>
-                <span className="text-[11px] font-sans font-medium">Delete</span>
-              </button>
-            </div>
+                  Share
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => window.print()}
+                  className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+                >
+                  Print
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />
+                <DropdownMenuItem
+                  onSelect={handleDelete}
+                  className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-red-600 dark:focus:text-red-400"
+                >
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Report recipe dialog */}

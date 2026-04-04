@@ -10,7 +10,6 @@ import { useDialKit } from "dialkit";
 import { getTheme, setTheme } from "@/lib/theme";
 import { Search } from "@/components/Search";
 import { RecentRecipes } from "@/components/RecentRecipes";
-import { GettingStarted } from "@/components/GettingStarted";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { WhoMadeIt } from "@/components/WhoMadeIt";
@@ -345,7 +344,18 @@ function SourceIcon({ type }: { type: "link" | "camera" | "chat" }) {
 
 function AuthenticatedHome() {
   const { error, isLoading } = useRecipe();
-  const { user } = useUser();
+
+  useEffect(() => {
+    if (window.location.hash !== "#search") return;
+
+    const searchSection = document.getElementById("search");
+    searchSection?.scrollIntoView({ block: "center" });
+
+    const input = searchSection?.querySelector("input");
+    if (input instanceof HTMLInputElement) {
+      input.focus();
+    }
+  }, []);
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
@@ -363,7 +373,10 @@ function AuthenticatedHome() {
         </div>
 
         {/* Search */}
-        <div className="page-fade-in-up page-fade-delay-2 w-full flex flex-col items-center">
+        <div
+          id="search"
+          className="page-fade-in-up page-fade-delay-2 w-full scroll-mt-24 flex flex-col items-center"
+        >
           <Search />
 
           {isLoading && (
@@ -380,7 +393,9 @@ function AuthenticatedHome() {
         </div>
 
         {/* Recent recipes */}
-        <div className="w-full">{user ? <RecentRecipes /> : <GettingStarted />}</div>
+        <div className="w-full">
+          <RecentRecipes />
+        </div>
       </div>
     </div>
   );

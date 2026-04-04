@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { RecipeProvider } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
 import { Sidebar } from "@/components/Sidebar";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
@@ -17,6 +18,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   // Treat loading state as landing on homepage so sidebar don't flash
   // before auth resolves
   const isLanding = isHomePage && (loading || !user);
+  const showMobileNav = !!user && ["/", "/cookbook", "/profile"].includes(pathname);
 
   return (
     <RecipeProvider>
@@ -55,6 +57,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               {children}
             </main>
           </div>
+          {showMobileNav && <MobileBottomNav />}
         </div>
       )}
     </RecipeProvider>
