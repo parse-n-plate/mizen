@@ -20,7 +20,7 @@
     "@solar-icons/react": "^1.1.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.97.0",
-    "agentation": "^2.2.1",
+    "agentation": "^3.0.2",
     "axios": "^1.13.5",
     "cheerio": "^1.2.0",
     "class-variance-authority": "^0.7.1",

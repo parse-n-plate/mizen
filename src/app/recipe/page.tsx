@@ -41,6 +41,8 @@ import { HeartButton } from "@/components/HeartButton";
 import { ReportRecipeDialog } from "@/components/ReportRecipeDialog";
 import Flag from "@solar-icons/react/csr/ui/Flag";
 import ChatRoundDots from "@solar-icons/react/csr/messages/ChatRoundDots";
+import BookMinimalistic from "@solar-icons/react/csr/school/BookMinimalistic";
+import AltArrowRight from "@solar-icons/react/csr/arrows/AltArrowRight";
 
 export default function RecipePage() {
   const router = useRouter();
@@ -268,10 +270,23 @@ export default function RecipePage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-white dark:bg-stone-950 flex flex-col">
+    <div className="min-h-[calc(100vh-3.5rem)] flex flex-col">
       {/* Header section with cream background */}
       <div className="px-6 pt-8 pb-0">
         <div className="max-w-3xl mx-auto w-full pb-8">
+          {/* Breadcrumb */}
+          <nav aria-label="Breadcrumb" className="flex items-center gap-2 mb-5 text-sm">
+            <Link
+              href="/cookbook"
+              className="flex items-center gap-1.5 text-stone-400 hover:text-stone-200 transition-colors"
+            >
+              <BookMinimalistic className="size-4" />
+              <span>Cookbook</span>
+            </Link>
+            <AltArrowRight className="size-3 text-stone-600" />
+            <span className="text-stone-100 truncate max-w-[20rem]">{recipe.title}</span>
+          </nav>
+
           <div className="flex items-start gap-4">
             <div className="flex-1 min-w-0">
               <RecipeHeader
@@ -400,7 +415,7 @@ export default function RecipePage() {
                     }}
                     className={`press-scale inline-flex items-center justify-center h-8 px-2.5 rounded-lg text-xs font-medium font-sans transition-colors ${
                       isConverted
-                        ? "text-[var(--color-blue)] bg-blue-50 dark:bg-blue-950 dark:text-blue-400"
+                        ? "text-[var(--color-blue)] bg-[var(--color-blue-light)] border border-[var(--color-blue)]/15"
                         : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
                     }`}
                   >
@@ -591,8 +606,32 @@ export default function RecipePage() {
                       <button
                         type="button"
                         onClick={() => setShowDiff((v) => !v)}
-                        className="ml-auto font-sans text-xs font-medium text-[var(--color-blue)] hover:opacity-80 transition-opacity cursor-pointer"
+                        className="ml-auto inline-flex items-center gap-1 font-sans text-xs font-medium text-[var(--color-blue)] hover:opacity-80 transition-opacity cursor-pointer"
                       >
+                        <svg
+                          className="h-3.5 w-3.5"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          {showDiff ? (
+                            <>
+                              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                              <line x1="1" y1="1" x2="23" y2="23" />
+                            </>
+                          ) : (
+                            <>
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                              <circle cx="12" cy="12" r="3" />
+                            </>
+                          )}
+                        </svg>
                         {showDiff ? "Hide changes" : "Show changes"}
                       </button>
                       <button

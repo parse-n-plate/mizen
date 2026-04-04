@@ -348,10 +348,11 @@ function AuthenticatedHome() {
   const { user } = useUser();
 
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col">
-      <main className="flex flex-1 flex-col items-center justify-center px-6 pb-6">
-        <div className="page-fade-in-up w-full max-w-3xl space-y-8 text-center">
-          <h1 className="font-serif text-[clamp(40px,8vw,72px)] font-bold leading-[1.1] text-stone-900 dark:text-stone-100">
+    <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
+      <div className="flex w-full max-w-3xl flex-col gap-12">
+        {/* Hero */}
+        <div className="page-fade-in-up text-center">
+          <h1 className="mb-8 font-serif text-[clamp(40px,8vw,72px)] font-bold leading-[1.1] text-stone-900 dark:text-stone-100">
             Clean recipes,
             <br />
             calm cooking.
@@ -361,24 +362,26 @@ function AuthenticatedHome() {
           </p>
         </div>
 
-        <div className="page-fade-in-up page-fade-delay-2 mt-10 w-full flex justify-center">
+        {/* Search */}
+        <div className="page-fade-in-up page-fade-delay-2 w-full flex flex-col items-center">
           <Search />
+
+          {isLoading && (
+            <p className="mt-6 font-sans text-sm text-center text-stone-400 dark:text-stone-500 animate-pulse">
+              Parsing recipe...
+            </p>
+          )}
+
+          {error && (
+            <p className="mt-6 max-w-md mx-auto text-center font-sans text-sm text-red-500">
+              {error}
+            </p>
+          )}
         </div>
 
-        {isLoading && (
-          <p className="mt-6 font-sans text-sm text-stone-400 dark:text-stone-500 animate-pulse">
-            Parsing recipe...
-          </p>
-        )}
-
-        {error && (
-          <p className="mt-6 max-w-md text-center font-sans text-sm text-red-500">{error}</p>
-        )}
-
-        <div className="mt-12 w-full flex justify-center">
-          {user ? <RecentRecipes /> : <GettingStarted />}
-        </div>
-      </main>
+        {/* Recent recipes */}
+        <div className="w-full">{user ? <RecentRecipes /> : <GettingStarted />}</div>
+      </div>
     </div>
   );
 }
