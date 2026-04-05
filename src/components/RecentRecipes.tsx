@@ -50,13 +50,8 @@ export function RecentRecipes() {
   const hiddenCount = history.length - COLLAPSED_COUNT;
 
   const handleClick = (entry: HistoryEntry) => {
-    if (entry.savedMeta?.slug) {
-      setRecipe(entry.recipe);
-      router.push(`/r/${entry.savedMeta.slug}`);
-    } else {
-      setRecipe(entry.recipe);
-      router.push("/recipe");
-    }
+    setRecipe(entry.recipe);
+    router.push("/recipe");
   };
 
   return (

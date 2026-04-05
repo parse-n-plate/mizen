@@ -20,7 +20,6 @@ import Settings from "@solar-icons/react/csr/settings/Settings";
 import ChatRoundDots from "@solar-icons/react/csr/messages/ChatRoundDots";
 import Magnifer from "@solar-icons/react/csr/search/Magnifer";
 import SidebarMinimalistic from "@solar-icons/react/csr/it/SidebarMinimalistic";
-import BookBookmark from "@solar-icons/react/csr/school/BookBookmark";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -32,14 +31,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const {
-    setRecipe,
-    loadRecipe,
-    history,
-    setSavedMeta,
-    unsaveHistoryEntry,
-    recipe: currentRecipe,
-  } = useRecipe();
+  const { setRecipe } = useRecipe();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -410,77 +402,6 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   e.target.value = "";
                 }}
               />
-            </div>
-          )}
-
-          {/* Recent recipes */}
-          {history.length > 0 && (
-            <div className="flex flex-col gap-px">
-              <p className="px-2.5 pb-1 font-sans text-xs font-medium text-stone-400 dark:text-stone-500">
-                Recent
-              </p>
-              {history.slice(0, 5).map((entry) => {
-                const isActive =
-                  currentRecipe?.title === entry.recipe.title &&
-                  (pathname === "/recipe" ||
-                    (entry.savedMeta?.slug && pathname === `/r/${entry.savedMeta.slug}`));
-                const isSaved = !!entry.savedMeta;
-                return (
-                  <button
-                    key={entry.parsedAt}
-                    onClick={() => {
-                      loadRecipe(entry.recipe, entry.savedMeta);
-                      router.push(entry.savedMeta?.slug ? `/r/${entry.savedMeta.slug}` : "/recipe");
-                    }}
-                    className={cn(
-                      "group/recent flex items-center gap-2 rounded-lg px-2.5 py-1.5 font-sans text-sm text-left transition-none",
-                      isActive
-                        ? "bg-stone-200/60 dark:bg-stone-700/35 text-stone-900 dark:text-stone-100"
-                        : "text-stone-500 dark:text-stone-400 hover:bg-stone-200/60 dark:hover:bg-stone-700/35 hover:text-stone-700 dark:hover:text-stone-300"
-                    )}
-                  >
-                    <span className="flex-1 truncate">{entry.recipe.title}</span>
-                    {isSaved && (
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        aria-label="Unsave recipe"
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          try {
-                            const res = await fetch(`/api/recipes/${entry.savedMeta!.id}`, {
-                              method: "DELETE",
-                            });
-                            if (res.ok) {
-                              if (isActive) {
-                                setSavedMeta(null);
-                              } else {
-                                unsaveHistoryEntry(entry.recipe.title);
-                              }
-                              toast.success("Recipe removed");
-                            }
-                          } catch {
-                            toast.error("Failed to remove recipe");
-                          }
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            e.currentTarget.click();
-                          }
-                        }}
-                        className="shrink-0 flex items-center justify-center h-5 w-5 rounded hover:bg-stone-300/60 dark:hover:bg-stone-600/40 transition-none"
-                      >
-                        <BookBookmark
-                          size={13}
-                          weight="Bold"
-                          className="text-stone-400 dark:text-stone-500"
-                        />
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
             </div>
           )}
         </div>

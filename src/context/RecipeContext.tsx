@@ -11,7 +11,6 @@ interface SavedMeta {
 export interface HistoryEntry {
   recipe: ParsedRecipe;
   parsedAt: string;
-  savedMeta?: SavedMeta | null;
 }
 
 interface RecipeContextType {
@@ -26,8 +25,6 @@ interface RecipeContextType {
   history: HistoryEntry[];
   hasHydrated: boolean;
   removeFromHistory: () => void;
-  loadRecipe: (recipe: ParsedRecipe, meta?: SavedMeta | null) => void;
-  unsaveHistoryEntry: (title: string) => void;
 }
 
 const RecipeContext = createContext<RecipeContextType | undefined>(undefined);
@@ -114,33 +111,6 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Load an existing history recipe without reordering history
-  const loadRecipe = (r: ParsedRecipe, meta?: SavedMeta | null) => {
-    setRecipeState(r);
-    const resolvedMeta = meta ?? null;
-    setSavedMetaState(resolvedMeta);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(r));
-      if (resolvedMeta) {
-        localStorage.setItem(META_STORAGE_KEY, JSON.stringify(resolvedMeta));
-      } else {
-        localStorage.removeItem(META_STORAGE_KEY);
-      }
-    } catch {
-      // Ignore storage errors
-    }
-  };
-
-  const unsaveHistoryEntry = (title: string) => {
-    const updated = history.map((h) => (h.recipe.title === title ? { ...h, savedMeta: null } : h));
-    setHistory(updated);
-    try {
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
-    } catch {
-      // Ignore storage errors
-    }
-  };
-
   const setSavedMeta = (meta: SavedMeta | null) => {
     setSavedMetaState(meta);
     try {
@@ -148,14 +118,6 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(META_STORAGE_KEY, JSON.stringify(meta));
       } else {
         localStorage.removeItem(META_STORAGE_KEY);
-      }
-      // Update the matching history entry with savedMeta
-      if (recipe) {
-        const updated = history.map((h) =>
-          h.recipe.title === recipe.title ? { ...h, savedMeta: meta } : h
-        );
-        setHistory(updated);
-        localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
       }
     } catch {
       // Ignore storage errors
@@ -176,8 +138,6 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
         history,
         hasHydrated,
         removeFromHistory,
-        loadRecipe,
-        unsaveHistoryEntry,
       }}
     >
       {children}
