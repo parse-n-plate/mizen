@@ -5,6 +5,7 @@ import type { ParsedRecipe } from "@/lib/types";
 import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
 import User from "@solar-icons/react/csr/users/User";
 import { ServingsAdjuster } from "@/components/ServingsAdjuster";
+import { formatTime } from "@/lib/utils";
 
 interface RecipeHeaderProps {
   recipe: ParsedRecipe;
@@ -15,12 +16,7 @@ interface RecipeHeaderProps {
   onServingsOpenChange?: (open: boolean) => void;
 }
 
-export function formatTime(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`;
-  const hrs = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`;
-}
+export { formatTime } from "@/lib/utils";
 
 export function RecipeHeader({
   recipe,
@@ -55,7 +51,7 @@ export function RecipeHeader({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <h1 className="font-serif text-3xl font-bold leading-tight md:text-4xl tracking-tight">
+      <h1 className="font-serif text-3xl font-bold leading-tight md:text-4xl tracking-tight text-pretty">
         {recipe.title}
       </h1>
 
@@ -66,7 +62,7 @@ export function RecipeHeader({
       )}
 
       {/* Inline metadata row */}
-      <div className="flex items-center gap-1.5 flex-wrap font-sans text-sm text-stone-500 dark:text-stone-400">
+      <div className="flex items-center gap-3 flex-wrap font-sans text-sm text-stone-500 dark:text-stone-400">
         {recipe.author && <span className="text-base">{recipe.author}</span>}
 
         {recipe.sourceUrl && (
@@ -121,7 +117,12 @@ export function RecipeHeader({
                 />
               </button>
 
-              <span className="flex items-center gap-1.5 sm:hidden">
+              <span className="flex items-center gap-1 sm:hidden">
+                <span
+                  className={`flex items-center justify-center w-3.5 h-3.5 ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"}`}
+                >
+                  <User weight="Bold" className="w-3.5 h-3.5" />
+                </span>
                 <span>
                   <span
                     className={

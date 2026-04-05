@@ -179,7 +179,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             </Link>
             <button
               onClick={onToggle}
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300 transition-none"
               aria-label="Collapse sidebar"
             >
               <SidebarMinimalistic size={14} />
@@ -214,7 +214,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "flex items-center gap-2.5 rounded-lg px-2.5 py-2 font-sans text-sm transition-colors",
+                      "flex items-center gap-2.5 rounded-lg px-2.5 py-2 font-sans text-sm transition-none",
                       item.active
                         ? "bg-stone-200/60 dark:bg-stone-700/35 text-stone-900 dark:text-stone-100 font-medium"
                         : "text-stone-500 dark:text-stone-400 hover:bg-stone-200/60 dark:hover:bg-stone-700/35 hover:text-stone-700 dark:hover:text-stone-300"
@@ -410,7 +410,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <div className="flex flex-col px-4 pb-6 w-[240px]">
           <button
             onClick={() => setSettingsOpen(true)}
-            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 font-sans text-sm text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 hover:text-stone-700 dark:hover:text-stone-300 transition-colors"
+            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 font-sans text-sm text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 hover:text-stone-700 dark:hover:text-stone-300 transition-none"
           >
             <Settings size={17} className="shrink-0" />
             Settings
@@ -418,7 +418,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
           <button
             onClick={() => setFeedbackOpen(true)}
-            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 font-sans text-sm text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 hover:text-stone-700 dark:hover:text-stone-300 transition-colors"
+            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 font-sans text-sm text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 hover:text-stone-700 dark:hover:text-stone-300 transition-none"
           >
             <ChatRoundDots size={17} className="shrink-0" />
             Feedback

@@ -25,7 +25,7 @@ function RecipeRow({ entry, onClick }: { entry: HistoryEntry; onClick: () => voi
   return (
     <button
       onClick={onClick}
-      className="press-scale -mx-3 flex items-baseline justify-between gap-4 rounded-xl px-3 py-2.5 text-left transition hover:bg-stone-200/60 dark:hover:bg-stone-700/35"
+      className="press-scale -mx-3 flex items-baseline justify-between gap-4 rounded-xl px-3 py-2.5 text-left transition-none hover:bg-stone-200/60 dark:hover:bg-stone-700/35"
     >
       <p className="truncate font-sans text-[15px] font-medium text-stone-900 dark:text-stone-100">
         {entry.recipe.title}
@@ -86,7 +86,7 @@ export function RecentRecipes() {
 
             <button
               onClick={() => setExpanded(!expanded)}
-              className="press-scale -mx-3 mt-1 flex items-center gap-1.5 rounded-xl px-3 py-2 font-sans text-sm font-medium text-stone-400 dark:text-stone-500 transition hover:text-stone-600 dark:hover:text-stone-300"
+              className="press-scale -mx-3 mt-1 flex items-center gap-1.5 rounded-xl px-3 py-2 font-sans text-sm font-medium text-stone-400 dark:text-stone-500 transition-none hover:text-stone-600 dark:hover:text-stone-300"
             >
               <AltArrowDown
                 size={14}
