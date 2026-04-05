@@ -287,7 +287,7 @@ export default function RecipePage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] flex flex-col">
+    <div className="min-h-[calc(100vh-3.5rem)] flex flex-col pb-6">
       {/* Header section with cream background */}
       <div className="px-6 pt-8 pb-0">
         <div className="max-w-3xl mx-auto w-full pb-8">
@@ -306,7 +306,7 @@ export default function RecipePage() {
             </span>
           </nav>
 
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-6">
             <div className="flex-1 min-w-0">
               <RecipeHeader
                 recipe={recipe}
@@ -511,7 +511,7 @@ export default function RecipePage() {
                       aria-label="Report recipe"
                       className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition"
                     >
-                      <Flag size={14} aria-hidden="true" />
+                      <Flag size={16} aria-hidden="true" />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>Report recipe</TooltipContent>

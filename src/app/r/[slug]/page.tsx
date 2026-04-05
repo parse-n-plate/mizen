@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { notFound } from "next/navigation";
-import { RecipeHeader, formatTime } from "@/components/RecipeHeader";
+import { RecipeHeader } from "@/components/RecipeHeader";
+import { formatTime } from "@/lib/utils";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
