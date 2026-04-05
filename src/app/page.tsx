@@ -358,50 +358,42 @@ function AuthenticatedHome() {
   }, []);
 
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col">
-      <main className="flex flex-1 flex-col items-center justify-center px-6 pb-6">
-        <div className="page-fade-in-up w-full max-w-3xl space-y-8 text-center">
-          <h1 className="font-serif text-[clamp(40px,8vw,72px)] font-bold leading-[1.1] text-stone-900 dark:text-stone-100">
+    <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
+      <div className="flex w-full max-w-3xl flex-col gap-12">
+        {/* Hero */}
+        <div className="text-center">
+          <h1 className="mb-8 font-serif text-[clamp(40px,8vw,72px)] font-bold leading-[1.1] text-stone-900 dark:text-stone-100">
             Clean recipes,
             <br />
             calm cooking.
           </h1>
-          <p className="page-fade-in-up page-fade-delay-1 mx-auto max-w-md font-sans text-lg text-balance text-stone-500 dark:text-stone-400">
+          <p className="mx-auto max-w-md font-sans text-lg text-balance text-stone-500 dark:text-stone-400">
             Paste a recipe URL. Get a focused cooking experience.
           </p>
         </div>
 
-        <div
-          id="search"
-          className="page-fade-in-up page-fade-delay-2 mt-10 w-full scroll-mt-24 flex justify-center"
-        >
+        {/* Search */}
+        <div id="search" className="w-full scroll-mt-24 flex flex-col items-center">
           <Search />
+
+          {isLoading && (
+            <p className="mt-6 font-sans text-sm text-center text-stone-400 dark:text-stone-500 animate-pulse">
+              Parsing recipe...
+            </p>
+          )}
+
+          {error && (
+            <p className="mt-6 max-w-md mx-auto text-center font-sans text-sm text-red-500">
+              {error}
+            </p>
+          )}
         </div>
 
-        {isLoading && (
-          <p className="mt-6 font-sans text-sm text-stone-400 dark:text-stone-500 animate-pulse">
-            Parsing recipe...
-          </p>
-        )}
-
-        {error && (
-          <p className="mt-6 max-w-md text-center font-sans text-sm text-red-500">{error}</p>
-        )}
-
-        <div className="mt-12 w-full flex justify-center">
+        {/* Recent recipes */}
+        <div className="w-full">
           <RecentRecipes />
         </div>
-
-        <div className="mt-10 w-full max-w-md rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 dark:border-amber-900/70 dark:bg-amber-950/50 md:hidden">
-          <p className="font-sans text-sm font-medium text-amber-900 dark:text-amber-100">
-            Mizen is currently in beta.
-          </p>
-          <p className="mt-1 font-sans text-[13px] text-amber-800/90 dark:text-amber-200/80">
-            You may notice changes across the app as we keep refining recipes, navigation, and
-            account tools.
-          </p>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }
@@ -543,11 +535,11 @@ function WaitlistLanding() {
 
   return (
     <>
-      <div className="page-reveal flex flex-col lg:flex-row min-h-screen lg:min-h-0 lg:h-screen lg:overflow-hidden flex-1">
+      <div className="flex flex-col lg:flex-row min-h-screen lg:min-h-0 lg:h-screen lg:overflow-hidden flex-1">
         {/* Left panel */}
         <div className="relative flex flex-col justify-between lg:w-[38%] px-8 lg:px-12 xl:px-16 pt-12 lg:pt-5 pb-8 lg:pb-10 bg-white dark:bg-stone-950">
           {/* Top: Logo */}
-          <div className="page-fade-in-up flex items-center justify-between">
+          <div className="flex items-center justify-between">
             <Link
               href="/"
               className="group flex items-center gap-2 font-serif text-lg font-semibold text-stone-900 dark:text-stone-100"
@@ -575,13 +567,13 @@ function WaitlistLanding() {
           {/* Center: Hero content */}
           <div className="flex-1 flex flex-col justify-center py-12 lg:py-0 lg:pb-16 lg:items-start items-center">
             <div className="w-full text-center lg:text-left">
-              <div className="page-fade-in-up page-fade-delay-1 mb-6">
+              <div className="mb-6">
                 <span className="inline-block px-3 py-1 rounded-full border border-stone-200 dark:border-stone-700 font-sans text-xs text-stone-500 dark:text-stone-400">
                   Now in Early Access
                 </span>
               </div>
 
-              <h1 className="page-fade-in-up page-fade-delay-1 flex flex-col items-center gap-1 lg:items-start font-serif text-[clamp(32px,9vw,56px)] lg:text-[clamp(24px,2.6vw,44px)] xl:text-[clamp(32px,2.8vw,52px)] font-bold leading-[1.3] tracking-[-0.02em] text-stone-900 dark:text-stone-100 mb-5">
+              <h1 className="flex flex-col items-center gap-1 lg:items-start font-serif text-[clamp(32px,9vw,56px)] lg:text-[clamp(24px,2.6vw,44px)] xl:text-[clamp(32px,2.8vw,52px)] font-bold leading-[1.3] tracking-[-0.02em] text-stone-900 dark:text-stone-100 mb-5">
                 <span className="inline-flex items-center gap-2 whitespace-nowrap">
                   <span>Save any recipe.</span>
                   <motion.img
@@ -622,7 +614,7 @@ function WaitlistLanding() {
                 </span>
               </h1>
 
-              <p className="page-fade-in-up page-fade-delay-2 font-sans text-base lg:text-[17px] text-stone-500 dark:text-stone-400 leading-relaxed mb-8 max-w-sm mx-auto lg:mx-0">
+              <p className="font-sans text-base lg:text-[17px] text-stone-500 dark:text-stone-400 leading-relaxed mb-8 max-w-sm mx-auto lg:mx-0">
                 Bring a{" "}
                 <span
                   className="cursor-pointer underline decoration-transparent hover:decoration-stone-400 transition-colors"
@@ -654,10 +646,7 @@ function WaitlistLanding() {
               </p>
 
               {/* Email form */}
-              <form
-                onSubmit={handleSubmit}
-                className="page-fade-in-up page-fade-delay-2 max-w-md mx-auto lg:mx-0"
-              >
+              <form onSubmit={handleSubmit} className="max-w-md mx-auto lg:mx-0">
                 <div className="flex items-center h-[52px] rounded-xl border border-[#E7E5E4] bg-[#F5F5F4] dark:border-stone-700 dark:bg-stone-900 overflow-clip shrink-0 focus-within:border-[#18a1f7] focus-within:ring-[3px] focus-within:ring-[#18a1f7]/30 transition-[border-color,box-shadow]">
                   {/* Input — collapses on success */}
                   <motion.div
@@ -757,7 +746,7 @@ function WaitlistLanding() {
           </div>
 
           {/* Bottom: Free + Who made it (desktop only — on mobile this is a page footer) */}
-          <div className="page-fade-in-up page-fade-delay-3 hidden lg:flex items-center justify-between">
+          <div className="hidden lg:flex items-center justify-between">
             <span className="font-sans text-xs text-stone-400 dark:text-stone-500">
               Closed Beta v0.1.0
             </span>
@@ -768,7 +757,7 @@ function WaitlistLanding() {
         {/* Right panel */}
         <div className="relative flex-1 flex flex-col pt-6 lg:pt-0 bg-[#f5f5f0] dark:bg-stone-900 overflow-hidden">
           {/* Top nav */}
-          <div className="page-fade-in-up hidden lg:flex items-center justify-end px-8 lg:px-10 pt-5 pb-2 relative z-20">
+          <div className="hidden lg:flex items-center justify-end px-8 lg:px-10 pt-5 pb-2 relative z-20">
             {isSupabaseConfigured && (
               <button
                 onClick={() => setAuthOpen(true)}
@@ -780,7 +769,7 @@ function WaitlistLanding() {
           </div>
 
           {/* Source tabs */}
-          <div className="page-fade-in-up page-fade-delay-1 flex flex-col items-center gap-3 px-8 lg:px-10 pt-2 lg:pt-0 pb-5">
+          <div className="flex flex-col items-center gap-3 px-8 lg:px-10 pt-2 lg:pt-0 pb-5">
             <span className="font-sans text-sm text-stone-400 dark:text-stone-500">
               Works with any source
             </span>
@@ -789,7 +778,7 @@ function WaitlistLanding() {
                 <button
                   key={source.label}
                   onClick={() => handleSourceChange(i)}
-                  className={`press-scale flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-sans text-sm font-medium transition-[color,background-color,border-color,box-shadow] ${
+                  className={`press-scale flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-sans text-sm font-medium transition-[color,background-color,border-color,box-shadow,transform] ${
                     activeSource === i
                       ? "bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 border border-transparent"
                       : hoveredSource === i
@@ -805,7 +794,7 @@ function WaitlistLanding() {
           </div>
 
           {/* Recipe card + source overlay */}
-          <div className="page-fade-in-up page-fade-delay-3 relative flex-1 flex justify-center px-6 lg:px-10 pb-6 lg:pb-0">
+          <div className="relative flex-1 flex justify-center px-6 lg:px-10 pb-6 lg:pb-0">
             {/* Source input preview — overlaid on the recipe card */}
             {(phase === "preview" || phase === "absorb" || phase === "exit") && (
               <div className="absolute inset-x-6 lg:inset-x-10 top-0 bottom-6 lg:bottom-0 z-10 flex justify-center items-start pt-20 pointer-events-none">
@@ -840,7 +829,7 @@ function WaitlistLanding() {
                   phase === "exit"
                     ? "waitlist-recipe-exit"
                     : phase === "populate"
-                      ? "recipe-populate"
+                      ? ""
                       : phase === "idle"
                         ? ""
                         : "opacity-0"
@@ -857,7 +846,7 @@ function WaitlistLanding() {
         </div>
 
         {/* Mobile footer */}
-        <div className="page-fade-in-up page-fade-delay-3 flex lg:hidden items-center justify-between px-8 py-6 bg-[#f5f5f0] dark:bg-stone-900">
+        <div className="flex lg:hidden items-center justify-between px-8 py-6 bg-[#f5f5f0] dark:bg-stone-900">
           <span className="font-sans text-xs text-stone-400 dark:text-stone-500">
             Closed Beta v0.1.0
           </span>

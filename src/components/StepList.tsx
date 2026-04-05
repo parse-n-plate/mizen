@@ -68,7 +68,7 @@ export function StepList({ steps }: StepListProps) {
                 type="button"
                 onClick={() => setShowStepImages(!showImages)}
                 aria-label={showImages ? "Hide photos" : "Show photos"}
-                className={`press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors cursor-pointer ${
+                className={`press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg transition cursor-pointer ${
                   showImages
                     ? "text-[var(--color-blue)] bg-blue-50 dark:bg-blue-950 dark:text-blue-400"
                     : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"

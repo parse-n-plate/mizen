@@ -670,7 +670,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
           className={`smart-bar w-full antialiased ${
             isDragging
               ? "rounded-[20px] border-2 border-dashed border-[var(--color-blue)] bg-[var(--color-blue-light)] dark:bg-blue-950/20"
-              : `${mode === "idle" && !showPill ? "bg-stone-50" : "bg-white"} dark:bg-stone-900 [border-width:1.5px] border-solid ${
+              : `bg-white dark:bg-stone-900 [border-width:1.5px] border-solid ${
                   isExpanded || displayMode === "image"
                     ? "rounded-[20px] p-1 border-stone-200 dark:border-stone-700"
                     : "rounded-2xl border-stone-200 dark:border-stone-700"
@@ -823,7 +823,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                 <button
                   type="submit"
                   disabled={!hasInput || isLoading}
-                  className={`press-scale flex items-center justify-center rounded-xl shrink-0 size-10 transition-[color,background-color,opacity] ${
+                  className={`press-scale flex items-center justify-center rounded-xl shrink-0 size-10 transition-[color,background-color,opacity,transform] ${
                     submitIsBlue
                       ? "bg-[var(--color-blue)] text-white"
                       : "bg-stone-200 dark:bg-stone-700 text-stone-500 dark:text-stone-400"
@@ -860,7 +860,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="press-scale flex items-center justify-center rounded-xl bg-[var(--color-blue)] text-white shrink-0 size-10 transition-opacity disabled:opacity-60"
+                  className="press-scale flex items-center justify-center rounded-xl bg-[var(--color-blue)] text-white shrink-0 size-10 transition-[opacity,transform] disabled:opacity-60"
                 >
                   {isLoading ? <SpinnerIcon /> : <UpArrowIcon />}
                 </button>
@@ -897,7 +897,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="press-scale flex items-center justify-center rounded-xl bg-[var(--color-blue)] text-white shrink-0 size-10 transition-opacity disabled:opacity-60"
+                    className="press-scale flex items-center justify-center rounded-xl bg-[var(--color-blue)] text-white shrink-0 size-10 transition-[opacity,transform] disabled:opacity-60"
                   >
                     {isLoading ? <SpinnerIcon /> : <UpArrowIcon />}
                   </button>

@@ -34,7 +34,7 @@ export function MobileBottomNav() {
   }, [pathname]);
 
   return (
-    <nav className="sm:hidden fixed inset-x-0 bottom-0 z-30 border-t border-[var(--color-border-light)]/90 bg-[var(--color-surface)]/95 backdrop-blur-md">
+    <nav className="md:hidden fixed inset-x-0 bottom-0 z-30 border-t border-[var(--color-border-light)]/90 bg-[var(--color-surface)]/95 backdrop-blur-md">
       <div className="mx-auto flex max-w-3xl items-center justify-around px-4 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
         {NAV_ITEMS.map((item) => {
           const isActive =

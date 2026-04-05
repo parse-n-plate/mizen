@@ -50,12 +50,24 @@ const CATEGORIES: {
   },
 ];
 
-export function FeedbackDialog() {
+interface FeedbackDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  showTrigger?: boolean;
+}
+
+export function FeedbackDialog({
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+  showTrigger = true,
+}: FeedbackDialogProps = {}) {
   const { user } = useUser();
   const { recipe } = useRecipe();
   const pathname = usePathname();
 
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = controlledOnOpenChange ?? setInternalOpen;
   const [category, setCategory] = useState<FeedbackCategory | null>(null);
   const [description, setDescription] = useState("");
   const [includeRecipe, setIncludeRecipe] = useState(true);
@@ -163,19 +175,21 @@ export function FeedbackDialog() {
         setOpen(next);
       }}
     >
-      <DialogTrigger asChild>
-        <button
-          type="button"
-          className={`fixed right-5 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-[#18A1F7] text-white shadow-lg transition-transform duration-200 hover:scale-110 sm:right-6 ${
-            isOnRecipePage
-              ? "bottom-[calc(env(safe-area-inset-bottom)+5rem)] sm:bottom-6"
-              : "bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] sm:bottom-6"
-          }`}
-          aria-label="Send feedback"
-        >
-          <ChatRoundDots size={20} />
-        </button>
-      </DialogTrigger>
+      {showTrigger && (
+        <DialogTrigger asChild>
+          <button
+            type="button"
+            className={`fixed right-5 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-[#18A1F7] text-white shadow-lg transition-transform duration-200 hover:scale-110 sm:right-6 ${
+              isOnRecipePage
+                ? "bottom-[calc(env(safe-area-inset-bottom)+5rem)] sm:bottom-6"
+                : "bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] sm:bottom-6"
+            }`}
+            aria-label="Send feedback"
+          >
+            <ChatRoundDots size={20} />
+          </button>
+        </DialogTrigger>
+      )}
 
       <DialogContent className="sm:max-w-md">
         {!category ? (

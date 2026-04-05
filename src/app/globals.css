@@ -44,6 +44,9 @@
   --color-mizen-dark-surface: var(--color-dark-surface);
   --color-mizen-overlay: var(--color-overlay);
 
+  /* Breakpoints */
+  --breakpoint-md: 913px;
+
   /* Typography scale */
   --text-hero: 63px;
   --text-hero-tablet: 74px;
@@ -64,13 +67,14 @@
   --text-nav-md: 18px;
 }
 
-/* Prevent layout shift when modals toggle body overflow: hidden.
-   scrollbar-gutter: stable reserves scrollbar space permanently.
-   react-remove-scroll-bar adds padding-right to body as compensation —
-   since gutter already handles it, we neutralize the extra padding. */
 html {
-  scrollbar-gutter: stable;
+  overflow: hidden;
   touch-action: manipulation;
+}
+
+/* Landing page needs its own scroll since html has overflow: hidden */
+html:has(.landing-scroll) {
+  overflow: auto;
 }
 
 html body[data-scroll-locked] {
@@ -230,7 +234,6 @@ html {
   line-height: var(--line-height-body);
   color: var(--color-text-body);
   background-color: var(--color-background-cream);
-  overflow-x: clip;
 }
 
 body {
@@ -349,7 +352,8 @@ body {
     border-radius: 16px 16px 0 0 !important;
     transition:
       color 150ms ease,
-      background-color 150ms ease;
+      background-color 150ms ease,
+      transform 100ms ease;
     background-color: transparent !important;
     color: var(--color-text-muted);
     border: 1px solid transparent !important;
@@ -410,7 +414,8 @@ body {
     border-radius: 16px 16px 0 0 !important;
     transition:
       color 150ms ease,
-      background-color 150ms ease;
+      background-color 150ms ease,
+      transform 100ms ease;
     background-color: transparent !important;
     color: var(--color-text-muted);
     border: 1px solid transparent !important;
@@ -450,63 +455,11 @@ body {
     }
   }
 
-  /* ═══════════════════════════════════════════════════════════════════════════
-     LANDING PAGE ONLOAD ANIMATION
-  ═══════════════════════════════════════════════════════════════════════════ */
-
-  /* Whole-page reveal — fades the entire layout in as one unit so
-     nav/footer never appear before the content between them. */
-  @keyframes page-reveal {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  .page-reveal {
-    opacity: 0;
-    animation: page-reveal 350ms var(--ease-out-quint) 50ms forwards;
-  }
-
-  /* Per-element slide-up — runs *inside* the already-visible container
-     for a subtle staggered entrance without an independent opacity fight. */
-  @keyframes page-fade-in-up {
-    from {
-      opacity: 0;
-      transform: translateY(12px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .page-fade-in-up {
-    opacity: 0;
-    animation: page-fade-in-up 400ms var(--ease-out-quint) 80ms forwards;
-    will-change: transform;
-  }
-
-  .page-fade-delay-1 {
-    animation-delay: 140ms;
-  }
-  .page-fade-delay-2 {
-    animation-delay: 200ms;
-  }
-  .page-fade-delay-3 {
-    animation-delay: 270ms;
-  }
-
   @media (prefers-reduced-motion: reduce) {
-    .page-reveal,
-    .page-fade-in-up,
     .source-preview-enter,
     .source-preview-enter-initial,
     .source-preview-exit,
-    .source-absorb,
-    .recipe-populate > div > * {
+    .source-absorb {
       opacity: 1;
       animation: none;
     }
@@ -599,36 +552,6 @@ body {
   .source-absorb {
     animation: source-absorb 250ms var(--ease-out-quart) forwards;
     will-change: transform, opacity;
-  }
-
-  /* Recipe populate — staggered fade-in for recipe content children */
-  @keyframes recipe-child-enter {
-    from {
-      opacity: 0;
-      transform: translateY(12px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .recipe-populate > div > * {
-    opacity: 0;
-    animation: recipe-child-enter 260ms var(--ease-out-quint) forwards;
-  }
-
-  .recipe-populate > div > *:nth-child(1) {
-    animation-delay: 0ms;
-  }
-  .recipe-populate > div > *:nth-child(2) {
-    animation-delay: 60ms;
-  }
-  .recipe-populate > div > *:nth-child(3) {
-    animation-delay: 130ms;
-  }
-  .recipe-populate > div > *:nth-child(4) {
-    animation-delay: 210ms;
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
@@ -1067,15 +990,27 @@ body {
 
   /* ═══════════════════════════════════════════════════════════════════════════
      BUTTON PRESS — Tactile active state
+     Uses individual transition longhands so it composes with Tailwind's
+     transition-colors / transition utilities without overriding them.
   ═══════════════════════════════════════════════════════════════════════════ */
 
   .press-scale {
-    transition: transform 100ms ease;
-    will-change: transform;
+    transition-property: transform;
+    transition-duration: 100ms;
+    transition-timing-function: ease;
   }
 
   .press-scale:active {
-    transform: scale(0.97);
+    transform: scale(0.98);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .press-scale {
+      transition: none;
+    }
+    .press-scale:active {
+      transform: none;
+    }
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
