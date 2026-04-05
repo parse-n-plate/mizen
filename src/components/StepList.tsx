@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
+import Magnifer from "@solar-icons/react/csr/search/Magnifer";
+import { X } from "lucide-react";
 import Gallery from "@solar-icons/react/csr/video/Gallery";
+import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import type { InstructionStep } from "@/lib/types";
 import { type NumberFormat, getNumberFormat } from "@/lib/numberFormat";
@@ -51,44 +54,84 @@ interface StepListProps {
 export function StepList({ steps }: StepListProps) {
   const numberFormat = useNumberFormat();
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const showImages = useSyncExternalStore(subscribePreferences, getShowStepImages, () => true);
 
   const hasAnyImages = steps.some((s) => (s.imageUrls?.length ?? 0) > 0 || !!s.imageUrl);
 
+  const filteredSteps = useMemo(() => {
+    if (!searchQuery.trim()) return steps.map((step, i) => ({ step, originalIndex: i }));
+    const query = searchQuery.toLowerCase().trim();
+    return steps
+      .map((step, i) => ({ step, originalIndex: i }))
+      .filter(
+        ({ step }) =>
+          step.title?.toLowerCase().includes(query) || step.detail.toLowerCase().includes(query)
+      );
+  }, [steps, searchQuery]);
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-3 px-3">
-        <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500">
-          Directions
-        </h3>
-        {hasAnyImages && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={() => setShowStepImages(!showImages)}
-                aria-label={showImages ? "Hide photos" : "Show photos"}
-                className={`press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg transition cursor-pointer ${
-                  showImages
-                    ? "text-[var(--color-blue)] bg-blue-50 dark:bg-blue-950 dark:text-blue-400"
-                    : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
-                }`}
-              >
-                <Gallery size={16} />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              {showImages ? "Hide photos" : "Show photos"}
-            </TooltipContent>
-          </Tooltip>
-        )}
+      <div className="flex items-center justify-between gap-4 mb-3 px-3">
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500">
+            Directions
+          </h3>
+          {hasAnyImages && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => setShowStepImages(!showImages)}
+                  aria-label={showImages ? "Hide photos" : "Show photos"}
+                  className={`press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors cursor-pointer ${
+                    showImages
+                      ? "text-[var(--color-blue)] bg-blue-50 dark:bg-blue-950 dark:text-blue-400"
+                      : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
+                  }`}
+                >
+                  <Gallery size={16} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                {showImages ? "Hide photos" : "Show photos"}
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+        <div className="relative w-full max-w-[260px]">
+          <Magnifer className="absolute left-3 top-1/2 -translate-y-1/2 size-[16px] text-muted-foreground pointer-events-none" />
+          <Input
+            type="text"
+            placeholder="Search Directions"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search directions"
+            className="pl-9 pr-8 h-9 rounded-xl border-transparent bg-stone-100 dark:bg-stone-800 font-sans text-[13px] placeholder:text-muted-foreground focus-visible:bg-background focus-visible:border-input"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-sm text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Clear search"
+            >
+              <X className="size-4" />
+            </button>
+          )}
+        </div>
       </div>
-      {steps.map((step, i) => (
+      {filteredSteps.length === 0 && searchQuery.trim() ? (
+        <p className="font-sans text-sm text-muted-foreground text-center py-4 px-3">
+          No directions match &ldquo;{searchQuery}&rdquo;
+        </p>
+      ) : null}
+      {filteredSteps.map(({ step, originalIndex }, i) => (
         <StepRow
-          key={i}
+          key={originalIndex}
           step={step}
-          index={i}
-          isLast={i === steps.length - 1}
+          index={originalIndex}
+          isLast={i === filteredSteps.length - 1}
           numberFormat={numberFormat}
           onImageClick={setLightboxSrc}
           showImages={showImages}

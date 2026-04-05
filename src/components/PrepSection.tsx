@@ -22,9 +22,6 @@ export function PrepSection({ ingredients, steps, diffMap, diffGeneration }: Pre
       {tips.length > 0 && <TipsCallout tips={tips} />}
 
       <div>
-        <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-4 px-3">
-          Ingredients
-        </h3>
         <IngredientList groups={ingredients} diffMap={diffMap} diffGeneration={diffGeneration} />
       </div>
     </div>
