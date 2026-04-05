@@ -5,6 +5,7 @@ import type { ParsedRecipe } from "@/lib/types";
 import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
 import User from "@solar-icons/react/csr/users/User";
 import { ServingsAdjuster } from "@/components/ServingsAdjuster";
+import { formatTime } from "@/lib/utils";
 
 interface RecipeHeaderProps {
   recipe: ParsedRecipe;
