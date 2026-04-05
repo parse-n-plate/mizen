@@ -25,7 +25,7 @@ function RecipeRow({ entry, onClick }: { entry: HistoryEntry; onClick: () => voi
   return (
     <button
       onClick={onClick}
-      className="press-scale -mx-3 flex items-baseline justify-between gap-4 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-stone-100 dark:hover:bg-stone-800"
+      className="press-scale -mx-3 flex items-baseline justify-between gap-4 rounded-xl px-3 py-2.5 text-left transition hover:bg-stone-200/60 dark:hover:bg-stone-700/35"
     >
       <p className="truncate font-sans text-[15px] font-medium text-stone-900 dark:text-stone-100">
         {entry.recipe.title}
@@ -47,9 +47,7 @@ export function RecentRecipes() {
   if (history.length === 0) return null;
 
   const canExpand = history.length > COLLAPSED_COUNT;
-  const alwaysVisible = history.slice(0, COLLAPSED_COUNT);
-  const overflow = history.slice(COLLAPSED_COUNT);
-  const hiddenCount = overflow.length;
+  const hiddenCount = history.length - COLLAPSED_COUNT;
 
   const handleClick = (entry: HistoryEntry) => {
     setRecipe(entry.recipe);
@@ -57,7 +55,7 @@ export function RecentRecipes() {
   };
 
   return (
-    <section className="page-fade-in-up page-fade-delay-3 w-full max-w-3xl">
+    <section className="w-full max-w-3xl">
       <div className="mb-4">
         <h2 className="font-serif text-xl font-semibold text-stone-900 dark:text-stone-100">
           Recent Recipes
@@ -65,21 +63,18 @@ export function RecentRecipes() {
       </div>
 
       <div className="flex flex-col">
-        {alwaysVisible.map((entry) => (
+        {history.slice(0, COLLAPSED_COUNT).map((entry) => (
           <RecipeRow key={entry.parsedAt} entry={entry} onClick={() => handleClick(entry)} />
         ))}
 
         {canExpand && (
           <>
             <div
-              className="grid w-full transition-[grid-template-rows] duration-200"
-              style={{
-                gridTemplateRows: expanded ? "1fr" : "0fr",
-                transitionTimingFunction: "cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-              }}
+              className="-mx-3 grid transition-[grid-template-rows] duration-200 ease-[cubic-bezier(0.25,0.46,0.45,0.94)]"
+              style={{ gridTemplateRows: expanded ? "1fr" : "0fr" }}
             >
-              <div className="flex min-w-0 flex-col overflow-x-visible overflow-y-hidden">
-                {overflow.map((entry) => (
+              <div className="flex flex-col overflow-hidden px-3">
+                {history.slice(COLLAPSED_COUNT).map((entry) => (
                   <RecipeRow
                     key={entry.parsedAt}
                     entry={entry}
@@ -91,7 +86,7 @@ export function RecentRecipes() {
 
             <button
               onClick={() => setExpanded(!expanded)}
-              className="press-scale -mx-3 mt-1 flex items-center gap-1.5 rounded-xl px-3 py-2 font-sans text-sm font-medium text-stone-400 dark:text-stone-500 transition-colors hover:text-stone-600 dark:hover:text-stone-300"
+              className="press-scale -mx-3 mt-1 flex items-center gap-1.5 rounded-xl px-3 py-2 font-sans text-sm font-medium text-stone-400 dark:text-stone-500 transition hover:text-stone-600 dark:hover:text-stone-300"
             >
               <AltArrowDown
                 size={14}

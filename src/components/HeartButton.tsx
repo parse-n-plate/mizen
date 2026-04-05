@@ -187,7 +187,7 @@ export function HeartButton({ isSaved, saving, unsaving, onSave, onUnsave }: Hea
           onClick={isSaved ? onUnsave : onSave}
           disabled={saving || unsaving}
           aria-label={isSaved ? "Remove from saved" : "Save recipe"}
-          className={`press-scale flex-shrink-0 inline-flex items-center justify-center h-9 w-9 rounded-full transition-colors disabled:opacity-50 relative ${
+          className={`press-scale flex-shrink-0 inline-flex items-center justify-center h-9 w-9 rounded-full transition disabled:opacity-50 relative ${
             isSaved
               ? "text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300"
               : "text-stone-300 dark:text-stone-600 hover:text-red-400 dark:hover:text-red-400"

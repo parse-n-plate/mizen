@@ -37,6 +37,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { HeartButton } from "@/components/HeartButton";
 import { ReportRecipeDialog } from "@/components/ReportRecipeDialog";
@@ -44,6 +46,9 @@ import Flag from "@solar-icons/react/csr/ui/Flag";
 import ChatRoundDots from "@solar-icons/react/csr/messages/ChatRoundDots";
 import BookMinimalistic from "@solar-icons/react/csr/school/BookMinimalistic";
 import AltArrowRight from "@solar-icons/react/csr/arrows/AltArrowRight";
+import Ruler from "@solar-icons/react/csr/tools/Ruler";
+import Eye from "@solar-icons/react/csr/security/Eye";
+import EyeClosed from "@solar-icons/react/csr/security/EyeClosed";
 
 export default function RecipePage() {
   const router = useRouter();
@@ -290,13 +295,15 @@ export default function RecipePage() {
           <nav aria-label="Breadcrumb" className="flex items-center gap-2 mb-5 text-sm">
             <Link
               href="/cookbook"
-              className="flex items-center gap-1.5 text-stone-400 hover:text-stone-200 transition-colors"
+              className="flex items-center gap-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-body)] transition-colors"
             >
               <BookMinimalistic className="size-4" />
               <span>Cookbook</span>
             </Link>
-            <AltArrowRight className="size-3 text-stone-600" />
-            <span className="text-stone-100 truncate max-w-[20rem]">{recipe.title}</span>
+            <AltArrowRight className="size-3 text-[var(--color-text-muted)]" />
+            <span className="text-[var(--color-text-heading)] truncate max-w-[20rem]">
+              {recipe.title}
+            </span>
           </nav>
 
           <div className="flex items-start gap-4">
@@ -415,42 +422,57 @@ export default function RecipePage() {
 
             {/* Quick actions — right-aligned */}
             <div className="ml-auto flex items-center gap-1 pb-2">
-              {/* Convert units */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (isConverted) {
-                        setUnitSystem("original");
-                      } else {
-                        setUnitSystem(recipeUnitSystem === "metric" ? "imperial" : "metric");
-                      }
-                    }}
-                    className={`press-scale inline-flex items-center justify-center h-8 px-2.5 rounded-lg text-xs font-medium font-sans transition-colors ${
-                      isConverted
-                        ? "text-[var(--color-blue)] bg-[var(--color-blue-light)] border border-[var(--color-blue)]/15"
-                        : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
-                    }`}
+              {/* Convert units — ruler icon with dropdown */}
+              <DropdownMenu>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Convert units"
+                        className={`press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg transition ${
+                          isConverted
+                            ? "text-[var(--color-blue)] bg-[var(--color-blue-light)] border border-[var(--color-blue)]/15"
+                            : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
+                        }`}
+                      >
+                        <Ruler size={16} weight={isConverted ? "Bold" : undefined} />
+                      </button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>Convert units</TooltipContent>
+                </Tooltip>
+                <DropdownMenuContent
+                  align="end"
+                  className="bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700"
+                >
+                  <DropdownMenuRadioGroup
+                    value={unitSystem}
+                    onValueChange={(value) =>
+                      setUnitSystem(value as "original" | "metric" | "imperial")
+                    }
                   >
-                    {isConverted
-                      ? unitSystem === "metric"
-                        ? "Metric"
-                        : "Imperial"
-                      : recipeUnitSystem === "metric"
-                        ? "Metric"
-                        : "Imperial"}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {isConverted
-                    ? "Reset to original units"
-                    : `Convert to ${recipeUnitSystem === "metric" ? "imperial" : "metric"}`}
-                </TooltipContent>
-              </Tooltip>
-
-              {/* Divider */}
-              <div className="h-4 w-px bg-stone-200 dark:bg-stone-700 mx-0.5" />
+                    <DropdownMenuRadioItem
+                      value="original"
+                      className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+                    >
+                      Original ({recipeUnitSystem === "metric" ? "Metric" : "Imperial"})
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem
+                      value="metric"
+                      className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+                    >
+                      Metric
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem
+                      value="imperial"
+                      className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+                    >
+                      Imperial
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               {/* Copy recipe */}
               <Tooltip>
@@ -459,7 +481,7 @@ export default function RecipePage() {
                     type="button"
                     onClick={handleCopyRecipe}
                     aria-label="Copy recipe"
-                    className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                    className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition"
                   >
                     <svg
                       className="h-4 w-4"
@@ -479,16 +501,21 @@ export default function RecipePage() {
                 <TooltipContent>{copied ? "Copied!" : "Copy recipe"}</TooltipContent>
               </Tooltip>
 
-              {/* Report — ghost button (only for logged-in users) */}
+              {/* Report — icon-only (only for logged-in users) */}
               {user && (
-                <button
-                  type="button"
-                  onClick={() => setReportOpen(true)}
-                  className="press-scale inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors text-xs font-medium font-sans"
-                >
-                  <Flag size={14} aria-hidden="true" />
-                  Report
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => setReportOpen(true)}
+                      aria-label="Report recipe"
+                      className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition"
+                    >
+                      <Flag size={14} aria-hidden="true" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Report recipe</TooltipContent>
+                </Tooltip>
               )}
 
               {/* More actions (Print, Share) */}
@@ -497,7 +524,7 @@ export default function RecipePage() {
                   <button
                     type="button"
                     aria-label="More actions"
-                    className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                    className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition"
                   >
                     <svg
                       className="h-4 w-4"
@@ -622,30 +649,11 @@ export default function RecipePage() {
                         onClick={() => setShowDiff((v) => !v)}
                         className="ml-auto inline-flex items-center gap-1 font-sans text-xs font-medium text-[var(--color-blue)] hover:opacity-80 transition-opacity cursor-pointer"
                       >
-                        <svg
-                          className="h-3.5 w-3.5"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          aria-hidden="true"
-                        >
-                          {showDiff ? (
-                            <>
-                              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                              <line x1="1" y1="1" x2="23" y2="23" />
-                            </>
-                          ) : (
-                            <>
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                              <circle cx="12" cy="12" r="3" />
-                            </>
-                          )}
-                        </svg>
+                        {showDiff ? (
+                          <EyeClosed size={14} aria-hidden="true" />
+                        ) : (
+                          <Eye size={14} aria-hidden="true" />
+                        )}
                         {showDiff ? "Hide changes" : "Show changes"}
                       </button>
                       <button
