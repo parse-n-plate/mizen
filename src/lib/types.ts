@@ -60,3 +60,14 @@ export interface SavedRecipe {
   created_at: string;
   updated_at: string;
 }
+
+export type MealType = "breakfast" | "lunch" | "dinner";
+
+export interface MealPlanEntry {
+  id: string;
+  recipe_id: string;
+  date: string;
+  meal_type: MealType;
+  recipe: SavedRecipe;
+  created_at: string;
+}

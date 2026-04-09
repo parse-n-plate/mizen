@@ -42,7 +42,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { HeartButton } from "@/components/HeartButton";
 import { ReportRecipeDialog } from "@/components/ReportRecipeDialog";
+import { AddToMealPlanDialog } from "@/components/AddToMealPlanDialog";
 import Flag from "@solar-icons/react/csr/ui/Flag";
+import CalendarMinimalistic from "@solar-icons/react/csr/time/CalendarMinimalistic";
 import ChatRoundDots from "@solar-icons/react/csr/messages/ChatRoundDots";
 import BookMinimalistic from "@solar-icons/react/csr/school/BookMinimalistic";
 import AltArrowRight from "@solar-icons/react/csr/arrows/AltArrowRight";
@@ -59,6 +61,7 @@ export default function RecipePage() {
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"prep" | "cook">("prep");
   const [reportOpen, setReportOpen] = useState(false);
+  const [mealPlanOpen, setMealPlanOpen] = useState(false);
   const [mobileServingsOpen, setMobileServingsOpen] = useState(false);
   const numberFormat = useSyncExternalStore(
     (cb) => {
@@ -501,6 +504,23 @@ export default function RecipePage() {
                 <TooltipContent>{copied ? "Copied!" : "Copy recipe"}</TooltipContent>
               </Tooltip>
 
+              {/* Add to Meal Plan — only for saved recipes */}
+              {user && savedMeta && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={() => setMealPlanOpen(true)}
+                      aria-label="Add to meal plan"
+                      className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition"
+                    >
+                      <CalendarMinimalistic size={16} aria-hidden="true" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Add to meal plan</TooltipContent>
+                </Tooltip>
+              )}
+
               {/* Report — icon-only (only for logged-in users) */}
               {user && (
                 <Tooltip>
@@ -941,6 +961,14 @@ export default function RecipePage() {
         activeTab={activeTab}
         unitSystem={unitSystem}
       />
+
+      {savedMeta && (
+        <AddToMealPlanDialog
+          recipeId={savedMeta.id}
+          open={mealPlanOpen}
+          onOpenChange={setMealPlanOpen}
+        />
+      )}
     </div>
   );
 }

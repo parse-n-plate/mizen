@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isSupabaseConfigured } from "./is-configured";
 
-const PROTECTED_PATHS = ["/cookbook", "/recipe", "/profile"];
+const PROTECTED_PATHS = ["/cookbook", "/recipe", "/profile", "/meal-plan", "/grocery-list"];
 
 function isProtectedRoute(pathname: string) {
   return PROTECTED_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));

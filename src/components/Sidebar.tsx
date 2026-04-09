@@ -16,6 +16,8 @@ import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { createClient } from "@/lib/supabase/client";
 import HomeSmile from "@solar-icons/react/csr/ui/HomeSmile";
 import BookMinimalistic from "@solar-icons/react/csr/school/BookMinimalistic";
+import CalendarMinimalistic from "@solar-icons/react/csr/time/CalendarMinimalistic";
+import CartLarge from "@solar-icons/react/csr/shopping/CartLarge";
 import Settings from "@solar-icons/react/csr/settings/Settings";
 import ChatRoundDots from "@solar-icons/react/csr/messages/ChatRoundDots";
 import Magnifer from "@solar-icons/react/csr/search/Magnifer";
@@ -148,6 +150,20 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       label: "Cookbook",
       icon: BookMinimalistic,
       active: pathname === "/cookbook",
+      show: isSupabaseConfigured,
+    },
+    {
+      href: "/meal-plan",
+      label: "Meal Plan",
+      icon: CalendarMinimalistic,
+      active: pathname === "/meal-plan",
+      show: isSupabaseConfigured,
+    },
+    {
+      href: "/grocery-list",
+      label: "Grocery List",
+      icon: CartLarge,
+      active: pathname === "/grocery-list",
       show: isSupabaseConfigured,
     },
   ];

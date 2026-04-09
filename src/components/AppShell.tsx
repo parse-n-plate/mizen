@@ -19,7 +19,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   // Treat loading state as landing on homepage so sidebar don't flash
   // before auth resolves
   const isLanding = isHomePage && (loading || !user);
-  const showMobileNav = !!user && ["/", "/cookbook", "/profile"].includes(pathname);
+  const showMobileNav =
+    !!user && ["/", "/cookbook", "/profile", "/meal-plan", "/grocery-list"].includes(pathname);
 
   return (
     <RecipeProvider>

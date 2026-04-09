@@ -5,10 +5,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import AddCircle from "@solar-icons/react/csr/ui/AddCircle";
 import BookBookmark from "@solar-icons/react/csr/school/BookBookmark";
+import CalendarMinimalistic from "@solar-icons/react/csr/time/CalendarMinimalistic";
 import User from "@solar-icons/react/csr/users/User";
 
 type NavItem = {
-  id: "add" | "cookbook" | "profile";
+  id: "add" | "cookbook" | "meal-plan" | "profile";
   href: string;
   label: string;
 };
@@ -16,6 +17,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { id: "add", href: "/#search", label: "Add Recipe" },
   { id: "cookbook", href: "/cookbook", label: "Cookbook" },
+  { id: "meal-plan", href: "/meal-plan", label: "Meal Plan" },
   { id: "profile", href: "/profile", label: "Profile" },
 ];
 
@@ -42,7 +44,9 @@ export function MobileBottomNav() {
               ? pathname === "/profile"
               : item.id === "cookbook"
                 ? pathname === "/cookbook"
-                : pathname === "/" && activeHash === "#search";
+                : item.id === "meal-plan"
+                  ? pathname === "/meal-plan"
+                  : pathname === "/" && activeHash === "#search";
 
           return (
             <Link
@@ -59,6 +63,8 @@ export function MobileBottomNav() {
                 <AddCircle size={20} aria-hidden="true" />
               ) : item.id === "cookbook" ? (
                 <BookBookmark size={20} aria-hidden="true" />
+              ) : item.id === "meal-plan" ? (
+                <CalendarMinimalistic size={20} aria-hidden="true" />
               ) : (
                 <User size={20} aria-hidden="true" />
               )}
