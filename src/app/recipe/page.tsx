@@ -289,7 +289,7 @@ export default function RecipePage() {
   return (
     <div className="min-h-[calc(100vh-3.5rem)] flex flex-col pb-6">
       {/* Header section with cream background */}
-      <div className="px-6 pt-8 pb-0">
+      <div className="px-6 pt-6 pb-0">
         <div className="max-w-3xl mx-auto w-full pb-8">
           {/* Breadcrumb */}
           <nav aria-label="Breadcrumb" className="flex items-center gap-2 mb-5 text-sm">
@@ -371,7 +371,7 @@ export default function RecipePage() {
       </div>
 
       {/* Tabs + content */}
-      <div className="flex-1 flex flex-col px-6 print:hidden">
+      <div className="flex-1 flex flex-col px-6 sm:pb-6 print:hidden">
         <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col">
           {/* Desktop: top folder tabs + quick actions (hidden on mobile) */}
           <div className="group/tabs hidden sm:flex items-end w-full relative gap-0">
