@@ -29,7 +29,7 @@ Required JSON structure:
       "title": "Short step title (2-8 words)",
       "detail": "Full instruction text exactly as written",
       "ingredients": ["ingredient 1"],
-      "tips": "Optional tip"
+      "tips": "Optional — only if genuinely useful and specific to this step. Omit for obvious advice (e.g. 'use a sharp knife', 'stir well'). Never repeat a tip already used in another step."
     }
   ]
 }
@@ -120,7 +120,7 @@ Required JSON structure:
       "title": "Short step title (2-8 words)",
       "detail": "Full instruction text (unchanged)",
       "ingredients": ["ingredient 1"],
-      "tips": "Optional tip"
+      "tips": "Optional — only if genuinely useful and specific to this step. Omit for obvious advice (e.g. 'use a sharp knife', 'stir well'). Never repeat a tip already used in another step."
     }
   ],
   "summary": "One sentence, max 200 chars, neutral dish description"
