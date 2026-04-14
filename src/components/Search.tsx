@@ -282,7 +282,7 @@ function ThumbnailClose({ onClick }: { onClick: () => void }) {
 }
 
 function ImageThumbnail({ src, onRemove }: { src: string; onRemove: () => void }) {
-  const [lightbox, setLightbox] = useState(false);
+  const [lightbox, setLightbox] = useState<{ rect: DOMRect; el: HTMLElement } | null>(null);
 
   return (
     <>
@@ -292,12 +292,20 @@ function ImageThumbnail({ src, onRemove }: { src: string; onRemove: () => void }
           src={src}
           alt="Recipe"
           className="w-full h-full object-cover rounded-xl"
-          onClick={() => setLightbox(true)}
+          onClick={(e) =>
+            setLightbox({ rect: e.currentTarget.getBoundingClientRect(), el: e.currentTarget })
+          }
         />
         <ThumbnailClose onClick={onRemove} />
       </div>
       {lightbox && (
-        <ImageLightbox src={src} alt="Attached image" onClose={() => setLightbox(false)} />
+        <ImageLightbox
+          src={src}
+          alt="Attached image"
+          sourceRect={lightbox.rect}
+          sourceEl={lightbox.el}
+          onClose={() => setLightbox(null)}
+        />
       )}
     </>
   );
