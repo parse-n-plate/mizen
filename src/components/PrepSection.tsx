@@ -37,7 +37,7 @@ export function PrepSection({ ingredients, steps, diffMap, diffGeneration }: Pre
 }
 
 function TipsCallout({ tips }: { tips: { tip: string; stepTitle: string; index: number }[] }) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   return (
     <div className="rounded-lg border border-amber-200/60 dark:border-amber-800/40 bg-amber-50/50 dark:bg-amber-950/20">
