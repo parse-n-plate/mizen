@@ -53,7 +53,9 @@ interface StepListProps {
 
 export function StepList({ steps }: StepListProps) {
   const numberFormat = useNumberFormat();
-  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<{ src: string; rect: DOMRect; el: HTMLElement } | null>(
+    null
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const showImages = useSyncExternalStore(subscribePreferences, getShowStepImages, () => true);
 
@@ -133,12 +135,18 @@ export function StepList({ steps }: StepListProps) {
           index={originalIndex}
           isLast={i === filteredSteps.length - 1}
           numberFormat={numberFormat}
-          onImageClick={setLightboxSrc}
+          onImageClick={setLightbox}
           showImages={showImages}
         />
       ))}
-      {lightboxSrc && (
-        <ImageLightbox src={lightboxSrc} alt="Step image" onClose={() => setLightboxSrc(null)} />
+      {lightbox && (
+        <ImageLightbox
+          src={lightbox.src}
+          alt="Step image"
+          sourceRect={lightbox.rect}
+          sourceEl={lightbox.el}
+          onClose={() => setLightbox(null)}
+        />
       )}
     </div>
   );
@@ -156,7 +164,7 @@ function StepRow({
   index: number;
   isLast: boolean;
   numberFormat: NumberFormat;
-  onImageClick: (src: string) => void;
+  onImageClick: (state: { src: string; rect: DOMRect; el: HTMLElement }) => void;
   showImages: boolean;
 }) {
   // Resolve images: prefer imageUrls array, fall back to singular imageUrl
@@ -194,7 +202,14 @@ function StepRow({
         {hasImage && isSideBySide && showImages && (
           <div
             className="flex-shrink-0 w-[40%] max-w-[180px]"
-            onClick={() => onImageClick(images[0])}
+            onClick={(e) => {
+              const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
+              onImageClick({
+                src: images[0],
+                rect: img.getBoundingClientRect(),
+                el: img as HTMLElement,
+              });
+            }}
           >
             <Image
               src={images[0]}
@@ -214,7 +229,17 @@ function StepRow({
           className={`grid transition-[grid-template-rows] duration-200 ease-out ${showImages ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
         >
           <div className="overflow-hidden">
-            <div className="mt-2 flex" onClick={() => onImageClick(images[0])}>
+            <div
+              className="mt-2 flex"
+              onClick={(e) => {
+                const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
+                onImageClick({
+                  src: images[0],
+                  rect: img.getBoundingClientRect(),
+                  el: img as HTMLElement,
+                });
+              }}
+            >
               <Image
                 src={images[0]}
                 alt={`Step ${index + 1}`}
@@ -236,7 +261,18 @@ function StepRow({
           <div className="overflow-hidden">
             <div className="mt-2 flex gap-2">
               {images.map((src, i) => (
-                <div key={i} className="flex-1 min-w-0" onClick={() => onImageClick(src)}>
+                <div
+                  key={i}
+                  className="flex-1 min-w-0"
+                  onClick={(e) => {
+                    const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
+                    onImageClick({
+                      src,
+                      rect: img.getBoundingClientRect(),
+                      el: img as HTMLElement,
+                    });
+                  }}
+                >
                   <Image
                     src={src}
                     alt={`Step ${index + 1}, photo ${i + 1}`}
