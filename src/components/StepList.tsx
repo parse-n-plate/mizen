@@ -5,6 +5,7 @@ import Image from "next/image";
 import Magnifer from "@solar-icons/react/csr/search/Magnifer";
 import { X } from "lucide-react";
 import Gallery from "@solar-icons/react/csr/video/Gallery";
+import Lightbulb from "@solar-icons/react/csr/devices/Lightbulb";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import type { InstructionStep } from "@/lib/types";
@@ -126,12 +127,11 @@ export function StepList({ steps }: StepListProps) {
           No directions match &ldquo;{searchQuery}&rdquo;
         </p>
       ) : null}
-      {filteredSteps.map(({ step, originalIndex }, i) => (
+      {filteredSteps.map(({ step, originalIndex }) => (
         <StepRow
           key={originalIndex}
           step={step}
           index={originalIndex}
-          isLast={i === filteredSteps.length - 1}
           numberFormat={numberFormat}
           onImageClick={setLightboxSrc}
           showImages={showImages}
@@ -147,14 +147,12 @@ export function StepList({ steps }: StepListProps) {
 function StepRow({
   step,
   index,
-  isLast,
   numberFormat,
   onImageClick,
   showImages,
 }: {
   step: InstructionStep;
   index: number;
-  isLast: boolean;
   numberFormat: NumberFormat;
   onImageClick: (src: string) => void;
   showImages: boolean;
@@ -171,23 +169,15 @@ function StepRow({
 
   return (
     <div className="relative flex flex-col py-3.5 px-3 rounded-lg group hover:bg-[var(--color-cream)]">
-      {!isLast && (
-        <div className="step-list-divider absolute bottom-0 left-3 right-3 h-px bg-stone-100 dark:bg-stone-800 transition-opacity duration-150 group-hover:opacity-0" />
-      )}
       <div className="flex gap-4">
         {/* Content */}
-        <div className="flex-1 min-w-0 space-y-1">
+        <div className="flex-1 min-w-0 space-y-2.5">
           {step.title && (
             <h4 className="font-sans text-body-md-sm font-medium text-heading">{step.title}</h4>
           )}
           <p className="font-sans text-base leading-relaxed text-stone-600 dark:text-stone-300">
             {displayText(step.detail, numberFormat)}
           </p>
-          {step.tips && (
-            <p className="font-sans text-xs italic text-stone-400 dark:text-stone-500">
-              Tip: {displayText(step.tips, numberFormat)}
-            </p>
-          )}
         </div>
 
         {/* Side-by-side: portrait/square/mild landscape (0.7–1.4) */}
@@ -250,6 +240,13 @@ function StepRow({
             </div>
           </div>
         </div>
+      )}
+
+      {step.tips && (
+        <p className="font-sans text-xs italic text-stone-400 dark:text-stone-500 flex items-start gap-1 mt-2.5">
+          <Lightbulb width={14} height={14} className="shrink-0 mt-px" />
+          {displayText(step.tips, numberFormat)}
+        </p>
       )}
     </div>
   );
