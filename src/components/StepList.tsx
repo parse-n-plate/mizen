@@ -170,7 +170,10 @@ function StepRow({
   const isInline = !isMulti && ratio !== null && !isSideBySide;
 
   return (
-    <div className="relative flex flex-col py-3.5 px-3 rounded-lg group hover:bg-[var(--color-cream)]">
+    <div
+      id={`step-${index + 1}`}
+      className="relative flex flex-col py-3.5 px-3 rounded-lg group hover:bg-[var(--color-cream)]"
+    >
       {!isLast && (
         <div className="step-list-divider absolute bottom-0 left-3 right-3 h-px bg-stone-100 dark:bg-stone-800 transition-opacity duration-150 group-hover:opacity-0" />
       )}

@@ -1,18 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import type { IngredientGroup, InstructionStep } from "@/lib/types";
+import type { EquipmentItem, IngredientGroup, InstructionStep } from "@/lib/types";
 import { IngredientList } from "@/components/IngredientList";
+import { EquipmentList } from "@/components/EquipmentList";
 import type { DiffMap } from "@/hooks/useIngredientDiff";
 
 interface PrepSectionProps {
   ingredients: IngredientGroup[];
   steps: InstructionStep[];
+  equipment?: EquipmentItem[];
   diffMap?: DiffMap;
   diffGeneration?: number;
+  onStepClick?: (stepNumber: number) => void;
 }
 
-export function PrepSection({ ingredients, steps, diffMap, diffGeneration }: PrepSectionProps) {
+export function PrepSection({
+  ingredients,
+  steps,
+  equipment,
+  diffMap,
+  diffGeneration,
+  onStepClick,
+}: PrepSectionProps) {
   const tips = steps
     .filter((s) => s.tips)
     .map((s, i) => ({ tip: s.tips!, stepTitle: s.title, index: i }));
@@ -24,6 +34,12 @@ export function PrepSection({ ingredients, steps, diffMap, diffGeneration }: Pre
       <div>
         <IngredientList groups={ingredients} diffMap={diffMap} diffGeneration={diffGeneration} />
       </div>
+
+      {equipment && equipment.length > 0 && (
+        <div>
+          <EquipmentList equipment={equipment} steps={steps} onStepClick={onStepClick} />
+        </div>
+      )}
     </div>
   );
 }

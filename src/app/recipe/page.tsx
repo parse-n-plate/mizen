@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { useRecipe } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
@@ -86,6 +86,15 @@ export default function RecipePage() {
   const temperatureUnit = usePreference(getTemperatureUnit);
   const dietaryProfile = usePreference(getDietaryProfile);
   const substitutions = usePreference(getSubstitutions);
+
+  const handleStepClick = useCallback((stepNumber: number) => {
+    setActiveTab("cook");
+    requestAnimationFrame(() => {
+      document
+        .getElementById(`step-${stepNumber}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }, []);
 
   useEffect(() => {
     setServings(getPreferredServings(recipe?.servings, defaultServings));
@@ -687,8 +696,10 @@ export default function RecipePage() {
                   <PrepSection
                     ingredients={scaledIngredients}
                     steps={displayedInstructions}
+                    equipment={recipe?.equipment}
                     diffMap={showDiff ? diffMap : undefined}
                     diffGeneration={diffGeneration}
+                    onStepClick={handleStepClick}
                   />
                 </div>
               ) : (

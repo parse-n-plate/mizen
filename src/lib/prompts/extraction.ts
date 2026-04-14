@@ -31,6 +31,9 @@ Required JSON structure:
       "ingredients": ["ingredient 1"],
       "tips": "Optional tip"
     }
+  ],
+  "equipment": [
+    { "name": "large skillet", "stepNumbers": [2, 5] }
   ]
 }
 
@@ -74,6 +77,13 @@ INSTRUCTION RULES:
 - "detail": full instruction text exactly as written
 - Preserve all temperatures, times, measurements
 - Do NOT shorten or summarize the detail text
+
+EQUIPMENT RULES:
+- Extract all cooking equipment mentioned or implied in the instructions (pans, pots, bowls, baking sheets, thermometers, etc.)
+- "name": lowercase, specific name (e.g. "large skillet", "rimmed baking sheet", "stand mixer")
+- "stepNumbers": 1-indexed array of instruction step numbers where the equipment is used
+- Do NOT include basic utensils everyone has (spoons, forks, knives, cutting boards)
+- If no meaningful equipment is found, return an empty array
 
 SUMMARY:
 - Exactly one sentence, max 200 characters
@@ -123,6 +133,9 @@ Required JSON structure:
       "tips": "Optional tip"
     }
   ],
+  "equipment": [
+    { "name": "large skillet", "stepNumbers": [2, 5] }
+  ],
   "summary": "One sentence, max 200 chars, neutral dish description"
 }
 
@@ -135,6 +148,7 @@ RULES:
 6. INSTRUCTION DETAIL: Copy EXACTLY from input. Do not modify, shorten, or summarize.
 7. INSTRUCTION INGREDIENTS: List which ingredients from the recipe are used in each step.
 8. SUMMARY: One neutral sentence describing the dish, max 200 characters.
-9. TIMING & SERVINGS: If the input JSON has null for servings or time fields, extract them from the ingredient or instruction text if clearly mentioned (e.g. "serves 4", "cook for 30 minutes"). Pass through the existing value if already set. Omit (do not return the field) if you cannot confidently determine the value.
+9. EQUIPMENT: Extract all cooking equipment mentioned or implied in the instructions (pans, pots, bowls, baking sheets, thermometers, etc.). Use lowercase, specific names ("large skillet", not "pan"). Include 1-indexed step numbers where used. Skip basic utensils (spoons, forks, knives, cutting boards). Return empty array if none.
+10. TIMING & SERVINGS: If the input JSON has null for servings or time fields, extract them from the ingredient or instruction text if clearly mentioned (e.g. "serves 4", "cook for 30 minutes"). Pass through the existing value if already set. Omit (do not return the field) if you cannot confidently determine the value.
 
 CRITICAL: Do not invent ingredients or steps. Only reorganize and annotate existing data.`;

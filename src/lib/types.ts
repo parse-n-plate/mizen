@@ -28,6 +28,11 @@ export interface InstructionStep {
   imageUrls?: string[];
 }
 
+export interface EquipmentItem {
+  name: string;
+  stepNumbers: number[]; // 1-indexed steps where used
+}
+
 export interface ParsedRecipe {
   title: string;
   summary?: string;
@@ -38,6 +43,7 @@ export interface ParsedRecipe {
   totalTimeMinutes?: number;
   ingredients: IngredientGroup[];
   instructions: InstructionStep[];
+  equipment?: EquipmentItem[];
   sourceUrl?: string;
   imageUrl?: string;
   imageTranscription?: string;
