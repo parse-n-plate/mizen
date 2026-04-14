@@ -25,6 +25,11 @@ export const InstructionStepSchema = z.object({
   imageUrls: z.array(z.string()).optional(),
 });
 
+export const EquipmentItemSchema = z.object({
+  name: z.string().min(1),
+  stepNumbers: z.array(z.number().int().positive()),
+});
+
 export const CoreRecipeSchema = z.object({
   title: z.string().min(1),
   summary: z.string().optional(),
@@ -35,4 +40,5 @@ export const CoreRecipeSchema = z.object({
   totalTimeMinutes: z.number().optional(),
   ingredients: z.array(IngredientGroupSchema).min(1),
   instructions: z.array(z.union([InstructionStepSchema, z.string()])),
+  equipment: z.array(EquipmentItemSchema).optional(),
 });

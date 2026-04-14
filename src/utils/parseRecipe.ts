@@ -2,13 +2,14 @@ import * as cheerio from "cheerio";
 import { z } from "zod";
 import { getGroqClient, extractJsonFromAiResponse } from "@/lib/groq";
 import { logger } from "@/lib/logger";
-import { CoreRecipeSchema, IngredientGroupSchema } from "@/lib/schemas/recipe";
+import { CoreRecipeSchema, IngredientGroupSchema, EquipmentItemSchema } from "@/lib/schemas/recipe";
 import { EXTRACTION_PROMPT, ENRICHMENT_PROMPT } from "@/lib/prompts/extraction";
 import { cleanRecipeHTML, type CleanedHTML } from "./htmlCleaner";
 import { COLLECTION_MESSAGE } from "./urlPatterns";
 import { normalizeAmount, normalizeDecimalsInText } from "./ingredientScaler";
 import type {
   Ingredient,
+  EquipmentItem,
   ParsedRecipe,
   ParserResult,
   IngredientGroup,
@@ -268,6 +269,16 @@ function deduplicateUnits(groups: IngredientGroup[]): IngredientGroup[] {
       return ing;
     }),
   }));
+}
+
+/**
+ * Validate and extract equipment items from parsed AI response data.
+ */
+function extractEquipment(data: Record<string, unknown>): EquipmentItem[] | undefined {
+  if (!Array.isArray(data.equipment) || data.equipment.length === 0) return undefined;
+  const result = z.array(EquipmentItemSchema).safeParse(data.equipment);
+  if (!result.success) return undefined;
+  return result.data;
 }
 
 /**
@@ -669,6 +680,8 @@ async function extractWithAI(cleanedHtml: string): Promise<ParsedRecipe | null> 
     if (m) servings = parseInt(m[0], 10);
   }
 
+  const equipment = data.equipment;
+
   return {
     title: data.title,
     ingredients: normalizeIngredientAmounts(deduplicateUnits(data.ingredients)),
@@ -679,6 +692,7 @@ async function extractWithAI(cleanedHtml: string): Promise<ParsedRecipe | null> 
     ...(data.prepTimeMinutes && { prepTimeMinutes: data.prepTimeMinutes }),
     ...(data.cookTimeMinutes && { cookTimeMinutes: data.cookTimeMinutes }),
     ...(data.totalTimeMinutes && { totalTimeMinutes: data.totalTimeMinutes }),
+    ...(equipment && equipment.length > 0 && { equipment }),
   };
 }
 
@@ -750,9 +764,12 @@ async function enrichWithAI(jsonLdData: ParsedRecipe): Promise<Partial<ParsedRec
       ? data.totalTimeMinutes
       : undefined;
 
+  const enrichedEquipment = extractEquipment(data);
+
   return {
     ...(enrichedIngredients && { ingredients: enrichedIngredients }),
     ...(enrichedInstructions && { instructions: enrichedInstructions }),
+    ...(enrichedEquipment && { equipment: enrichedEquipment }),
     ...(summary && { summary }),
     ...(enrichedServings && { servings: enrichedServings }),
     ...(enrichedPrepTime && { prepTimeMinutes: enrichedPrepTime }),
@@ -867,6 +884,7 @@ export async function parseRecipeFromImage(dataUrl: string): Promise<ParserResul
       if (m) servings = parseInt(m[0], 10);
     }
 
+    const imageEquipment = data.equipment;
     const recipe: ParsedRecipe = {
       title: data.title,
       ingredients: normalizeIngredientAmounts(deduplicateUnits(data.ingredients)),
@@ -877,6 +895,7 @@ export async function parseRecipeFromImage(dataUrl: string): Promise<ParserResul
       ...(data.prepTimeMinutes && { prepTimeMinutes: data.prepTimeMinutes }),
       ...(data.cookTimeMinutes && { cookTimeMinutes: data.cookTimeMinutes }),
       ...(data.totalTimeMinutes && { totalTimeMinutes: data.totalTimeMinutes }),
+      ...(imageEquipment && imageEquipment.length > 0 && { equipment: imageEquipment }),
     };
 
     return { success: true, data: recipe, method: "image" };
@@ -967,6 +986,7 @@ export async function parseRecipeFromText(text: string): Promise<ParserResult> {
       if (m) servings = parseInt(m[0], 10);
     }
 
+    const textEquipment = data.equipment;
     const recipe: ParsedRecipe = {
       title: data.title,
       ingredients: deduplicateUnits(data.ingredients),
@@ -977,6 +997,7 @@ export async function parseRecipeFromText(text: string): Promise<ParserResult> {
       ...(data.prepTimeMinutes && { prepTimeMinutes: data.prepTimeMinutes }),
       ...(data.cookTimeMinutes && { cookTimeMinutes: data.cookTimeMinutes }),
       ...(data.totalTimeMinutes && { totalTimeMinutes: data.totalTimeMinutes }),
+      ...(textEquipment && textEquipment.length > 0 && { equipment: textEquipment }),
     };
 
     return { success: true, data: recipe, method: "text" };
@@ -1093,6 +1114,8 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
           })),
         }),
         ...(enrichment?.summary && { summary: enrichment.summary }),
+        ...(enrichment?.equipment &&
+          enrichment.equipment.length > 0 && { equipment: enrichment.equipment }),
         // Backfill time/servings from AI enrichment only when JSON-LD didn't have them
         ...(!jsonLdResult.servings && enrichment?.servings && { servings: enrichment.servings }),
         ...(!jsonLdResult.prepTimeMinutes &&
@@ -1123,6 +1146,7 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
         useBetterAiGroupings ||
         useEnrichedInstructions ||
         Boolean(enrichment?.summary) ||
+        Boolean(enrichment?.equipment && enrichment.equipment.length > 0) ||
         Boolean(!jsonLdResult.servings && enrichment?.servings) ||
         Boolean(!jsonLdResult.prepTimeMinutes && enrichment?.prepTimeMinutes) ||
         Boolean(!jsonLdResult.cookTimeMinutes && enrichment?.cookTimeMinutes) ||
