@@ -27,9 +27,17 @@ export function PrepSection({
     .filter((s) => s.tips)
     .map((s, i) => ({ tip: s.tips!, stepTitle: s.title, index: i }));
 
+  const seen = new Set<string>();
+  const uniqueTips = tips.filter((t) => {
+    const key = t.tip.toLowerCase().trim();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
   return (
     <div className="space-y-6">
-      {tips.length > 0 && <TipsCallout tips={tips} />}
+      {uniqueTips.length > 0 && <TipsCallout tips={uniqueTips} />}
 
       <div>
         <IngredientList groups={ingredients} diffMap={diffMap} diffGeneration={diffGeneration} />
@@ -45,7 +53,7 @@ export function PrepSection({
 }
 
 function TipsCallout({ tips }: { tips: { tip: string; stepTitle: string; index: number }[] }) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   return (
     <div className="rounded-lg border border-amber-200/60 dark:border-amber-800/40 bg-amber-50/50 dark:bg-amber-950/20">

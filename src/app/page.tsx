@@ -829,7 +829,7 @@ function WaitlistLanding() {
                   phase === "exit"
                     ? "waitlist-recipe-exit"
                     : phase === "populate"
-                      ? ""
+                      ? "waitlist-recipe-enter"
                       : phase === "idle"
                         ? ""
                         : "opacity-0"

@@ -670,9 +670,6 @@ export function WaitlistRecipePreview({
         <div className="px-5 sm:px-8 pt-5 pb-6">
           {activeTab === "prep" ? (
             <div key="prep" className="tab-content-animate">
-              <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-4">
-                Ingredients
-              </h3>
               <IngredientList groups={scaledIngredients} />
             </div>
           ) : (
