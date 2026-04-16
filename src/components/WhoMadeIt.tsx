@@ -5,7 +5,7 @@ const team = [
   {
     name: "Gage",
     src: "/assets/avatars/Gage_Avatar.jpg",
-    href: "https://gagem.vercel.app/",
+    href: "https://gageminamoto.com/",
   },
   {
     name: "Michelle",
