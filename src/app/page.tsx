@@ -19,10 +19,70 @@ import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import type { ParsedRecipe } from "@/lib/types";
 
 const SOURCES = [
-  { label: "URLs", icon: "link", hint: "Paste any recipe URL" },
-  { label: "Recipe Photos", icon: "camera", hint: "Snap a photo of any recipe" },
-  { label: "Text", icon: "chat", hint: "Forward a recipe from a text" },
+  { label: "Recipe Sites", icon: "link", hint: "Paste any recipe URL" },
+  { label: "ChatGPT", icon: "ai", hint: "Paste a recipe from ChatGPT" },
+  { label: "Photos", icon: "camera", hint: "Snap a photo of any recipe" },
 ] as const;
+
+const LANDING_COPY = {
+  badge: "Your recipe collection",
+  sub: "One place for every recipe you find online. Clean ingredients, clear steps.",
+  sourceLabel: "Bring recipes from",
+};
+
+function HeroBook() {
+  return (
+    <motion.img
+      src="/assets/hero-book.svg"
+      alt=""
+      aria-hidden
+      className="h-[1.05em] w-auto shrink-0 cursor-pointer"
+      draggable={false}
+      whileHover={{
+        rotate: [0, -4, 4, -4, 0],
+        scale: 1.05,
+        transition: {
+          rotate: { duration: 0.6, ease: "easeInOut" },
+          scale: { duration: 0.2, ease: "easeOut" },
+        },
+      }}
+      whileTap={{ scale: 0.95 }}
+    />
+  );
+}
+
+function HeroPot() {
+  return (
+    <motion.img
+      src="/assets/hero-pot.svg"
+      alt=""
+      aria-hidden
+      className="h-[1.2em] w-auto shrink-0 cursor-pointer"
+      draggable={false}
+      whileHover={{
+        rotate: [0, -3, 3, -3, 2, -1, 0],
+        transition: { duration: 0.5, ease: "easeInOut" },
+      }}
+      whileTap={{ scale: 0.95 }}
+    />
+  );
+}
+
+function HeroHeadline() {
+  return (
+    <>
+      <span className="inline-flex items-center gap-2 whitespace-nowrap">
+        <span>Every recipe,</span>
+        <HeroBook />
+      </span>
+      <span className="inline-flex items-center gap-2 whitespace-nowrap">
+        <span>same</span>
+        <HeroPot />
+        <span>format.</span>
+      </span>
+    </>
+  );
+}
 
 const EXAMPLE_RECIPES: ParsedRecipe[] = [
   {
@@ -81,6 +141,59 @@ const EXAMPLE_RECIPES: ParsedRecipe[] = [
     ],
   },
   {
+    title: "Chocolate Chip Cookies",
+    summary:
+      "Thick, chewy chocolate chip cookies with crispy edges and gooey centers — the only recipe you need.",
+    author: "ChatGPT",
+    servings: 36,
+    prepTimeMinutes: 15,
+    cookTimeMinutes: 12,
+    totalTimeMinutes: 30,
+    ingredients: [
+      {
+        groupName: "Dry ingredients",
+        ingredients: [
+          { amount: "2.25", units: "cups", ingredient: "all-purpose flour" },
+          { amount: "1", units: "tsp", ingredient: "baking soda" },
+          { amount: "1", units: "tsp", ingredient: "fine sea salt" },
+          { amount: "1", units: "tsp", ingredient: "cornstarch" },
+        ],
+      },
+      {
+        groupName: "Wet ingredients",
+        ingredients: [
+          { amount: "0.75", units: "cup", ingredient: "unsalted butter, melted" },
+          { amount: "0.75", units: "cup", ingredient: "packed light brown sugar" },
+          { amount: "0.5", units: "cup", ingredient: "granulated sugar" },
+          { amount: "2", units: "tsp", ingredient: "vanilla extract" },
+          { amount: "1.25", units: "cups", ingredient: "chocolate chips" },
+        ],
+      },
+    ],
+    instructions: [
+      {
+        title: "Mix dry ingredients",
+        detail:
+          "Whisk together flour, baking soda, salt, and cornstarch in a medium bowl. Set aside.",
+      },
+      {
+        title: "Make the dough",
+        detail:
+          "In a large bowl, whisk the melted butter, brown sugar, and granulated sugar until smooth. Beat in the egg and vanilla extract until combined.",
+      },
+      {
+        title: "Combine and chill",
+        detail:
+          "Slowly mix the dry ingredients into the wet ingredients until just combined. Fold in the chocolate chips. Cover dough and refrigerate for at least 30 minutes (or up to 2 days).",
+      },
+      {
+        title: "Bake",
+        detail:
+          "Preheat oven to 325\u00b0F (163\u00b0C). Scoop 1.5 tablespoon balls of dough onto lined baking sheets, spaced 2 inches apart. Bake for 12 minutes until edges are set but centers look undone. Cool on the pan for 10 minutes.",
+      },
+    ],
+  },
+  {
     title: "Homemade White Bread",
     summary:
       "A classic from-scratch white bread with a soft crumb and golden crust — just flour, yeast, and a little patience.",
@@ -127,12 +240,12 @@ Makes 2 loaves.`,
       {
         title: "Mix the dough",
         detail:
-          "Measure 6\u00bd cups flour into a large bowl and make a well in the center. Add sugar and salt. Dissolve yeast in the lukewarm water, then pour into the well along with the warm water. Stir rapidly in a circular motion, working outward until the liquid is absorbed.",
+          "Measure 6½ cups flour into a large bowl and make a well in the center. Add sugar and salt. Dissolve yeast in the lukewarm water, then pour into the well along with the warm water. Stir rapidly in a circular motion, working outward until the liquid is absorbed.",
       },
       {
         title: "Add shortening and knead",
         detail:
-          "Work in the shortening in small pieces with your hands. Turn dough onto a floured surface and knead until firm and elastic, about 10 minutes, using up to \u00bd cup more flour as needed.",
+          "Work in the shortening in small pieces with your hands. Turn dough onto a floured surface and knead until firm and elastic, about 10 minutes, using up to ½ cup more flour as needed.",
       },
       {
         title: "First and second rise",
@@ -142,61 +255,7 @@ Makes 2 loaves.`,
       {
         title: "Shape and bake",
         detail:
-          "Divide dough in half and shape into loaves. Pierce each loaf about 4 times to release air. Place in greased loaf pans, cover, and let rise until just over double. Bake in a preheated 400\u00b0F oven for 25 minutes.",
-      },
-    ],
-  },
-  {
-    title: "Chocolate Chip Cookies",
-    summary:
-      "Thick, chewy chocolate chip cookies with crispy edges and gooey centers — the only recipe you need.",
-    author: "Sally's Baking Addiction",
-    servings: 36,
-    prepTimeMinutes: 15,
-    cookTimeMinutes: 12,
-    totalTimeMinutes: 30,
-    sourceUrl: "https://sallysbakingaddiction.com/chewy-chocolate-chip-cookies/",
-    ingredients: [
-      {
-        groupName: "Dry ingredients",
-        ingredients: [
-          { amount: "2.25", units: "cups", ingredient: "all-purpose flour" },
-          { amount: "1", units: "tsp", ingredient: "baking soda" },
-          { amount: "1", units: "tsp", ingredient: "fine sea salt" },
-          { amount: "1", units: "tsp", ingredient: "cornstarch" },
-        ],
-      },
-      {
-        groupName: "Wet ingredients",
-        ingredients: [
-          { amount: "0.75", units: "cup", ingredient: "unsalted butter, melted" },
-          { amount: "0.75", units: "cup", ingredient: "packed light brown sugar" },
-          { amount: "0.5", units: "cup", ingredient: "granulated sugar" },
-          { amount: "2", units: "tsp", ingredient: "vanilla extract" },
-          { amount: "1.25", units: "cups", ingredient: "chocolate chips" },
-        ],
-      },
-    ],
-    instructions: [
-      {
-        title: "Mix dry ingredients",
-        detail:
-          "Whisk together flour, baking soda, salt, and cornstarch in a medium bowl. Set aside.",
-      },
-      {
-        title: "Make the dough",
-        detail:
-          "In a large bowl, whisk the melted butter, brown sugar, and granulated sugar until smooth. Beat in the egg and vanilla extract until combined.",
-      },
-      {
-        title: "Combine and chill",
-        detail:
-          "Slowly mix the dry ingredients into the wet ingredients until just combined. Fold in the chocolate chips. Cover dough and refrigerate for at least 30 minutes (or up to 2 days).",
-      },
-      {
-        title: "Bake",
-        detail:
-          "Preheat oven to 325\u00b0F (163\u00b0C). Scoop 1.5 tablespoon balls of dough onto lined baking sheets, spaced 2 inches apart. Bake for 12 minutes until edges are set but centers look undone. Cool on the pan for 10 minutes.",
+          "Divide dough in half and shape into loaves. Pierce each loaf about 4 times to release air. Place in greased loaf pans, cover, and let rise until just over double. Bake in a preheated 400°F oven for 25 minutes.",
       },
     ],
   },
@@ -260,41 +319,35 @@ function PhotoSourcePreview() {
   );
 }
 
-function TextSourcePreview() {
+function ChatGPTSourcePreview() {
   return (
-    <div className="flex flex-col gap-2 max-w-xs w-full">
-      {/* Incoming message */}
-      <div className="self-start">
-        <div className="px-3.5 py-2.5 rounded-2xl rounded-bl-md bg-stone-200 dark:bg-stone-700">
-          <p className="font-sans text-[13px] text-stone-800 dark:text-stone-200 leading-snug">
-            You HAVE to make these cookies
-          </p>
+    <div className="flex flex-col gap-3 max-w-xs w-full">
+      {/* ChatGPT-style conversation bubble */}
+      <div className="flex gap-2.5 items-start">
+        <div className="flex-shrink-0 w-7 h-7 rounded-full bg-[#10a37f] flex items-center justify-center">
+          <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.872zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z" />
+          </svg>
         </div>
-      </div>
-      {/* Incoming message — long */}
-      <div className="self-start max-w-[85%]">
-        <div className="px-3.5 py-2.5 rounded-2xl rounded-bl-md bg-stone-200 dark:bg-stone-700">
-          <p className="font-sans text-[13px] text-stone-800 dark:text-stone-200 leading-snug">
-            2¼ cups flour, 1 tsp baking soda, 1 tsp salt, ¾ cup melted butter, ¾ cup brown sugar, ½
-            cup white sugar, 2 tsp vanilla, 1¼ cups chocolate chips.
-          </p>
-        </div>
-      </div>
-      {/* Outgoing message */}
-      <div className="self-end">
-        <div className="px-3.5 py-2.5 rounded-2xl rounded-br-md bg-[#007AFF]">
-          <p className="font-sans text-[13px] text-white leading-snug">
-            perfect, saving this to mizen
-          </p>
+        <div className="flex flex-col gap-1.5 min-w-0">
+          <span className="font-sans text-[11px] font-semibold text-stone-500 dark:text-stone-400">
+            ChatGPT
+          </span>
+          <div className="px-3.5 py-2.5 rounded-2xl rounded-tl-md bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700">
+            <p className="font-sans text-[13px] text-stone-700 dark:text-stone-200 leading-snug">
+              <span className="font-semibold">Classic Carbonara</span>
+              <br />4 oz guanciale, 4 eggs, 1 cup pecorino, 1 lb spaghetti, black pepper...
+            </p>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-const SOURCE_PREVIEWS = [UrlSourcePreview, PhotoSourcePreview, TextSourcePreview];
+const SOURCE_PREVIEWS = [UrlSourcePreview, ChatGPTSourcePreview, PhotoSourcePreview];
 
-function SourceIcon({ type }: { type: "link" | "camera" | "chat" }) {
+function SourceIcon({ type }: { type: "link" | "camera" | "chat" | "ai" }) {
   if (type === "link") {
     return (
       <svg
@@ -308,6 +361,13 @@ function SourceIcon({ type }: { type: "link" | "camera" | "chat" }) {
       >
         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
         <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+      </svg>
+    );
+  }
+  if (type === "ai") {
+    return (
+      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.872zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z" />
       </svg>
     );
   }
@@ -445,7 +505,6 @@ function WaitlistLanding() {
   const [submitted, setSubmitted] = useState(false);
   const [alreadyOnList, setAlreadyOnList] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-  const [hoveredSource, setHoveredSource] = useState<number | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const dial = useDialKit("Theme", {
@@ -569,80 +628,16 @@ function WaitlistLanding() {
             <div className="w-full text-center lg:text-left">
               <div className="mb-6">
                 <span className="inline-block px-3 py-1 rounded-full border border-stone-200 dark:border-stone-700 font-sans text-xs text-stone-500 dark:text-stone-400">
-                  Now in Early Access
+                  {LANDING_COPY.badge}
                 </span>
               </div>
 
               <h1 className="flex flex-col items-center gap-1 lg:items-start font-serif text-[clamp(32px,9vw,56px)] lg:text-[clamp(24px,2.6vw,44px)] xl:text-[clamp(32px,2.8vw,52px)] font-bold leading-[1.3] tracking-[-0.02em] text-stone-900 dark:text-stone-100 mb-5">
-                <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                  <span>Save any recipe.</span>
-                  <motion.img
-                    src="/assets/hero-book.svg"
-                    alt=""
-                    aria-hidden
-                    className="h-[1.05em] w-auto shrink-0 cursor-pointer"
-                    draggable={false}
-                    whileHover={{
-                      rotate: [0, -4, 4, -4, 0],
-                      scale: 1.05,
-                      transition: {
-                        rotate: { duration: 0.6, ease: "easeInOut" },
-                        scale: { duration: 0.2, ease: "easeOut" },
-                      },
-                    }}
-                    whileTap={{ scale: 0.95 }}
-                  />
-                </span>
-                <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                  <span>Cook</span>
-                  <motion.img
-                    src="/assets/hero-pot.svg"
-                    alt=""
-                    aria-hidden
-                    className="h-[1.2em] w-auto shrink-0 cursor-pointer"
-                    draggable={false}
-                    whileHover={{
-                      rotate: [0, -3, 3, -3, 2, -1, 0],
-                      transition: {
-                        duration: 0.5,
-                        ease: "easeInOut",
-                      },
-                    }}
-                    whileTap={{ scale: 0.95 }}
-                  />
-                  <span>it your way.</span>
-                </span>
+                <HeroHeadline />
               </h1>
 
-              <p className="font-sans text-base lg:text-[17px] text-stone-500 dark:text-stone-400 leading-relaxed mb-8 max-w-sm mx-auto lg:mx-0">
-                Bring a{" "}
-                <span
-                  className="cursor-pointer underline decoration-transparent hover:decoration-stone-400 transition-colors"
-                  onMouseEnter={() => setHoveredSource(0)}
-                  onMouseLeave={() => setHoveredSource(null)}
-                  onClick={() => handleSourceChange(0)}
-                >
-                  link
-                </span>
-                ,{" "}
-                <span
-                  className="cursor-pointer underline decoration-transparent hover:decoration-stone-400 transition-colors"
-                  onMouseEnter={() => setHoveredSource(1)}
-                  onMouseLeave={() => setHoveredSource(null)}
-                  onClick={() => handleSourceChange(1)}
-                >
-                  photo
-                </span>
-                , or{" "}
-                <span
-                  className="cursor-pointer underline decoration-transparent hover:decoration-stone-400 transition-colors"
-                  onMouseEnter={() => setHoveredSource(2)}
-                  onMouseLeave={() => setHoveredSource(null)}
-                  onClick={() => handleSourceChange(2)}
-                >
-                  text
-                </span>
-                . Get clean ingredients, clear steps, and nothing else.
+              <p className="font-sans text-base lg:text-[17px] text-stone-500 dark:text-stone-400 leading-relaxed mb-8 max-w-[26rem] mx-auto lg:mx-0 text-balance">
+                {LANDING_COPY.sub}
               </p>
 
               {/* Email form */}
@@ -771,7 +766,7 @@ function WaitlistLanding() {
           {/* Source tabs */}
           <div className="flex flex-col items-center gap-3 px-8 lg:px-10 pt-2 lg:pt-0 pb-5">
             <span className="font-sans text-sm text-stone-400 dark:text-stone-500">
-              Works with any source
+              {LANDING_COPY.sourceLabel}
             </span>
             <div className="flex items-center gap-2">
               {SOURCES.map((source, i) => (
@@ -781,9 +776,7 @@ function WaitlistLanding() {
                   className={`press-scale flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-sans text-sm font-medium transition-[color,background-color,border-color,box-shadow,transform] ${
                     activeSource === i
                       ? "bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 border border-transparent"
-                      : hoveredSource === i
-                        ? "bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 border border-stone-400 dark:border-stone-400 shadow-sm"
-                        : "bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600"
+                      : "bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600"
                   }`}
                 >
                   <SourceIcon type={source.icon} />
@@ -838,7 +831,7 @@ function WaitlistLanding() {
                 <WaitlistRecipePreview
                   key={displayedSource}
                   recipe={EXAMPLE_RECIPES[displayedSource]}
-                  sourceType={(["url", "photo", "text"] as const)[displayedSource]}
+                  sourceType={(["url", "url", "photo"] as const)[displayedSource]}
                 />
               </div>
             </div>
