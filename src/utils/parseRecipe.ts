@@ -914,12 +914,12 @@ export async function parseRecipeFromText(text: string): Promise<ParserResult> {
     const groq = getGroqClient();
 
     const response = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model: "meta-llama/llama-4-scout-17b-16e-instruct",
       messages: [
         { role: "system", content: EXTRACTION_PROMPT },
         {
           role: "user",
-          content: `Extract the recipe from the following text:\n\n${text}`,
+          content: `The following is plain text (not HTML) containing a recipe. Extract the recipe data from it:\n\n${text}`,
         },
       ],
       temperature: 0.1,
@@ -989,8 +989,8 @@ export async function parseRecipeFromText(text: string): Promise<ParserResult> {
     const textEquipment = data.equipment;
     const recipe: ParsedRecipe = {
       title: data.title,
-      ingredients: deduplicateUnits(data.ingredients),
-      instructions: normalizedInstructions,
+      ingredients: normalizeIngredientAmounts(deduplicateUnits(data.ingredients)),
+      instructions: normalizeInstructionText(normalizedInstructions),
       ...(data.author && { author: data.author }),
       ...(data.summary && { summary: data.summary }),
       ...(servings && { servings }),
