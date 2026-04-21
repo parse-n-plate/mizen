@@ -231,7 +231,7 @@ export function ReportRecipeDialog({
           </span>
         </div>
 
-        <DialogFooter className="flex-row items-center gap-3 sm:gap-3">
+        <DialogFooter className="flex-col-reverse sm:flex-row items-stretch sm:items-center gap-3">
           {/* Recipe context card */}
           {recipe && (
             <div className="flex flex-1 items-center gap-3 rounded-lg bg-stone-100 dark:bg-stone-800 px-3 py-2">
@@ -257,7 +257,7 @@ export function ReportRecipeDialog({
           <Button
             onClick={handleSubmit}
             disabled={!description.trim() || submitting}
-            className="bg-[var(--color-blue)] hover:bg-[var(--color-blue)]/90 text-white"
+            className="bg-[var(--color-blue)] hover:bg-[var(--color-blue)]/90 text-white w-full sm:w-auto"
           >
             {submitting ? "Submitting..." : "Submit"}
           </Button>
