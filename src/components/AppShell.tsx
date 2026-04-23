@@ -24,7 +24,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <RecipeProvider>
       {isLanding ? (
-        <div className="landing-scroll min-h-screen md:min-h-0 md:h-screen flex flex-col">
+        <div className="landing-scroll min-h-screen lg:min-h-0 lg:h-screen flex flex-col">
           {children}
         </div>
       ) : (
