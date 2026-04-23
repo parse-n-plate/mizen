@@ -624,7 +624,7 @@ export default function RecipePage() {
           <div
             className={`sm:bg-white sm:dark:bg-stone-900 sm:rounded-b-lg ${activeTab === "prep" ? "sm:rounded-tr-lg" : "sm:rounded-t-lg"} sm:border sm:border-stone-200 sm:dark:border-stone-700 flex-1`}
           >
-            <div className="max-w-3xl mx-auto sm:px-6 sm:pt-5 pb-24 sm:pb-6">
+            <div className="max-w-3xl mx-auto sm:px-6 sm:pt-5 pb-[calc(7.25rem+env(safe-area-inset-bottom)+1rem)] sm:pb-6">
               {/* Unit conversion banner */}
               {bannerMounted && activeTab === "prep" && (
                 <div
