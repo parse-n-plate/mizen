@@ -207,6 +207,7 @@ export function CookbookList({ initialRecipes }: CookbookListProps) {
                             onClick={(e) => e.stopPropagation()}
                             className="flex h-8 w-8 items-center justify-center rounded-md text-stone-400 dark:text-stone-500 hover:bg-stone-300 dark:hover:bg-stone-600 hover:text-stone-700 dark:hover:text-stone-200 transition-colors"
                             aria-label="More actions"
+                            suppressHydrationWarning
                           >
                             <MenuDots className="h-4 w-4" />
                           </button>
