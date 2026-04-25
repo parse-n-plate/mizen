@@ -756,7 +756,7 @@ function WaitlistLanding() {
             {isSupabaseConfigured && (
               <button
                 onClick={() => setAuthOpen(true)}
-                className="hidden lg:block px-3 py-1.5 rounded-lg bg-stone-100 dark:bg-stone-800 font-sans text-sm font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
+                className="hidden lg:block px-3 py-1.5 rounded-lg bg-white dark:bg-stone-800 font-sans text-sm font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors"
               >
                 Sign in
               </button>

@@ -272,18 +272,25 @@ export default function RecipePage() {
     setMobileServingsOpen((open) => !open);
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm("Delete this recipe? This can't be undone.")) return;
-    try {
-      if (savedMeta) {
-        await fetch(`/api/recipes/${savedMeta.id}`, { method: "DELETE" });
+  const handleDelete = (e: Event) => {
+    e.preventDefault();
+    setTimeout(async () => {
+      if (!window.confirm("Delete this recipe? This can't be undone.")) return;
+      try {
+        if (savedMeta) {
+          const res = await fetch(`/api/recipes/${savedMeta.id}`, { method: "DELETE" });
+          if (!res.ok) {
+            toast.error("Failed to delete recipe");
+            return;
+          }
+        }
+        removeFromHistory();
+        toast.success("Recipe deleted");
+        router.push("/");
+      } catch {
+        toast.error("Failed to delete recipe");
       }
-      removeFromHistory();
-      toast.success("Recipe deleted");
-      router.push("/");
-    } catch {
-      toast.error("Failed to delete recipe");
-    }
+    });
   };
 
   if (!recipe) {
