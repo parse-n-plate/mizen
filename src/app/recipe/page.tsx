@@ -6,6 +6,7 @@ import { useRecipe } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
 import { usePreference } from "@/hooks/usePreference";
 import { useIngredientDiff } from "@/hooks/useIngredientDiff";
+import { useTabScrollMemory } from "@/hooks/useTabScrollMemory";
 import {
   annotateIngredientGroups,
   convertIngredientGroups,
@@ -58,6 +59,7 @@ export default function RecipePage() {
   const [unsaving, setUnsaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"prep" | "cook">("prep");
+  useTabScrollMemory(activeTab);
   const [reportOpen, setReportOpen] = useState(false);
   const [mobileServingsOpen, setMobileServingsOpen] = useState(false);
   const numberFormat = useSyncExternalStore(
