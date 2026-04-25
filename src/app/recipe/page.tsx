@@ -45,8 +45,7 @@ import { HeartButton } from "@/components/HeartButton";
 import { ReportRecipeDialog } from "@/components/ReportRecipeDialog";
 import Flag from "@solar-icons/react/csr/ui/Flag";
 import ChatRoundDots from "@solar-icons/react/csr/messages/ChatRoundDots";
-import BookMinimalistic from "@solar-icons/react/csr/school/BookMinimalistic";
-import AltArrowRight from "@solar-icons/react/csr/arrows/AltArrowRight";
+import AltArrowLeft from "@solar-icons/react/csr/arrows/AltArrowLeft";
 import Ruler from "@solar-icons/react/csr/tools/Ruler";
 import Eye from "@solar-icons/react/csr/security/Eye";
 import EyeClosed from "@solar-icons/react/csr/security/EyeClosed";
@@ -309,20 +308,15 @@ export default function RecipePage() {
       {/* Header section with cream background */}
       <div className="px-6 pt-6 pb-0">
         <div className="max-w-3xl mx-auto w-full pb-8">
-          {/* Breadcrumb */}
-          <nav aria-label="Breadcrumb" className="flex items-center gap-2 mb-5 text-sm">
-            <Link
-              href="/cookbook"
-              className="flex items-center gap-1.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-body)] transition-colors"
-            >
-              <BookMinimalistic className="size-4" />
-              <span>Cookbook</span>
-            </Link>
-            <AltArrowRight className="size-3 text-[var(--color-text-muted)]" />
-            <span className="text-[var(--color-text-heading)] truncate max-w-[20rem]">
-              {recipe.title}
-            </span>
-          </nav>
+          {/* Mobile back button */}
+          <Link
+            href="/cookbook"
+            aria-label="Back to Cookbook"
+            className="sm:hidden inline-flex items-center gap-1 mb-5 -ml-1 text-sm text-[var(--color-text-muted)] active:text-[var(--color-text-body)]"
+          >
+            <AltArrowLeft className="size-4" />
+            <span>Cookbook</span>
+          </Link>
 
           <div className="flex items-start gap-6">
             <div className="flex-1 min-w-0">
