@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
+import { useTabScrollMemory } from "@/hooks/useTabScrollMemory";
 import { formatTime } from "@/lib/utils";
 import type { ParsedRecipe } from "@/lib/types";
 
@@ -13,6 +14,7 @@ interface RecipeTabsProps {
 
 export function RecipeTabs({ recipe }: RecipeTabsProps) {
   const [tab, setTab] = useState("prep");
+  useTabScrollMemory(tab);
 
   const handleStepClick = useCallback((stepNumber: number) => {
     setTab("cook");
