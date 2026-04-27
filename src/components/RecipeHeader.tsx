@@ -91,7 +91,7 @@ export function RecipeHeader({
             <>
               <button
                 onClick={() => setIsSliderOpen(!isSliderOpen)}
-                className={`hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-md transition-colors cursor-pointer ${isAdjusted ? "hover:bg-[var(--color-blue)]/8" : "hover:bg-stone-100 dark:hover:bg-stone-800"}`}
+                className={`hidden md:inline-flex items-center gap-1 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-md transition-colors cursor-pointer ${isAdjusted ? "hover:bg-[var(--color-blue)]/8" : "hover:bg-stone-100 dark:hover:bg-stone-800"}`}
                 aria-expanded={isSliderOpen}
                 aria-label="Adjust servings"
               >
@@ -117,7 +117,7 @@ export function RecipeHeader({
                 />
               </button>
 
-              <span className="flex items-center gap-1 sm:hidden">
+              <span className="flex items-center gap-1 md:hidden">
                 <span
                   className={`flex items-center justify-center w-3.5 h-3.5 ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"}`}
                 >
@@ -153,7 +153,7 @@ export function RecipeHeader({
 
       {/* Servings slider card */}
       {canAdjustServings && (
-        <div className="hidden sm:block">
+        <div className="hidden md:block">
           <ServingsAdjuster
             servings={servings!}
             originalServings={originalServings!}
