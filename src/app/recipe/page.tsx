@@ -312,7 +312,7 @@ export default function RecipePage() {
           <Link
             href="/cookbook"
             aria-label="Back to Cookbook"
-            className="sm:hidden inline-flex items-center gap-1 mb-5 -ml-1 text-sm text-[var(--color-text-muted)] active:text-[var(--color-text-body)]"
+            className="md:hidden inline-flex items-center gap-1 mb-5 -ml-1 text-sm text-[var(--color-text-muted)] active:text-[var(--color-text-body)]"
           >
             <AltArrowLeft className="size-4" />
             <span>Cookbook</span>
@@ -383,10 +383,10 @@ export default function RecipePage() {
       </div>
 
       {/* Tabs + content */}
-      <div className="flex-1 flex flex-col px-6 sm:pb-6 print:hidden">
+      <div className="flex-1 flex flex-col px-6 md:pb-6 print:hidden">
         <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col">
           {/* Desktop: top folder tabs + quick actions (hidden on mobile) */}
-          <div className="group/tabs hidden sm:flex items-end w-full relative gap-0">
+          <div className="group/tabs hidden md:flex items-end w-full relative gap-0">
             <button
               onClick={() => setActiveTab("prep")}
               className={`folder-tab-trigger press-scale h-12 px-10 font-sans text-[15px] ${
@@ -625,9 +625,9 @@ export default function RecipePage() {
 
           {/* Content card */}
           <div
-            className={`sm:bg-white sm:dark:bg-stone-900 sm:rounded-b-lg ${activeTab === "prep" ? "sm:rounded-tr-lg" : "sm:rounded-t-lg"} sm:border sm:border-stone-200 sm:dark:border-stone-700 flex-1`}
+            className={`md:bg-white md:dark:bg-stone-900 md:rounded-b-lg ${activeTab === "prep" ? "md:rounded-tr-lg" : "md:rounded-t-lg"} md:border md:border-stone-200 md:dark:border-stone-700 flex-1`}
           >
-            <div className="max-w-3xl mx-auto sm:px-6 sm:pt-5 pb-[calc(7.25rem+env(safe-area-inset-bottom)+1rem)] sm:pb-6">
+            <div className="max-w-3xl mx-auto md:px-6 md:pt-5 pb-[calc(7.25rem+env(safe-area-inset-bottom)+1rem)] md:pb-6">
               {/* Unit conversion banner */}
               {bannerMounted && activeTab === "prep" && (
                 <div
@@ -717,7 +717,7 @@ export default function RecipePage() {
 
       {canAdjustServings && (
         <div
-          className="sm:hidden print:hidden pointer-events-none fixed inset-x-0 z-30 px-6"
+          className="md:hidden print:hidden pointer-events-none fixed inset-x-0 z-30 px-6"
           style={{ bottom: mobileServingsOffset }}
         >
           <div className="pointer-events-auto mx-auto w-full max-w-[20.5rem]">
@@ -733,10 +733,10 @@ export default function RecipePage() {
       )}
 
       {/* Mobile: fade above bottom tabs */}
-      <div className="sm:hidden print:hidden fixed bottom-12 left-0 right-0 z-[19] h-24 pointer-events-none bg-gradient-to-t from-white dark:from-mizen-dark-surface to-transparent" />
+      <div className="md:hidden print:hidden fixed bottom-12 left-0 right-0 z-[19] h-24 pointer-events-none bg-gradient-to-t from-white dark:from-mizen-dark-surface to-transparent" />
 
       {/* Mobile: fixed bottom folder tabs */}
-      <div className="sm:hidden print:hidden fixed bottom-0 left-0 right-0 z-20 pb-[env(safe-area-inset-bottom)] bg-[var(--color-surface)]">
+      <div className="md:hidden print:hidden fixed bottom-0 left-0 right-0 z-20 pb-[env(safe-area-inset-bottom)] bg-[var(--color-surface)]">
         <div className="px-6">
           <div className="flex items-center w-full relative gap-0">
             <button
