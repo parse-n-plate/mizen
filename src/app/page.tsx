@@ -141,55 +141,52 @@ const EXAMPLE_RECIPES: ParsedRecipe[] = [
     ],
   },
   {
-    title: "Chocolate Chip Cookies",
+    title: "Simple Homemade Chocolate",
     summary:
-      "Thick, chewy chocolate chip cookies with crispy edges and gooey centers — the only recipe you need.",
+      "Real chocolate from cocoa powder in about ten minutes of work — melt, mix, chill, eat.",
     author: "ChatGPT",
-    servings: 36,
-    prepTimeMinutes: 15,
-    cookTimeMinutes: 12,
-    totalTimeMinutes: 30,
+    servings: 6,
+    prepTimeMinutes: 5,
+    cookTimeMinutes: 10,
+    totalTimeMinutes: 75,
     ingredients: [
       {
-        groupName: "Dry ingredients",
+        groupName: "Chocolate",
         ingredients: [
-          { amount: "2.25", units: "cups", ingredient: "all-purpose flour" },
-          { amount: "1", units: "tsp", ingredient: "baking soda" },
-          { amount: "1", units: "tsp", ingredient: "fine sea salt" },
-          { amount: "1", units: "tsp", ingredient: "cornstarch" },
-        ],
-      },
-      {
-        groupName: "Wet ingredients",
-        ingredients: [
-          { amount: "0.75", units: "cup", ingredient: "unsalted butter, melted" },
-          { amount: "0.75", units: "cup", ingredient: "packed light brown sugar" },
-          { amount: "0.5", units: "cup", ingredient: "granulated sugar" },
-          { amount: "2", units: "tsp", ingredient: "vanilla extract" },
-          { amount: "1.25", units: "cups", ingredient: "chocolate chips" },
+          { amount: "0.5", units: "cup", ingredient: "cocoa powder" },
+          {
+            amount: "0.25",
+            units: "cup",
+            ingredient: "melted coconut oil or cocoa butter",
+          },
+          {
+            amount: "2-4",
+            units: "tbsp",
+            ingredient: "honey, maple syrup, or sugar (adjust to taste)",
+          },
+          { amount: "0.5", units: "tsp", ingredient: "vanilla extract" },
+          { amount: "", units: "", ingredient: "pinch of salt" },
         ],
       },
     ],
     instructions: [
       {
-        title: "Mix dry ingredients",
-        detail:
-          "Whisk together flour, baking soda, salt, and cornstarch in a medium bowl. Set aside.",
+        title: "Melt the fat",
+        detail: "Melt the coconut oil or cocoa butter until fully liquid.",
       },
       {
-        title: "Make the dough",
-        detail:
-          "In a large bowl, whisk the melted butter, brown sugar, and granulated sugar until smooth. Beat in the egg and vanilla extract until combined.",
+        title: "Stir in cocoa",
+        detail: "Stir in the cocoa powder until smooth and no lumps remain.",
       },
       {
-        title: "Combine and chill",
+        title: "Add sweetener and flavor",
         detail:
-          "Slowly mix the dry ingredients into the wet ingredients until just combined. Fold in the chocolate chips. Cover dough and refrigerate for at least 30 minutes (or up to 2 days).",
+          "Add the sweetener, vanilla, and a pinch of salt. Mix until fully combined, then taste and adjust sweetness if needed.",
       },
       {
-        title: "Bake",
+        title: "Pour and chill",
         detail:
-          "Preheat oven to 325\u00b0F (163\u00b0C). Scoop 1.5 tablespoon balls of dough onto lined baking sheets, spaced 2 inches apart. Bake for 12 minutes until edges are set but centers look undone. Cool on the pan for 10 minutes.",
+          "Pour into a mold or a small lined container. Refrigerate for 1–2 hours, until solid.",
       },
     ],
   },
@@ -335,8 +332,9 @@ function ChatGPTSourcePreview() {
           </span>
           <div className="px-3.5 py-2.5 rounded-2xl rounded-tl-md bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700">
             <p className="font-sans text-[13px] text-stone-700 dark:text-stone-200 leading-snug">
-              <span className="font-semibold">Classic Carbonara</span>
-              <br />4 oz guanciale, 4 eggs, 1 cup pecorino, 1 lb spaghetti, black pepper...
+              <span className="font-semibold">Simple Homemade Chocolate</span>
+              <br />½ cup cocoa powder, ¼ cup coconut oil or cocoa butter, 2–4 tbsp honey, vanilla,
+              pinch of salt...
             </p>
           </div>
         </div>
