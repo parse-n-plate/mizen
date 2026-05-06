@@ -19,9 +19,9 @@ import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import type { ParsedRecipe } from "@/lib/types";
 
 const SOURCES = [
-  { label: "Recipe Sites", icon: "link", hint: "Paste any recipe URL" },
-  { label: "ChatGPT", icon: "ai", hint: "Paste a recipe from ChatGPT" },
-  { label: "Photos", icon: "camera", hint: "Snap a photo of any recipe" },
+  { label: "Recipe Sites", shortLabel: "Sites", icon: "link", hint: "Paste any recipe URL" },
+  { label: "ChatGPT", shortLabel: "ChatGPT", icon: "ai", hint: "Paste a recipe from ChatGPT" },
+  { label: "Photos", shortLabel: "Photos", icon: "camera", hint: "Snap a photo of any recipe" },
 ] as const;
 
 const LANDING_COPY = {
@@ -778,7 +778,8 @@ function WaitlistLanding() {
                   }`}
                 >
                   <SourceIcon type={source.icon} />
-                  {source.label}
+                  <span className="sm:hidden whitespace-nowrap">{source.shortLabel}</span>
+                  <span className="hidden sm:inline whitespace-nowrap">{source.label}</span>
                 </button>
               ))}
             </div>
