@@ -1,7 +1,9 @@
 "use client";
 
 import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
+import Heart from "@solar-icons/react/csr/like/Heart";
 import { useRecipe } from "@/context/RecipeContext";
+import type { HistoryEntry } from "@/context/RecipeContext";
 import type { ParsedRecipe } from "@/lib/types";
 import {
   DropdownMenu,
@@ -78,7 +80,7 @@ function SwitcherContent({
   entries,
   onSelect,
 }: {
-  entries: { parsedAt: string; recipe: ParsedRecipe }[];
+  entries: HistoryEntry[];
   onSelect: (recipe: ParsedRecipe) => void;
 }) {
   return (
@@ -90,15 +92,25 @@ function SwitcherContent({
       <DropdownMenuLabel className="font-sans text-xs uppercase tracking-wider text-stone-400 dark:text-stone-500 font-medium">
         Recent recipes
       </DropdownMenuLabel>
-      {entries.map((entry) => (
-        <DropdownMenuItem
-          key={entry.parsedAt}
-          onSelect={() => onSelect(entry.recipe)}
-          className="font-sans"
-        >
-          <span className="truncate">{entry.recipe.title}</span>
-        </DropdownMenuItem>
-      ))}
+      {entries.map((entry) => {
+        const isSaved = !!entry.savedMeta;
+        return (
+          <DropdownMenuItem
+            key={entry.parsedAt}
+            onSelect={() => onSelect(entry.recipe)}
+            className="group/item font-sans flex items-center gap-2"
+          >
+            <span className="truncate flex-1 min-w-0">{entry.recipe.title}</span>
+            {isSaved && (
+              <Heart
+                weight="Bold"
+                aria-label="Saved"
+                className="shrink-0 size-4 text-stone-300 dark:text-stone-600 group-hover/item:text-red-500 dark:group-hover/item:text-red-400 group-focus/item:text-red-500 dark:group-focus/item:text-red-400"
+              />
+            )}
+          </DropdownMenuItem>
+        );
+      })}
     </DropdownMenuContent>
   );
 }
