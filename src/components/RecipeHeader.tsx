@@ -4,7 +4,9 @@ import { useState } from "react";
 import type { ParsedRecipe } from "@/lib/types";
 import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
 import User from "@solar-icons/react/csr/users/User";
+import SidebarMinimalistic from "@solar-icons/react/csr/it/SidebarMinimalistic";
 import { ServingsAdjuster } from "@/components/ServingsAdjuster";
+import { useSidebar } from "@/components/AppShell";
 import { formatTime } from "@/lib/utils";
 
 interface RecipeHeaderProps {
@@ -27,6 +29,7 @@ export function RecipeHeader({
   onServingsOpenChange,
 }: RecipeHeaderProps) {
   const [isSliderOpenLocal, setIsSliderOpenLocal] = useState(false);
+  const { collapsed: sidebarCollapsed, setCollapsed: setSidebarCollapsed } = useSidebar();
   const showPrepAndCook = !!recipe.prepTimeMinutes || !!recipe.cookTimeMinutes;
   const isSliderOpen = isServingsOpen ?? isSliderOpenLocal;
 
@@ -51,9 +54,32 @@ export function RecipeHeader({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <h1 className="font-serif text-3xl font-bold leading-tight md:text-4xl tracking-tight text-pretty">
-        {recipe.title}
-      </h1>
+      <div className="flex items-start gap-2.5">
+        {/* Inline expand-sidebar button — sits to the left of the recipe title when sidebar is collapsed */}
+        <div
+          className={`hidden md:block shrink-0 overflow-hidden transition-[width] ease-[cubic-bezier(0.165,0.84,0.44,1)] motion-reduce:transition-none ${
+            sidebarCollapsed ? "w-7 duration-[220ms]" : "w-0 duration-[180ms]"
+          }`}
+        >
+          <button
+            onClick={() => setSidebarCollapsed(false)}
+            className={`flex h-7 w-7 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300 transition-[opacity] ease-out motion-reduce:transition-none mt-1.5 ${
+              sidebarCollapsed
+                ? "opacity-100 duration-150 delay-100"
+                : "opacity-0 pointer-events-none duration-75"
+            }`}
+            aria-label="Expand sidebar"
+            aria-expanded={!sidebarCollapsed}
+            aria-controls="primary-sidebar"
+            tabIndex={sidebarCollapsed ? 0 : -1}
+          >
+            <SidebarMinimalistic size={14} />
+          </button>
+        </div>
+        <h1 className="flex-1 min-w-0 font-serif text-3xl font-bold leading-tight md:text-4xl tracking-tight text-pretty">
+          {recipe.title}
+        </h1>
+      </div>
 
       {recipe.summary && (
         <p className="font-sans text-lg text-stone-500 dark:text-stone-400 max-w-2xl leading-relaxed">
