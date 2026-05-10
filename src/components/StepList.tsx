@@ -116,7 +116,7 @@ export function StepList({ steps }: StepListProps) {
                   type="button"
                   onClick={() => setShowStepImages(!showImages)}
                   aria-label={showImages ? "Hide photos" : "Show photos"}
-                  className={`press-scale inline-flex items-center justify-center h-9 w-9 rounded-xl transition-colors cursor-pointer ${
+                  className={`press-scale inline-flex items-center justify-end h-9 w-7 rounded-xl transition-colors cursor-pointer ${
                     showImages
                       ? "text-[var(--color-blue)] bg-blue-50 dark:bg-blue-950 dark:text-blue-400"
                       : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
@@ -132,7 +132,7 @@ export function StepList({ steps }: StepListProps) {
           )}
           <div
             className={`group relative h-9 transition-[width] duration-200 ease-in-out ${
-              isSearchExpanded ? "w-[260px] max-w-full" : "w-9"
+              isSearchExpanded ? "w-[260px] max-w-full" : "w-7"
             }`}
           >
             {!searchQuery && (
