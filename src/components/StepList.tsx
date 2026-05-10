@@ -103,16 +103,15 @@ export function StepList({ steps }: StepListProps) {
           )}
         </div>
         <div className="relative w-full max-w-[260px]">
-          <Magnifer className="absolute left-3 top-1/2 -translate-y-1/2 size-[16px] text-muted-foreground pointer-events-none" />
           <Input
             type="text"
             placeholder="Search Directions"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             aria-label="Search directions"
-            className="pl-9 pr-8 h-9 rounded-xl border-transparent bg-stone-100 dark:bg-stone-800 font-sans text-[13px] placeholder:text-muted-foreground focus-visible:bg-background focus-visible:border-input"
+            className="pl-3 pr-9 h-9 rounded-xl border-transparent bg-stone-100 dark:bg-stone-800 font-sans text-[13px] placeholder:text-muted-foreground focus-visible:bg-background focus-visible:border-input"
           />
-          {searchQuery && (
+          {searchQuery ? (
             <button
               type="button"
               onClick={() => setSearchQuery("")}
@@ -121,6 +120,8 @@ export function StepList({ steps }: StepListProps) {
             >
               <X className="size-4" />
             </button>
+          ) : (
+            <Magnifer className="absolute right-3 top-1/2 -translate-y-1/2 size-[16px] text-muted-foreground pointer-events-none" />
           )}
         </div>
       </div>
