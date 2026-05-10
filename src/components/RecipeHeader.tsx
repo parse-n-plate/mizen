@@ -54,11 +54,11 @@ export function RecipeHeader({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex items-start gap-2.5">
+      <div className="flex items-start">
         {/* Inline expand-sidebar button — sits to the left of the recipe title when sidebar is collapsed */}
         <div
           className={`hidden md:block shrink-0 overflow-hidden transition-[width] ease-[cubic-bezier(0.165,0.84,0.44,1)] motion-reduce:transition-none ${
-            sidebarCollapsed ? "w-7 duration-[220ms]" : "w-0 duration-[180ms]"
+            sidebarCollapsed ? "w-9 duration-[220ms]" : "w-0 duration-[180ms]"
           }`}
         >
           <button
