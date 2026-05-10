@@ -15,6 +15,7 @@ import {
 } from "@/lib/recipe-preferences";
 import { toast } from "sonner";
 import { RecipeHeader, formatTime } from "@/components/RecipeHeader";
+import { RecipeSwitcher } from "@/components/RecipeSwitcher";
 import { ServingsAdjuster } from "@/components/ServingsAdjuster";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
@@ -308,15 +309,17 @@ export default function RecipePage() {
       {/* Header section with cream background */}
       <div className="px-6 pt-6 pb-0">
         <div className="max-w-3xl mx-auto w-full pb-8">
-          {/* Mobile back button */}
-          <Link
-            href="/cookbook"
-            aria-label="Back to Cookbook"
-            className="md:hidden inline-flex items-center gap-1 mb-5 -ml-1 text-sm text-[var(--color-text-muted)] active:text-[var(--color-text-body)]"
-          >
-            <AltArrowLeft className="size-4" />
-            <span>Cookbook</span>
-          </Link>
+          {/* Mobile back button + recipe switcher */}
+          <div className="md:hidden flex items-center gap-2 mb-5 -ml-1 min-w-0">
+            <Link
+              href="/cookbook"
+              aria-label="Back to Cookbook"
+              className="shrink-0 inline-flex items-center text-[var(--color-text-muted)] active:text-[var(--color-text-body)]"
+            >
+              <AltArrowLeft className="size-4" />
+            </Link>
+            <RecipeSwitcher title={recipe.title} variant="compact" />
+          </div>
 
           <div className="flex items-start gap-6">
             <div className="flex-1 min-w-0">
@@ -327,6 +330,7 @@ export default function RecipePage() {
                 onServingsChange={setServings}
                 isServingsOpen={mobileServingsOpen}
                 onServingsOpenChange={setMobileServingsOpen}
+                showSwitcher
               />
             </div>
 
