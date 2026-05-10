@@ -307,7 +307,7 @@ export default function RecipePage() {
     <div className="min-h-[calc(100vh-3.5rem)] flex flex-col pb-6">
       {/* Header section with cream background */}
       <div className="pt-6 pb-0">
-        <div className="max-w-[800px] px-3 w-full pb-8">
+        <div className="max-w-[800px] duration-[220ms] group-data-[sidebar-collapsed=true]/shell:max-w-[1040px] group-data-[sidebar-collapsed=true]/shell:duration-[180ms] transition-[max-width] ease-[cubic-bezier(0.165,0.84,0.44,1)] motion-reduce:transition-none px-3 w-full pb-8">
           {/* Mobile back button + recipe switcher */}
           <div className="md:hidden flex items-center gap-2 mb-5 -ml-1 min-w-0">
             <Link
@@ -387,7 +387,7 @@ export default function RecipePage() {
 
       {/* Tabs + content */}
       <div className="flex-1 flex flex-col md:pb-6 print:hidden">
-        <div className="max-w-[800px] px-3 w-full flex-1 flex flex-col">
+        <div className="max-w-[800px] duration-[220ms] group-data-[sidebar-collapsed=true]/shell:max-w-[1040px] group-data-[sidebar-collapsed=true]/shell:duration-[180ms] transition-[max-width] ease-[cubic-bezier(0.165,0.84,0.44,1)] motion-reduce:transition-none px-3 w-full flex-1 flex flex-col">
           {/* Desktop: top folder tabs + quick actions (hidden on mobile) */}
           <div className="group/tabs hidden md:flex items-end w-full relative gap-0">
             <button
