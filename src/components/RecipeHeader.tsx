@@ -5,6 +5,7 @@ import type { ParsedRecipe } from "@/lib/types";
 import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
 import User from "@solar-icons/react/csr/users/User";
 import { ServingsAdjuster } from "@/components/ServingsAdjuster";
+import { RecipeSwitcher } from "@/components/RecipeSwitcher";
 import { formatTime } from "@/lib/utils";
 
 interface RecipeHeaderProps {
@@ -14,6 +15,7 @@ interface RecipeHeaderProps {
   onServingsChange?: (n: number) => void;
   isServingsOpen?: boolean;
   onServingsOpenChange?: (open: boolean) => void;
+  showSwitcher?: boolean;
 }
 
 export { formatTime } from "@/lib/utils";
@@ -25,6 +27,7 @@ export function RecipeHeader({
   onServingsChange,
   isServingsOpen,
   onServingsOpenChange,
+  showSwitcher = false,
 }: RecipeHeaderProps) {
   const [isSliderOpenLocal, setIsSliderOpenLocal] = useState(false);
   const showPrepAndCook = !!recipe.prepTimeMinutes || !!recipe.cookTimeMinutes;
@@ -51,9 +54,13 @@ export function RecipeHeader({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <h1 className="font-serif text-3xl font-bold leading-tight md:text-4xl tracking-tight text-pretty">
-        {recipe.title}
-      </h1>
+      {showSwitcher ? (
+        <RecipeSwitcher title={recipe.title} variant="h1" />
+      ) : (
+        <h1 className="font-serif text-3xl font-bold leading-tight md:text-4xl tracking-tight text-pretty">
+          {recipe.title}
+        </h1>
+      )}
 
       {recipe.summary && (
         <p className="font-sans text-lg text-stone-500 dark:text-stone-400 max-w-2xl leading-relaxed">
