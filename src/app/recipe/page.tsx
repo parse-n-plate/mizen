@@ -307,8 +307,8 @@ export default function RecipePage() {
   return (
     <div className="min-h-[calc(100vh-3.5rem)] flex flex-col pb-6">
       {/* Header section with cream background */}
-      <div className="px-6 pt-6 pb-0">
-        <div className="max-w-3xl mx-auto w-full pb-8">
+      <div className="pt-6 pb-0">
+        <div className="max-w-[800px] px-3 w-full pb-8">
           {/* Mobile back button + recipe switcher */}
           <div className="md:hidden flex items-center gap-2 mb-5 -ml-1 min-w-0">
             <Link
@@ -387,8 +387,8 @@ export default function RecipePage() {
       </div>
 
       {/* Tabs + content */}
-      <div className="flex-1 flex flex-col px-6 md:pb-6 print:hidden">
-        <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col md:pb-6 print:hidden">
+        <div className="max-w-[800px] px-3 w-full flex-1 flex flex-col">
           {/* Desktop: top folder tabs + quick actions (hidden on mobile) */}
           <div className="group/tabs hidden md:flex items-end w-full relative gap-0">
             <button
@@ -631,7 +631,7 @@ export default function RecipePage() {
           <div
             className={`md:bg-white md:dark:bg-stone-900 md:rounded-b-lg ${activeTab === "prep" ? "md:rounded-tr-lg" : "md:rounded-t-lg"} md:border md:border-stone-200 md:dark:border-stone-700 flex-1`}
           >
-            <div className="max-w-3xl mx-auto md:px-6 md:pt-5 pb-[calc(7.25rem+env(safe-area-inset-bottom)+1rem)] md:pb-6">
+            <div className="md:px-6 md:pt-5 pb-[calc(7.25rem+env(safe-area-inset-bottom)+1rem)] md:pb-6">
               {/* Unit conversion banner */}
               {bannerMounted && activeTab === "prep" && (
                 <div
