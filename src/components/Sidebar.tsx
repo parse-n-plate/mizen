@@ -155,12 +155,12 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   return (
     <>
       <aside
+        id="primary-sidebar"
         className={cn(
-          "flex flex-col justify-between shrink-0 w-[240px] transition-[transform,margin,opacity] ease-[cubic-bezier(0.25,0.46,0.45,0.94)]",
-          collapsed
-            ? "-translate-x-full -ml-[240px] opacity-0 duration-150"
-            : "translate-x-0 ml-0 opacity-100 duration-200"
+          "flex flex-col justify-between items-end shrink-0 overflow-hidden [will-change:width] transition-[width] ease-[cubic-bezier(0.165,0.84,0.44,1)] motion-reduce:transition-none motion-reduce:duration-0",
+          collapsed ? "w-0 duration-[180ms]" : "w-[240px] duration-[220ms]"
         )}
+        inert={collapsed}
       >
         <div className="flex flex-col gap-6 px-4 pt-6 w-[240px]">
           {/* Logo + sidebar toggle */}
@@ -181,6 +181,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               onClick={onToggle}
               className="flex h-7 w-7 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300 transition-none"
               aria-label="Collapse sidebar"
+              aria-expanded={!collapsed}
+              aria-controls="primary-sidebar"
             >
               <SidebarMinimalistic size={14} />
             </button>
