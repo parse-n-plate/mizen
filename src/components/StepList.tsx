@@ -104,7 +104,7 @@ export function StepList({ steps }: StepListProps) {
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-4 mb-3 px-3">
+      <div className="flex items-center justify-between gap-4 mb-3 pl-3">
         <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 flex-shrink-0">
           Directions
         </h3>
@@ -137,7 +137,7 @@ export function StepList({ steps }: StepListProps) {
           >
             {!searchQuery && (
               <Magnifer
-                className={`absolute right-2.5 top-1/2 -translate-y-1/2 size-[16px] text-muted-foreground pointer-events-none z-10 transition-colors ${
+                className={`absolute right-0 top-1/2 -translate-y-1/2 size-[16px] text-muted-foreground pointer-events-none z-10 transition-colors ${
                   isSearchExpanded
                     ? ""
                     : "group-hover:text-stone-600 dark:group-hover:text-stone-300"
