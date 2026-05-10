@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "reac
 import Magnifer from "@solar-icons/react/csr/search/Magnifer";
 import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import type { Ingredient, IngredientGroup } from "@/lib/types";
 import { ProgressPie } from "@/components/shared/progress-pie";
 import { type NumberFormat, getNumberFormat } from "@/lib/numberFormat";
@@ -101,32 +102,37 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4 px-3 mb-4">
+      <div className="flex items-center justify-between gap-4 pl-3 mb-4">
         <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 flex-shrink-0">
           Ingredients
         </h3>
         <div
-          className={`group relative h-9 -mr-2.5 transition-[width] duration-200 ease-in-out ${
-            isSearchExpanded ? "w-[260px] max-w-full" : "w-9"
+          className={`group relative h-9 transition-[width] duration-200 ease-in-out ${
+            isSearchExpanded ? "w-[260px] max-w-full" : "w-7"
           }`}
         >
           {!searchQuery && (
             <Magnifer
-              className={`absolute right-2.5 top-1/2 -translate-y-1/2 size-[16px] text-muted-foreground pointer-events-none z-10 transition-colors ${
+              className={`absolute right-1.5 top-1/2 -translate-y-1/2 size-[16px] text-muted-foreground pointer-events-none z-10 transition-colors ${
                 isSearchExpanded ? "" : "group-hover:text-stone-600 dark:group-hover:text-stone-300"
               }`}
             />
           )}
-          <button
-            type="button"
-            onClick={() => setIsSearchOpen(true)}
-            aria-label="Search ingredients"
-            aria-hidden={isSearchExpanded}
-            tabIndex={isSearchExpanded ? -1 : 0}
-            className={`press-scale absolute inset-0 rounded-xl transition-opacity duration-150 ease-out hover:bg-stone-100 dark:hover:bg-stone-800 ${
-              isSearchExpanded ? "opacity-0 pointer-events-none" : "opacity-100"
-            }`}
-          />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => setIsSearchOpen(true)}
+                aria-label="Search ingredients"
+                aria-hidden={isSearchExpanded}
+                tabIndex={isSearchExpanded ? -1 : 0}
+                className={`press-scale absolute inset-0 rounded-xl transition-opacity duration-150 ease-out hover:bg-stone-100 dark:hover:bg-stone-800 ${
+                  isSearchExpanded ? "opacity-0 pointer-events-none" : "opacity-100"
+                }`}
+              />
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Search ingredients</TooltipContent>
+          </Tooltip>
           <Input
             ref={searchInputRef}
             type="text"

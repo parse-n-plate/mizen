@@ -104,7 +104,7 @@ export function StepList({ steps }: StepListProps) {
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-4 mb-3 px-3">
+      <div className="flex items-center justify-between gap-4 mb-3 pl-3">
         <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 flex-shrink-0">
           Directions
         </h3>
@@ -116,7 +116,7 @@ export function StepList({ steps }: StepListProps) {
                   type="button"
                   onClick={() => setShowStepImages(!showImages)}
                   aria-label={showImages ? "Hide photos" : "Show photos"}
-                  className={`press-scale inline-flex items-center justify-center h-9 w-9 rounded-xl transition-colors cursor-pointer ${
+                  className={`press-scale inline-flex items-center justify-center h-9 w-7 rounded-xl transition-colors cursor-pointer ${
                     showImages
                       ? "text-[var(--color-blue)] bg-blue-50 dark:bg-blue-950 dark:text-blue-400"
                       : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
@@ -132,28 +132,33 @@ export function StepList({ steps }: StepListProps) {
           )}
           <div
             className={`group relative h-9 transition-[width] duration-200 ease-in-out ${
-              isSearchExpanded ? "w-[260px] max-w-full" : "w-9"
+              isSearchExpanded ? "w-[260px] max-w-full" : "w-7"
             }`}
           >
             {!searchQuery && (
               <Magnifer
-                className={`absolute right-2.5 top-1/2 -translate-y-1/2 size-[16px] text-muted-foreground pointer-events-none z-10 transition-colors ${
+                className={`absolute right-1.5 top-1/2 -translate-y-1/2 size-[16px] text-muted-foreground pointer-events-none z-10 transition-colors ${
                   isSearchExpanded
                     ? ""
                     : "group-hover:text-stone-600 dark:group-hover:text-stone-300"
                 }`}
               />
             )}
-            <button
-              type="button"
-              onClick={() => setIsSearchOpen(true)}
-              aria-label="Search directions"
-              aria-hidden={isSearchExpanded}
-              tabIndex={isSearchExpanded ? -1 : 0}
-              className={`press-scale absolute inset-0 rounded-xl transition-opacity duration-150 ease-out hover:bg-stone-100 dark:hover:bg-stone-800 ${
-                isSearchExpanded ? "opacity-0 pointer-events-none" : "opacity-100"
-              }`}
-            />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => setIsSearchOpen(true)}
+                  aria-label="Search directions"
+                  aria-hidden={isSearchExpanded}
+                  tabIndex={isSearchExpanded ? -1 : 0}
+                  className={`press-scale absolute inset-0 rounded-xl transition-opacity duration-150 ease-out hover:bg-stone-100 dark:hover:bg-stone-800 ${
+                    isSearchExpanded ? "opacity-0 pointer-events-none" : "opacity-100"
+                  }`}
+                />
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Search directions</TooltipContent>
+            </Tooltip>
             <Input
               ref={searchInputRef}
               type="text"
