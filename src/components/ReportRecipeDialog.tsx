@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import CloseCircle from "@solar-icons/react/csr/ui/CloseCircle";
 import Gallery from "@solar-icons/react/csr/video/Gallery";
 import type { ParsedRecipe } from "@/lib/types";
+import { submitFeedback } from "@/lib/feedback-client";
 
 function safeHostname(url: string): string {
   try {
@@ -72,6 +73,7 @@ export function ReportRecipeDialog({
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const debugInfo = useMemo(
@@ -111,46 +113,39 @@ export function ReportRecipeDialog({
     previews.forEach(URL.revokeObjectURL);
     setPreviews([]);
     setSubmitting(false);
+    setSubmitError(null);
   }
 
   async function handleSubmit() {
     if (!description.trim() || submitting) return;
     setSubmitting(true);
+    setSubmitError(null);
 
-    try {
-      const formData = new FormData();
-      formData.append("description", description.trim());
-      formData.append("recipeTitle", recipe?.title || "Untitled");
-      formData.append("sourceUrl", recipe?.sourceUrl || "");
-      formData.append("reporterEmail", userEmail);
-      formData.append("deviceOS", navigator.userAgent);
-      formData.append("activeTab", activeTab);
-      formData.append("unitSystem", unitSystem);
-      formData.append("debugInfo", JSON.stringify(debugInfo));
-      for (const img of images) {
-        formData.append("images", img);
-      }
+    const formData = new FormData();
+    formData.append("description", description.trim());
+    formData.append("recipeTitle", recipe?.title || "Untitled");
+    formData.append("sourceUrl", recipe?.sourceUrl || "");
+    formData.append("reporterEmail", userEmail);
+    formData.append("deviceOS", navigator.userAgent);
+    formData.append("activeTab", activeTab);
+    formData.append("unitSystem", unitSystem);
+    formData.append("debugInfo", JSON.stringify(debugInfo));
+    for (const img of images) {
+      formData.append("images", img);
+    }
 
-      const res = await fetch("/api/feedback", {
-        method: "POST",
-        body: formData,
-      });
+    const result = await submitFeedback(formData);
+    setSubmitting(false);
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to submit report");
-      }
-
+    if (result.ok) {
       toast.success("Report submitted — thanks for the feedback!");
       resetForm();
       onOpenChange(false);
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to submit report. Please try again."
-      );
-    } finally {
-      setSubmitting(false);
+      return;
     }
+
+    setSubmitError(result.error || "Failed to submit report. Please try again.");
+    toast.error(result.error || "Failed to submit report. Please try again.");
   }
 
   return (
@@ -168,6 +163,22 @@ export function ReportRecipeDialog({
         </DialogHeader>
 
         <div className="flex flex-col gap-2">
+          {submitError && (
+            <div
+              role="alert"
+              className="flex items-start justify-between gap-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300"
+            >
+              <span className="flex-1">{submitError}</span>
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="font-medium underline underline-offset-2 disabled:opacity-50"
+              >
+                Try again
+              </button>
+            </div>
+          )}
           {/* Textarea with inline attach button */}
           <div className="flex flex-col rounded-md border border-input shadow-xs transition-[color,box-shadow] focus-within:border-[var(--color-blue)] focus-within:ring-[3px] focus-within:ring-[var(--color-blue)]/20">
             <textarea

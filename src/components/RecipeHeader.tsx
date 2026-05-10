@@ -7,6 +7,7 @@ import User from "@solar-icons/react/csr/users/User";
 import SidebarMinimalistic from "@solar-icons/react/csr/it/SidebarMinimalistic";
 import { ServingsAdjuster } from "@/components/ServingsAdjuster";
 import { useSidebar } from "@/components/AppShell";
+import { RecipeSwitcher } from "@/components/RecipeSwitcher";
 import { formatTime } from "@/lib/utils";
 
 interface RecipeHeaderProps {
@@ -16,6 +17,7 @@ interface RecipeHeaderProps {
   onServingsChange?: (n: number) => void;
   isServingsOpen?: boolean;
   onServingsOpenChange?: (open: boolean) => void;
+  showSwitcher?: boolean;
 }
 
 export { formatTime } from "@/lib/utils";
@@ -27,6 +29,7 @@ export function RecipeHeader({
   onServingsChange,
   isServingsOpen,
   onServingsOpenChange,
+  showSwitcher = false,
 }: RecipeHeaderProps) {
   const [isSliderOpenLocal, setIsSliderOpenLocal] = useState(false);
   const { collapsed: sidebarCollapsed, setCollapsed: setSidebarCollapsed } = useSidebar();
@@ -76,9 +79,15 @@ export function RecipeHeader({
             <SidebarMinimalistic size={14} />
           </button>
         </div>
-        <h1 className="flex-1 min-w-0 font-serif text-3xl font-bold leading-tight md:text-4xl tracking-tight text-pretty">
-          {recipe.title}
-        </h1>
+        <div className="flex-1 min-w-0">
+          {showSwitcher ? (
+            <RecipeSwitcher title={recipe.title} variant="h1" />
+          ) : (
+            <h1 className="font-serif text-3xl font-bold leading-tight md:text-4xl tracking-tight text-pretty">
+              {recipe.title}
+            </h1>
+          )}
+        </div>
       </div>
 
       {recipe.summary && (
