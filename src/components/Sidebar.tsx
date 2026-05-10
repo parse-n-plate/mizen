@@ -156,7 +156,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     <>
       <aside
         className={cn(
-          "flex flex-col justify-between shrink-0 w-[240px] transition-[transform,margin,opacity] ease-[cubic-bezier(0.25,0.46,0.45,0.94)]",
+          "relative z-20 flex flex-col justify-between shrink-0 w-[240px] transition-[transform,margin,opacity] ease-[cubic-bezier(0.25,0.46,0.45,0.94)]",
           collapsed
             ? "-translate-x-full -ml-[240px] opacity-0 duration-150"
             : "translate-x-0 ml-0 opacity-100 duration-200"
