@@ -144,16 +144,21 @@ export function StepList({ steps }: StepListProps) {
                 }`}
               />
             )}
-            <button
-              type="button"
-              onClick={() => setIsSearchOpen(true)}
-              aria-label="Search directions"
-              aria-hidden={isSearchExpanded}
-              tabIndex={isSearchExpanded ? -1 : 0}
-              className={`press-scale absolute inset-0 rounded-xl transition-opacity duration-150 ease-out hover:bg-stone-100 dark:hover:bg-stone-800 ${
-                isSearchExpanded ? "opacity-0 pointer-events-none" : "opacity-100"
-              }`}
-            />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => setIsSearchOpen(true)}
+                  aria-label="Search directions"
+                  aria-hidden={isSearchExpanded}
+                  tabIndex={isSearchExpanded ? -1 : 0}
+                  className={`press-scale absolute inset-0 rounded-xl transition-opacity duration-150 ease-out hover:bg-stone-100 dark:hover:bg-stone-800 ${
+                    isSearchExpanded ? "opacity-0 pointer-events-none" : "opacity-100"
+                  }`}
+                />
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Search directions</TooltipContent>
+            </Tooltip>
             <Input
               ref={searchInputRef}
               type="text"
