@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Client } from "@notionhq/client";
+import {
+  APIErrorCode,
+  APIResponseError,
+  Client,
+  RequestTimeoutError,
+  isNotionClientError,
+} from "@notionhq/client";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -7,19 +13,84 @@ const MAX_IMAGES = 3;
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
+type LogFields = Record<string, unknown>;
+
+function log(level: "info" | "warn" | "error", event: string, fields: LogFields = {}) {
+  const payload = {
+    event: `feedback.${event}`,
+    level,
+    timestamp: new Date().toISOString(),
+    env: process.env.VERCEL_ENV || process.env.NODE_ENV || "unknown",
+    ...fields,
+  };
+  const fn = level === "error" ? console.error : level === "warn" ? console.warn : console.log;
+  fn(JSON.stringify(payload));
+}
+
+const RETRYABLE_NOTION_CODES = new Set<string>([
+  APIErrorCode.InternalServerError,
+  APIErrorCode.ServiceUnavailable,
+  APIErrorCode.ConflictError,
+  "request_timeout",
+]);
+
+function isRetryableError(error: unknown): boolean {
+  if (error instanceof RequestTimeoutError) return true;
+  if (error instanceof APIResponseError) {
+    if (RETRYABLE_NOTION_CODES.has(error.code)) return true;
+    if (error.status >= 500) return true;
+    return false;
+  }
+  // Network / fetch errors (no status, not from Notion SDK)
+  if (error instanceof TypeError) return true;
+  return false;
+}
+
+async function createNotionPageWithRetry(
+  notion: Client,
+  args: Parameters<Client["pages"]["create"]>[0],
+  attempts = 3
+) {
+  let lastError: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await notion.pages.create(args);
+    } catch (error) {
+      lastError = error;
+      if (i === attempts - 1 || !isRetryableError(error)) throw error;
+      const delay = 250 * Math.pow(3, i); // 250ms, 750ms
+      log("warn", "notion.retry", {
+        attempt: i + 1,
+        nextDelayMs: delay,
+        errorCode: error instanceof APIResponseError ? error.code : undefined,
+        status: error instanceof APIResponseError ? error.status : undefined,
+        message: error instanceof Error ? error.message : String(error),
+      });
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+  throw lastError;
+}
+
 export async function POST(req: NextRequest) {
+  let userId: string | undefined;
   try {
     // Authenticate — only logged-in users can submit feedback
     const supabase = await createClient();
     if (!supabase) {
-      return NextResponse.json({ error: "Auth not configured" }, { status: 503 });
+      log("error", "auth.unconfigured");
+      return NextResponse.json(
+        { error: "Auth not configured", code: "AUTH_UNCONFIGURED" },
+        { status: 503 }
+      );
     }
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized", code: "UNAUTHORIZED" }, { status: 401 });
     }
+    userId = user.id;
 
     const formData = await req.formData();
 
@@ -61,22 +132,30 @@ export async function POST(req: NextRequest) {
     // Upload images to Supabase Storage (using admin client for write access)
     const imageUrls: string[] = [];
     if (images.length > 0) {
-      const supabase = createAdminClient();
-      if (!supabase) {
-        console.warn("Feedback: Supabase admin client not configured, skipping image uploads");
+      const adminSupabase = createAdminClient();
+      if (!adminSupabase) {
+        log("warn", "images.admin_client_missing", { userId, imageCount: images.length });
       } else {
         for (const img of images) {
           const ext = img.name.split(".").pop() || "jpg";
           const path = `reports/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
           const buffer = Buffer.from(await img.arrayBuffer());
-          const { error } = await supabase.storage
+          const { error } = await adminSupabase.storage
             .from("feedback-images")
             .upload(path, buffer, { contentType: img.type });
           if (error) {
-            console.error("Feedback image upload failed:", error.message);
+            log("error", "images.upload_failed", {
+              userId,
+              path,
+              size: img.size,
+              type: img.type,
+              message: error.message,
+            });
             continue;
           }
-          const { data: urlData } = supabase.storage.from("feedback-images").getPublicUrl(path);
+          const { data: urlData } = adminSupabase.storage
+            .from("feedback-images")
+            .getPublicUrl(path);
           imageUrls.push(urlData.publicUrl);
         }
       }
@@ -87,7 +166,15 @@ export async function POST(req: NextRequest) {
     const feedbackDbId = process.env.NOTION_FEEDBACK_DB_ID;
 
     if (!notionKey || !feedbackDbId) {
-      return NextResponse.json({ error: "Feedback is not configured" }, { status: 500 });
+      log("error", "config.missing", {
+        userId,
+        hasNotionKey: !!notionKey,
+        hasFeedbackDbId: !!feedbackDbId,
+      });
+      return NextResponse.json(
+        { error: "Feedback is not configured", code: "CONFIG_MISSING" },
+        { status: 500 }
+      );
     }
 
     const notion = new Client({ auth: notionKey });
@@ -219,19 +306,84 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    await notion.pages.create({
-      parent: { database_id: feedbackDbId },
-      properties,
-      children,
-    });
+    try {
+      await createNotionPageWithRetry(notion, {
+        parent: { database_id: feedbackDbId },
+        properties,
+        children,
+      });
+    } catch (error) {
+      const isDev = process.env.NODE_ENV === "development";
+      const baseFields = {
+        userId,
+        feedbackType,
+        category,
+        notionType,
+        propertyKeys: Object.keys(properties),
+      };
 
+      if (error instanceof APIResponseError) {
+        const retryable = isRetryableError(error);
+        log("error", retryable ? "notion.unavailable" : "notion.rejected", {
+          ...baseFields,
+          notionCode: error.code,
+          status: error.status,
+          message: error.message,
+        });
+        if (retryable) {
+          return NextResponse.json(
+            {
+              error: "Couldn't reach our tracker — please try again",
+              code: "NOTION_UNAVAILABLE",
+              ...(isDev && { details: error.message }),
+            },
+            { status: 502 }
+          );
+        }
+        return NextResponse.json(
+          {
+            error: "Submission failed — please try again or contact support",
+            code: "NOTION_REJECTED",
+            ...(isDev && { details: error.message, notionCode: error.code }),
+          },
+          { status: 500 }
+        );
+      }
+
+      if (error instanceof RequestTimeoutError || isNotionClientError(error)) {
+        log("error", "notion.unavailable", {
+          ...baseFields,
+          message: error instanceof Error ? error.message : String(error),
+        });
+        return NextResponse.json(
+          {
+            error: "Couldn't reach our tracker — please try again",
+            code: "NOTION_UNAVAILABLE",
+            ...(isDev && { details: error instanceof Error ? error.message : String(error) }),
+          },
+          { status: 502 }
+        );
+      }
+
+      throw error;
+    }
+
+    log("info", "submitted", {
+      userId,
+      feedbackType,
+      category,
+      notionType,
+      hasImages: imageUrls.length > 0,
+    });
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Feedback error:", error);
-    const message =
-      process.env.NODE_ENV === "development" && error instanceof Error
-        ? error.message
-        : "Something went wrong";
-    return NextResponse.json({ error: message }, { status: 500 });
+    log("error", "unhandled", {
+      userId,
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    const isDev = process.env.NODE_ENV === "development";
+    const message = isDev && error instanceof Error ? error.message : "Something went wrong";
+    return NextResponse.json({ error: message, code: "UNKNOWN" }, { status: 500 });
   }
 }

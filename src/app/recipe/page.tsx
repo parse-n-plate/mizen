@@ -15,6 +15,7 @@ import {
 } from "@/lib/recipe-preferences";
 import { toast } from "sonner";
 import { RecipeHeader, formatTime } from "@/components/RecipeHeader";
+import { RecipeSwitcher } from "@/components/RecipeSwitcher";
 import { ServingsAdjuster } from "@/components/ServingsAdjuster";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
@@ -44,7 +45,6 @@ import {
 import { HeartButton } from "@/components/HeartButton";
 import { ReportRecipeDialog } from "@/components/ReportRecipeDialog";
 import Flag from "@solar-icons/react/csr/ui/Flag";
-import ChatRoundDots from "@solar-icons/react/csr/messages/ChatRoundDots";
 import AltArrowLeft from "@solar-icons/react/csr/arrows/AltArrowLeft";
 import Ruler from "@solar-icons/react/csr/tools/Ruler";
 import Eye from "@solar-icons/react/csr/security/Eye";
@@ -73,7 +73,7 @@ export default function RecipePage() {
   const originalServings = useMemo(() => recipe?.servings, [recipe?.servings]);
   const [servings, setServings] = useState<number | undefined>(recipe?.servings);
   const canAdjustServings = !!(originalServings && originalServings > 0);
-  const mobileFooterStackHeight = "7.25rem";
+  const mobileFooterStackHeight = "4rem";
   const mobileServingsGap = "0.75rem";
   const mobileServingsOffset = `calc(${mobileFooterStackHeight} + ${mobileServingsGap} + env(safe-area-inset-bottom))`;
   const roundAmounts = usePreference(getRoundAmounts);
@@ -306,17 +306,19 @@ export default function RecipePage() {
   return (
     <div className="min-h-[calc(100vh-3.5rem)] flex flex-col pb-6">
       {/* Header section with cream background */}
-      <div className="px-6 pt-6 pb-0">
-        <div className="max-w-3xl mx-auto w-full pb-8">
-          {/* Mobile back button */}
-          <Link
-            href="/cookbook"
-            aria-label="Back to Cookbook"
-            className="sm:hidden inline-flex items-center gap-1 mb-5 -ml-1 text-sm text-[var(--color-text-muted)] active:text-[var(--color-text-body)]"
-          >
-            <AltArrowLeft className="size-4" />
-            <span>Cookbook</span>
-          </Link>
+      <div className="pt-6 pb-0">
+        <div className="max-w-[800px] duration-[220ms] group-data-[sidebar-collapsed=true]/shell:max-w-[1040px] group-data-[sidebar-collapsed=true]/shell:duration-[180ms] transition-[max-width] ease-[cubic-bezier(0.165,0.84,0.44,1)] motion-reduce:transition-none px-3 w-full pb-8">
+          {/* Mobile back button + recipe switcher */}
+          <div className="md:hidden flex items-center gap-2 mb-5 -ml-1 min-w-0">
+            <Link
+              href="/cookbook"
+              aria-label="Back to Cookbook"
+              className="shrink-0 inline-flex items-center text-[var(--color-text-muted)] active:text-[var(--color-text-body)]"
+            >
+              <AltArrowLeft className="size-4" />
+            </Link>
+            <RecipeSwitcher title={recipe.title} variant="compact" />
+          </div>
 
           <div className="flex items-start gap-6">
             <div className="flex-1 min-w-0">
@@ -327,6 +329,7 @@ export default function RecipePage() {
                 onServingsChange={setServings}
                 isServingsOpen={mobileServingsOpen}
                 onServingsOpenChange={setMobileServingsOpen}
+                showSwitcher
               />
             </div>
 
@@ -383,10 +386,10 @@ export default function RecipePage() {
       </div>
 
       {/* Tabs + content */}
-      <div className="flex-1 flex flex-col px-6 sm:pb-6 print:hidden">
-        <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col md:pb-6 print:hidden">
+        <div className="max-w-[800px] duration-[220ms] group-data-[sidebar-collapsed=true]/shell:max-w-[1040px] group-data-[sidebar-collapsed=true]/shell:duration-[180ms] transition-[max-width] ease-[cubic-bezier(0.165,0.84,0.44,1)] motion-reduce:transition-none px-3 w-full flex-1 flex flex-col">
           {/* Desktop: top folder tabs + quick actions (hidden on mobile) */}
-          <div className="group/tabs hidden sm:flex items-end w-full relative gap-0">
+          <div className="group/tabs hidden md:flex items-end w-full relative gap-0">
             <button
               onClick={() => setActiveTab("prep")}
               className={`folder-tab-trigger press-scale h-12 px-10 font-sans text-[15px] ${
@@ -625,9 +628,9 @@ export default function RecipePage() {
 
           {/* Content card */}
           <div
-            className={`sm:bg-white sm:dark:bg-stone-900 sm:rounded-b-lg ${activeTab === "prep" ? "sm:rounded-tr-lg" : "sm:rounded-t-lg"} sm:border sm:border-stone-200 sm:dark:border-stone-700 flex-1`}
+            className={`md:bg-white md:dark:bg-stone-900 md:rounded-b-lg ${activeTab === "prep" ? "md:rounded-tr-lg" : "md:rounded-t-lg"} md:border md:border-stone-200 md:dark:border-stone-700 flex-1`}
           >
-            <div className="max-w-3xl mx-auto sm:px-6 sm:pt-5 pb-[calc(7.25rem+env(safe-area-inset-bottom)+1rem)] sm:pb-6">
+            <div className="md:px-6 md:pt-5 pb-[calc(7.25rem+env(safe-area-inset-bottom)+1rem)] md:pb-6">
               {/* Unit conversion banner */}
               {bannerMounted && activeTab === "prep" && (
                 <div
@@ -717,7 +720,7 @@ export default function RecipePage() {
 
       {canAdjustServings && (
         <div
-          className="sm:hidden print:hidden pointer-events-none fixed inset-x-0 z-30 px-6"
+          className="md:hidden print:hidden pointer-events-none fixed inset-x-0 z-30 px-6"
           style={{ bottom: mobileServingsOffset }}
         >
           <div className="pointer-events-auto mx-auto w-full max-w-[20.5rem]">
@@ -733,11 +736,11 @@ export default function RecipePage() {
       )}
 
       {/* Mobile: fade above bottom tabs */}
-      <div className="sm:hidden print:hidden fixed bottom-12 left-0 right-0 z-[19] h-24 pointer-events-none bg-gradient-to-t from-white dark:from-mizen-dark-surface to-transparent" />
+      <div className="md:hidden print:hidden fixed bottom-16 left-0 right-0 z-[19] h-24 pointer-events-none bg-gradient-to-t from-white dark:from-mizen-dark-surface to-transparent" />
 
       {/* Mobile: fixed bottom folder tabs */}
-      <div className="sm:hidden print:hidden fixed bottom-0 left-0 right-0 z-20 pb-[env(safe-area-inset-bottom)] bg-[var(--color-surface)]">
-        <div className="px-6">
+      <div className="md:hidden print:hidden fixed bottom-0 left-0 right-0 z-20 pb-[env(safe-area-inset-bottom)] bg-[var(--color-surface)]">
+        <div className="px-6 py-2">
           <div className="flex items-center w-full relative gap-0">
             <button
               onClick={() => setActiveTab("prep")}
@@ -783,165 +786,119 @@ export default function RecipePage() {
                 </span>
               ) : null}
             </button>
-          </div>
-        </div>
 
-        <div className="vault-animate border-t border-[var(--color-border-light)]/90 px-6 py-3">
-          <div className="flex items-center justify-around">
-            <button
-              type="button"
-              aria-label={
-                isConverted
-                  ? "Reset to original units"
-                  : `Convert to ${recipeUnitSystem === "metric" ? "imperial" : "metric"}`
-              }
-              onClick={() => {
-                if (isConverted) {
-                  setUnitSystem("original");
-                } else {
-                  setUnitSystem(recipeUnitSystem === "metric" ? "imperial" : "metric");
-                }
-              }}
-              className={`flex flex-col items-center gap-1 transition-colors ${
-                isConverted
-                  ? "text-[var(--color-blue)]"
-                  : "text-[var(--color-text-muted)] active:text-[var(--color-text-heading)]"
-              }`}
-            >
-              <svg
-                className="h-5 w-5"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-              </svg>
-              <span className="text-[11px] font-sans font-medium">
-                {isConverted
-                  ? unitSystem === "metric"
-                    ? "Metric"
-                    : "Imperial"
-                  : recipeUnitSystem === "metric"
-                    ? "Metric"
-                    : "Imperial"}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleCopyRecipe}
-              aria-label="Copy recipe"
-              className="flex flex-col items-center gap-1 text-[var(--color-text-muted)] active:text-[var(--color-text-heading)] transition-colors"
-            >
-              <svg
-                className="h-5 w-5"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-              </svg>
-              <span className="text-[11px] font-sans font-medium">Copy</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleToggleMobileServings}
-              aria-label="Adjust servings"
-              aria-expanded={mobileServingsOpen}
-              className={`flex flex-col items-center gap-1 transition-colors ${
-                mobileServingsOpen
-                  ? "text-[var(--color-blue)]"
-                  : "text-[var(--color-text-muted)] active:text-[var(--color-text-heading)]"
-              }`}
-            >
-              <svg
-                className="h-5 w-5"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <circle cx="12" cy="8" r="4" />
-                <path d="M20 21a8 8 0 0 0-16 0" />
-              </svg>
-              <span className="text-[11px] font-sans font-medium">Servings</span>
-            </button>
-
-            {user && (
+            <div className="flex items-center gap-1 pl-2 shrink-0">
               <button
                 type="button"
-                onClick={() => setReportOpen(true)}
-                aria-label="Send feedback"
-                className="flex flex-col items-center gap-1 text-[var(--color-text-muted)] active:text-[var(--color-text-heading)] transition-colors"
+                aria-label={
+                  isConverted
+                    ? "Reset to original units"
+                    : `Convert to ${recipeUnitSystem === "metric" ? "imperial" : "metric"}`
+                }
+                onClick={() => {
+                  if (isConverted) {
+                    setUnitSystem("original");
+                  } else {
+                    setUnitSystem(recipeUnitSystem === "metric" ? "imperial" : "metric");
+                  }
+                }}
+                className={`press-scale inline-flex h-12 w-9 items-center justify-center transition-colors ${
+                  isConverted
+                    ? "text-[var(--color-blue)]"
+                    : "text-[var(--color-text-muted)] active:text-[var(--color-text-heading)]"
+                }`}
               >
-                <ChatRoundDots size={20} aria-hidden="true" />
-                <span className="text-[11px] font-sans font-medium">Feedback</span>
+                <Ruler size={20} weight={isConverted ? "Bold" : undefined} aria-hidden="true" />
               </button>
-            )}
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  aria-label="More actions"
-                  className="flex flex-col items-center gap-1 text-[var(--color-text-muted)] active:text-[var(--color-text-heading)] transition-colors"
-                >
-                  <svg
-                    className="h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <circle cx="12" cy="5" r="1.5" />
-                    <circle cx="12" cy="12" r="1.5" />
-                    <circle cx="12" cy="19" r="1.5" />
-                  </svg>
-                  <span className="text-[11px] font-sans font-medium">More</span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                side="top"
-                className="bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700"
+              <button
+                type="button"
+                onClick={handleToggleMobileServings}
+                aria-label="Adjust servings"
+                aria-expanded={mobileServingsOpen}
+                className={`press-scale inline-flex h-12 w-9 items-center justify-center transition-colors ${
+                  mobileServingsOpen
+                    ? "text-[var(--color-blue)]"
+                    : "text-[var(--color-text-muted)] active:text-[var(--color-text-heading)]"
+                }`}
               >
-                <DropdownMenuItem
-                  onSelect={handleShare}
-                  className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+                <svg
+                  className="h-5 w-5"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
                 >
-                  Share
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onSelect={() => window.print()}
-                  className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M20 21a8 8 0 0 0-16 0" />
+                </svg>
+              </button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="More actions"
+                    className="press-scale inline-flex h-12 w-9 items-center justify-center text-[var(--color-text-muted)] active:text-[var(--color-text-heading)] transition-colors"
+                  >
+                    <svg
+                      className="h-5 w-5"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <circle cx="12" cy="5" r="1.5" />
+                      <circle cx="12" cy="12" r="1.5" />
+                      <circle cx="12" cy="19" r="1.5" />
+                    </svg>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  side="top"
+                  className="bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700"
                 >
-                  Print
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />
-                <DropdownMenuItem
-                  onSelect={handleDelete}
-                  className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-red-600 dark:focus:text-red-400"
-                >
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <DropdownMenuItem
+                    onSelect={handleCopyRecipe}
+                    className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+                  >
+                    Copy
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onSelect={handleShare}
+                    className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+                  >
+                    Share
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onSelect={() => window.print()}
+                    className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+                  >
+                    Print
+                  </DropdownMenuItem>
+                  {user && (
+                    <DropdownMenuItem
+                      onSelect={() => setReportOpen(true)}
+                      className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+                    >
+                      Feedback
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />
+                  <DropdownMenuItem
+                    onSelect={handleDelete}
+                    className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-red-600 dark:focus:text-red-400"
+                  >
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </div>
       </div>

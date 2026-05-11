@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import Magnifer from "@solar-icons/react/csr/search/Magnifer";
 import { X } from "lucide-react";
@@ -13,6 +13,28 @@ import { type NumberFormat, getNumberFormat } from "@/lib/numberFormat";
 import { subscribePreferences, getShowStepImages, setShowStepImages } from "@/lib/preferences";
 import { displayText } from "@/utils/ingredientScaler";
 import { ImageLightbox } from "@/components/ImageLightbox";
+
+const REVEAL_EASE = "cubic-bezier(0.215, 0.61, 0.355, 1)";
+const REVEAL_DURATION = 200;
+const REVEAL_TRANSLATE_Y = 8;
+const REVEAL_STAGGER = 50;
+
+function photoRevealStyle(show: boolean, index = 0): React.CSSProperties {
+  const delay = index * REVEAL_STAGGER;
+  if (show) {
+    return {
+      opacity: 1,
+      transform: "translateY(0)",
+      transition: `opacity ${REVEAL_DURATION}ms ${REVEAL_EASE} ${delay}ms, transform ${REVEAL_DURATION}ms ${REVEAL_EASE} ${delay}ms`,
+      willChange: "opacity, transform",
+    };
+  }
+  return {
+    opacity: 0,
+    transform: `translateY(${REVEAL_TRANSLATE_Y}px)`,
+    transition: "opacity 0ms, transform 0ms",
+  };
+}
 
 function useImageAspectRatio(src: string | undefined) {
   const [state, setState] = useState<{ ratio: number | null; error: boolean }>({
@@ -58,7 +80,14 @@ export function StepList({ steps }: StepListProps) {
     null
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const isSearchExpanded = isSearchOpen || !!searchQuery;
   const showImages = useSyncExternalStore(subscribePreferences, getShowStepImages, () => true);
+
+  useEffect(() => {
+    if (isSearchOpen) searchInputRef.current?.focus({ preventScroll: true });
+  }, [isSearchOpen]);
 
   const hasAnyImages = steps.some((s) => (s.imageUrls?.length ?? 0) > 0 || !!s.imageUrl);
 
@@ -75,11 +104,11 @@ export function StepList({ steps }: StepListProps) {
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-4 mb-3 px-3">
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500">
-            Directions
-          </h3>
+      <div className="flex items-center justify-between gap-4 mb-3 pl-3">
+        <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 flex-shrink-0">
+          Directions
+        </h3>
+        <div className="flex items-center gap-1.5">
           {hasAnyImages && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -87,7 +116,7 @@ export function StepList({ steps }: StepListProps) {
                   type="button"
                   onClick={() => setShowStepImages(!showImages)}
                   aria-label={showImages ? "Hide photos" : "Show photos"}
-                  className={`press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors cursor-pointer ${
+                  className={`press-scale inline-flex items-center justify-center h-9 w-7 rounded-xl transition-colors cursor-pointer ${
                     showImages
                       ? "text-[var(--color-blue)] bg-blue-50 dark:bg-blue-950 dark:text-blue-400"
                       : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
@@ -101,27 +130,65 @@ export function StepList({ steps }: StepListProps) {
               </TooltipContent>
             </Tooltip>
           )}
-        </div>
-        <div className="relative w-full max-w-[260px]">
-          <Magnifer className="absolute left-3 top-1/2 -translate-y-1/2 size-[16px] text-muted-foreground pointer-events-none" />
-          <Input
-            type="text"
-            placeholder="Search Directions"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            aria-label="Search directions"
-            className="pl-9 pr-8 h-9 rounded-xl border-transparent bg-stone-100 dark:bg-stone-800 font-sans text-[13px] placeholder:text-muted-foreground focus-visible:bg-background focus-visible:border-input"
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-sm text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Clear search"
-            >
-              <X className="size-4" />
-            </button>
-          )}
+          <div
+            className={`group relative h-9 transition-[width] duration-200 ease-in-out ${
+              isSearchExpanded ? "w-[260px] max-w-full" : "w-7"
+            }`}
+          >
+            {!searchQuery && (
+              <Magnifer
+                className={`absolute right-1.5 top-1/2 -translate-y-1/2 size-[16px] text-muted-foreground pointer-events-none z-10 transition-colors ${
+                  isSearchExpanded
+                    ? ""
+                    : "group-hover:text-stone-600 dark:group-hover:text-stone-300"
+                }`}
+              />
+            )}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => setIsSearchOpen(true)}
+                  aria-label="Search directions"
+                  aria-hidden={isSearchExpanded}
+                  tabIndex={isSearchExpanded ? -1 : 0}
+                  className={`press-scale absolute inset-0 rounded-xl transition-opacity duration-150 ease-out hover:bg-stone-100 dark:hover:bg-stone-800 ${
+                    isSearchExpanded ? "opacity-0 pointer-events-none" : "opacity-100"
+                  }`}
+                />
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Search directions</TooltipContent>
+            </Tooltip>
+            <Input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search Directions"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onBlur={() => {
+                if (!searchQuery) setIsSearchOpen(false);
+              }}
+              aria-label="Search directions"
+              tabIndex={isSearchExpanded ? 0 : -1}
+              aria-hidden={!isSearchExpanded}
+              className={`absolute inset-0 w-full pl-3 pr-9 h-9 rounded-xl border-transparent bg-stone-100 dark:bg-stone-800 font-sans text-[13px] placeholder:text-muted-foreground focus-visible:bg-background focus-visible:border-input transition-opacity duration-200 ease-out ${
+                isSearchExpanded ? "opacity-100" : "opacity-0 pointer-events-none"
+              }`}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  setIsSearchOpen(false);
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-sm text-muted-foreground hover:text-foreground transition-colors z-10"
+                aria-label="Clear search"
+              >
+                <X className="size-4" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
       {filteredSteps.length === 0 && searchQuery.trim() ? (
@@ -192,26 +259,37 @@ function StepRow({
         </div>
 
         {/* Side-by-side: portrait/square/mild landscape (0.7–1.4) */}
-        {hasImage && isSideBySide && showImages && (
+        {hasImage && isSideBySide && (
           <div
-            className="flex-shrink-0 w-[40%] max-w-[180px]"
-            onClick={(e) => {
-              const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
-              onImageClick({
-                src: images[0],
-                rect: img.getBoundingClientRect(),
-                el: img as HTMLElement,
-              });
+            className="flex-shrink-0 grid"
+            style={{
+              gridTemplateColumns: showImages ? "1fr" : "0fr",
+              transition: `grid-template-columns ${REVEAL_DURATION}ms ${REVEAL_EASE}`,
             }}
           >
-            <Image
-              src={images[0]}
-              alt={`Step ${index + 1}`}
-              width={180}
-              height={Math.round(180 / (ratio ?? 1))}
-              className="w-full h-auto rounded-[10px]"
-              unoptimized
-            />
+            <div className="overflow-hidden">
+              <div
+                className="w-[40vw] max-w-[180px]"
+                onClick={(e) => {
+                  const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
+                  onImageClick({
+                    src: images[0],
+                    rect: img.getBoundingClientRect(),
+                    el: img as HTMLElement,
+                  });
+                }}
+              >
+                <Image
+                  src={images[0]}
+                  alt={`Step ${index + 1}`}
+                  width={180}
+                  height={Math.round(180 / (ratio ?? 1))}
+                  className="w-full h-auto rounded-[10px]"
+                  style={photoRevealStyle(showImages)}
+                  unoptimized
+                />
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -219,7 +297,11 @@ function StepRow({
       {/* Inline: tall portrait (<0.7) or landscape (>1.4) — no crop, max-height capped */}
       {hasImage && isInline && (
         <div
-          className={`grid transition-[grid-template-rows] duration-200 ease-out ${showImages ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+          className="grid"
+          style={{
+            gridTemplateRows: showImages ? "1fr" : "0fr",
+            transition: `grid-template-rows ${REVEAL_DURATION}ms ${REVEAL_EASE}`,
+          }}
         >
           <div className="overflow-hidden">
             <div
@@ -239,6 +321,7 @@ function StepRow({
                 width={496}
                 height={Math.round(496 / (ratio ?? 1))}
                 className="max-w-full max-h-[280px] w-auto h-auto rounded-[10px]"
+                style={photoRevealStyle(showImages)}
                 unoptimized
               />
             </div>
@@ -249,7 +332,11 @@ function StepRow({
       {/* Multiple images — horizontal row, fixed height thumbnails */}
       {hasImage && isMulti && (
         <div
-          className={`grid transition-[grid-template-rows] duration-200 ease-out ${showImages ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
+          className="grid"
+          style={{
+            gridTemplateRows: showImages ? "1fr" : "0fr",
+            transition: `grid-template-rows ${REVEAL_DURATION}ms ${REVEAL_EASE}`,
+          }}
         >
           <div className="overflow-hidden">
             <div className="mt-2 flex gap-2">
@@ -257,6 +344,7 @@ function StepRow({
                 <div
                   key={i}
                   className="flex-1 min-w-0"
+                  style={photoRevealStyle(showImages, i)}
                   onClick={(e) => {
                     const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
                     onImageClick({

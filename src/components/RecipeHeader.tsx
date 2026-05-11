@@ -4,7 +4,10 @@ import { useState } from "react";
 import type { ParsedRecipe } from "@/lib/types";
 import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
 import User from "@solar-icons/react/csr/users/User";
+import SidebarMinimalistic from "@solar-icons/react/csr/it/SidebarMinimalistic";
 import { ServingsAdjuster } from "@/components/ServingsAdjuster";
+import { useSidebar } from "@/components/AppShell";
+import { RecipeSwitcher } from "@/components/RecipeSwitcher";
 import { formatTime } from "@/lib/utils";
 
 interface RecipeHeaderProps {
@@ -14,6 +17,7 @@ interface RecipeHeaderProps {
   onServingsChange?: (n: number) => void;
   isServingsOpen?: boolean;
   onServingsOpenChange?: (open: boolean) => void;
+  showSwitcher?: boolean;
 }
 
 export { formatTime } from "@/lib/utils";
@@ -25,8 +29,10 @@ export function RecipeHeader({
   onServingsChange,
   isServingsOpen,
   onServingsOpenChange,
+  showSwitcher = false,
 }: RecipeHeaderProps) {
   const [isSliderOpenLocal, setIsSliderOpenLocal] = useState(false);
+  const { collapsed: sidebarCollapsed, setCollapsed: setSidebarCollapsed } = useSidebar();
   const showPrepAndCook = !!recipe.prepTimeMinutes || !!recipe.cookTimeMinutes;
   const isSliderOpen = isServingsOpen ?? isSliderOpenLocal;
 
@@ -51,9 +57,38 @@ export function RecipeHeader({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <h1 className="font-serif text-3xl font-bold leading-tight md:text-4xl tracking-tight text-pretty">
-        {recipe.title}
-      </h1>
+      <div className="flex items-start">
+        {/* Inline expand-sidebar button — sits to the left of the recipe title when sidebar is collapsed */}
+        <div
+          className={`hidden md:block shrink-0 overflow-hidden transition-[width] ease-[cubic-bezier(0.165,0.84,0.44,1)] motion-reduce:transition-none ${
+            sidebarCollapsed ? "w-9 duration-[220ms]" : "w-0 duration-[180ms]"
+          }`}
+        >
+          <button
+            onClick={() => setSidebarCollapsed(false)}
+            className={`flex h-7 w-7 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300 transition-[opacity] ease-out motion-reduce:transition-none mt-1.5 ${
+              sidebarCollapsed
+                ? "opacity-100 duration-150 delay-100"
+                : "opacity-0 pointer-events-none duration-75"
+            }`}
+            aria-label="Expand sidebar"
+            aria-expanded={!sidebarCollapsed}
+            aria-controls="primary-sidebar"
+            tabIndex={sidebarCollapsed ? 0 : -1}
+          >
+            <SidebarMinimalistic size={14} />
+          </button>
+        </div>
+        <div className="flex-1 min-w-0">
+          {showSwitcher ? (
+            <RecipeSwitcher title={recipe.title} variant="h1" />
+          ) : (
+            <h1 className="font-serif text-3xl font-bold leading-tight md:text-4xl tracking-tight text-pretty">
+              {recipe.title}
+            </h1>
+          )}
+        </div>
+      </div>
 
       {recipe.summary && (
         <p className="font-sans text-lg text-stone-500 dark:text-stone-400 max-w-2xl leading-relaxed">
@@ -91,7 +126,7 @@ export function RecipeHeader({
             <>
               <button
                 onClick={() => setIsSliderOpen(!isSliderOpen)}
-                className={`hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-md transition-colors cursor-pointer ${isAdjusted ? "hover:bg-[var(--color-blue)]/8" : "hover:bg-stone-100 dark:hover:bg-stone-800"}`}
+                className={`hidden md:inline-flex items-center gap-1 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-md transition-colors cursor-pointer ${isAdjusted ? "hover:bg-[var(--color-blue)]/8" : "hover:bg-stone-100 dark:hover:bg-stone-800"}`}
                 aria-expanded={isSliderOpen}
                 aria-label="Adjust servings"
               >
@@ -117,7 +152,7 @@ export function RecipeHeader({
                 />
               </button>
 
-              <span className="flex items-center gap-1 sm:hidden">
+              <span className="flex items-center gap-1 md:hidden">
                 <span
                   className={`flex items-center justify-center w-3.5 h-3.5 ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"}`}
                 >
@@ -153,7 +188,7 @@ export function RecipeHeader({
 
       {/* Servings slider card */}
       {canAdjustServings && (
-        <div className="hidden sm:block">
+        <div className="hidden md:block">
           <ServingsAdjuster
             servings={servings!}
             originalServings={originalServings!}

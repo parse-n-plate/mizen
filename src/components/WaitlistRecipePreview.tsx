@@ -292,6 +292,19 @@ function ImageLightboxContent({
           {recipe.author && (
             <p className="font-sans text-[12px] text-stone-400 dark:text-stone-500 italic">
               Source: {recipe.author}
+              {recipe.sourceUrl && (
+                <>
+                  {" — "}
+                  <a
+                    href={recipe.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline decoration-stone-300 dark:decoration-stone-600 underline-offset-2 hover:text-stone-600 dark:hover:text-stone-300 not-italic"
+                  >
+                    {new URL(recipe.sourceUrl).hostname.replace(/^www\./, "")}
+                  </a>
+                </>
+              )}
             </p>
           )}
         </div>
