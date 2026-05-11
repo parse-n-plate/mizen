@@ -168,6 +168,26 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
     }
   };
 
+  const handleDevSignIn = async () => {
+    if (!allowSubmit()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/auth/dev-signin", { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || "Dev sign-in failed.");
+        setLoading(false);
+        return;
+      }
+      // Reload so middleware and useUser pick up the fresh session cookies.
+      window.location.reload();
+    } catch {
+      setError("Dev sign-in failed.");
+      setLoading(false);
+    }
+  };
+
   const handleGoogleAuth = async () => {
     setError(null);
     const supabase = createClient();
@@ -479,6 +499,19 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
             onSubmit={handleSubmit}
             className="space-y-4"
           >
+            {process.env.NODE_ENV === "development" && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full justify-center gap-2 border-dashed border-amber-500/60 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                onClick={handleDevSignIn}
+                disabled={loading}
+              >
+                <Login className="h-4 w-4" />
+                Dev sign in (development only)
+              </Button>
+            )}
+
             <Button
               type="button"
               variant="outline"
