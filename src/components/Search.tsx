@@ -24,6 +24,22 @@ interface ImageFile {
 
 type BarMode = "idle" | "focused" | "loading" | "url" | "image" | "text";
 
+type ParseUsage = {
+  used: number;
+  limit: number;
+  resetAt: string;
+  anonymous: boolean;
+};
+
+function formatResetTime(iso: string): string {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  } catch {
+    return "tomorrow";
+  }
+}
+
 function looksLikeUrl(str: string): boolean {
   const trimmed = str.trim();
   try {
@@ -376,6 +392,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
   // Track which mode was active before loading started
   const [preLoadMode, setPreLoadMode] = useState<BarMode>("idle");
   const [inlineError, setInlineError] = useState<string | null>(null);
+  const [parseUsage, setParseUsage] = useState<ParseUsage | null>(null);
 
   const mode = isLoading ? "loading" : getMode(false, url, imageFile, pastedText, isFocused);
   const displayMode = isLoading ? preLoadMode : mode;
@@ -547,6 +564,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
 
         const response = await fetch("/api/parse", { method: "POST", body });
         const result = await response.json();
+        if (result?.usage) setParseUsage(result.usage);
 
         if (result.success && result.data) {
           setRecipe(result.data);
@@ -583,6 +601,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
 
         const response = await fetch("/api/parse", { method: "POST", body });
         const result = await response.json();
+        if (result?.usage) setParseUsage(result.usage);
 
         if (result.success && result.data) {
           setRecipe(result.data);
@@ -620,6 +639,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
 
         const response = await fetch("/api/parse", { method: "POST", body });
         const result = await response.json();
+        if (result?.usage) setParseUsage(result.usage);
 
         if (result.success && result.data) {
           setRecipe(result.data);
@@ -938,6 +958,23 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
               <circle cx="8" cy="11" r="0.75" fill="#EF4444" />
             </svg>
             <span className="text-[13px] font-medium text-red-500">{inlineError}</span>
+          </div>
+        )}
+
+        {/* ── Daily quota counter ── */}
+        {parseUsage && parseUsage.used > 0 && !isLoading && !inlineError && (
+          <div className="mt-2 px-2 text-[12px] leading-4 text-stone-400 dark:text-stone-500">
+            {parseUsage.used >= parseUsage.limit ? (
+              <>
+                Daily limit reached — resets at {formatResetTime(parseUsage.resetAt)}
+                {parseUsage.anonymous && " · sign in for more"}
+              </>
+            ) : (
+              <>
+                {parseUsage.used} of {parseUsage.limit} today
+                {parseUsage.anonymous && " · sign in for more"}
+              </>
+            )}
           </div>
         )}
 

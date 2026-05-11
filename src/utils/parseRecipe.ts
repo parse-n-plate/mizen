@@ -1011,6 +1011,34 @@ export async function parseRecipeFromText(text: string): Promise<ParserResult> {
 // URL Orchestrator
 // ---------------------------------------------------------------------------
 
+// Fallback for sites that block direct scraping (e.g. allrecipes.com).
+// Routes the URL through Jina Reader, which returns clean markdown we can
+// feed straight to the AI extractor.
+async function parseViaJinaReader(url: string): Promise<ParserResult | null> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  try {
+    const response = await fetch(`https://r.jina.ai/${url}`, {
+      headers: { Accept: "text/plain" },
+      signal: controller.signal,
+    });
+    if (!response.ok) return null;
+    const markdown = await response.text();
+    if (!markdown || markdown.trim().length === 0) return null;
+
+    const aiResult = await extractWithAI(markdown);
+    if (!aiResult) return null;
+
+    aiResult.sourceUrl = url;
+    return { success: true, data: aiResult, method: "ai" };
+  } catch (error) {
+    log.warn({ err: error }, "Jina Reader fallback failed");
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
   try {
     // Fetch HTML
@@ -1042,11 +1070,17 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      const error =
-        response.status === 402 || response.status === 403
-          ? "This website blocked the request. Try copying the recipe text and pasting it instead."
-          : `Failed to fetch URL: ${response.status}`;
-      return { success: false, error, method: "none" };
+      if (response.status === 402 || response.status === 403) {
+        const fallback = await parseViaJinaReader(url);
+        if (fallback) return fallback;
+        return {
+          success: false,
+          error:
+            "This website blocked the request. Try copying the recipe text and pasting it instead.",
+          method: "none",
+        };
+      }
+      return { success: false, error: `Failed to fetch URL: ${response.status}`, method: "none" };
     }
 
     const rawHtml = await response.text();

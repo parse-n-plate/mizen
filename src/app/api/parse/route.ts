@@ -1,12 +1,59 @@
 import { NextResponse } from "next/server";
 import { parseRecipeFromUrl, parseRecipeFromImage, parseRecipeFromText } from "@/utils/parseRecipe";
+import { createClient } from "@/lib/supabase/server";
+import {
+  PARSE_LIMIT_ANON,
+  PARSE_LIMIT_AUTHED,
+  checkAndIncrementParseUsage,
+  extractClientIp,
+  hashIp,
+  type ParseUsage,
+} from "@/lib/rateLimit";
 
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024; // 4 MB (Groq base64 limit)
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const DATA_URL_MIME_PATTERN = /^data:([^;,]+)(?:;[^,]*)?,/i;
 
+function withUsage<T extends object>(payload: T, usage: ParseUsage | null) {
+  return usage ? { ...payload, usage } : payload;
+}
+
 export async function POST(request: Request) {
   try {
+    // Identify caller and enforce the daily parse cap before doing any work.
+    let userId: string | null = null;
+    const supabase = await createClient();
+    if (supabase) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) userId = user.id;
+    }
+
+    let ipHash: string | null = null;
+    if (!userId) {
+      const ip = extractClientIp(request);
+      ipHash = ip ? hashIp(ip) : hashIp("unknown");
+    }
+
+    const limit = userId ? PARSE_LIMIT_AUTHED : PARSE_LIMIT_ANON;
+    const rateLimit = await checkAndIncrementParseUsage({ userId, ipHash, limit });
+    const usage = rateLimit.usage;
+
+    if (rateLimit.ok === false) {
+      return NextResponse.json(
+        withUsage(
+          {
+            success: false,
+            error: "Daily limit reached. Please try again tomorrow.",
+            method: "none",
+          },
+          usage
+        ),
+        { status: 429 }
+      );
+    }
+
     const contentType = request.headers.get("content-type") ?? "";
     let file: File | null = null;
     let url: string | null = null;
@@ -95,7 +142,7 @@ export async function POST(request: Request) {
       const base64 = `data:${file.type};base64,${buffer.toString("base64")}`;
 
       const result = await parseRecipeFromImage(base64);
-      return NextResponse.json(result, {
+      return NextResponse.json(withUsage(result, usage), {
         status: result.success ? 200 : 422,
       });
     }
@@ -141,7 +188,7 @@ export async function POST(request: Request) {
       }
 
       const result = await parseRecipeFromImage(dataUrl);
-      return NextResponse.json(result, {
+      return NextResponse.json(withUsage(result, usage), {
         status: result.success ? 200 : 422,
       });
     }
@@ -156,7 +203,7 @@ export async function POST(request: Request) {
       }
 
       const result = await parseRecipeFromText(text);
-      return NextResponse.json(result, {
+      return NextResponse.json(withUsage(result, usage), {
         status: result.success ? 200 : 422,
       });
     }
@@ -176,7 +223,7 @@ export async function POST(request: Request) {
     }
 
     const result = await parseRecipeFromUrl(url);
-    return NextResponse.json(result, {
+    return NextResponse.json(withUsage(result, usage), {
       status: result.success ? 200 : 422,
     });
   } catch (error) {
