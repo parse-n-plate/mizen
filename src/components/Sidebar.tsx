@@ -12,6 +12,7 @@ import { detectCollectionUrl } from "@/utils/urlPatterns";
 import { SettingsModal } from "@/components/SettingsModal";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { FeedbackDialog } from "@/components/FeedbackDialog";
+import { feedbackFeaturesEnabled } from "@/lib/features";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { createClient } from "@/lib/supabase/client";
 import HomeSmile from "@solar-icons/react/csr/ui/HomeSmile";
@@ -418,13 +419,15 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             Settings
           </button>
 
-          <button
-            onClick={() => setFeedbackOpen(true)}
-            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 font-sans text-sm text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 hover:text-stone-700 dark:hover:text-stone-300 transition-none"
-          >
-            <ChatRoundDots size={17} className="shrink-0" />
-            Feedback
-          </button>
+          {feedbackFeaturesEnabled && (
+            <button
+              onClick={() => setFeedbackOpen(true)}
+              className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 font-sans text-sm text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 hover:text-stone-700 dark:hover:text-stone-300 transition-none"
+            >
+              <ChatRoundDots size={17} className="shrink-0" />
+              Feedback
+            </button>
+          )}
 
           {user && (
             <div className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 mt-2">
@@ -459,7 +462,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
       <BetaAuthModal open={authOpen} onOpenChange={setAuthOpen} />
-      <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} showTrigger={false} />
+      {feedbackFeaturesEnabled && (
+        <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} showTrigger={false} />
+      )}
     </>
   );
 }

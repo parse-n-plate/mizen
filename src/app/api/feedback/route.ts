@@ -6,6 +6,7 @@ import {
   RequestTimeoutError,
   isNotionClientError,
 } from "@notionhq/client";
+import { feedbackFeaturesEnabled } from "@/lib/features";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -75,6 +76,13 @@ async function createNotionPageWithRetry(
 export async function POST(req: NextRequest) {
   let userId: string | undefined;
   try {
+    if (!feedbackFeaturesEnabled) {
+      return NextResponse.json(
+        { error: "Feedback is temporarily disabled", code: "FEEDBACK_DISABLED" },
+        { status: 404 }
+      );
+    }
+
     // Authenticate — only logged-in users can submit feedback
     const supabase = await createClient();
     if (!supabase) {
