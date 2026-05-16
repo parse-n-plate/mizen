@@ -22,6 +22,7 @@ import { StepList } from "@/components/StepList";
 import { scaleIngredients, displayAmount, displayText } from "@/utils/ingredientScaler";
 import { detectUnitSystem } from "@/utils/unitConverter";
 import { getNumberFormat } from "@/lib/numberFormat";
+import { feedbackFeaturesEnabled } from "@/lib/features";
 import {
   getDefaultServings,
   getDietaryProfile,
@@ -517,7 +518,7 @@ export default function RecipePage() {
               </Tooltip>
 
               {/* Report — icon-only (only for logged-in users) */}
-              {user && (
+              {feedbackFeaturesEnabled && user && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
@@ -881,7 +882,7 @@ export default function RecipePage() {
                   >
                     Print
                   </DropdownMenuItem>
-                  {user && (
+                  {feedbackFeaturesEnabled && user && (
                     <DropdownMenuItem
                       onSelect={() => setReportOpen(true)}
                       className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
@@ -904,14 +905,16 @@ export default function RecipePage() {
       </div>
 
       {/* Report recipe dialog */}
-      <ReportRecipeDialog
-        open={reportOpen}
-        onOpenChange={setReportOpen}
-        recipe={recipe}
-        userEmail={user?.email || ""}
-        activeTab={activeTab}
-        unitSystem={unitSystem}
-      />
+      {feedbackFeaturesEnabled && (
+        <ReportRecipeDialog
+          open={reportOpen}
+          onOpenChange={setReportOpen}
+          recipe={recipe}
+          userEmail={user?.email || ""}
+          activeTab={activeTab}
+          unitSystem={unitSystem}
+        />
+      )}
     </div>
   );
 }

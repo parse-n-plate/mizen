@@ -3,6 +3,7 @@ import { Domine, Albert_Sans } from "next/font/google";
 import { Agentation } from "agentation";
 import { DialRoot } from "dialkit";
 import { AppShell } from "@/components/AppShell";
+import { developerFeedbackToolsEnabled } from "@/lib/features";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeSync } from "@/components/ThemeSync";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -56,8 +57,10 @@ export default function RootLayout({
         </TooltipProvider>
         <ThemeSync />
         <Toaster />
-        {process.env.NODE_ENV === "development" && <Agentation />}
-        {process.env.NODE_ENV === "development" && <DialRoot position="bottom-right" />}
+        {process.env.NODE_ENV === "development" && developerFeedbackToolsEnabled && <Agentation />}
+        {process.env.NODE_ENV === "development" && developerFeedbackToolsEnabled && (
+          <DialRoot position="bottom-right" />
+        )}
       </body>
     </html>
   );
