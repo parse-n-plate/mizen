@@ -840,6 +840,7 @@ export default function RecipePage() {
 
       <MobileNavShell
         items={recipeMobileNavItems}
+        showLabels
         actionSlot={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

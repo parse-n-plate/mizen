@@ -43,15 +43,25 @@ type MobileNavShellProps = {
   action?: MobileNavAction;
   actionSlot?: ReactNode;
   className?: string;
+  showLabels?: boolean;
 };
 
-function NavIconButton({ item, className }: { item: MobileNavItem; className?: string }) {
+function NavIconButton({
+  item,
+  className,
+  showLabel = false,
+}: {
+  item: MobileNavItem;
+  className?: string;
+  showLabel?: boolean;
+}) {
   const stateClass = item.active
     ? "bg-stone-100 text-[var(--color-text-heading)] shadow-[inset_0_0_0_1px_rgba(41,37,36,0.025)] dark:bg-stone-800 dark:text-stone-100"
     : "text-[var(--color-text-muted)] active:bg-stone-100 active:text-[var(--color-text-heading)] dark:active:bg-stone-800";
 
   const sharedClassName = cn(
-    "press-scale inline-flex h-12 min-w-12 items-center justify-center rounded-full px-3 transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-blue)] disabled:pointer-events-none disabled:opacity-40",
+    "press-scale inline-flex h-12 items-center justify-center rounded-full transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-blue)] disabled:pointer-events-none disabled:opacity-40",
+    showLabel ? "min-w-[5.75rem] gap-1.5 px-4 font-sans text-xs font-semibold" : "min-w-12 px-3",
     stateClass,
     className
   );
@@ -67,6 +77,7 @@ function NavIconButton({ item, className }: { item: MobileNavItem; className?: s
         className={sharedClassName}
       >
         {item.icon}
+        {showLabel && <span>{item.label}</span>}
       </Link>
     );
   }
@@ -82,15 +93,22 @@ function NavIconButton({ item, className }: { item: MobileNavItem; className?: s
       className={sharedClassName}
     >
       {item.icon}
+      {showLabel && <span>{item.label}</span>}
     </button>
   );
 }
 
-function MobileNavTabLayer({ items }: { items: MobileNavItem[] }) {
+function MobileNavTabLayer({
+  items,
+  showLabels,
+}: {
+  items: MobileNavItem[];
+  showLabels?: boolean;
+}) {
   return (
     <div className="flex min-w-0 items-center justify-center gap-1 rounded-full p-1" role="tablist">
       {items.map((item) => (
-        <NavIconButton key={item.id} item={item} />
+        <NavIconButton key={item.id} item={item} showLabel={showLabels} />
       ))}
     </div>
   );
@@ -123,7 +141,13 @@ function MobileNavPrimaryAction({ action }: { action: MobileNavAction }) {
   );
 }
 
-export function MobileNavShell({ items, action, actionSlot, className }: MobileNavShellProps) {
+export function MobileNavShell({
+  items,
+  action,
+  actionSlot,
+  className,
+  showLabels,
+}: MobileNavShellProps) {
   return (
     <nav
       className={cn(
@@ -134,7 +158,7 @@ export function MobileNavShell({ items, action, actionSlot, className }: MobileN
     >
       <div className="mx-auto flex max-w-3xl items-center justify-center gap-3 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3">
         <div className="pointer-events-auto relative min-w-0 rounded-full border border-[var(--color-border-light)]/80 bg-[var(--color-surface)]/95 shadow-[0_12px_34px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-stone-700 dark:bg-stone-900/95">
-          <MobileNavTabLayer items={items} />
+          <MobileNavTabLayer items={items} showLabels={showLabels} />
         </div>
         {actionSlot ? (
           <div className="pointer-events-auto">{actionSlot}</div>
