@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import Magnifer from "@solar-icons/react/csr/search/Magnifer";
 import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -44,12 +45,21 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [mobileSearchContainer] = useState<HTMLElement | null>(() =>
+    typeof document === "undefined"
+      ? null
+      : document.getElementById("mobile-ingredient-search-action")
+  );
+  const desktopSearchInputRef = useRef<HTMLInputElement>(null);
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const isSearchExpanded = isSearchOpen || !!searchQuery;
   const numberFormat = useNumberFormat();
 
   useEffect(() => {
-    if (isSearchOpen) searchInputRef.current?.focus({ preventScroll: true });
+    if (!isSearchOpen) return;
+    const isMobileViewport = window.matchMedia("(max-width: 767px)").matches;
+    const input = isMobileViewport ? mobileSearchInputRef.current : desktopSearchInputRef.current;
+    input?.focus({ preventScroll: true });
   }, [isSearchOpen]);
 
   const toggleCheck = (key: string) => {
@@ -100,17 +110,22 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
     });
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4 pl-3 mb-4">
-        <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 flex-shrink-0">
-          Ingredients
-        </h3>
-        <div
-          className={`group relative h-9 transition-[width] duration-200 ease-in-out ${
-            isSearchExpanded ? "w-[260px] max-w-full" : "w-7"
-          }`}
-        >
+  const searchControl = (placement: "desktop" | "mobile") => {
+    const isMobile = placement === "mobile";
+
+    return (
+      <div
+        className={`group relative h-9 transition-[width] duration-200 ease-in-out ${
+          isSearchExpanded
+            ? isMobile
+              ? "w-[min(260px,calc(100vw-5.25rem))]"
+              : "w-[260px] max-w-full"
+            : isMobile
+              ? "w-9"
+              : "w-7"
+        }`}
+      >
+        <div className={isMobile && isSearchExpanded ? "absolute right-0 top-0 h-9 w-full" : ""}>
           {!searchQuery && (
             <Magnifer
               className={`absolute right-1.5 top-1/2 -translate-y-1/2 size-[16px] text-muted-foreground pointer-events-none z-10 transition-colors ${
@@ -134,7 +149,7 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
             <TooltipContent side="bottom">Search ingredients</TooltipContent>
           </Tooltip>
           <Input
-            ref={searchInputRef}
+            ref={isMobile ? mobileSearchInputRef : desktopSearchInputRef}
             type="text"
             placeholder="Search Ingredients"
             value={searchQuery}
@@ -163,6 +178,23 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
             </button>
           )}
         </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {mobileSearchContainer &&
+        createPortal(
+          <div className="md:hidden">{searchControl("mobile")}</div>,
+          mobileSearchContainer
+        )}
+
+      <div className="flex items-center justify-between gap-4 pl-3 mb-4">
+        <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 flex-shrink-0">
+          Ingredients
+        </h3>
+        <div className="hidden md:block">{searchControl("desktop")}</div>
       </div>
 
       {filteredGroups.length === 0 && searchQuery.trim() ? (
