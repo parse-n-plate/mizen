@@ -224,6 +224,7 @@ export function CookbookList({ initialRecipes }: CookbookListProps) {
                         className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                       >
                         Open recipe
+                        <Book className="ml-auto h-4 w-4" />
                       </DropdownMenuItem>
                       {item.source_url && (
                         <DropdownMenuItem
@@ -231,6 +232,7 @@ export function CookbookList({ initialRecipes }: CookbookListProps) {
                           className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                         >
                           Open original
+                          <LinkSquare className="ml-auto h-4 w-4" />
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />
@@ -239,6 +241,7 @@ export function CookbookList({ initialRecipes }: CookbookListProps) {
                         className="text-red-600 dark:text-red-400 focus:bg-red-50 dark:focus:bg-red-950 focus:text-red-700 dark:focus:text-red-300"
                       >
                         Delete
+                        <TrashBinMinimalistic className="ml-auto h-4 w-4" />
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
