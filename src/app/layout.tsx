@@ -57,7 +57,9 @@ export default function RootLayout({
         </TooltipProvider>
         <ThemeSync />
         <Toaster />
-        {process.env.NODE_ENV === "development" && developerFeedbackToolsEnabled && <Agentation />}
+        {process.env.NODE_ENV === "development" && developerFeedbackToolsEnabled && (
+          <Agentation endpoint="http://localhost:4747" />
+        )}
         {process.env.NODE_ENV === "development" && developerFeedbackToolsEnabled && (
           <DialRoot position="bottom-right" />
         )}
