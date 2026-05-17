@@ -12,9 +12,18 @@ import { detectCollectionUrl } from "@/utils/urlPatterns";
 import { SettingsModal } from "@/components/SettingsModal";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { FeedbackDialog } from "@/components/FeedbackDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { feedbackFeaturesEnabled } from "@/lib/features";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { createClient } from "@/lib/supabase/client";
+import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
 import HomeSmile from "@solar-icons/react/csr/ui/HomeSmile";
 import BookMinimalistic from "@solar-icons/react/csr/school/BookMinimalistic";
 import Settings from "@solar-icons/react/csr/settings/Settings";
@@ -430,23 +439,66 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           )}
 
           {user && (
-            <div className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 mt-2">
-              {user.user_metadata?.avatar_url ? (
-                <Image
-                  src={user.user_metadata.avatar_url}
-                  alt={name}
-                  width={28}
-                  height={28}
-                  className="h-7 w-7 rounded-full shrink-0"
-                  unoptimized
-                />
-              ) : (
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-stone-200 dark:bg-stone-700 font-sans text-xs font-medium text-stone-600 dark:text-stone-300 shrink-0">
-                  {name[0]?.toUpperCase()}
-                </div>
-              )}
-              <span className="font-sans text-sm text-stone-600 dark:text-stone-300">{name}</span>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="group/user mt-2 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left hover:bg-stone-100 dark:hover:bg-stone-800/50 transition-none"
+                  aria-label="Open account menu"
+                >
+                  {user.user_metadata?.avatar_url ? (
+                    <Image
+                      src={user.user_metadata.avatar_url}
+                      alt={name}
+                      width={28}
+                      height={28}
+                      className="h-7 w-7 rounded-full shrink-0"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-stone-200 dark:bg-stone-700 font-sans text-xs font-medium text-stone-600 dark:text-stone-300 shrink-0">
+                      {name[0]?.toUpperCase()}
+                    </div>
+                  )}
+                  <span className="min-w-0 flex-1 truncate font-sans text-sm text-stone-600 dark:text-stone-300 group-hover/user:text-stone-800 dark:group-hover/user:text-stone-100">
+                    {name}
+                  </span>
+                  <AltArrowDown className="size-3.5 shrink-0 text-stone-400 dark:text-stone-500 transition-transform duration-200 group-data-[state=open]/user:rotate-180" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="start"
+                side="top"
+                sideOffset={8}
+                className="w-52 bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700"
+              >
+                <DropdownMenuLabel className="font-sans">
+                  <span className="block truncate text-sm font-medium text-stone-900 dark:text-stone-100">
+                    {name}
+                  </span>
+                  <span className="block truncate text-xs font-normal text-stone-400 dark:text-stone-500">
+                    {user.email}
+                  </span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />
+                <DropdownMenuItem
+                  onSelect={() => setSettingsOpen(true)}
+                  className="font-sans text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+                >
+                  Settings
+                </DropdownMenuItem>
+                <form action="/api/auth/signout" method="post">
+                  <DropdownMenuItem
+                    className="font-sans text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+                    asChild
+                  >
+                    <button type="submit" className="w-full text-left">
+                      Sign out
+                    </button>
+                  </DropdownMenuItem>
+                </form>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
 
           {!authLoading && !user && isSupabaseConfigured && (
