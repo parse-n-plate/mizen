@@ -70,7 +70,7 @@ export function ProfileSettingsPanel() {
   const [roundAmounts, setRoundAmountsValue] = useState(getRoundAmounts);
 
   return (
-    <section className="mt-10 rounded-[1.75rem] border border-stone-200 bg-white/75 p-5 shadow-sm backdrop-blur-sm dark:border-stone-800 dark:bg-stone-900/70">
+    <section className="mt-10 rounded-[1.75rem] border border-stone-200 bg-white/75 p-5 backdrop-blur-sm dark:border-stone-800 dark:bg-stone-900/70">
       <div className="mb-2">
         <h2 className="font-serif text-xl font-semibold text-stone-900 dark:text-stone-100">
           Settings

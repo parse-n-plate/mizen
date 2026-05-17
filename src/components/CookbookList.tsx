@@ -12,7 +12,6 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import LinkSquare from "@solar-icons/react/csr/text-formatting/LinkSquare";
 import TrashBinMinimalistic from "@solar-icons/react/csr/ui/TrashBinMinimalistic";
 import MenuDots from "@solar-icons/react/csr/ui/MenuDots";
@@ -145,76 +144,31 @@ export function CookbookList({ initialRecipes }: CookbookListProps) {
                       className="shrink-0 rounded-sm"
                     />
                   )}
-                  <div className="min-w-0">
-                    <span className="font-serif text-base font-semibold leading-snug text-stone-900 dark:text-stone-50">
+                  <div className="min-w-0 flex items-baseline">
+                    <span className="truncate font-serif text-base font-semibold leading-snug text-stone-900 dark:text-stone-50">
                       {item.recipe.title}
                     </span>
                     {domain && (
-                      <span className="ml-2 font-sans text-[13px] text-stone-400 dark:text-stone-500">
+                      <span className="ml-2 shrink-0 font-sans text-[13px] text-stone-400 dark:text-stone-500">
                         {domain}
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div
-                  className={`flex items-center gap-0.5 shrink-0 ml-4 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 ${menuOpenId === item.id ? "!opacity-100" : ""}`}
-                >
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (item.source_url) {
-                            window.open(item.source_url, "_blank", "noopener");
-                          } else {
-                            handleOpen(item);
-                          }
-                        }}
-                        className="flex h-8 w-8 items-center justify-center rounded-md text-stone-400 dark:text-stone-500 hover:bg-stone-300 dark:hover:bg-stone-600 hover:text-stone-700 dark:hover:text-stone-200 transition-colors"
-                        aria-label="Open original"
-                      >
-                        <LinkSquare className="h-4 w-4" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Open original</TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(item.id);
-                        }}
-                        className="flex h-8 w-8 items-center justify-center rounded-md text-stone-400 dark:text-stone-500 hover:bg-red-100 dark:hover:bg-red-900/40 hover:text-red-500 dark:hover:text-red-400 transition-colors"
-                        aria-label="Delete recipe"
-                      >
-                        <TrashBinMinimalistic className="h-4 w-4" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Delete</TooltipContent>
-                  </Tooltip>
-
+                <div className="flex shrink-0 items-center ml-4">
                   <DropdownMenu onOpenChange={(open) => setMenuOpenId(open ? item.id : null)}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            type="button"
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex h-8 w-8 items-center justify-center rounded-md text-stone-400 dark:text-stone-500 hover:bg-stone-300 dark:hover:bg-stone-600 hover:text-stone-700 dark:hover:text-stone-200 transition-colors"
-                            aria-label="More actions"
-                            suppressHydrationWarning
-                          >
-                            <MenuDots className="h-4 w-4" />
-                          </button>
-                        </DropdownMenuTrigger>
-                      </TooltipTrigger>
-                      <TooltipContent>More</TooltipContent>
-                    </Tooltip>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex h-8 w-8 items-center justify-center rounded-md text-stone-400 dark:text-stone-500 hover:bg-stone-300 dark:hover:bg-stone-600 hover:text-stone-700 dark:hover:text-stone-200 transition-colors"
+                        aria-label="More actions"
+                        suppressHydrationWarning
+                      >
+                        <MenuDots className="h-4 w-4" />
+                      </button>
+                    </DropdownMenuTrigger>
                     <DropdownMenuContent
                       align="end"
                       className="bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700"

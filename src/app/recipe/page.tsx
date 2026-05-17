@@ -18,6 +18,7 @@ import { RecipeHeader, formatTime } from "@/components/RecipeHeader";
 import { ServingsAdjuster } from "@/components/ServingsAdjuster";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
+import { MobileNavShell, type MobileNavItem } from "@/components/MobileBottomNav";
 import { scaleIngredients, displayAmount, displayText } from "@/utils/ingredientScaler";
 import { detectUnitSystem } from "@/utils/unitConverter";
 import { getNumberFormat } from "@/lib/numberFormat";
@@ -49,7 +50,17 @@ import AltArrowLeft from "@solar-icons/react/csr/arrows/AltArrowLeft";
 import Ruler from "@solar-icons/react/csr/tools/Ruler";
 import Eye from "@solar-icons/react/csr/security/Eye";
 import EyeClosed from "@solar-icons/react/csr/security/EyeClosed";
-import { Copy, FileText, MessageSquare, Printer, Scale, Share2, Trash2 } from "lucide-react";
+import {
+  Copy,
+  EllipsisVertical,
+  FileText,
+  MessageSquare,
+  Printer,
+  Scale,
+  Share2,
+  Trash2,
+  UsersRound,
+} from "lucide-react";
 
 export default function RecipePage() {
   const router = useRouter();
@@ -74,7 +85,7 @@ export default function RecipePage() {
   const originalServings = useMemo(() => recipe?.servings, [recipe?.servings]);
   const [servings, setServings] = useState<number | undefined>(recipe?.servings);
   const canAdjustServings = !!(originalServings && originalServings > 0);
-  const mobileFooterStackHeight = "4rem";
+  const mobileFooterStackHeight = "4.75rem";
   const mobileServingsGap = "0.75rem";
   const mobileServingsOffset = `calc(${mobileFooterStackHeight} + ${mobileServingsGap} + env(safe-area-inset-bottom))`;
   const roundAmounts = usePreference(getRoundAmounts);
@@ -304,6 +315,41 @@ export default function RecipePage() {
     );
   }
 
+  const toggleMobileUnits = () => {
+    if (isConverted) {
+      setUnitSystem("original");
+    } else {
+      setUnitSystem(recipeUnitSystem === "metric" ? "imperial" : "metric");
+    }
+  };
+
+  const recipeMobileNavItems: MobileNavItem[] = [
+    {
+      id: "prep",
+      type: "button",
+      label: "Prep",
+      active: activeTab === "prep",
+      pressed: activeTab === "prep",
+      onClick: () => setActiveTab("prep"),
+      icon: (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src="/assets/icon-prep.png" alt="" className="h-6 w-6" aria-hidden="true" />
+      ),
+    },
+    {
+      id: "cook",
+      type: "button",
+      label: "Cook",
+      active: activeTab === "cook",
+      pressed: activeTab === "cook",
+      onClick: () => setActiveTab("cook"),
+      icon: (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src="/assets/icon-cook.svg" alt="" className="h-6 w-6" aria-hidden="true" />
+      ),
+    },
+  ];
+
   return (
     <div className="min-h-[calc(100vh-3.5rem)] flex flex-col pb-6">
       {/* Header section with cream background */}
@@ -320,9 +366,41 @@ export default function RecipePage() {
             </Link>
             <div className="ml-auto flex items-center gap-1">
               <div
-                id="mobile-ingredient-search-action"
+                id="mobile-recipe-search-action"
                 className="flex h-9 w-9 items-center justify-center"
               />
+              <button
+                type="button"
+                aria-label={
+                  isConverted
+                    ? "Reset to original units"
+                    : `Convert to ${recipeUnitSystem === "metric" ? "imperial" : "metric"}`
+                }
+                aria-pressed={isConverted}
+                onClick={toggleMobileUnits}
+                className={`press-scale inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
+                  isConverted
+                    ? "bg-[var(--color-blue-light)] text-[var(--color-blue)]"
+                    : "text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:text-stone-500 dark:hover:bg-stone-800 dark:hover:text-stone-300"
+                }`}
+              >
+                <Ruler size={18} weight={isConverted ? "Bold" : undefined} aria-hidden="true" />
+              </button>
+              {canAdjustServings && (
+                <button
+                  type="button"
+                  onClick={handleToggleMobileServings}
+                  aria-label="Adjust servings"
+                  aria-expanded={mobileServingsOpen}
+                  className={`press-scale inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
+                    mobileServingsOpen
+                      ? "bg-[var(--color-blue-light)] text-[var(--color-blue)]"
+                      : "text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:text-stone-500 dark:hover:bg-stone-800 dark:hover:text-stone-300"
+                  }`}
+                >
+                  <UsersRound className="h-[18px] w-[18px]" aria-hidden="true" />
+                </button>
+              )}
               {user && (
                 <HeartButton
                   isSaved={!!savedMeta}
@@ -757,178 +835,69 @@ export default function RecipePage() {
         </div>
       )}
 
-      {/* Mobile: fade above bottom tabs */}
-      <div className="md:hidden print:hidden fixed bottom-16 left-0 right-0 z-[19] h-24 pointer-events-none bg-gradient-to-t from-white dark:from-mizen-dark-surface to-transparent" />
+      {/* Mobile: soft content fade above the floating nav */}
+      <div className="md:hidden print:hidden fixed bottom-0 left-0 right-0 z-[19] h-28 pointer-events-none bg-gradient-to-t from-white/90 via-white/45 to-transparent dark:from-stone-950/80 dark:via-stone-950/35 dark:to-transparent" />
 
-      {/* Mobile: fixed bottom folder tabs */}
-      <div className="md:hidden print:hidden fixed bottom-0 left-0 right-0 z-20 pb-[env(safe-area-inset-bottom)] bg-[var(--color-surface)]">
-        <div className="px-6 py-2">
-          <div className="flex items-center w-full relative gap-0">
-            <button
-              onClick={() => setActiveTab("prep")}
-              className={`folder-tab-trigger-bottom press-scale flex-1 h-12 font-sans text-[14px] ${
-                activeTab === "prep" ? "font-semibold" : "font-medium"
-              }`}
-              data-state={activeTab === "prep" ? "active" : "inactive"}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/assets/icon-prep.png"
-                alt=""
-                width={24}
-                height={24}
-                className="tab-icon-prep h-6 w-6"
-              />
-              Prep
-              {recipe.prepTimeMinutes ? (
-                <span className="font-normal text-stone-400 dark:text-stone-500 ml-1.5">
-                  {formatTime(recipe.prepTimeMinutes)}
-                </span>
-              ) : null}
-            </button>
-            <button
-              onClick={() => setActiveTab("cook")}
-              className={`folder-tab-trigger-bottom press-scale flex-1 h-12 font-sans text-[14px] ${
-                activeTab === "cook" ? "font-semibold" : "font-medium"
-              }`}
-              data-state={activeTab === "cook" ? "active" : "inactive"}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/assets/icon-cook.svg"
-                alt=""
-                width={24}
-                height={24}
-                className="tab-icon-cook h-6 w-6"
-              />
-              Cook
-              {recipe.cookTimeMinutes ? (
-                <span className="font-normal text-stone-400 dark:text-stone-500 ml-1.5">
-                  {formatTime(recipe.cookTimeMinutes)}
-                </span>
-              ) : null}
-            </button>
-
-            <div className="flex items-center gap-1 pl-2 shrink-0">
+      <MobileNavShell
+        items={recipeMobileNavItems}
+        actionSlot={
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                aria-label={
-                  isConverted
-                    ? "Reset to original units"
-                    : `Convert to ${recipeUnitSystem === "metric" ? "imperial" : "metric"}`
-                }
-                onClick={() => {
-                  if (isConverted) {
-                    setUnitSystem("original");
-                  } else {
-                    setUnitSystem(recipeUnitSystem === "metric" ? "imperial" : "metric");
-                  }
-                }}
-                className={`press-scale inline-flex h-12 w-9 items-center justify-center transition-colors ${
-                  isConverted
-                    ? "text-[var(--color-blue)]"
-                    : "text-[var(--color-text-muted)] active:text-[var(--color-text-heading)]"
-                }`}
+                aria-label="More recipe actions"
+                className="press-scale inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-[var(--color-border-light)]/80 bg-[var(--color-surface)] text-[var(--color-text-heading)] shadow-[0_12px_30px_rgba(0,0,0,0.08)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-blue)] dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
               >
-                <Ruler size={20} weight={isConverted ? "Bold" : undefined} aria-hidden="true" />
+                <EllipsisVertical className="h-5 w-5" aria-hidden="true" />
               </button>
-
-              <button
-                type="button"
-                onClick={handleToggleMobileServings}
-                aria-label="Adjust servings"
-                aria-expanded={mobileServingsOpen}
-                className={`press-scale inline-flex h-12 w-9 items-center justify-center transition-colors ${
-                  mobileServingsOpen
-                    ? "text-[var(--color-blue)]"
-                    : "text-[var(--color-text-muted)] active:text-[var(--color-text-heading)]"
-                }`}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              side="top"
+              className="bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700"
+            >
+              <DropdownMenuItem
+                onSelect={handleCopyRecipe}
+                className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
               >
-                <svg
-                  className="h-5 w-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
+                Copy
+                <Copy className="ml-auto h-4 w-4" />
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={handleShare}
+                className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+              >
+                Share
+                <Share2 className="ml-auto h-4 w-4" />
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => window.print()}
+                className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+              >
+                Print
+                <Printer className="ml-auto h-4 w-4" />
+              </DropdownMenuItem>
+              {feedbackFeaturesEnabled && user && (
+                <DropdownMenuItem
+                  onSelect={() => setReportOpen(true)}
+                  className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                 >
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M20 21a8 8 0 0 0-16 0" />
-                </svg>
-              </button>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    aria-label="More actions"
-                    className="press-scale inline-flex h-12 w-9 items-center justify-center text-[var(--color-text-muted)] active:text-[var(--color-text-heading)] transition-colors"
-                  >
-                    <svg
-                      className="h-5 w-5"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <circle cx="12" cy="5" r="1.5" />
-                      <circle cx="12" cy="12" r="1.5" />
-                      <circle cx="12" cy="19" r="1.5" />
-                    </svg>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  side="top"
-                  className="bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700"
-                >
-                  <DropdownMenuItem
-                    onSelect={handleCopyRecipe}
-                    className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
-                  >
-                    Copy
-                    <Copy className="ml-auto h-4 w-4" />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onSelect={handleShare}
-                    className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
-                  >
-                    Share
-                    <Share2 className="ml-auto h-4 w-4" />
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onSelect={() => window.print()}
-                    className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
-                  >
-                    Print
-                    <Printer className="ml-auto h-4 w-4" />
-                  </DropdownMenuItem>
-                  {feedbackFeaturesEnabled && user && (
-                    <DropdownMenuItem
-                      onSelect={() => setReportOpen(true)}
-                      className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
-                    >
-                      Feedback
-                      <MessageSquare className="ml-auto h-4 w-4" />
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />
-                  <DropdownMenuItem
-                    onSelect={handleDelete}
-                    className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-red-600 dark:focus:text-red-400"
-                  >
-                    Delete
-                    <Trash2 className="ml-auto h-4 w-4 text-red-500 dark:text-red-400" />
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </div>
-      </div>
+                  Feedback
+                  <MessageSquare className="ml-auto h-4 w-4" />
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />
+              <DropdownMenuItem
+                onSelect={handleDelete}
+                className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-red-600 dark:focus:text-red-400"
+              >
+                Delete
+                <Trash2 className="ml-auto h-4 w-4 text-red-500 dark:text-red-400" />
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        }
+      />
 
       {/* Report recipe dialog */}
       {feedbackFeaturesEnabled && (
