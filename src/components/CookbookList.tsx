@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { FileText, ImageIcon, LinkIcon, type LucideIcon } from "lucide-react";
 import { useRecipe } from "@/context/RecipeContext";
 import {
   DropdownMenu,
@@ -18,6 +19,20 @@ import MenuDots from "@solar-icons/react/csr/ui/MenuDots";
 import Book from "@solar-icons/react/csr/school/Book";
 
 import type { SavedRecipe } from "@/lib/types";
+
+type SourceKind = "image" | "url" | "text";
+
+const SOURCE_KIND_ICON: Record<SourceKind, LucideIcon> = {
+  image: ImageIcon,
+  url: LinkIcon,
+  text: FileText,
+};
+
+const SOURCE_KIND_LABEL: Record<SourceKind, string> = {
+  image: "Image recipe",
+  url: "Web recipe",
+  text: "Text recipe",
+};
 
 function getTimeGroup(dateStr: string): string {
   const date = new Date(dateStr);
@@ -56,6 +71,42 @@ function groupRecipes(recipes: SavedRecipe[]) {
   }
 
   return groups;
+}
+
+function getSourceKind(item: SavedRecipe): SourceKind {
+  if (item.source_url || item.recipe.sourceUrl) return "url";
+  if (item.recipe.imageTranscription || item.recipe.imageUrl) return "image";
+  return "text";
+}
+
+function RecipeSourceIcon({ domain, kind }: { domain: string | null; kind: SourceKind }) {
+  const [faviconFailed, setFaviconFailed] = useState(false);
+
+  if (domain && !faviconFailed) {
+    return (
+      <Image
+        src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
+        alt=""
+        width={16}
+        height={16}
+        unoptimized
+        onError={() => setFaviconFailed(true)}
+        className="shrink-0 rounded-sm"
+      />
+    );
+  }
+
+  const Icon = SOURCE_KIND_ICON[kind];
+
+  return (
+    <span
+      className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-stone-400 dark:text-stone-500"
+      title={SOURCE_KIND_LABEL[kind]}
+      aria-label={SOURCE_KIND_LABEL[kind]}
+    >
+      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+    </span>
+  );
 }
 
 interface CookbookListProps {
@@ -134,16 +185,7 @@ export function CookbookList({ initialRecipes }: CookbookListProps) {
                 className={`group -mx-3 flex items-center justify-between rounded-xl px-3 py-3.5 cursor-pointer outline-none hover:bg-stone-200/60 dark:hover:bg-stone-700/35 focus-visible:ring-2 focus-visible:ring-[var(--color-blue)] focus-visible:ring-offset-2 ${menuOpenId === item.id ? "bg-stone-200/60 dark:bg-stone-700/35" : ""}`}
               >
                 <div className="min-w-0 flex-1 flex items-center gap-3">
-                  {domain && (
-                    <Image
-                      src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
-                      alt=""
-                      width={16}
-                      height={16}
-                      unoptimized
-                      className="shrink-0 rounded-sm"
-                    />
-                  )}
+                  <RecipeSourceIcon domain={domain} kind={getSourceKind(item)} />
                   <div className="min-w-0 flex items-baseline">
                     <span className="truncate font-serif text-base font-semibold leading-snug text-stone-900 dark:text-stone-50">
                       {item.recipe.title}
