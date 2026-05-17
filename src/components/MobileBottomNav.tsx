@@ -45,13 +45,7 @@ type MobileNavShellProps = {
   className?: string;
 };
 
-function NavIconButton({
-  item,
-  className,
-}: {
-  item: MobileNavItem;
-  className?: string;
-}) {
+function NavIconButton({ item, className }: { item: MobileNavItem; className?: string }) {
   const stateClass = item.active
     ? "bg-stone-100 text-[var(--color-text-heading)] shadow-[inset_0_0_0_1px_rgba(41,37,36,0.025)] dark:bg-stone-800 dark:text-stone-100"
     : "text-[var(--color-text-muted)] active:bg-stone-100 active:text-[var(--color-text-heading)] dark:active:bg-stone-800";
@@ -94,10 +88,7 @@ function NavIconButton({
 
 function MobileNavTabLayer({ items }: { items: MobileNavItem[] }) {
   return (
-    <div
-      className="flex min-w-0 items-center justify-center gap-1 rounded-full p-1"
-      role="tablist"
-    >
+    <div className="flex min-w-0 items-center justify-center gap-1 rounded-full p-1" role="tablist">
       {items.map((item) => (
         <NavIconButton key={item.id} item={item} />
       ))}
