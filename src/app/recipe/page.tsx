@@ -50,6 +50,7 @@ import AltArrowLeft from "@solar-icons/react/csr/arrows/AltArrowLeft";
 import Ruler from "@solar-icons/react/csr/tools/Ruler";
 import Eye from "@solar-icons/react/csr/security/Eye";
 import EyeClosed from "@solar-icons/react/csr/security/EyeClosed";
+import { Copy, FileText, MessageSquare, Printer, Scale, Share2, Trash2 } from "lucide-react";
 
 export default function RecipePage() {
   const router = useRouter();
@@ -472,19 +473,24 @@ export default function RecipePage() {
                       value="original"
                       className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                     >
-                      Original ({recipeUnitSystem === "metric" ? "Metric" : "Imperial"})
+                      <span className="min-w-0 flex-1 truncate">
+                        Original ({recipeUnitSystem === "metric" ? "Metric" : "Imperial"})
+                      </span>
+                      <FileText className="ml-auto h-4 w-4" />
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem
                       value="metric"
                       className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                     >
-                      Metric
+                      <span className="min-w-0 flex-1 truncate">Metric</span>
+                      <Scale className="ml-auto h-4 w-4" />
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem
                       value="imperial"
                       className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                     >
-                      Imperial
+                      <span className="min-w-0 flex-1 truncate">Imperial</span>
+                      <Ruler className="ml-auto h-4 w-4" />
                     </DropdownMenuRadioItem>
                   </DropdownMenuRadioGroup>
                 </DropdownMenuContent>
@@ -564,8 +570,9 @@ export default function RecipePage() {
                     onSelect={() => window.print()}
                     className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                   >
+                    Print
                     <svg
-                      className="h-4 w-4 mr-2"
+                      className="ml-auto h-4 w-4"
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
                       fill="none"
@@ -578,14 +585,14 @@ export default function RecipePage() {
                       <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                       <rect width="12" height="8" x="6" y="14" />
                     </svg>
-                    Print
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onSelect={handleShare}
                     className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                   >
+                    Share
                     <svg
-                      className="h-4 w-4 mr-2"
+                      className="ml-auto h-4 w-4"
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
                       fill="none"
@@ -598,15 +605,15 @@ export default function RecipePage() {
                       <polyline points="16 6 12 2 8 6" />
                       <line x1="12" x2="12" y1="2" y2="15" />
                     </svg>
-                    Share
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />
                   <DropdownMenuItem
                     onSelect={handleDelete}
                     className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-red-600 dark:focus:text-red-400"
                   >
+                    Delete
                     <svg
-                      className="h-4 w-4 mr-2 text-red-500 dark:text-red-400"
+                      className="ml-auto h-4 w-4 text-red-500 dark:text-red-400"
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
                       fill="none"
@@ -620,7 +627,6 @@ export default function RecipePage() {
                       <line x1="10" x2="10" y1="11" y2="17" />
                       <line x1="14" x2="14" y1="11" y2="17" />
                     </svg>
-                    Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -869,18 +875,21 @@ export default function RecipePage() {
                     className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                   >
                     Copy
+                    <Copy className="ml-auto h-4 w-4" />
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onSelect={handleShare}
                     className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                   >
                     Share
+                    <Share2 className="ml-auto h-4 w-4" />
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onSelect={() => window.print()}
                     className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                   >
                     Print
+                    <Printer className="ml-auto h-4 w-4" />
                   </DropdownMenuItem>
                   {feedbackFeaturesEnabled && user && (
                     <DropdownMenuItem
@@ -888,6 +897,7 @@ export default function RecipePage() {
                       className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                     >
                       Feedback
+                      <MessageSquare className="ml-auto h-4 w-4" />
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />
@@ -896,6 +906,7 @@ export default function RecipePage() {
                     className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-red-600 dark:focus:text-red-400"
                   >
                     Delete
+                    <Trash2 className="ml-auto h-4 w-4 text-red-500 dark:text-red-400" />
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

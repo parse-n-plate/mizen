@@ -23,13 +23,13 @@ import {
 import { feedbackFeaturesEnabled } from "@/lib/features";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { createClient } from "@/lib/supabase/client";
-import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
 import HomeSmile from "@solar-icons/react/csr/ui/HomeSmile";
 import BookMinimalistic from "@solar-icons/react/csr/school/BookMinimalistic";
 import Settings from "@solar-icons/react/csr/settings/Settings";
 import ChatRoundDots from "@solar-icons/react/csr/messages/ChatRoundDots";
 import Magnifer from "@solar-icons/react/csr/search/Magnifer";
 import SidebarMinimalistic from "@solar-icons/react/csr/it/SidebarMinimalistic";
+import { LogOut } from "lucide-react";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -420,14 +420,6 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
         {/* Bottom section */}
         <div className="flex flex-col px-4 pb-6 w-[240px]">
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 font-sans text-sm text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 hover:text-stone-700 dark:hover:text-stone-300 transition-none"
-          >
-            <Settings size={17} className="shrink-0" />
-            Settings
-          </button>
-
           {feedbackFeaturesEnabled && (
             <button
               onClick={() => setFeedbackOpen(true)}
@@ -463,7 +455,6 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   <span className="min-w-0 flex-1 truncate font-sans text-sm text-stone-600 dark:text-stone-300 group-hover/user:text-stone-800 dark:group-hover/user:text-stone-100">
                     {name}
                   </span>
-                  <AltArrowDown className="size-3.5 shrink-0 text-stone-400 dark:text-stone-500 transition-transform duration-200 group-data-[state=open]/user:rotate-180" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -472,12 +463,28 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 sideOffset={8}
                 className="w-52 bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700"
               >
-                <DropdownMenuLabel className="font-sans">
-                  <span className="block truncate text-sm font-medium text-stone-900 dark:text-stone-100">
-                    {name}
-                  </span>
-                  <span className="block truncate text-xs font-normal text-stone-400 dark:text-stone-500">
-                    {user.email}
+                <DropdownMenuLabel className="flex items-center gap-2.5 font-sans">
+                  {user.user_metadata?.avatar_url ? (
+                    <Image
+                      src={user.user_metadata.avatar_url}
+                      alt={name}
+                      width={32}
+                      height={32}
+                      className="h-8 w-8 rounded-full shrink-0"
+                      unoptimized
+                    />
+                  ) : (
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-stone-200 font-sans text-xs font-medium text-stone-600 dark:bg-stone-700 dark:text-stone-300">
+                      {name[0]?.toUpperCase()}
+                    </span>
+                  )}
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-medium text-stone-900 dark:text-stone-100">
+                      {name}
+                    </span>
+                    <span className="block truncate text-xs font-normal text-stone-400 dark:text-stone-500">
+                      {user.email}
+                    </span>
                   </span>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />
@@ -486,14 +493,16 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   className="font-sans text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                 >
                   Settings
+                  <Settings className="ml-auto size-4" />
                 </DropdownMenuItem>
                 <form action="/api/auth/signout" method="post">
                   <DropdownMenuItem
                     className="font-sans text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                     asChild
                   >
-                    <button type="submit" className="w-full text-left">
+                    <button type="submit" className="flex w-full items-center gap-2 text-left">
                       Sign out
+                      <LogOut className="ml-auto size-4" />
                     </button>
                   </DropdownMenuItem>
                 </form>
