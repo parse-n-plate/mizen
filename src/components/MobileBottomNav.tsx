@@ -1,72 +1,206 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import AddCircle from "@solar-icons/react/csr/ui/AddCircle";
+import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
+import Home from "@solar-icons/react/csr/ui/Home";
 import BookBookmark from "@solar-icons/react/csr/school/BookBookmark";
 import User from "@solar-icons/react/csr/users/User";
 
-type NavItem = {
-  id: "add" | "cookbook" | "profile";
-  href: string;
+type BaseMobileNavItem = {
+  id: string;
   label: string;
+  icon: ReactNode;
+  active?: boolean;
+  disabled?: boolean;
 };
 
-const NAV_ITEMS: NavItem[] = [
-  { id: "add", href: "/#search", label: "Add Recipe" },
-  { id: "cookbook", href: "/cookbook", label: "Cookbook" },
-  { id: "profile", href: "/profile", label: "Profile" },
-];
+type MobileNavLinkItem = BaseMobileNavItem & {
+  type: "link";
+  href: string;
+};
 
-export function MobileBottomNav() {
-  const pathname = usePathname();
-  const [hash, setHash] = useState("");
-  const activeHash = pathname === "/" ? hash : "";
+type MobileNavButtonItem = BaseMobileNavItem & {
+  type: "button";
+  onClick: () => void;
+  pressed?: boolean;
+};
 
-  useEffect(() => {
-    if (pathname !== "/") return;
+export type MobileNavItem = MobileNavLinkItem | MobileNavButtonItem;
 
-    const syncHash = () => setHash(window.location.hash);
-    syncHash();
-    window.addEventListener("hashchange", syncHash);
-    return () => window.removeEventListener("hashchange", syncHash);
-  }, [pathname]);
+type MobileNavAction = {
+  label: string;
+  icon: ReactNode;
+  href?: string;
+  onClick?: () => void;
+  active?: boolean;
+  disabled?: boolean;
+};
+
+type MobileNavShellProps = {
+  items: MobileNavItem[];
+  action?: MobileNavAction;
+  actionSlot?: ReactNode;
+  className?: string;
+  showLabels?: boolean;
+};
+
+function NavIconButton({
+  item,
+  className,
+  showLabel = false,
+}: {
+  item: MobileNavItem;
+  className?: string;
+  showLabel?: boolean;
+}) {
+  const stateClass = item.active
+    ? "bg-stone-100 text-[var(--color-text-heading)] shadow-[inset_0_0_0_1px_rgba(41,37,36,0.025)] dark:bg-stone-800 dark:text-stone-100"
+    : "text-[var(--color-text-muted)] active:bg-stone-100 active:text-[var(--color-text-heading)] dark:active:bg-stone-800";
+
+  const sharedClassName = cn(
+    "press-scale inline-flex h-12 items-center justify-center rounded-full transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-blue)] disabled:pointer-events-none disabled:opacity-40",
+    showLabel ? "min-w-[5.75rem] gap-1.5 px-4 font-sans text-xs font-semibold" : "min-w-12 px-3",
+    stateClass,
+    className
+  );
+
+  if (item.type === "link") {
+    return (
+      <Link
+        href={item.href}
+        role="tab"
+        aria-label={item.label}
+        aria-selected={item.active}
+        aria-current={item.active ? "page" : undefined}
+        className={sharedClassName}
+      >
+        {item.icon}
+        {showLabel && <span>{item.label}</span>}
+      </Link>
+    );
+  }
 
   return (
-    <nav className="md:hidden fixed inset-x-0 bottom-0 z-30 border-t border-[var(--color-border-light)]/90 bg-[var(--color-surface)]/95 backdrop-blur-md">
-      <div className="mx-auto flex max-w-3xl items-center justify-around px-4 pt-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
-        {NAV_ITEMS.map((item) => {
-          const isActive =
-            item.id === "profile"
-              ? pathname === "/profile"
-              : item.id === "cookbook"
-                ? pathname === "/cookbook"
-                : pathname === "/" && activeHash === "#search";
+    <button
+      type="button"
+      role="tab"
+      aria-label={item.label}
+      aria-selected={item.active}
+      disabled={item.disabled}
+      onClick={item.onClick}
+      className={sharedClassName}
+    >
+      {item.icon}
+      {showLabel && <span>{item.label}</span>}
+    </button>
+  );
+}
 
-          return (
-            <Link
-              key={item.id}
-              href={item.href}
-              aria-current={isActive ? "page" : undefined}
-              className={`flex min-w-20 flex-col items-center gap-1 rounded-xl px-3 py-2 font-sans text-[11px] font-medium transition-colors ${
-                isActive
-                  ? "text-[var(--color-blue)]"
-                  : "text-[var(--color-text-muted)] active:text-[var(--color-text-heading)]"
-              }`}
-            >
-              {item.id === "add" ? (
-                <AddCircle size={20} aria-hidden="true" />
-              ) : item.id === "cookbook" ? (
-                <BookBookmark size={20} aria-hidden="true" />
-              ) : (
-                <User size={20} aria-hidden="true" />
-              )}
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
+function MobileNavTabLayer({
+  items,
+  showLabels,
+}: {
+  items: MobileNavItem[];
+  showLabels?: boolean;
+}) {
+  return (
+    <div className="flex min-w-0 items-center justify-center gap-1 rounded-full p-1" role="tablist">
+      {items.map((item) => (
+        <NavIconButton key={item.id} item={item} showLabel={showLabels} />
+      ))}
+    </div>
+  );
+}
+
+function MobileNavPrimaryAction({ action }: { action: MobileNavAction }) {
+  const className = cn(
+    "press-scale inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-[var(--color-border-light)]/80 bg-[var(--color-surface)] text-[var(--color-text-heading)] shadow-[0_12px_30px_rgba(0,0,0,0.08)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-blue)] disabled:pointer-events-none disabled:opacity-40 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100",
+    action.active && "bg-stone-100 text-[var(--color-blue)] dark:bg-stone-800"
+  );
+
+  if (action.href) {
+    return (
+      <Link href={action.href} aria-label={action.label} className={className}>
+        {action.icon}
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      aria-label={action.label}
+      disabled={action.disabled}
+      onClick={action.onClick}
+      className={className}
+    >
+      {action.icon}
+    </button>
+  );
+}
+
+export function MobileNavShell({
+  items,
+  action,
+  actionSlot,
+  className,
+  showLabels,
+}: MobileNavShellProps) {
+  return (
+    <nav
+      className={cn(
+        "md:hidden print:hidden fixed inset-x-0 bottom-0 z-30 pointer-events-none",
+        className
+      )}
+      aria-label="Mobile navigation"
+    >
+      <div className="mx-auto flex max-w-3xl items-center justify-center gap-3 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3">
+        <div className="pointer-events-auto relative min-w-0 rounded-full border border-[var(--color-border-light)]/80 bg-[var(--color-surface)]/95 shadow-[0_12px_34px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-stone-700 dark:bg-stone-900/95">
+          <MobileNavTabLayer items={items} showLabels={showLabels} />
+        </div>
+        {actionSlot ? (
+          <div className="pointer-events-auto">{actionSlot}</div>
+        ) : action ? (
+          <div className="pointer-events-auto">
+            <MobileNavPrimaryAction action={action} />
+          </div>
+        ) : null}
       </div>
     </nav>
   );
+}
+
+export function MobileBottomNav() {
+  const pathname = usePathname();
+
+  const items: MobileNavItem[] = [
+    {
+      id: "home",
+      type: "link",
+      href: "/",
+      label: "Home",
+      active: pathname === "/",
+      icon: <Home size={22} aria-hidden="true" />,
+    },
+    {
+      id: "cookbook",
+      type: "link",
+      href: "/cookbook",
+      label: "Cookbook",
+      active: pathname === "/cookbook",
+      icon: <BookBookmark size={22} aria-hidden="true" />,
+    },
+    {
+      id: "profile",
+      type: "link",
+      href: "/profile",
+      label: "Profile",
+      active: pathname === "/profile",
+      icon: <User size={22} aria-hidden="true" />,
+    },
+  ];
+
+  return <MobileNavShell items={items} />;
 }
