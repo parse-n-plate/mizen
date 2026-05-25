@@ -187,18 +187,6 @@ export function TopBar() {
                       <span className="truncate font-sans text-sm font-medium text-stone-600 dark:text-stone-400">
                         {recipe.title}
                       </span>
-                      <svg
-                        className={`h-3.5 w-3.5 flex-shrink-0 text-stone-400 dark:text-stone-500 transition-transform ${recipeSwitcherOpen ? "rotate-180" : ""}`}
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="m6 9 6 6 6-6" />
-                      </svg>
                     </button>
 
                     {recipeSwitcherOpen && (
