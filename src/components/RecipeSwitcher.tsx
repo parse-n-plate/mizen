@@ -1,6 +1,5 @@
 "use client";
 
-import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
 import Heart from "@solar-icons/react/csr/like/Heart";
 import { useRecipe } from "@/context/RecipeContext";
 import type { HistoryEntry } from "@/context/RecipeContext";
@@ -40,10 +39,9 @@ export function RecipeSwitcher({ title, variant }: RecipeSwitcherProps) {
             <button
               type="button"
               aria-label="Switch recipe"
-              className="group/switcher hidden md:flex items-baseline gap-2 text-left -mx-1 px-1 rounded-md hover:bg-stone-100 dark:hover:bg-stone-800/60 transition-colors cursor-pointer"
+              className="group/switcher hidden md:flex items-baseline text-left -mx-1 px-1 rounded-md hover:bg-stone-100 dark:hover:bg-stone-800/60 transition-colors cursor-pointer"
             >
               <h1 className={H1_CLASSES}>{title}</h1>
-              <AltArrowDown className="shrink-0 size-5 md:size-6 text-stone-400 dark:text-stone-500 transition-transform duration-200 group-data-[state=open]/switcher:rotate-180" />
             </button>
           </DropdownMenuTrigger>
           <SwitcherContent entries={otherEntries} onSelect={setRecipe} />
@@ -64,10 +62,9 @@ export function RecipeSwitcher({ title, variant }: RecipeSwitcherProps) {
         <button
           type="button"
           aria-label="Switch recipe"
-          className="group/switcher inline-flex items-center gap-1 min-w-0 text-sm text-[var(--color-text-muted)] active:text-[var(--color-text-body)]"
+          className="group/switcher inline-flex items-center min-w-0 text-sm text-[var(--color-text-muted)] active:text-[var(--color-text-body)]"
         >
           <span className="truncate">{title}</span>
-          <AltArrowDown className="shrink-0 size-3.5 transition-transform duration-200 group-data-[state=open]/switcher:rotate-180" />
         </button>
       </DropdownMenuTrigger>
       <SwitcherContent entries={otherEntries} onSelect={setRecipe} />
