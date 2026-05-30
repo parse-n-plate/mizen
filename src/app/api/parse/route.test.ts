@@ -1,11 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { POST } from "./route";
 import { createClient } from "@/lib/supabase/server";
-import {
-  checkAndIncrementParseUsage,
-  extractClientIp,
-  hashIp,
-} from "@/lib/rateLimit";
+import { checkAndIncrementParseUsage, extractClientIp, hashIp } from "@/lib/rateLimit";
 import { parseRecipeFromUrl } from "@/utils/parseRecipe";
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -35,7 +31,9 @@ describe("/api/parse", () => {
       success: true,
       data: {
         title: "Soup",
-        ingredients: [{ groupName: "Main", ingredients: [{ amount: "1", units: "", ingredient: "water" }] }],
+        ingredients: [
+          { groupName: "Main", ingredients: [{ amount: "1", units: "", ingredient: "water" }] },
+        ],
         instructions: [{ title: "Step 1", detail: "Simmer." }],
       },
       method: "json-ld",
