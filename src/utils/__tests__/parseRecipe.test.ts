@@ -1,7 +1,40 @@
 import * as cheerio from "cheerio";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { __test__ } from "@/utils/parseRecipe";
 import type { InstructionStep } from "@/lib/types";
+
+vi.mock("@/lib/groq", () => ({
+  getGroqClient: () => ({
+    chat: {
+      completions: {
+        create: vi.fn().mockResolvedValue({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  title: "Fragment Soup",
+                  ingredients: [
+                    {
+                      groupName: "Main",
+                      ingredients: [{ amount: "1", units: "cup", ingredient: "water" }],
+                    },
+                  ],
+                  instructions: [{ title: "Step 1", detail: "Simmer." }],
+                }),
+              },
+            },
+          ],
+        }),
+      },
+    },
+  }),
+  extractJsonFromAiResponse: (text: string) => JSON.parse(text),
+}));
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
 
 describe("parseRecipe image handling", () => {
   it("extracts multiple image URLs from JSON-LD instruction arrays", () => {
@@ -123,5 +156,22 @@ describe("parseRecipe image handling", () => {
         ],
       },
     ]);
+  });
+
+  it("encodes special characters when requesting the Jina Reader fallback", async () => {
+    const targetUrl = "https://recipes.example/path?name=tomato soup#ingredients";
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      text: vi.fn().mockResolvedValue("recipe markdown"),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await __test__.parseViaJinaReader(targetUrl);
+
+    expect(result?.success).toBe(true);
+    expect(fetchMock).toHaveBeenCalledWith(`https://r.jina.ai/${encodeURIComponent(targetUrl)}`, {
+      headers: { Accept: "text/plain" },
+      signal: expect.any(AbortSignal),
+    });
   });
 });

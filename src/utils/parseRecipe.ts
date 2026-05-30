@@ -1018,7 +1018,7 @@ async function parseViaJinaReader(url: string): Promise<ParserResult | null> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 15000);
   try {
-    const response = await fetch(`https://r.jina.ai/${url}`, {
+    const response = await fetch(`https://r.jina.ai/${encodeURIComponent(url)}`, {
       headers: { Accept: "text/plain" },
       signal: controller.signal,
     });
@@ -1225,4 +1225,5 @@ export const __test__ = {
   extractFromJsonLd,
   extractStepImagesFromHtml,
   mergeStepImages,
+  parseViaJinaReader,
 };

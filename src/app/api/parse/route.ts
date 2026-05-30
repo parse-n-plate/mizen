@@ -33,12 +33,23 @@ export async function POST(request: Request) {
     let ipHash: string | null = null;
     if (!userId) {
       const ip = extractClientIp(request);
-      ipHash = ip ? hashIp(ip) : hashIp("unknown");
+      ipHash = ip ? hashIp(ip) : null;
     }
 
     const limit = userId ? PARSE_LIMIT_AUTHED : PARSE_LIMIT_ANON;
     const rateLimit = await checkAndIncrementParseUsage({ userId, ipHash, limit });
     const usage = rateLimit.usage;
+
+    if (rateLimit.ok === "skipped" && rateLimit.reason !== "missing_identifier") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Rate limit unavailable. Please try again later.",
+          method: "none",
+        },
+        { status: 503 }
+      );
+    }
 
     if (rateLimit.ok === false) {
       return NextResponse.json(

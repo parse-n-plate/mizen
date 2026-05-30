@@ -31,9 +31,10 @@ type ParseUsage = {
   anonymous: boolean;
 };
 
-function formatResetTime(iso: string): string {
+export function formatResetTime(iso: string): string {
   try {
     const d = new Date(iso);
+    if (isNaN(d.getTime())) return "tomorrow";
     return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   } catch {
     return "tomorrow";

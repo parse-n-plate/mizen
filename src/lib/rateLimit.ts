@@ -17,8 +17,12 @@ export type ParseUsage = {
 export type RateLimitResult =
   | { ok: true; usage: ParseUsage }
   | { ok: false; usage: ParseUsage }
-  // Storage is unreachable — caller decides whether to fail open or closed.
-  | { ok: "skipped"; usage: null };
+  // The caller decides whether a skipped check should fail open or closed.
+  | {
+      ok: "skipped";
+      usage: null;
+      reason: "missing_identifier" | "admin_unavailable" | "rpc_error" | "no_data";
+    };
 
 export function extractClientIp(request: Request): string | null {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -54,13 +58,17 @@ export async function checkAndIncrementParseUsage({
   ipHash: string | null;
   limit: number;
 }): Promise<RateLimitResult> {
-  if ((userId === null) === (ipHash === null)) {
+  if (userId === null && ipHash === null) {
+    return { ok: "skipped", usage: null, reason: "missing_identifier" };
+  }
+
+  if (userId !== null && ipHash !== null) {
     throw new Error("Exactly one of userId or ipHash must be provided");
   }
 
   const supabase = createAdminClient();
   if (!supabase) {
-    return { ok: "skipped", usage: null };
+    return { ok: "skipped", usage: null, reason: "admin_unavailable" };
   }
 
   const { data, error } = await supabase.rpc("increment_parse_usage", {
@@ -71,11 +79,11 @@ export async function checkAndIncrementParseUsage({
 
   if (error || !data) {
     log.error({ err: error }, "increment_parse_usage RPC failed");
-    return { ok: "skipped", usage: null };
+    return { ok: "skipped", usage: null, reason: "rpc_error" };
   }
 
   const row = Array.isArray(data) ? data[0] : data;
-  if (!row) return { ok: "skipped", usage: null };
+  if (!row) return { ok: "skipped", usage: null, reason: "no_data" };
 
   const usage: ParseUsage = {
     used: row.used,
