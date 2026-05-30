@@ -45,15 +45,22 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [mobileSearchContainer] = useState<HTMLElement | null>(() =>
-    typeof document === "undefined"
-      ? null
-      : document.getElementById("mobile-ingredient-search-action")
-  );
+  const [mobileSearchContainer, setMobileSearchContainer] = useState<HTMLElement | null>(null);
   const desktopSearchInputRef = useRef<HTMLInputElement>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const isSearchExpanded = isSearchOpen || !!searchQuery;
   const numberFormat = useNumberFormat();
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      setMobileSearchContainer(
+        document.getElementById("mobile-recipe-search-action") ??
+          document.getElementById("mobile-ingredient-search-action")
+      );
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   useEffect(() => {
     if (!isSearchOpen) return;

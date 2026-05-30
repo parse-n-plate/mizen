@@ -53,7 +53,7 @@ export default async function CookbookPage() {
             </div>
             <Link
               href="/"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-stone-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-stone-700 dark:bg-stone-200 dark:text-stone-900 dark:hover:bg-stone-300"
+              className="hidden items-center gap-1.5 rounded-lg bg-stone-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-stone-700 dark:bg-stone-200 dark:text-stone-900 dark:hover:bg-stone-300 sm:inline-flex"
             >
               <span className="text-base leading-none">+</span>
               Add Recipe
