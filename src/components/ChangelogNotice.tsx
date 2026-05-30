@@ -73,14 +73,18 @@ export function ChangelogNotice({
         <DialogTrigger asChild>
           <Button
             type="button"
-            variant="outline"
-            size={compact ? "sm" : "default"}
+            variant="notice"
+            size={compact ? "notice" : "default"}
             aria-label={isNew ? `${triggerLabel} ${triggerBadgeLabel}` : triggerLabel}
-            className={cn("w-full justify-start", compact && "h-auto", className)}
+            className={cn("w-full justify-start", className)}
           >
             <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
               <span className="min-w-0 truncate">{triggerLabel}</span>
-              {isNew && <Badge variant="secondary">{triggerBadgeLabel}</Badge>}
+              {isNew && (
+                <Badge variant="secondary" className="text-[11px] font-semibold leading-none">
+                  {triggerBadgeLabel}
+                </Badge>
+              )}
             </span>
           </Button>
         </DialogTrigger>
@@ -130,7 +134,7 @@ export function ChangelogNotice({
             </div>
 
             <div className="flex w-full items-center justify-end">
-              <Button asChild size="sm">
+              <Button asChild variant="primary-blue" size="sm">
                 <a href={contactHref} aria-label={`Send Mizen feedback to ${contactEmail}`}>
                   <ChatRoundDots size={18} weight="Bold" className="shrink-0" />
                   {feedbackLabel}
