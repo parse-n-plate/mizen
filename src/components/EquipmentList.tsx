@@ -27,7 +27,7 @@ export function EquipmentList({ equipment, steps, onStepClick }: EquipmentListPr
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center px-3 mb-4">
+      <div className="flex items-center md:px-3 mb-4">
         <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500">
           Equipment
         </h3>

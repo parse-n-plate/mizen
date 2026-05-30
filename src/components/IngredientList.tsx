@@ -197,7 +197,7 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
           mobileSearchContainer
         )}
 
-      <div className="flex items-center justify-between gap-4 pl-3 mb-4">
+      <div className="flex items-center justify-between gap-4 md:pl-3 mb-4">
         <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 flex-shrink-0">
           Ingredients
         </h3>
@@ -257,7 +257,7 @@ function IngredientGroupSection({
       <button
         type="button"
         onClick={() => setCollapsed(!collapsed)}
-        className="w-full flex items-center py-2.5 px-3 group cursor-pointer transition-colors duration-[180ms] hover:opacity-80 rounded-lg"
+        className="w-full flex items-center py-2.5 md:px-3 group cursor-pointer transition-colors duration-[180ms] hover:opacity-80 rounded-lg"
         aria-expanded={!collapsed}
       >
         <div className="flex items-center gap-3 flex-1">

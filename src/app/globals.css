@@ -635,6 +635,18 @@ body {
     background-color: var(--color-border-light);
   }
 
+  @media (max-width: 912px) {
+    .ingredient-list-content {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .ingredient-list-divider {
+      left: 30px;
+      right: 0;
+    }
+  }
+
   /* Native checkbox styled to match production */
   .ingredient-checkbox-input {
     width: 20px;

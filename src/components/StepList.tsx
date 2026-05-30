@@ -196,7 +196,7 @@ export function StepList({ steps }: StepListProps) {
           mobileSearchContainer
         )}
 
-      <div className="flex items-center justify-between gap-4 mb-3 pl-3">
+      <div className="flex items-center justify-between gap-4 mb-3 md:pl-3">
         <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 flex-shrink-0">
           Directions
         </h3>
@@ -228,7 +228,7 @@ export function StepList({ steps }: StepListProps) {
         </div>
       </div>
       {filteredSteps.length === 0 && searchQuery.trim() ? (
-        <p className="font-sans text-sm text-muted-foreground text-center py-4 px-3">
+        <p className="font-sans text-sm text-muted-foreground text-center py-4 md:px-3">
           No directions match &ldquo;{searchQuery}&rdquo;
         </p>
       ) : null}
@@ -281,9 +281,9 @@ function StepRow({
   return (
     <div
       id={`step-${index + 1}`}
-      className="relative flex flex-col py-3.5 px-3 rounded-lg group hover:bg-[var(--color-cream)]"
+      className="relative flex flex-col py-3.5 md:px-3 rounded-lg group hover:bg-[var(--color-cream)]"
     >
-      <div className="flex gap-4">
+      <div className="md:flex md:gap-4">
         {/* Content */}
         <div className="flex-1 min-w-0 space-y-2.5">
           {step.title && (
@@ -297,7 +297,7 @@ function StepRow({
         {/* Side-by-side: portrait/square/mild landscape (0.7–1.4) */}
         {hasImage && isSideBySide && (
           <div
-            className="flex-shrink-0 grid"
+            className="hidden md:grid flex-shrink-0"
             style={{
               gridTemplateColumns: showImages ? "1fr" : "0fr",
               transition: `grid-template-columns ${REVEAL_DURATION}ms ${REVEAL_EASE}`,
@@ -330,10 +330,45 @@ function StepRow({
         )}
       </div>
 
+      {/* Mobile: all single images stack full-width below the step copy. */}
+      {hasImage && !isMulti && (
+        <div
+          className="grid md:hidden"
+          style={{
+            gridTemplateRows: showImages ? "1fr" : "0fr",
+            transition: `grid-template-rows ${REVEAL_DURATION}ms ${REVEAL_EASE}`,
+          }}
+        >
+          <div className="overflow-hidden">
+            <div
+              className="mt-3"
+              onClick={(e) => {
+                const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
+                onImageClick({
+                  src: images[0],
+                  rect: img.getBoundingClientRect(),
+                  el: img as HTMLElement,
+                });
+              }}
+            >
+              <Image
+                src={images[0]}
+                alt={`Step ${index + 1}`}
+                width={496}
+                height={Math.round(496 / (ratio ?? 1))}
+                className="w-full h-auto rounded-[10px]"
+                style={photoRevealStyle(showImages)}
+                unoptimized
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Inline: tall portrait (<0.7) or landscape (>1.4) — no crop, max-height capped */}
       {hasImage && isInline && (
         <div
-          className="grid"
+          className="hidden md:grid"
           style={{
             gridTemplateRows: showImages ? "1fr" : "0fr",
             transition: `grid-template-rows ${REVEAL_DURATION}ms ${REVEAL_EASE}`,
@@ -365,7 +400,7 @@ function StepRow({
         </div>
       )}
 
-      {/* Multiple images — horizontal row, fixed height thumbnails */}
+      {/* Multiple images — stacked on mobile, horizontal thumbnails on desktop */}
       {hasImage && isMulti && (
         <div
           className="grid"
@@ -375,7 +410,7 @@ function StepRow({
           }}
         >
           <div className="overflow-hidden">
-            <div className="mt-2 flex gap-2">
+            <div className="mt-3 md:mt-2 flex flex-col md:flex-row gap-3 md:gap-2">
               {images.map((src, i) => (
                 <div
                   key={i}
@@ -395,7 +430,7 @@ function StepRow({
                     alt={`Step ${index + 1}, photo ${i + 1}`}
                     width={240}
                     height={140}
-                    className="w-full h-[140px] rounded-[10px] object-cover"
+                    className="w-full h-auto md:h-[140px] rounded-[10px] md:object-cover"
                     unoptimized
                   />
                 </div>
