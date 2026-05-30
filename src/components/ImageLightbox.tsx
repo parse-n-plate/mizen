@@ -1,6 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import {
+  useMemo,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useCallback,
+  type MouseEvent,
+  type PointerEvent,
+} from "react";
 import { createPortal } from "react-dom";
 
 export function ImageLightbox({
@@ -18,28 +27,46 @@ export function ImageLightbox({
 }) {
   const [active, setActive] = useState(false);
   const sourceElRef = useRef(sourceEl);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sourceRestoredRef = useRef(false);
+  const borderRadius = active ? 24 : 10;
   const [duration] = useState(() =>
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 300
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 240
   );
+  const easing = "cubic-bezier(0.23, 1, 0.32, 1)";
 
-  // Calculate scale so the image fits within 85% of the viewport
-  const scale = Math.min(
-    (window.innerWidth * 0.85) / sourceRect.width,
-    (window.innerHeight * 0.85) / sourceRect.height
-  );
+  const imageTransform = useMemo(() => {
+    const scale = Math.min(
+      (window.innerWidth * 0.85) / sourceRect.width,
+      (window.innerHeight * 0.85) / sourceRect.height
+    );
+    const expandedWidth = sourceRect.width * scale;
+    const expandedHeight = sourceRect.height * scale;
+    const expandedLeft = window.innerWidth / 2 - expandedWidth / 2;
+    const expandedTop = window.innerHeight / 2 - expandedHeight / 2;
+    const translateX = expandedLeft - sourceRect.left;
+    const translateY = expandedTop - sourceRect.top;
 
-  // Translation to move the image center to the viewport center
-  const translateX = window.innerWidth / 2 - (sourceRect.left + sourceRect.width / 2);
-  const translateY = window.innerHeight / 2 - (sourceRect.top + sourceRect.height / 2);
+    return active
+      ? `translate3d(${translateX}px, ${translateY}px, 0) scale(${scale})`
+      : "translate3d(0, 0, 0) scale(1)";
+  }, [active, sourceRect]);
 
-  // Hide the source thumbnail while lightbox is open
-  useEffect(() => {
-    const el = sourceElRef.current;
-    el.style.visibility = "hidden";
-    return () => {
-      el.style.visibility = "";
-    };
+  const restoreSource = useCallback(() => {
+    if (sourceRestoredRef.current) {
+      return;
+    }
+    sourceElRef.current.style.visibility = "";
+    sourceRestoredRef.current = true;
   }, []);
+
+  // Hide before paint so the clone replaces the thumbnail without a duplicate frame.
+  useLayoutEffect(() => {
+    const el = sourceElRef.current;
+    sourceRestoredRef.current = false;
+    el.style.visibility = "hidden";
+    return restoreSource;
+  }, [restoreSource]);
 
   // Double rAF: first frame paints the element at source position,
   // second frame triggers the transition to the scaled state
@@ -49,10 +76,52 @@ export function ImageLightbox({
   }, []);
 
   const handleClose = useCallback(() => {
+    if (closeTimerRef.current) {
+      return;
+    }
+
     setActive(false);
-    const timeout = setTimeout(onClose, duration);
-    return () => clearTimeout(timeout);
-  }, [onClose, duration]);
+    closeTimerRef.current = setTimeout(() => {
+      restoreSource();
+      onClose();
+    }, duration);
+  }, [onClose, duration, restoreSource]);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+      }
+    };
+  }, []);
+
+  const stopLightboxEvent = useCallback((e: MouseEvent | PointerEvent) => {
+    e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation?.();
+  }, []);
+
+  const handleRootClick = useCallback(
+    (e: MouseEvent<HTMLDivElement>) => {
+      stopLightboxEvent(e);
+      handleClose();
+    },
+    [handleClose, stopLightboxEvent]
+  );
+
+  const handleRootPointerDown = useCallback(
+    (e: PointerEvent<HTMLDivElement>) => {
+      stopLightboxEvent(e);
+    },
+    [stopLightboxEvent]
+  );
+
+  const handleImageClick = useCallback(
+    (e: MouseEvent<HTMLDivElement>) => {
+      stopLightboxEvent(e);
+      handleClose();
+    },
+    [handleClose, stopLightboxEvent]
+  );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -67,39 +136,39 @@ export function ImageLightbox({
       role="dialog"
       aria-modal="true"
       aria-label={alt}
-      className="fixed inset-0 z-50"
-      onClick={handleClose}
+      className="fixed inset-0 z-50 cursor-zoom-out"
+      onClick={handleRootClick}
+      onPointerDown={handleRootPointerDown}
     >
       {/* Backdrop — bg-color + blur transition together */}
       <div
         className="absolute inset-0"
         style={{
           backgroundColor: active ? "rgba(0, 0, 0, 0.8)" : "rgba(0, 0, 0, 0)",
-          backdropFilter: active ? "blur(4px)" : "blur(0px)",
-          WebkitBackdropFilter: active ? "blur(4px)" : "blur(0px)",
-          transition: `background-color ${duration}ms cubic-bezier(0.165, 0.84, 0.44, 1), backdrop-filter ${duration}ms cubic-bezier(0.165, 0.84, 0.44, 1), -webkit-backdrop-filter ${duration}ms cubic-bezier(0.165, 0.84, 0.44, 1)`,
+          transition: `background-color ${duration}ms ${easing}`,
         }}
       />
       {/* Image — scales from thumbnail position to viewport center */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt={alt}
-        className="fixed rounded-[10px] object-contain shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
+      <div
+        className="fixed overflow-hidden shadow-2xl"
+        onClick={handleImageClick}
         style={{
           top: sourceRect.top,
           left: sourceRect.left,
           width: sourceRect.width,
           height: sourceRect.height,
-          transformOrigin: "center center",
-          transform: active
-            ? `translate(${translateX}px, ${translateY}px) scale(${scale})`
-            : "translate(0, 0) scale(1)",
-          transition: `transform ${duration}ms cubic-bezier(0.165, 0.84, 0.44, 1)`,
+          transform: imageTransform,
+          transformOrigin: "top left",
+          borderRadius,
+          clipPath: `inset(0 round ${borderRadius}px)`,
+          transition: `transform ${duration}ms ${easing}, border-radius ${duration}ms ${easing}, clip-path ${duration}ms ${easing}`,
+          cursor: "zoom-out",
           willChange: "transform",
         }}
-      />
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt={alt} className="h-full w-full object-cover" draggable={false} />
+      </div>
     </div>,
     document.body
   );

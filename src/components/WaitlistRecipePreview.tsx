@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo } from "react";
 import type { ParsedRecipe } from "@/lib/types";
 import { RecipeHeader, formatTime } from "@/components/RecipeHeader";
 import { IngredientList } from "@/components/IngredientList";
 import { StepList } from "@/components/StepList";
+import { ImageLightbox } from "@/components/ImageLightbox";
 import { scaleIngredients } from "@/utils/ingredientScaler";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
@@ -129,312 +130,6 @@ In a large bowl, whisk the melted butter, brown sugar, and granulated sugar unti
 Slowly mix the dry ingredients into the wet ingredients until just combined. Fold in the chocolate chips. Cover dough and refrigerate for at least 30 minutes (or up to 2 days).
 
 Preheat oven to 325°F (163°C). Scoop 1.5 tablespoon balls of dough onto lined baking sheets, spaced 2 inches apart. Bake for 12 minutes until edges are set but centers look undone. Cool on the pan for 10 minutes.`;
-
-const ZOOM_MIN = 1;
-const ZOOM_MAX = 4;
-const ZOOM_STEP = 0.5;
-
-function ImageLightboxContent({
-  recipe,
-  zoom,
-  pan,
-  containerRef,
-  handleWheel,
-  handlePointerDown,
-  handlePointerMove,
-  handlePointerUp,
-  handleZoomIn,
-  handleZoomOut,
-  resetView,
-  hasTranscription,
-}: {
-  recipe: ParsedRecipe;
-  zoom: number;
-  pan: { x: number; y: number };
-  containerRef: React.RefObject<HTMLDivElement | null>;
-  handleWheel: (e: React.WheelEvent) => void;
-  handlePointerDown: (e: React.PointerEvent) => void;
-  handlePointerMove: (e: React.PointerEvent) => void;
-  handlePointerUp: () => void;
-  handleZoomIn: () => void;
-  handleZoomOut: () => void;
-  resetView: () => void;
-  hasTranscription: boolean;
-}) {
-  if (!hasTranscription) {
-    return (
-      /* eslint-disable-next-line @next/next/no-img-element */
-      <img
-        src={recipe.imageUrl}
-        alt={recipe.title}
-        className="w-full max-h-[80vh] object-contain rounded-lg"
-      />
-    );
-  }
-
-  return (
-    <>
-      {/* Image */}
-      <div
-        ref={containerRef}
-        className="relative shrink-0 bg-stone-100 dark:bg-stone-800 flex items-center justify-center overflow-hidden select-none aspect-[4/3] sm:aspect-auto sm:w-2/3"
-        onWheel={handleWheel}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        style={{ cursor: zoom > 1 ? "grab" : "default", touchAction: "none" }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={recipe.imageUrl}
-          alt={recipe.title}
-          className="w-full h-full object-contain pointer-events-none transition-transform duration-150 ease-out"
-          draggable={false}
-          style={{
-            transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
-          }}
-        />
-        {/* Zoom controls */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-black/60 backdrop-blur-sm rounded-full px-1.5 py-1 z-10">
-          <button
-            onClick={handleZoomOut}
-            disabled={zoom <= ZOOM_MIN}
-            className="w-7 h-7 flex items-center justify-center rounded-full text-white hover:bg-white/20 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-            aria-label="Zoom out"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
-              <path d="M5 12h14" />
-            </svg>
-          </button>
-          <button
-            onClick={resetView}
-            className="px-2 h-7 flex items-center justify-center rounded-full text-white text-xs font-medium tabular-nums hover:bg-white/20 transition-colors min-w-[3rem]"
-            aria-label="Reset zoom"
-          >
-            {Math.round(zoom * 100)}%
-          </button>
-          <button
-            onClick={handleZoomIn}
-            disabled={zoom >= ZOOM_MAX}
-            className="w-7 h-7 flex items-center justify-center rounded-full text-white hover:bg-white/20 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-            aria-label="Zoom in"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-          </button>
-        </div>
-      </div>
-      {/* Transcription */}
-      <div className="overflow-y-auto p-5 sm:p-6 sm:w-1/3">
-        <div className="space-y-4">
-          <div>
-            <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 mb-1">
-              Transcription
-            </h3>
-            <p className="font-sans text-[14px] leading-relaxed text-stone-700 dark:text-stone-300 whitespace-pre-wrap">
-              {recipe.imageTranscription}
-            </p>
-          </div>
-          <div className="border-t border-stone-200 dark:border-stone-700 pt-4 space-y-3">
-            <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500">
-              At a glance
-            </h3>
-            <div className="grid grid-cols-2 gap-2 text-[13px]">
-              {recipe.servings && (
-                <div className="flex flex-col gap-0.5 rounded-lg bg-stone-50 dark:bg-stone-800 px-3 py-2">
-                  <span className="text-stone-400 dark:text-stone-500">Yield</span>
-                  <span className="font-medium text-stone-700 dark:text-stone-200">
-                    {recipe.servings} loaves
-                  </span>
-                </div>
-              )}
-              {recipe.totalTimeMinutes && (
-                <div className="flex flex-col gap-0.5 rounded-lg bg-stone-50 dark:bg-stone-800 px-3 py-2">
-                  <span className="text-stone-400 dark:text-stone-500">Total time</span>
-                  <span className="font-medium text-stone-700 dark:text-stone-200">
-                    {formatTime(recipe.totalTimeMinutes)}
-                  </span>
-                </div>
-              )}
-              {recipe.cookTimeMinutes && (
-                <div className="flex flex-col gap-0.5 rounded-lg bg-stone-50 dark:bg-stone-800 px-3 py-2">
-                  <span className="text-stone-400 dark:text-stone-500">Bake</span>
-                  <span className="font-medium text-stone-700 dark:text-stone-200">
-                    400°F / {formatTime(recipe.cookTimeMinutes)}
-                  </span>
-                </div>
-              )}
-              <div className="flex flex-col gap-0.5 rounded-lg bg-stone-50 dark:bg-stone-800 px-3 py-2">
-                <span className="text-stone-400 dark:text-stone-500">Ingredients</span>
-                <span className="font-medium text-stone-700 dark:text-stone-200">
-                  {recipe.ingredients.reduce((sum, g) => sum + g.ingredients.length, 0)} items
-                </span>
-              </div>
-            </div>
-          </div>
-          {recipe.author && (
-            <p className="font-sans text-[12px] text-stone-400 dark:text-stone-500 italic">
-              Source: {recipe.author}
-              {recipe.sourceUrl && (
-                <>
-                  {" — "}
-                  <a
-                    href={recipe.sourceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline decoration-stone-300 dark:decoration-stone-600 underline-offset-2 hover:text-stone-600 dark:hover:text-stone-300 not-italic"
-                  >
-                    {new URL(recipe.sourceUrl).hostname.replace(/^www\./, "")}
-                  </a>
-                </>
-              )}
-            </p>
-          )}
-        </div>
-      </div>
-    </>
-  );
-}
-
-function ImageLightbox({
-  open,
-  onOpenChange,
-  recipe,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  recipe: ParsedRecipe;
-}) {
-  const isDesktop = useMediaQuery("(min-width: 640px)");
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const isDragging = useRef(false);
-  const dragStart = useRef({ x: 0, y: 0 });
-  const panStart = useRef({ x: 0, y: 0 });
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const resetView = useCallback(() => {
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
-  }, []);
-
-  const handleZoomIn = useCallback(() => {
-    setZoom((z) => Math.min(z + ZOOM_STEP, ZOOM_MAX));
-  }, []);
-
-  const handleZoomOut = useCallback(() => {
-    setZoom((z) => {
-      const next = Math.max(z - ZOOM_STEP, ZOOM_MIN);
-      if (next === 1) setPan({ x: 0, y: 0 });
-      return next;
-    });
-  }, []);
-
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
-    setZoom((z) => {
-      const next = Math.min(Math.max(z + delta, ZOOM_MIN), ZOOM_MAX);
-      if (next === 1) setPan({ x: 0, y: 0 });
-      return next;
-    });
-  }, []);
-
-  const handlePointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      if (zoom <= 1) return;
-      isDragging.current = true;
-      dragStart.current = { x: e.clientX, y: e.clientY };
-      panStart.current = { ...pan };
-      (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    },
-    [zoom, pan]
-  );
-
-  const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (!isDragging.current) return;
-    setPan({
-      x: panStart.current.x + (e.clientX - dragStart.current.x),
-      y: panStart.current.y + (e.clientY - dragStart.current.y),
-    });
-  }, []);
-
-  const handlePointerUp = useCallback(() => {
-    isDragging.current = false;
-  }, []);
-
-  const hasTranscription = !!recipe.imageTranscription;
-
-  const contentProps = {
-    recipe,
-    zoom,
-    pan,
-    containerRef,
-    handleWheel,
-    handlePointerDown,
-    handlePointerMove,
-    handlePointerUp,
-    handleZoomIn,
-    handleZoomOut,
-    resetView,
-    hasTranscription,
-  };
-
-  const handleOpenChange = (v: boolean) => {
-    onOpenChange(v);
-    if (!v) resetView();
-  };
-
-  if (!isDesktop) {
-    return (
-      <Drawer open={open} onOpenChange={handleOpenChange}>
-        <DrawerContent
-          aria-describedby={undefined}
-          className="max-h-[90vh] p-0 overflow-hidden bg-white dark:bg-stone-900"
-        >
-          <DrawerTitle className="sr-only">{recipe.title}</DrawerTitle>
-          <div className="overflow-y-auto">
-            <ImageLightboxContent {...contentProps} />
-          </div>
-        </DrawerContent>
-      </Drawer>
-    );
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent
-        className={`p-0 border-0 overflow-hidden ${
-          hasTranscription
-            ? "sm:max-w-[min(1400px,94vw)] w-[94vw] max-h-[88vh] bg-white dark:bg-stone-900 rounded-xl"
-            : "max-w-2xl w-auto bg-transparent shadow-none"
-        } [&>button[data-slot=dialog-close]]:bg-black/50 [&>button[data-slot=dialog-close]]:text-white [&>button[data-slot=dialog-close]]:rounded-full [&>button[data-slot=dialog-close]]:p-1 [&>button[data-slot=dialog-close]]:top-2 [&>button[data-slot=dialog-close]]:right-2 [&>button[data-slot=dialog-close]]:opacity-100 [&>button[data-slot=dialog-close]]:hover:bg-black/70 [&>button[data-slot=dialog-close]]:z-20`}
-      >
-        <DialogTitle className="sr-only">{recipe.title}</DialogTitle>
-        <div className="flex flex-row h-[min(80vh,calc(94vw*2/3))]">
-          <ImageLightboxContent {...contentProps} />
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function TextDialogBody({ text }: { text: string }) {
   return (
@@ -570,7 +265,7 @@ export function WaitlistRecipePreview({
   const originalServings = recipe.servings ?? 1;
   const [servings, setServings] = useState(originalServings);
   const [activeTab, setActiveTab] = useState<"prep" | "cook">("prep");
-  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightbox, setLightbox] = useState<{ rect: DOMRect; el: HTMLElement } | null>(null);
   const [textOpen, setTextOpen] = useState(false);
   const [urlOpen, setUrlOpen] = useState(false);
   const pastedTextContent = pastedText ?? DEFAULT_PASTED_TEXT;
@@ -603,9 +298,13 @@ export function WaitlistRecipePreview({
             <button
               onClick={(e) => {
                 (e.currentTarget as HTMLElement).blur();
-                setLightboxOpen(true);
+                const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
+                setLightbox({
+                  rect: img.getBoundingClientRect(),
+                  el: img as HTMLElement,
+                });
               }}
-              className="group flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors cursor-pointer"
+              className="group flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors cursor-zoom-in"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -693,8 +392,14 @@ export function WaitlistRecipePreview({
         </div>
       </div>
 
-      {recipe.imageUrl && (
-        <ImageLightbox open={lightboxOpen} onOpenChange={setLightboxOpen} recipe={recipe} />
+      {recipe.imageUrl && lightbox && (
+        <ImageLightbox
+          src={recipe.imageUrl}
+          alt={recipe.title}
+          sourceRect={lightbox.rect}
+          sourceEl={lightbox.el}
+          onClose={() => setLightbox(null)}
+        />
       )}
 
       {isDesktop ? (
