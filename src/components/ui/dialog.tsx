@@ -52,7 +52,9 @@ function DialogContent({
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay
-        className={animated ? undefined : "data-[state=open]:animate-none data-[state=closed]:animate-none"}
+        className={
+          animated ? undefined : "data-[state=open]:animate-none data-[state=closed]:animate-none"
+        }
       />
       <DialogPrimitive.Content
         data-slot="dialog-content"
