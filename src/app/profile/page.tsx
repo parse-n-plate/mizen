@@ -68,16 +68,6 @@ export default async function ProfilePage() {
           </form>
         </div>
 
-        <div className="mt-10 rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 dark:border-amber-900/70 dark:bg-amber-950/50">
-          <p className="font-sans text-sm font-medium text-amber-900 dark:text-amber-100">
-            Mizen is currently in beta.
-          </p>
-          <p className="mt-1 font-sans text-[13px] text-amber-800/90 dark:text-amber-200/80">
-            You may notice changes across the app as we keep refining recipes, navigation, and
-            account tools.
-          </p>
-        </div>
-
         <ProfileSettingsPanel />
       </div>
     </div>

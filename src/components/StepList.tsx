@@ -308,7 +308,7 @@ function StepRow({
           >
             <div className="overflow-hidden">
               <div
-                className="w-[40vw] max-w-[180px]"
+                className="w-[40vw] max-w-[180px] cursor-zoom-in"
                 onClick={(e) => {
                   const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
                   onImageClick({
@@ -379,7 +379,7 @@ function StepRow({
         >
           <div className="overflow-hidden">
             <div
-              className="mt-2 flex"
+              className="mt-2 flex cursor-zoom-in"
               onClick={(e) => {
                 const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
                 onImageClick({
@@ -417,7 +417,7 @@ function StepRow({
               {images.map((src, i) => (
                 <div
                   key={i}
-                  className="flex-1 min-w-0"
+                  className="flex-1 min-w-0 cursor-zoom-in"
                   style={photoRevealStyle(showImages, i)}
                   onClick={(e) => {
                     const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
