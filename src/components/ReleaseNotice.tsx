@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { appVersion } from "@/lib/app-version";
 import { cn } from "@/lib/utils";
 
 type ReleaseNoticeProps = {
@@ -37,7 +38,7 @@ const defaultDescription =
   "This early access includes custom recipe imports and the mobile cooking view. Bugs are to be expected, and your feedback helps us make Mizen a better experience for home cooks.";
 
 export function ReleaseNotice({
-  badgeLabel = "0.1.0",
+  badgeLabel = appVersion,
   bodyTitle = "Thanks for helping test Mizen!",
   compact = false,
   className,
