@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
-type ChangelogNoticeProps = {
+type BetaWelcomeNoticeProps = {
   badgeLabel?: string;
   bodyTitle?: string;
   compact?: boolean;
@@ -36,7 +36,7 @@ const defaultContactEmail = "hello@mizen.recipes";
 const defaultDescription =
   "This early access includes custom recipe imports and the mobile cooking view. Bugs are to be expected, and your feedback helps us make Mizen a better experience for home cooks.";
 
-export function ChangelogNotice({
+export function BetaWelcomeNotice({
   badgeLabel = "0.1.0",
   bodyTitle = "Thanks for helping test Mizen!",
   compact = false,
@@ -50,7 +50,7 @@ export function ChangelogNotice({
   title = "Mizen Early Access",
   triggerBadgeLabel = "New",
   triggerLabel = "Welcome to Beta",
-}: ChangelogNoticeProps) {
+}: BetaWelcomeNoticeProps) {
   const contactHref = `mailto:${contactEmail}?subject=${encodeURIComponent(
     contactSubject
   )}&body=${encodeURIComponent("Hi Mizen,\n\nI wanted to share:\n")}`;

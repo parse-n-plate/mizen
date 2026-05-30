@@ -11,7 +11,7 @@ import { useRecipe } from "@/context/RecipeContext";
 import { detectCollectionUrl } from "@/utils/urlPatterns";
 import { SettingsModal } from "@/components/SettingsModal";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
-import { ChangelogNotice } from "@/components/ChangelogNotice";
+import { BetaWelcomeNotice } from "@/components/BetaWelcomeNotice";
 import { FeedbackDialog } from "@/components/FeedbackDialog";
 import {
   DropdownMenu,
@@ -431,7 +431,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             </button>
           )}
 
-          {user && <ChangelogNotice compact className="mt-2" />}
+          {user && <BetaWelcomeNotice compact className="mt-2" />}
 
           {user && (
             <DropdownMenu>
