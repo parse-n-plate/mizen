@@ -27,6 +27,7 @@ type ChangelogNoticeProps = {
   description?: string;
   feedbackLabel?: string;
   isNew?: boolean;
+  modalAnimated?: boolean;
   title?: string;
   triggerBadgeLabel?: string;
   triggerLabel?: string;
@@ -46,6 +47,7 @@ export function ChangelogNotice({
   description = defaultDescription,
   feedbackLabel = "Share feedback",
   isNew = true,
+  modalAnimated = true,
   title = "Mizen Early Access",
   triggerBadgeLabel = "New",
   triggerLabel = "Welcome to Beta",
@@ -98,7 +100,7 @@ export function ChangelogNotice({
         </DialogTrigger>
 
         <DialogContent
-          animated={false}
+          animated={modalAnimated}
           showCloseButton={false}
           className="changelog-notice-dialog flex w-[min(584px,calc(100vw-2rem))] flex-col items-center gap-6 overflow-hidden rounded-lg border border-stone-200 bg-white p-0 pb-6 shadow-[0_24px_60px_rgba(28,25,23,0.18)] sm:max-w-none dark:border-stone-800 dark:bg-stone-950"
         >
