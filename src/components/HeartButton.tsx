@@ -130,7 +130,7 @@ export function HeartButton({ isSaved, saving, unsaving, onSave, onUnsave }: Hea
             {...heartSvgProps}
             fill="currentColor"
             stroke="currentColor"
-            className="h-5 w-5 absolute inset-0 m-auto text-red-500 dark:text-red-400"
+            className="h-5 w-5 absolute inset-0 m-auto text-[var(--color-text-muted)]"
             style={{ clipPath: "inset(0 50% 0 0)" }}
             initial={{ x: 0, y: 0, rotate: 0, opacity: 1 }}
             animate={{ x: -5, y: 7, rotate: -20, opacity: 0 }}
@@ -142,7 +142,7 @@ export function HeartButton({ isSaved, saving, unsaving, onSave, onUnsave }: Hea
             {...heartSvgProps}
             fill="currentColor"
             stroke="currentColor"
-            className="h-5 w-5 absolute inset-0 m-auto text-red-500 dark:text-red-400"
+            className="h-5 w-5 absolute inset-0 m-auto text-[var(--color-text-muted)]"
             style={{ clipPath: "inset(0 0 0 50%)" }}
             initial={{ x: 0, y: 0, rotate: 0, opacity: 1 }}
             animate={{ x: 5, y: 7, rotate: 20, opacity: 0 }}
@@ -190,7 +190,7 @@ export function HeartButton({ isSaved, saving, unsaving, onSave, onUnsave }: Hea
           className={`press-scale flex-shrink-0 inline-flex items-center justify-center h-9 w-9 rounded-full transition disabled:opacity-50 relative ${
             isSaved
               ? "text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300"
-              : "text-stone-300 dark:text-stone-600 hover:text-red-400 dark:hover:text-red-400"
+              : "text-[var(--color-text-muted)] hover:text-[var(--color-text-heading)]"
           }`}
         >
           {renderHeart()}

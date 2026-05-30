@@ -25,7 +25,7 @@ function RecipeRow({ entry, onClick }: { entry: HistoryEntry; onClick: () => voi
   return (
     <button
       onClick={onClick}
-      className="press-scale -mx-3 flex items-baseline justify-between gap-4 rounded-xl px-3 py-2.5 text-left transition-none hover:bg-stone-200/60 dark:hover:bg-stone-700/35"
+      className="-mx-3 flex items-baseline justify-between gap-4 rounded-xl px-3 py-2.5 text-left transition-none hover:bg-stone-200/60 dark:hover:bg-stone-700/35"
     >
       <p className="truncate font-sans text-[15px] font-medium text-stone-900 dark:text-stone-100">
         {entry.recipe.title}
