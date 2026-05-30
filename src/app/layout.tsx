@@ -10,6 +10,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 import "dialkit/styles.css";
 
+/* eslint-disable @next/next/no-img-element */
+
 const domine = Domine({
   variable: "--font-domine",
   subsets: ["latin"],
@@ -50,8 +52,57 @@ export default function RootLayout({
             __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
           }}
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{if(localStorage.getItem('mizen:core-app-seen')==='true'&&sessionStorage.getItem('mizen:splash-seen')!=='true'){document.documentElement.dataset.earlySplash='true'}}catch(e){}})()`,
+          }}
+        />
       </head>
       <body className={`${domine.variable} ${albertSans.variable} antialiased`}>
+        <div id="mizen-early-splash" aria-hidden="true">
+          <div className="mizen-early-splash-scale">
+            <div className="mizen-early-splash-icons">
+              <div className="mizen-early-splash-icon mizen-early-splash-icon-0">
+                <div className="mizen-early-splash-clip">
+                  <img
+                    alt=""
+                    draggable={false}
+                    src="/assets/splash/tomato.png"
+                    className="mizen-early-splash-img mizen-early-splash-img-tomato"
+                  />
+                </div>
+              </div>
+              <div className="mizen-early-splash-icon mizen-early-splash-icon-1">
+                <img
+                  alt=""
+                  draggable={false}
+                  src="/assets/splash/tomato-slice.png"
+                  className="mizen-early-splash-img mizen-early-splash-img-slice"
+                />
+              </div>
+              <div className="mizen-early-splash-icon mizen-early-splash-icon-2">
+                <div className="mizen-early-splash-clip">
+                  <img
+                    alt=""
+                    draggable={false}
+                    src="/assets/splash/tomato-half.png"
+                    className="mizen-early-splash-img mizen-early-splash-img-half"
+                  />
+                </div>
+              </div>
+              <div className="mizen-early-splash-icon mizen-early-splash-icon-3">
+                <div className="mizen-early-splash-clip">
+                  <img
+                    alt=""
+                    draggable={false}
+                    src="/assets/splash/pan.png"
+                    className="mizen-early-splash-img mizen-early-splash-img-pan"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <TooltipProvider>
           <AppShell>{children}</AppShell>
         </TooltipProvider>
