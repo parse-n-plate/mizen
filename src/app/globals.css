@@ -82,6 +82,170 @@ html body[data-scroll-locked] {
   margin-right: 0 !important;
 }
 
+#mizen-early-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #fafaf9;
+  pointer-events: none;
+}
+
+html[data-early-splash="true"] #mizen-early-splash {
+  display: flex;
+}
+
+.dark #mizen-early-splash {
+  background: #0c0a09;
+}
+
+.mizen-early-splash-scale {
+  transform-origin: center;
+  transform: scale(0.56);
+}
+
+.mizen-early-splash-icons {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  width: 552px;
+}
+
+.mizen-early-splash-icon {
+  position: relative;
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  transform-origin: 50% 100%;
+  animation-duration: 1.71s;
+  animation-iteration-count: infinite;
+  animation-delay: calc(var(--mizen-early-splash-index) * 0.14s);
+}
+
+.mizen-early-splash-icon-0 {
+  --mizen-early-splash-index: 0;
+  animation-name: mizen-early-splash-bounce-left;
+}
+
+.mizen-early-splash-icon-1 {
+  --mizen-early-splash-index: 1;
+  animation-name: mizen-early-splash-bounce-right;
+}
+
+.mizen-early-splash-icon-2 {
+  --mizen-early-splash-index: 2;
+  animation-name: mizen-early-splash-bounce-left;
+}
+
+.mizen-early-splash-icon-3 {
+  --mizen-early-splash-index: 3;
+  animation-name: mizen-early-splash-bounce-right;
+}
+
+.mizen-early-splash-clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.mizen-early-splash-img {
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
+}
+
+.mizen-early-splash-img-tomato {
+  position: absolute;
+  left: -130.72%;
+  top: -13.66%;
+  width: 245.65%;
+  height: 245.65%;
+}
+
+.mizen-early-splash-img-slice {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: bottom;
+}
+
+.mizen-early-splash-img-half {
+  position: absolute;
+  left: -100.77%;
+  top: -103.49%;
+  width: 308.45%;
+  height: 308.45%;
+}
+
+.mizen-early-splash-img-pan {
+  position: absolute;
+  left: -102.48%;
+  top: -199.74%;
+  width: 308.45%;
+  height: 308.45%;
+}
+
+@keyframes mizen-early-splash-bounce-left {
+  0% {
+    transform: translateY(0) scaleX(1) scaleY(1) rotate(0deg);
+    animation-timing-function: cubic-bezier(0.34, 1.504, 0.64, 1);
+  }
+  12.22% {
+    transform: translateY(-42px) scaleX(0.89) scaleY(1.11) rotate(-7deg);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  23.16% {
+    transform: translateY(2.1px) scaleX(1.04) scaleY(0.95) rotate(0deg);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  32.16%,
+  100% {
+    transform: translateY(0) scaleX(1) scaleY(1) rotate(0deg);
+  }
+}
+
+@keyframes mizen-early-splash-bounce-right {
+  0% {
+    transform: translateY(0) scaleX(1) scaleY(1) rotate(0deg);
+    animation-timing-function: cubic-bezier(0.34, 1.504, 0.64, 1);
+  }
+  12.22% {
+    transform: translateY(-42px) scaleX(0.89) scaleY(1.11) rotate(7deg);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  23.16% {
+    transform: translateY(2.1px) scaleX(1.04) scaleY(0.95) rotate(0deg);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  32.16%,
+  100% {
+    transform: translateY(0) scaleX(1) scaleY(1) rotate(0deg);
+  }
+}
+
+@media (min-width: 480px) {
+  .mizen-early-splash-scale {
+    transform: scale(0.75);
+  }
+}
+
+@media (min-width: 768px) {
+  .mizen-early-splash-scale {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mizen-early-splash-icon {
+    animation: none;
+  }
+}
+
 /* Custom CSS Variables — Parse & Plate Design System */
 :root {
   /* Override Tailwind's default font stack with our fonts */

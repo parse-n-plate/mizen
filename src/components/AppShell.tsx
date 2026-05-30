@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { RecipeProvider } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
@@ -35,6 +35,20 @@ export function AppShell({ children }: { children: ReactNode }) {
   // Pages that render their own inline expand button — suppress the shell-level gutter
   const hasInlineExpand = pathname.startsWith("/recipe");
   const showSplash = !!user && !isLanding;
+
+  useEffect(() => {
+    try {
+      if (user) {
+        localStorage.setItem("mizen:core-app-seen", "true");
+        document.documentElement.removeAttribute("data-early-splash");
+      } else if (!loading) {
+        localStorage.removeItem("mizen:core-app-seen");
+        document.documentElement.removeAttribute("data-early-splash");
+      }
+    } catch {
+      document.documentElement.removeAttribute("data-early-splash");
+    }
+  }, [loading, user]);
 
   return (
     <SidebarContext.Provider
