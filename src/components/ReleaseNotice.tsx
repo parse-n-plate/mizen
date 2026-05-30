@@ -76,7 +76,7 @@ export function ReleaseNotice({
             variant="notice"
             size={compact ? "notice" : "default"}
             aria-label={isNew ? `${triggerLabel} ${triggerBadgeLabel}` : triggerLabel}
-            className={cn("w-full justify-start", className)}
+            className={cn("w-full justify-start active:!scale-100", className)}
           >
             <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
               <span className="min-w-0 truncate text-center font-medium">{triggerLabel}</span>
@@ -98,9 +98,15 @@ export function ReleaseNotice({
               <Badge variant="secondary" className="tabular-nums">
                 {badgeLabel}
               </Badge>
-              <DialogTitle className="truncate text-base">{title}</DialogTitle>
+              <DialogTitle className="truncate font-sans text-base">{title}</DialogTitle>
             </div>
           </DialogHeader>
+
+          <div className="flex w-full flex-col items-start gap-3 px-6 text-left">
+            <p className="font-serif text-2xl font-semibold leading-tight text-foreground">
+              {bodyTitle}
+            </p>
+          </div>
 
           <div className="flex w-full flex-col gap-3 px-6">
             <button
@@ -127,7 +133,6 @@ export function ReleaseNotice({
 
           <div className="flex w-full flex-col gap-6 px-6 text-left">
             <div className="flex w-full flex-col items-start gap-3">
-              <p className="text-2xl font-semibold leading-tight text-foreground">{bodyTitle}</p>
               <DialogDescription className="text-base leading-6 text-pretty">
                 {description}
               </DialogDescription>
