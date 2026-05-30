@@ -79,7 +79,7 @@ export function ChangelogNotice({
             className={cn("w-full justify-start", className)}
           >
             <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
-              <span className="min-w-0 truncate">{triggerLabel}</span>
+              <span className="min-w-0 truncate text-center font-medium">{triggerLabel}</span>
               {isNew && (
                 <Badge variant="secondary" className="text-[11px] font-semibold leading-none">
                   {triggerBadgeLabel}
