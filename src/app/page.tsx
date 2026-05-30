@@ -13,6 +13,7 @@ import { RecentRecipes } from "@/components/RecentRecipes";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { WhoMadeIt } from "@/components/WhoMadeIt";
+import { Button } from "@/components/ui/button";
 import { useRecipe } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
@@ -640,7 +641,7 @@ function WaitlistLanding() {
 
               {/* Email form */}
               <form onSubmit={handleSubmit} className="max-w-md mx-auto lg:mx-0">
-                <div className="flex items-center h-[52px] rounded-xl border border-[#E7E5E4] bg-[#F5F5F4] dark:border-stone-700 dark:bg-stone-900 overflow-clip shrink-0 focus-within:border-[#18a1f7] focus-within:ring-[3px] focus-within:ring-[#18a1f7]/30 transition-[border-color,box-shadow]">
+                <div className="flex h-[52px] shrink-0 items-center overflow-clip rounded-xl border border-input bg-muted transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50">
                   {/* Input — collapses on success */}
                   <motion.div
                     initial={false}
@@ -664,75 +665,75 @@ function WaitlistLanding() {
                   </motion.div>
 
                   {/* Button — expands to fill, then shows success */}
-                  <motion.button
-                    type="submit"
-                    disabled={submitting || submitted || alreadyOnList}
-                    initial={false}
-                    animate={{
-                      flex: submitted || alreadyOnList ? "1 1 0%" : "0 0 auto",
-                    }}
-                    whileTap={
-                      submitted || alreadyOnList || submitting ? undefined : { scale: 0.96 }
-                    }
-                    transition={{ duration: 0.25, ease: [0.77, 0, 0.175, 1] }}
-                    className={`px-5 h-10 rounded-lg bg-[#18A1F7] font-sans text-[14px] text-[#ffffff] font-semibold leading-[18px] m-1.5 flex items-center justify-center gap-1.5 transition-[opacity] overflow-hidden ${
-                      submitted || alreadyOnList
-                        ? "!opacity-100 pointer-events-none"
-                        : "hover:bg-[#1590de] disabled:opacity-60"
-                    }`}
-                  >
-                    <AnimatePresence mode="wait" initial={false}>
-                      {submitted || alreadyOnList ? (
-                        <motion.span
-                          key="success"
-                          initial={{ opacity: 0, scale: 0.96, y: 4 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          transition={{
-                            delay: 0.1,
-                            duration: 0.2,
-                            ease: [0.23, 1, 0.32, 1],
-                          }}
-                          className="flex items-center gap-2 whitespace-nowrap"
-                        >
-                          <svg
-                            className="w-4 h-4 flex-shrink-0"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                  <Button asChild variant="primary" className="m-1.5 h-10 overflow-hidden px-5">
+                    <motion.button
+                      type="submit"
+                      disabled={submitting || submitted || alreadyOnList}
+                      initial={false}
+                      animate={{
+                        flex: submitted || alreadyOnList ? "1 1 0%" : "0 0 auto",
+                      }}
+                      whileTap={
+                        submitted || alreadyOnList || submitting ? undefined : { scale: 0.96 }
+                      }
+                      transition={{ duration: 0.25, ease: [0.77, 0, 0.175, 1] }}
+                      className={
+                        submitted || alreadyOnList ? "!opacity-100 pointer-events-none" : ""
+                      }
+                    >
+                      <AnimatePresence mode="wait" initial={false}>
+                        {submitted || alreadyOnList ? (
+                          <motion.span
+                            key="success"
+                            initial={{ opacity: 0, scale: 0.96, y: 4 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            transition={{
+                              delay: 0.1,
+                              duration: 0.2,
+                              ease: [0.23, 1, 0.32, 1],
+                            }}
+                            className="flex items-center gap-2 whitespace-nowrap"
                           >
-                            <path d="M20 6 9 17l-5-5" />
-                          </svg>
-                          <span className="font-medium">
-                            {alreadyOnList
-                              ? "You\u2019re already on the list!"
-                              : "You\u2019re on the list!"}
-                          </span>
-                        </motion.span>
-                      ) : submitting ? (
-                        <motion.span
-                          key="sending"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
-                          transition={{ duration: 0.1, ease: [0.23, 1, 0.32, 1] }}
-                        >
-                          Sending...
-                        </motion.span>
-                      ) : (
-                        <motion.span
-                          key="cta"
-                          exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
-                          transition={{ duration: 0.1, ease: [0.23, 1, 0.32, 1] }}
-                          className="flex items-center gap-1.5"
-                        >
-                          <Plain size={16} weight="Bold" className="shrink-0" /> Notify Me
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </motion.button>
+                            <svg
+                              className="w-4 h-4 flex-shrink-0"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M20 6 9 17l-5-5" />
+                            </svg>
+                            <span className="font-medium">
+                              {alreadyOnList
+                                ? "You\u2019re already on the list!"
+                                : "You\u2019re on the list!"}
+                            </span>
+                          </motion.span>
+                        ) : submitting ? (
+                          <motion.span
+                            key="sending"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
+                            transition={{ duration: 0.1, ease: [0.23, 1, 0.32, 1] }}
+                          >
+                            Sending...
+                          </motion.span>
+                        ) : (
+                          <motion.span
+                            key="cta"
+                            exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
+                            transition={{ duration: 0.1, ease: [0.23, 1, 0.32, 1] }}
+                            className="flex items-center gap-1.5"
+                          >
+                            <Plain size={16} weight="Bold" className="shrink-0" /> Notify Me
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </motion.button>
+                  </Button>
                 </div>
               </form>
             </div>

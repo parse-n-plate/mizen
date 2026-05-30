@@ -109,7 +109,7 @@ function CookbookCard({
           onClick();
         }
       }}
-      className="group relative flex flex-col rounded-2xl border border-stone-150 dark:border-stone-800 bg-[var(--color-white)] p-5 text-left transition-colors hover:border-stone-300 dark:hover:border-stone-700 hover:bg-stone-50/50 dark:hover:bg-stone-800/50 cursor-pointer focus-visible:ring-2 focus-visible:ring-[var(--color-blue)] focus-visible:ring-offset-2 outline-none"
+      className="group relative flex flex-col rounded-2xl border border-border bg-card p-5 text-left transition-colors hover:bg-muted/60 cursor-pointer outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
     >
       {/* Delete button */}
       <button

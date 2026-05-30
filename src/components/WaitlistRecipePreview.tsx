@@ -8,6 +8,7 @@ import { StepList } from "@/components/StepList";
 import { scaleIngredients } from "@/utils/ingredientScaler";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
+import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 type SourceType = "url" | "photo" | "text";
@@ -630,9 +631,12 @@ export function WaitlistRecipePreview({
 
       {/* Tabs */}
       <div className="flex items-end w-full relative gap-0 px-5 sm:px-8 border-b border-stone-200 dark:border-stone-700">
-        <button
+        <Button
+          type="button"
+          variant={activeTab === "prep" ? "secondary" : "ghost"}
+          data-recipe-tab-trigger
           onClick={() => setActiveTab("prep")}
-          className={`folder-tab-trigger press-scale h-12 px-5 sm:px-10 font-sans text-[15px] ${
+          className={`h-12 rounded-b-none px-5 text-[15px] sm:px-10 ${
             activeTab === "prep" ? "font-semibold" : "font-medium"
           }`}
           data-state={activeTab === "prep" ? "active" : "inactive"}
@@ -647,15 +651,18 @@ export function WaitlistRecipePreview({
           />
           Prep
           {recipe.prepTimeMinutes ? (
-            <span className="font-normal text-stone-400 dark:text-stone-500 ml-1.5">
+            <span className="ml-1.5 font-normal text-muted-foreground">
               {formatTime(recipe.prepTimeMinutes)}
             </span>
           ) : null}
-        </button>
+        </Button>
         {hasInstructions && (
-          <button
+          <Button
+            type="button"
+            variant={activeTab === "cook" ? "secondary" : "ghost"}
+            data-recipe-tab-trigger
             onClick={() => setActiveTab("cook")}
-            className={`folder-tab-trigger press-scale h-12 px-5 sm:px-10 font-sans text-[15px] ${
+            className={`h-12 rounded-b-none px-5 text-[15px] sm:px-10 ${
               activeTab === "cook" ? "font-semibold" : "font-medium"
             }`}
             data-state={activeTab === "cook" ? "active" : "inactive"}
@@ -670,11 +677,11 @@ export function WaitlistRecipePreview({
             />
             Cook
             {recipe.cookTimeMinutes ? (
-              <span className="font-normal text-stone-400 dark:text-stone-500 ml-1.5">
+              <span className="ml-1.5 font-normal text-muted-foreground">
                 {formatTime(recipe.cookTimeMinutes)}
               </span>
             ) : null}
-          </button>
+          </Button>
         )}
       </div>
 

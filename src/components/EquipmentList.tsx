@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import type { EquipmentItem, InstructionStep } from "@/lib/types";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 interface EquipmentListProps {
@@ -28,7 +30,7 @@ export function EquipmentList({ equipment, steps, onStepClick }: EquipmentListPr
   return (
     <div className="space-y-2">
       <div className="flex items-center md:px-3 mb-4">
-        <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500">
+        <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Equipment
         </h3>
       </div>
@@ -38,25 +40,19 @@ export function EquipmentList({ equipment, steps, onStepClick }: EquipmentListPr
         const isLast = i === equipment.length - 1;
 
         return (
-          <div
-            key={item.name}
-            className={`ingredient-list-item group ${isChecked ? "is-checked" : ""}`}
-          >
+          <div key={item.name} className="group relative w-full rounded-md">
             <div
-              className="ingredient-list-content cursor-pointer"
+              className="relative flex cursor-pointer items-center gap-3 px-0 py-3.5 md:px-3 hover:bg-muted/60 rounded-md"
               onClick={() => toggleCheck(item.name)}
             >
               <div className="flex-shrink-0 flex items-center">
-                <input
-                  type="checkbox"
-                  className="ingredient-checkbox-input cursor-pointer"
+                <Checkbox
                   aria-label={item.name}
                   checked={isChecked}
-                  onChange={(e) => {
+                  onCheckedChange={() => toggleCheck(item.name)}
+                  onClick={(e) => {
                     e.stopPropagation();
-                    toggleCheck(item.name);
                   }}
-                  onClick={(e) => e.stopPropagation()}
                 />
               </div>
               <div className="flex-1 min-w-0">
@@ -66,8 +62,8 @@ export function EquipmentList({ equipment, steps, onStepClick }: EquipmentListPr
                   }`}
                 >
                   <p
-                    className={`font-sans font-medium text-base text-stone-800 dark:text-stone-200 capitalize truncate ${
-                      isChecked ? "line-through" : ""
+                    className={`font-sans font-medium text-base text-foreground capitalize truncate ${
+                      isChecked ? "line-through text-muted-foreground" : ""
                     }`}
                   >
                     {item.name}
@@ -77,21 +73,18 @@ export function EquipmentList({ equipment, steps, onStepClick }: EquipmentListPr
                       {item.stepNumbers.map((stepNum) => {
                         const step = steps?.[stepNum - 1];
                         const tag = (
-                          <button
-                            key={stepNum}
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onStepClick?.(stepNum);
-                            }}
-                            className={`inline-flex items-center justify-center rounded-md bg-stone-100 dark:bg-stone-800 px-1.5 py-0.5 font-sans text-[11px] font-medium text-stone-500 dark:text-stone-400 transition-none ${
-                              onStepClick
-                                ? "cursor-pointer hover:bg-stone-200 dark:hover:bg-stone-700 hover:text-stone-700 dark:hover:text-stone-300"
-                                : ""
-                            }`}
-                          >
-                            Step {stepNum}
-                          </button>
+                          <Badge key={stepNum} asChild variant="secondary">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onStepClick?.(stepNum);
+                              }}
+                              className="text-[11px]"
+                            >
+                              Step {stepNum}
+                            </button>
+                          </Badge>
                         );
 
                         if (step) {
@@ -107,16 +100,16 @@ export function EquipmentList({ equipment, steps, onStepClick }: EquipmentListPr
                                 side="top"
                                 sideOffset={8}
                                 hideArrow
-                                className="max-w-[280px] p-0 overflow-hidden bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-600 shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] rounded-xl"
+                                className="max-w-[280px] overflow-hidden border bg-popover p-0 text-popover-foreground shadow-md"
                               >
-                                <div className="px-3 py-2 bg-stone-50 dark:bg-stone-700/50 border-b border-stone-200 dark:border-stone-600">
-                                  <p className="font-sans text-xs font-semibold text-stone-700 dark:text-stone-200">
+                                <div className="border-b bg-muted px-3 py-2">
+                                  <p className="font-sans text-xs font-semibold text-foreground">
                                     Step {stepNum}
-                                    {step.title ? ` — ${step.title}` : ""}
+                                    {step.title ? ` - ${step.title}` : ""}
                                   </p>
                                 </div>
                                 <div className="px-3 py-2.5">
-                                  <p className="font-sans text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                                  <p className="font-sans text-xs text-muted-foreground leading-relaxed">
                                     {preview}
                                   </p>
                                 </div>
@@ -134,7 +127,7 @@ export function EquipmentList({ equipment, steps, onStepClick }: EquipmentListPr
             </div>
 
             {!isLast && (
-              <div className="ingredient-list-divider absolute bottom-0 h-px bg-stone-100 dark:bg-stone-800 transition-opacity duration-150 group-hover:opacity-0" />
+              <div className="absolute bottom-0 left-8 right-0 h-px bg-border md:left-11 md:right-3" />
             )}
           </div>
         );
