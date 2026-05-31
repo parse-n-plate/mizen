@@ -1,5 +1,5 @@
 /**
- * Focused extraction-only prompt for Baby Mizen parse pipeline.
+ * Focused extraction-only prompt for the Mizen parse pipeline.
  */
 export const EXTRACTION_PROMPT = `========================================
 CRITICAL OUTPUT FORMAT
