@@ -603,7 +603,7 @@ function WaitlistLanding() {
               className="group flex items-center gap-2 font-serif text-lg font-semibold text-stone-900 dark:text-stone-100"
             >
               <Image
-                src="/assets/icons/Fish Logo.png"
+                src="/assets/icons/Fish Logo.svg"
                 alt=""
                 aria-hidden
                 width={28}
