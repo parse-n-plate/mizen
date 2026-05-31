@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Magnifer from "@solar-icons/react/csr/search/Magnifer";
-import { X } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import type { Ingredient, IngredientGroup } from "@/lib/types";
@@ -253,64 +254,47 @@ function IngredientGroupSection({
   const progressPercentage = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
 
   return (
-    <div className="ingredient-group">
-      <button
-        type="button"
-        onClick={() => setCollapsed(!collapsed)}
-        className="w-full flex items-center py-2.5 md:px-3 group cursor-pointer transition-colors duration-[180ms] hover:opacity-80 rounded-lg"
-        aria-expanded={!collapsed}
-      >
-        <div className="flex items-center gap-3 flex-1">
-          <h3 className="font-sans text-base font-semibold text-stone-900 dark:text-stone-100 capitalize">
-            {group.groupName}
-          </h3>
+    <div className="mb-6">
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => setCollapsed(!collapsed)}
+          className="group h-auto min-w-0 flex-1 justify-start rounded-lg py-2.5 active:!transform-none md:px-3"
+          aria-expanded={!collapsed}
+        >
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <h3 className="font-sans text-base font-semibold text-foreground capitalize">
+              {group.groupName}
+            </h3>
 
-          {/* Progress Pie - appears when at least one ingredient is checked */}
-          <div
-            className={`flex items-center flex-shrink-0 transition-[opacity,transform] duration-150 ease-out ${
-              checkedCount > 0
-                ? "opacity-100"
-                : "opacity-0 w-0 -ml-3 overflow-hidden pointer-events-none"
-            }`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleAll(ingredientKeys);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                e.stopPropagation();
-                onToggleAll(ingredientKeys);
-              }
-            }}
-            role="button"
-            tabIndex={checkedCount > 0 ? 0 : -1}
-            aria-label={`${checkedCount === totalCount ? "Uncheck" : "Check"} all ingredients in ${group.groupName}`}
-          >
-            <ProgressPie
-              percentage={progressPercentage}
-              size={18}
-              strokeWidth={1.5}
-              color="var(--primary)"
+            <ChevronDown
+              className={`size-4 text-muted-foreground transition-transform duration-200 ${
+                collapsed ? "-rotate-90" : ""
+              }`}
             />
           </div>
+        </Button>
 
-          <svg
-            className={`w-4 h-4 text-stone-400 dark:text-stone-500 transition-transform duration-200 ${
-              collapsed ? "-rotate-90" : ""
-            } ${!collapsed ? "ingredient-group-chevron" : ""}`}
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="m6 9 6 6 6-6" />
-          </svg>
-        </div>
-      </button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className={`shrink-0 transition-[opacity,width] active:!transform-none ${
+            checkedCount > 0 ? "opacity-100" : "w-0 overflow-hidden opacity-0 pointer-events-none"
+          }`}
+          onClick={() => onToggleAll(ingredientKeys)}
+          tabIndex={checkedCount > 0 ? 0 : -1}
+          aria-label={`${checkedCount === totalCount ? "Uncheck" : "Check"} all ingredients in ${group.groupName}`}
+        >
+          <ProgressPie
+            percentage={progressPercentage}
+            size={18}
+            strokeWidth={1.5}
+            color="var(--primary)"
+          />
+        </Button>
+      </div>
 
       <div
         className={`grid transition-[grid-template-rows] duration-300 ease-out ${

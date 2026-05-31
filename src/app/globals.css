@@ -270,7 +270,7 @@ html[data-early-splash="true"] #mizen-early-splash {
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: var(--color-primary-blue);
 
   /* Mizen palette — Neutrals */
   --color-white: #ffffff;
@@ -353,7 +353,7 @@ html[data-early-splash="true"] #mizen-early-splash {
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.32 0 0);
   --input: oklch(0.32 0 0);
-  --ring: oklch(0.556 0 0);
+  --ring: var(--color-primary-blue);
 
   /* Mizen palette — Neutrals (inverted) */
   --color-white: #292524;

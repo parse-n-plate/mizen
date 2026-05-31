@@ -210,7 +210,7 @@ export function StepList({ steps }: StepListProps) {
                   aria-label={showImages ? "Hide photos" : "Show photos"}
                   className={`press-scale inline-flex items-center justify-center h-9 w-7 rounded-xl transition-colors cursor-pointer ${
                     showImages
-                      ? "text-[var(--color-blue)] bg-blue-50 dark:bg-blue-950 dark:text-blue-400"
+                      ? "text-stone-700 bg-stone-100 dark:bg-stone-800 dark:text-stone-200"
                       : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
                   }`}
                 >

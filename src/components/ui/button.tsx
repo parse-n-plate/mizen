@@ -11,7 +11,7 @@ const buttonVariants = cva(
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/90",
         "primary-blue":
-          "bg-[var(--color-blue)] text-white hover:bg-[var(--color-blue)]/90 focus-visible:ring-[var(--color-blue)]/20",
+          "bg-[var(--color-blue)] text-white visited:text-white hover:bg-[var(--color-blue)]/90 hover:text-white focus-visible:ring-[var(--color-blue)]/20 [&_svg]:text-white",
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         notice:
