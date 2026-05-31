@@ -304,7 +304,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               {quickAddOpen && (
                 <>
                   <div className="fixed inset-0 z-30" onClick={closeQuickAdd} />
-                  <div className="animate-in fade-in-0 zoom-in-95 slide-in-from-top-1 duration-150 absolute left-0 top-full z-40 mt-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-lg overflow-hidden">
+                  <div className="popover-animate absolute left-0 top-full z-40 mt-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-lg overflow-hidden">
                     {quickAddMode === "menu" ? (
                       <div className="py-1 w-44">
                         <p className="px-3 py-1.5 font-sans text-xs font-medium text-stone-400 dark:text-stone-500">
@@ -355,7 +355,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                       </div>
                     ) : (
                       <div className="p-2 w-72">
-                        <div className="flex items-center gap-2 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50 px-2.5 py-1.5 focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 transition-[border-color,box-shadow]">
+                        <div className="flex items-center gap-2 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50 px-2.5 py-1.5 focus-within:border-stone-400 dark:focus-within:border-stone-500 transition-colors">
                           <svg
                             className="h-3.5 w-3.5 flex-shrink-0 text-stone-400 dark:text-stone-500"
                             xmlns="http://www.w3.org/2000/svg"
@@ -493,14 +493,14 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />
                 <DropdownMenuItem
                   onSelect={() => setSettingsOpen(true)}
-                  className="font-sans text-foreground focus:bg-accent focus:text-accent-foreground"
+                  className="font-sans text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                 >
                   Settings
                   <Settings className="ml-auto size-4" />
                 </DropdownMenuItem>
                 <form action="/api/auth/signout" method="post">
                   <DropdownMenuItem
-                    className="font-sans text-foreground focus:bg-accent focus:text-accent-foreground"
+                    className="font-sans text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                     asChild
                   >
                     <button type="submit" className="flex w-full items-center gap-2 text-left">

@@ -60,7 +60,7 @@ function NavIconButton({
     : "text-[var(--color-text-muted)] active:bg-stone-100 active:text-[var(--color-text-heading)] dark:active:bg-stone-800";
 
   const sharedClassName = cn(
-    "press-scale inline-flex h-12 items-center justify-center rounded-full border border-transparent transition-none outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40",
+    "press-scale inline-flex h-12 items-center justify-center rounded-full transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-blue)] disabled:pointer-events-none disabled:opacity-40",
     showLabel ? "min-w-[5.75rem] gap-1.5 px-4 font-sans text-xs font-semibold" : "min-w-12 px-3",
     stateClass,
     className
@@ -116,7 +116,7 @@ function MobileNavTabLayer({
 
 function MobileNavPrimaryAction({ action }: { action: MobileNavAction }) {
   const className = cn(
-    "press-scale inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-border bg-card text-card-foreground shadow-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40",
+    "press-scale inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-[var(--color-border-light)]/80 bg-[var(--color-surface)] text-[var(--color-text-heading)] shadow-[0_12px_30px_rgba(0,0,0,0.08)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-blue)] disabled:pointer-events-none disabled:opacity-40 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100",
     action.active && "bg-stone-100 text-[var(--color-blue)] dark:bg-stone-800"
   );
 

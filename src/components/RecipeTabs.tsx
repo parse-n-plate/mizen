@@ -27,19 +27,18 @@ export function RecipeTabs({ recipe }: RecipeTabsProps) {
 
   return (
     <Tabs value={tab} onValueChange={setTab} className="flex-1 flex flex-col">
-      <TabsList variant="line" className="w-full justify-start border-b border-border px-1">
+      <TabsList className="flex items-end w-full relative rounded-none border-b border-stone-200 dark:border-stone-700 bg-transparent p-0 gap-0">
         <TabsTrigger
           value="prep"
-          data-recipe-tab-trigger
-          className="h-11 flex-none px-5 text-[14px] font-medium sm:px-8"
+          className="folder-tab-trigger h-11 px-5 sm:px-8 font-sans text-[14px] font-medium"
         >
           Prep
           {recipe.prepTimeMinutes ? (
             <>
-              <span className="text-muted-foreground/50" aria-hidden>
+              <span className="text-stone-300 dark:text-stone-600" aria-hidden>
                 ·
               </span>
-              <span className="font-normal text-muted-foreground">
+              <span className="font-normal text-stone-400 dark:text-stone-500">
                 {formatTime(recipe.prepTimeMinutes)}
               </span>
             </>
@@ -47,16 +46,15 @@ export function RecipeTabs({ recipe }: RecipeTabsProps) {
         </TabsTrigger>
         <TabsTrigger
           value="cook"
-          data-recipe-tab-trigger
-          className="h-11 flex-none px-5 text-[14px] font-medium sm:px-8"
+          className="folder-tab-trigger h-11 px-5 sm:px-8 font-sans text-[14px] font-medium"
         >
           Cook
           {recipe.cookTimeMinutes ? (
             <>
-              <span className="text-muted-foreground/50" aria-hidden>
+              <span className="text-stone-300 dark:text-stone-600" aria-hidden>
                 ·
               </span>
-              <span className="font-normal text-muted-foreground">
+              <span className="font-normal text-stone-400 dark:text-stone-500">
                 {formatTime(recipe.cookTimeMinutes)}
               </span>
             </>
@@ -65,7 +63,7 @@ export function RecipeTabs({ recipe }: RecipeTabsProps) {
       </TabsList>
 
       {/* Tab content */}
-      <div className="flex-1 rounded-b-lg border border-t-0 border-border bg-card text-card-foreground">
+      <div className="bg-white dark:bg-stone-900 rounded-b-lg border border-t-0 border-stone-200 dark:border-stone-700 flex-1">
         <div className="max-w-3xl mx-auto px-5 pt-5 pb-12">
           <TabsContent value="prep" className="space-y-0">
             <PrepSection
