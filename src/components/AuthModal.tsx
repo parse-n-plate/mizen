@@ -349,7 +349,7 @@ export function AuthModal({ open, onOpenChange, initialMode = "login" }: AuthMod
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-mizen-blue hover:bg-mizen-blue/90 focus-visible:ring-mizen-blue/50"
+                  className="w-full bg-mizen-blue hover:bg-mizen-blue/90"
                   style={{ color: "white" }}
                   size="lg"
                 >
@@ -482,7 +482,7 @@ export function AuthModal({ open, onOpenChange, initialMode = "login" }: AuthMod
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full relative overflow-hidden bg-mizen-blue hover:bg-mizen-blue/90 focus-visible:ring-mizen-blue/50"
+                  className="w-full relative overflow-hidden bg-mizen-blue hover:bg-mizen-blue/90"
                   style={{ color: "white" }}
                   size="lg"
                 >

@@ -9,9 +9,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        "primary-blue":
-          "bg-[var(--color-blue)] text-white hover:bg-[var(--color-blue)]/90 focus-visible:ring-[var(--color-blue)]/20",
+        default: "bg-mizen-blue text-white hover:bg-mizen-blue/90",
+        primary: "bg-mizen-blue text-white hover:bg-mizen-blue/90",
+        "primary-blue": "bg-mizen-blue text-white hover:bg-mizen-blue/90",
+        black: "bg-primary text-primary-foreground hover:bg-primary/90",
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         notice:

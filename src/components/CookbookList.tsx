@@ -182,7 +182,7 @@ export function CookbookList({ initialRecipes }: CookbookListProps) {
                     handleOpen(item);
                   }
                 }}
-                className={`group -mx-3 flex items-center justify-between rounded-xl px-3 py-3.5 cursor-pointer outline-none hover:bg-stone-200/60 dark:hover:bg-stone-700/35 focus-visible:ring-2 focus-visible:ring-[var(--color-blue)] focus-visible:ring-offset-2 ${menuOpenId === item.id ? "bg-stone-200/60 dark:bg-stone-700/35" : ""}`}
+                className={`group -mx-3 flex items-center justify-between rounded-xl px-3 py-3.5 cursor-pointer outline-none hover:bg-muted focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 ${menuOpenId === item.id ? "bg-muted" : ""}`}
               >
                 <div className="min-w-0 flex-1 flex items-center gap-3">
                   <RecipeSourceIcon domain={domain} kind={getSourceKind(item)} />
@@ -217,7 +217,7 @@ export function CookbookList({ initialRecipes }: CookbookListProps) {
                     >
                       <DropdownMenuItem
                         onSelect={() => handleOpen(item)}
-                        className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+                        className="text-foreground focus:bg-accent focus:text-accent-foreground"
                       >
                         Open recipe
                         <Book className="ml-auto h-4 w-4" />
@@ -225,7 +225,7 @@ export function CookbookList({ initialRecipes }: CookbookListProps) {
                       {item.source_url && (
                         <DropdownMenuItem
                           onSelect={() => window.open(item.source_url!, "_blank", "noopener")}
-                          className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+                          className="text-foreground focus:bg-accent focus:text-accent-foreground"
                         >
                           Open original
                           <LinkSquare className="ml-auto h-4 w-4" />
