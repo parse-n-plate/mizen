@@ -12,6 +12,7 @@ import { Search } from "@/components/Search";
 import { RecentRecipes } from "@/components/RecentRecipes";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
+import { LandingAuthCta } from "@/components/LandingAuthCta";
 import { WhoMadeIt } from "@/components/WhoMadeIt";
 import { useRecipe } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
@@ -489,7 +490,7 @@ export default function HomePage() {
   return <WaitlistLanding />;
 }
 
-function WaitlistLanding() {
+export function WaitlistLanding() {
   const [activeSource, setActiveSource] = useState(0);
   const [displayedSource, setDisplayedSource] = useState(0);
   const [displayedPreview, setDisplayedPreview] = useState(0);
@@ -611,14 +612,7 @@ function WaitlistLanding() {
               />
               Mizen
             </Link>
-            {isSupabaseConfigured && (
-              <button
-                onClick={() => setAuthOpen(true)}
-                className="lg:hidden px-3 py-1.5 rounded-lg bg-stone-100 dark:bg-stone-800 font-sans text-sm font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
-              >
-                Sign in
-              </button>
-            )}
+            <LandingAuthCta onSignIn={() => setAuthOpen(true)} className="lg:hidden" />
           </div>
 
           {/* Center: Hero content */}
@@ -748,17 +742,13 @@ function WaitlistLanding() {
         </div>
 
         {/* Right panel */}
-        <div className="relative flex-1 flex flex-col pt-6 lg:pt-0 bg-[#f5f5f0] dark:bg-stone-900 overflow-hidden">
+        <div className="relative flex-1 flex flex-col pt-6 lg:pt-0 bg-[#FAFAF9] dark:bg-stone-900 overflow-hidden">
           {/* Top nav */}
           <div className="hidden lg:flex items-center justify-end px-8 lg:px-10 pt-5 pb-2 relative z-20">
-            {isSupabaseConfigured && (
-              <button
-                onClick={() => setAuthOpen(true)}
-                className="hidden lg:block px-3 py-1.5 rounded-lg bg-white dark:bg-stone-800 font-sans text-sm font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors"
-              >
-                Sign in
-              </button>
-            )}
+            <LandingAuthCta
+              onSignIn={() => setAuthOpen(true)}
+              className="hidden bg-white hover:bg-stone-50 lg:block"
+            />
           </div>
 
           {/* Source tabs */}
@@ -838,11 +828,11 @@ function WaitlistLanding() {
         </div>
 
         {/* Mobile footer */}
-        <div className="flex lg:hidden items-center justify-between px-8 py-6 bg-[#f5f5f0] dark:bg-stone-900">
+        <div className="flex lg:hidden items-center justify-between px-8 py-6 bg-[#FAFAF9] dark:bg-stone-900">
           <span className="font-sans text-xs text-stone-400 dark:text-stone-500">
             Closed Beta v0.1.0
           </span>
-          <WhoMadeIt borderColor="border-[#f5f5f0] dark:border-stone-900" />
+          <WhoMadeIt borderColor="border-[#FAFAF9] dark:border-stone-900" />
         </div>
       </div>
 

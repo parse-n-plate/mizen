@@ -27,9 +27,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const isHomePage = pathname === "/";
+  const isPublicStandalonePage = pathname === "/get-started" || pathname === "/homepage";
   // Treat loading state as landing on homepage so sidebar don't flash
   // before auth resolves
-  const isLanding = isHomePage && (loading || !user);
+  const isLanding = isPublicStandalonePage || (isHomePage && (loading || !user));
   const showMobileNav = !!user && ["/", "/cookbook", "/profile"].includes(pathname);
   // Pages that render their own inline expand button — suppress the shell-level gutter
   const hasInlineExpand = pathname.startsWith("/recipe");
