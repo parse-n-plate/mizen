@@ -1,18 +1,15 @@
-// Dev-only sign-in shortcut.
-//
-// Gated on NODE_ENV === "development" — returns 404 in any other environment
-// (preview, staging, production). `next build` / `next start` and Vercel set
-// NODE_ENV="production" on all deploys, so this route is unreachable there.
+// Dev/staging-only sign-in shortcut.
 //
 // Requires DEV_AUTH_EMAIL and DEV_AUTH_PASSWORD in .env.local, pointing to a
 // real Supabase user you've created yourself. No service-role keys, no fake
 // sessions — just an automated call to the normal signInWithPassword flow.
 
 import { NextResponse } from "next/server";
+import { isDevSignInEnabled } from "@/lib/dev-auth";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST() {
-  if (process.env.NODE_ENV !== "development") {
+  if (!isDevSignInEnabled()) {
     return new NextResponse(null, { status: 404 });
   }
 

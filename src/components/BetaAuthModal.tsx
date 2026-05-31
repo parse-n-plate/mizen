@@ -22,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { resolveEmailAuthFeedback } from "@/lib/auth-feedback";
+import { isDevSignInEnabled } from "@/lib/dev-auth";
 import Login from "@solar-icons/react/csr/arrows-action/Login";
 import UserPlus from "@solar-icons/react/csr/users/UserPlus";
 import Letter from "@solar-icons/react/csr/messages/Letter";
@@ -40,6 +41,7 @@ interface BetaAuthModalProps {
 
 const TRANSITION = { duration: 0.15, ease: [0.4, 0, 0.2, 1] as const };
 const INSTANT = { duration: 0 };
+const devSignInEnabled = isDevSignInEnabled();
 
 export function BetaAuthModal({ open, onOpenChange }: BetaAuthModalProps) {
   const isMobile = useIsMobile();
@@ -499,7 +501,7 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
             onSubmit={handleSubmit}
             className="space-y-4"
           >
-            {process.env.NODE_ENV === "development" && (
+            {devSignInEnabled && (
               <Button
                 type="button"
                 variant="outline"
@@ -508,7 +510,7 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
                 disabled={loading}
               >
                 <Login className="h-4 w-4" />
-                Dev sign in (development only)
+                Dev sign in
               </Button>
             )}
 
