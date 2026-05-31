@@ -56,7 +56,7 @@ export function RecipeHeader({
   const hasServings = !!(recipe.servings && recipe.servings > 0);
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1 md:gap-1.5">
       <div className="flex items-start">
         {/* Inline expand-sidebar button — sits to the left of the recipe title when sidebar is collapsed */}
         <div
@@ -97,7 +97,7 @@ export function RecipeHeader({
       )}
 
       {/* Inline metadata row */}
-      <div className="flex items-center gap-3 flex-wrap font-sans text-sm text-stone-500 dark:text-stone-400">
+      <div className="flex items-center gap-x-2 gap-y-1 md:gap-3 flex-wrap font-sans text-sm text-stone-500 dark:text-stone-400">
         {recipe.author && <span className="text-base">{recipe.author}</span>}
 
         {recipe.sourceUrl && (

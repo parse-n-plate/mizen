@@ -308,7 +308,7 @@ function ImageThumbnail({ src, onRemove }: { src: string; onRemove: () => void }
         <img
           src={src}
           alt="Recipe"
-          className="w-full h-full object-cover rounded-xl"
+          className="w-full h-full object-cover rounded-xl cursor-zoom-in"
           onClick={(e) =>
             setLightbox({ rect: e.currentTarget.getBoundingClientRect(), el: e.currentTarget })
           }

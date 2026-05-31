@@ -32,6 +32,7 @@ import {
   setUnitSystem,
 } from "@/lib/preferences";
 import { type NumberFormat, getNumberFormat, setNumberFormat } from "@/lib/numberFormat";
+import { feedbackFeaturesEnabled } from "@/lib/features";
 import { useRecipe } from "@/context/RecipeContext";
 import { applySubstitutionsToGroups, countApplicableSubstitutions } from "@/lib/recipe-preferences";
 import { toast } from "sonner";
@@ -694,15 +695,17 @@ function AboutSection() {
         </Badge>
       </SettingRow>
 
-      <SettingRow label="Send feedback" description="Questions, bugs, or product ideas.">
-        <a
-          href="mailto:feedback@mizen.app"
-          className="inline-flex items-center gap-1.5 font-sans text-[13px] text-stone-500 transition-colors hover:text-[var(--color-blue)] dark:text-stone-400 dark:hover:text-[var(--color-blue)]"
-        >
-          <Letter className="size-4" />
-          Email us
-        </a>
-      </SettingRow>
+      {feedbackFeaturesEnabled && (
+        <SettingRow label="Send feedback" description="Questions, bugs, or product ideas.">
+          <a
+            href="mailto:feedback@mizen.app"
+            className="inline-flex items-center gap-1.5 font-sans text-[13px] text-stone-500 transition-colors hover:text-[var(--color-blue)] dark:text-stone-400 dark:hover:text-[var(--color-blue)]"
+          >
+            <Letter className="size-4" />
+            Email us
+          </a>
+        </SettingRow>
+      )}
 
       <SettingRow label="Privacy Policy" description="See how account and recipe data are handled.">
         <a

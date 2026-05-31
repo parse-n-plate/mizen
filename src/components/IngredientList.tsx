@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import Magnifer from "@solar-icons/react/csr/search/Magnifer";
-import { X } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import type { Ingredient, IngredientGroup } from "@/lib/types";
@@ -44,12 +46,28 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [mobileSearchContainer, setMobileSearchContainer] = useState<HTMLElement | null>(null);
+  const desktopSearchInputRef = useRef<HTMLInputElement>(null);
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const isSearchExpanded = isSearchOpen || !!searchQuery;
   const numberFormat = useNumberFormat();
 
   useEffect(() => {
-    if (isSearchOpen) searchInputRef.current?.focus({ preventScroll: true });
+    const frame = requestAnimationFrame(() => {
+      setMobileSearchContainer(
+        document.getElementById("mobile-recipe-search-action") ??
+          document.getElementById("mobile-ingredient-search-action")
+      );
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    if (!isSearchOpen) return;
+    const isMobileViewport = window.matchMedia("(max-width: 767px)").matches;
+    const input = isMobileViewport ? mobileSearchInputRef.current : desktopSearchInputRef.current;
+    input?.focus({ preventScroll: true });
   }, [isSearchOpen]);
 
   const toggleCheck = (key: string) => {
@@ -100,17 +118,22 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
     });
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4 pl-3 mb-4">
-        <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 flex-shrink-0">
-          Ingredients
-        </h3>
-        <div
-          className={`group relative h-9 transition-[width] duration-200 ease-in-out ${
-            isSearchExpanded ? "w-[260px] max-w-full" : "w-7"
-          }`}
-        >
+  const searchControl = (placement: "desktop" | "mobile") => {
+    const isMobile = placement === "mobile";
+
+    return (
+      <div
+        className={`group relative h-9 transition-[width] duration-200 ease-in-out ${
+          isSearchExpanded
+            ? isMobile
+              ? "w-[min(260px,calc(100vw-5.25rem))]"
+              : "w-[260px] max-w-full"
+            : isMobile
+              ? "w-9"
+              : "w-7"
+        }`}
+      >
+        <div className={isMobile && isSearchExpanded ? "absolute right-0 top-0 h-9 w-full" : ""}>
           {!searchQuery && (
             <Magnifer
               className={`absolute right-1.5 top-1/2 -translate-y-1/2 size-[16px] text-muted-foreground pointer-events-none z-10 transition-colors ${
@@ -134,7 +157,7 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
             <TooltipContent side="bottom">Search ingredients</TooltipContent>
           </Tooltip>
           <Input
-            ref={searchInputRef}
+            ref={isMobile ? mobileSearchInputRef : desktopSearchInputRef}
             type="text"
             placeholder="Search Ingredients"
             value={searchQuery}
@@ -163,6 +186,23 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
             </button>
           )}
         </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {mobileSearchContainer &&
+        createPortal(
+          <div className="md:hidden">{searchControl("mobile")}</div>,
+          mobileSearchContainer
+        )}
+
+      <div className="flex items-center justify-between gap-4 md:pl-3 mb-4">
+        <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 flex-shrink-0">
+          Ingredients
+        </h3>
+        <div className="hidden md:block">{searchControl("desktop")}</div>
       </div>
 
       {filteredGroups.length === 0 && searchQuery.trim() ? (
@@ -214,64 +254,47 @@ function IngredientGroupSection({
   const progressPercentage = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
 
   return (
-    <div className="ingredient-group">
-      <button
-        type="button"
-        onClick={() => setCollapsed(!collapsed)}
-        className="w-full flex items-center py-2.5 px-3 group cursor-pointer transition-colors duration-[180ms] hover:opacity-80 rounded-lg"
-        aria-expanded={!collapsed}
-      >
-        <div className="flex items-center gap-3 flex-1">
-          <h3 className="font-sans text-base font-semibold text-stone-900 dark:text-stone-100 capitalize">
-            {group.groupName}
-          </h3>
+    <div className="mb-6">
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => setCollapsed(!collapsed)}
+          className="group h-auto min-w-0 flex-1 justify-start rounded-lg py-2.5 active:!transform-none md:px-3"
+          aria-expanded={!collapsed}
+        >
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <h3 className="font-sans text-base font-semibold text-foreground capitalize">
+              {group.groupName}
+            </h3>
 
-          {/* Progress Pie - appears when at least one ingredient is checked */}
-          <div
-            className={`flex items-center flex-shrink-0 transition-[opacity,transform] duration-150 ease-out ${
-              checkedCount > 0
-                ? "opacity-100"
-                : "opacity-0 w-0 -ml-3 overflow-hidden pointer-events-none"
-            }`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleAll(ingredientKeys);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                e.stopPropagation();
-                onToggleAll(ingredientKeys);
-              }
-            }}
-            role="button"
-            tabIndex={checkedCount > 0 ? 0 : -1}
-            aria-label={`${checkedCount === totalCount ? "Uncheck" : "Check"} all ingredients in ${group.groupName}`}
-          >
-            <ProgressPie
-              percentage={progressPercentage}
-              size={18}
-              strokeWidth={1.5}
-              color="var(--primary)"
+            <ChevronDown
+              className={`size-4 text-muted-foreground transition-transform duration-200 ${
+                collapsed ? "-rotate-90" : ""
+              }`}
             />
           </div>
+        </Button>
 
-          <svg
-            className={`w-4 h-4 text-stone-400 dark:text-stone-500 transition-transform duration-200 ${
-              collapsed ? "-rotate-90" : ""
-            } ${!collapsed ? "ingredient-group-chevron" : ""}`}
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="m6 9 6 6 6-6" />
-          </svg>
-        </div>
-      </button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className={`shrink-0 transition-[opacity,width] active:!transform-none ${
+            checkedCount > 0 ? "opacity-100" : "w-0 overflow-hidden opacity-0 pointer-events-none"
+          }`}
+          onClick={() => onToggleAll(ingredientKeys)}
+          tabIndex={checkedCount > 0 ? 0 : -1}
+          aria-label={`${checkedCount === totalCount ? "Uncheck" : "Check"} all ingredients in ${group.groupName}`}
+        >
+          <ProgressPie
+            percentage={progressPercentage}
+            size={18}
+            strokeWidth={1.5}
+            color="var(--primary)"
+          />
+        </Button>
+      </div>
 
       <div
         className={`grid transition-[grid-template-rows] duration-300 ease-out ${

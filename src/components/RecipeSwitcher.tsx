@@ -31,8 +31,7 @@ export function RecipeSwitcher({ title, variant }: RecipeSwitcherProps) {
     if (!hasOthers) {
       return <h1 className={H1_CLASSES}>{title}</h1>;
     }
-    // The mobile h1 stays a plain heading; the dropdown trigger appears only
-    // at md+, since the compact variant in the back-button row handles mobile.
+    // The mobile h1 stays a plain heading; the dropdown trigger appears only at md+.
     return (
       <>
         <h1 className={`md:hidden ${H1_CLASSES}`}>{title}</h1>
@@ -41,10 +40,9 @@ export function RecipeSwitcher({ title, variant }: RecipeSwitcherProps) {
             <button
               type="button"
               aria-label="Switch recipe"
-              className="group/switcher hidden md:flex items-baseline gap-2 text-left -mx-1 px-1 rounded-md hover:bg-stone-100 dark:hover:bg-stone-800/60 transition-colors cursor-pointer"
+              className="hidden md:flex items-baseline text-left -mx-1 px-1 rounded-md hover:bg-stone-100 dark:hover:bg-stone-800/60 transition-colors cursor-pointer"
             >
               <h1 className={H1_CLASSES}>{title}</h1>
-              <AltArrowDown className="shrink-0 size-5 md:size-6 text-stone-400 dark:text-stone-500 transition-transform duration-200 group-data-[state=open]/switcher:rotate-180" />
             </button>
           </DropdownMenuTrigger>
           <SwitcherContent entries={otherEntries} onSelect={setRecipe} />
