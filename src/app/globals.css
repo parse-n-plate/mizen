@@ -82,6 +82,170 @@ html body[data-scroll-locked] {
   margin-right: 0 !important;
 }
 
+#mizen-early-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #fafaf9;
+  pointer-events: none;
+}
+
+html[data-early-splash="true"] #mizen-early-splash {
+  display: flex;
+}
+
+.dark #mizen-early-splash {
+  background: #0c0a09;
+}
+
+.mizen-early-splash-scale {
+  transform-origin: center;
+  transform: scale(0.56);
+}
+
+.mizen-early-splash-icons {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  width: 552px;
+}
+
+.mizen-early-splash-icon {
+  position: relative;
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  transform-origin: 50% 100%;
+  animation-duration: 1.71s;
+  animation-iteration-count: infinite;
+  animation-delay: calc(var(--mizen-early-splash-index) * 0.14s);
+}
+
+.mizen-early-splash-icon-0 {
+  --mizen-early-splash-index: 0;
+  animation-name: mizen-early-splash-bounce-left;
+}
+
+.mizen-early-splash-icon-1 {
+  --mizen-early-splash-index: 1;
+  animation-name: mizen-early-splash-bounce-right;
+}
+
+.mizen-early-splash-icon-2 {
+  --mizen-early-splash-index: 2;
+  animation-name: mizen-early-splash-bounce-left;
+}
+
+.mizen-early-splash-icon-3 {
+  --mizen-early-splash-index: 3;
+  animation-name: mizen-early-splash-bounce-right;
+}
+
+.mizen-early-splash-clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.mizen-early-splash-img {
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
+}
+
+.mizen-early-splash-img-tomato {
+  position: absolute;
+  left: -130.72%;
+  top: -13.66%;
+  width: 245.65%;
+  height: 245.65%;
+}
+
+.mizen-early-splash-img-slice {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: bottom;
+}
+
+.mizen-early-splash-img-half {
+  position: absolute;
+  left: -100.77%;
+  top: -103.49%;
+  width: 308.45%;
+  height: 308.45%;
+}
+
+.mizen-early-splash-img-pan {
+  position: absolute;
+  left: -102.48%;
+  top: -199.74%;
+  width: 308.45%;
+  height: 308.45%;
+}
+
+@keyframes mizen-early-splash-bounce-left {
+  0% {
+    transform: translateY(0) scaleX(1) scaleY(1) rotate(0deg);
+    animation-timing-function: cubic-bezier(0.34, 1.504, 0.64, 1);
+  }
+  12.22% {
+    transform: translateY(-42px) scaleX(0.89) scaleY(1.11) rotate(-7deg);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  23.16% {
+    transform: translateY(2.1px) scaleX(1.04) scaleY(0.95) rotate(0deg);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  32.16%,
+  100% {
+    transform: translateY(0) scaleX(1) scaleY(1) rotate(0deg);
+  }
+}
+
+@keyframes mizen-early-splash-bounce-right {
+  0% {
+    transform: translateY(0) scaleX(1) scaleY(1) rotate(0deg);
+    animation-timing-function: cubic-bezier(0.34, 1.504, 0.64, 1);
+  }
+  12.22% {
+    transform: translateY(-42px) scaleX(0.89) scaleY(1.11) rotate(7deg);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  23.16% {
+    transform: translateY(2.1px) scaleX(1.04) scaleY(0.95) rotate(0deg);
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  32.16%,
+  100% {
+    transform: translateY(0) scaleX(1) scaleY(1) rotate(0deg);
+  }
+}
+
+@media (min-width: 480px) {
+  .mizen-early-splash-scale {
+    transform: scale(0.75);
+  }
+}
+
+@media (min-width: 768px) {
+  .mizen-early-splash-scale {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mizen-early-splash-icon {
+    animation: none;
+  }
+}
+
 /* Custom CSS Variables — Parse & Plate Design System */
 :root {
   /* Override Tailwind's default font stack with our fonts */
@@ -338,123 +502,6 @@ body {
 
 /* Component Styles */
 @layer components {
-  /* ═══════════════════════════════════════════════════════════════════════════
-     FOLDER TABS — Modern tab navigation that looks like file folders
-  ═══════════════════════════════════════════════════════════════════════════ */
-
-  .folder-tab-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 0 8px;
-    white-space: nowrap;
-    border-radius: 16px 16px 0 0 !important;
-    transition:
-      color 150ms ease,
-      background-color 150ms ease,
-      transform 100ms ease;
-    background-color: transparent !important;
-    color: var(--color-text-muted);
-    border: 1px solid transparent !important;
-    position: relative;
-    cursor: pointer;
-    outline: none;
-    margin-bottom: -1px;
-    z-index: 1;
-    box-shadow: none !important;
-  }
-
-  .folder-tab-trigger:focus-visible {
-    outline: 2px solid var(--color-blue);
-    outline-offset: -2px;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .folder-tab-trigger:hover:not([data-state="active"]) {
-      background-color: color-mix(in srgb, var(--color-gray-light) 40%, transparent) !important;
-      color: var(--color-black);
-    }
-  }
-
-  .folder-tab-trigger[data-state="active"] {
-    background-color: var(--color-surface) !important;
-    color: var(--color-black);
-    border-color: var(--color-border-light) !important;
-    border-bottom-color: transparent !important;
-    border-top-color: var(--color-border-light) !important;
-    z-index: 3;
-    box-shadow: none !important;
-    transform-origin: top center;
-  }
-
-  /* Hide the line-style active indicator */
-  .folder-tab-trigger::after {
-    display: none !important;
-  }
-
-  @media (max-width: 640px) {
-    .folder-tab-trigger {
-      padding: 0 4px;
-      gap: 4px;
-    }
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════════════
-     FOLDER TABS (BOTTOM) — Flipped folder tabs anchored to bottom of screen
-  ═══════════════════════════════════════════════════════════════════════════ */
-
-  .folder-tab-trigger-bottom {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 0 8px;
-    white-space: nowrap;
-    border-radius: 16px 16px 0 0 !important;
-    transition:
-      color 150ms ease,
-      background-color 150ms ease,
-      transform 100ms ease;
-    background-color: transparent !important;
-    color: var(--color-text-muted);
-    border: 1px solid transparent !important;
-    position: relative;
-    cursor: pointer;
-    outline: none;
-    margin-bottom: -1px;
-    z-index: 1;
-    box-shadow: none !important;
-  }
-
-  .folder-tab-trigger-bottom:focus-visible {
-    outline: 2px solid var(--color-blue);
-    outline-offset: -2px;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .folder-tab-trigger-bottom:hover:not([data-state="active"]) {
-      background-color: color-mix(in srgb, var(--color-gray-light) 40%, transparent) !important;
-      color: var(--color-black);
-    }
-  }
-
-  .folder-tab-trigger-bottom[data-state="active"] {
-    background-color: var(--color-surface) !important;
-    color: var(--color-black);
-    border-color: var(--color-border-light) !important;
-    border-bottom-color: var(--color-surface) !important;
-    z-index: 3;
-    box-shadow: none !important;
-  }
-
-  @media (max-width: 640px) {
-    .folder-tab-trigger-bottom {
-      padding: 0 4px;
-      gap: 4px;
-    }
-  }
-
   @media (prefers-reduced-motion: reduce) {
     .source-preview-enter,
     .source-preview-enter-initial,
@@ -617,145 +664,6 @@ body {
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
-     INGREDIENT GROUP — Collapsible group with chevron animation
-  ═══════════════════════════════════════════════════════════════════════════ */
-
-  .ingredient-group {
-    margin-bottom: 1.5rem;
-  }
-
-  .ingredient-group-chevron {
-    opacity: 0;
-    transition: opacity 150ms ease;
-  }
-
-  [aria-expanded="false"] .ingredient-group-chevron {
-    opacity: 1;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .group:hover .ingredient-group-chevron {
-      opacity: 1;
-    }
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════════════
-     INGREDIENT LIST — Linear list style with native checkboxes
-  ═══════════════════════════════════════════════════════════════════════════ */
-
-  .ingredient-list-item {
-    position: relative;
-    width: 100%;
-    cursor: pointer;
-    border-radius: var(--radius-md);
-    transition:
-      transform var(--press-duration, 120ms) var(--press-easing, ease-out),
-      background-color 150ms ease;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .ingredient-list-item:hover {
-      background-color: var(--color-cream);
-    }
-  }
-
-  .ingredient-list-item:active {
-    transform: scale(var(--press-scale, 0.995));
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .ingredient-list-item {
-      transition: none;
-    }
-    .ingredient-list-item:active {
-      transform: none;
-    }
-  }
-
-  /* Hide the previous item's divider when the next item is hovered */
-  @media (hover: hover) and (pointer: fine) {
-    .ingredient-list-item:has(+ .ingredient-list-item:hover) .ingredient-list-divider,
-    .group:has(+ .group:hover) .step-list-divider {
-      opacity: 0;
-    }
-  }
-
-  .ingredient-list-content {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 12px;
-    position: relative;
-  }
-
-  .ingredient-list-divider {
-    position: absolute;
-    bottom: 0;
-    left: 42px;
-    right: 12px;
-    height: 1px;
-    background-color: var(--color-border-light);
-  }
-
-  /* Native checkbox styled to match production */
-  .ingredient-checkbox-input {
-    width: 20px;
-    height: 20px;
-    border: 1.5px solid var(--color-gray-light);
-    border-radius: 4px;
-    background-color: transparent;
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    position: relative;
-    flex-shrink: 0;
-    transform: translateY(-1px);
-  }
-
-  .ingredient-checkbox-input:checked {
-    background-color: var(--color-primary-blue);
-    border: none;
-  }
-
-  .ingredient-checkbox-input:checked::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 5px;
-    height: 10px;
-    border: solid white;
-    border-width: 0 2px 2px 0;
-    transform: translate(-50%, -50%) rotate(45deg);
-  }
-
-  .ingredient-list-name {
-    font-family: "Albert Sans", "Helvetica", "system-ui", sans-serif;
-    font-weight: 500;
-    font-size: 14px;
-    line-height: 20px;
-    margin: 0;
-  }
-
-  .ingredient-list-description {
-    font-family: "Albert Sans", "Helvetica", "system-ui", sans-serif;
-    font-weight: 400;
-    font-size: 12px;
-    line-height: 16px;
-    color: var(--color-text-muted);
-    margin: 0;
-  }
-
-  /* Checked state */
-  .ingredient-list-item.is-checked .ingredient-list-name,
-  .ingredient-list-item.is-checked .ingredient-list-name span,
-  .ingredient-list-item.is-checked .ingredient-list-description {
-    text-decoration: line-through;
-    color: var(--color-text-muted);
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════════════
      LOADING ANIMATION — Vertical step state
   ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -814,29 +722,6 @@ body {
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
-     RECIPE STEP LIST
-  ═══════════════════════════════════════════════════════════════════════════ */
-
-  .recipe-step-list-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    padding: 1rem 0;
-    border-bottom: 1px solid var(--color-border-light);
-    transition: background-color 150ms ease;
-  }
-
-  .recipe-step-list-item:last-child {
-    border-bottom: none;
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    .recipe-step-list-item:hover {
-      background-color: color-mix(in srgb, var(--color-background-cream) 50%, transparent);
-    }
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════════════
      QUANTITY HIGHLIGHT
   ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -867,26 +752,6 @@ body {
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
-     POPOVER / DROPDOWN — Enter animation for floating panels
-  ═══════════════════════════════════════════════════════════════════════════ */
-
-  @keyframes popover-in {
-    from {
-      opacity: 0;
-      transform: scale(0.95) translateY(-4px);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1) translateY(0);
-    }
-  }
-
-  .popover-animate {
-    animation: popover-in 150ms var(--ease-out-quart) forwards;
-    transform-origin: top right;
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════════════
      TAB CONTENT — Crossfade on tab switch
   ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -906,26 +771,6 @@ body {
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
-     CHECKBOX — Satisfying pop on check
-  ═══════════════════════════════════════════════════════════════════════════ */
-
-  @keyframes checkbox-pop {
-    0% {
-      transform: translateY(-1px) scale(1);
-    }
-    50% {
-      transform: translateY(-1px) scale(1.2);
-    }
-    100% {
-      transform: translateY(-1px) scale(1);
-    }
-  }
-
-  .ingredient-checkbox-input:checked {
-    animation: checkbox-pop 180ms var(--ease-out-quart);
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════════════
      SMART BAR — Morphing container transitions
   ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -936,11 +781,6 @@ body {
       background-color 150ms ease,
       box-shadow 150ms ease;
     overflow: hidden;
-  }
-
-  .smart-bar-focus-ring {
-    border-color: var(--color-blue);
-    box-shadow: 0 0 0 3px rgba(24, 161, 247, 0.2);
   }
 
   .smart-bar-loading-ring {
@@ -1064,6 +904,10 @@ body {
 
   .press-scale:active {
     transform: scale(0.98);
+  }
+
+  #primary-sidebar > .flex > .press-scale:active {
+    transform: none;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -1272,8 +1116,7 @@ body {
 
   /* Hide non-print elements */
   header,
-  .folder-tab-trigger,
-  .folder-tab-trigger-bottom,
+  [data-recipe-tab-trigger],
   .vault-animate,
   [data-sonner-toaster],
   .clipboard-pill-animate,
@@ -1282,23 +1125,7 @@ body {
   }
 
   /* Clean card appearance */
-  .ingredient-group {
-    break-inside: avoid;
-  }
-
-  .recipe-step-list-item {
-    break-inside: avoid;
-  }
-
-  .ingredient-checkbox-input {
+  [data-slot="checkbox"] {
     display: none !important;
-  }
-
-  .ingredient-list-content {
-    padding: 6px 0 !important;
-  }
-
-  .ingredient-list-divider {
-    left: 0 !important;
   }
 }

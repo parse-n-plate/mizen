@@ -11,6 +11,7 @@ import { useRecipe } from "@/context/RecipeContext";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { SettingsModal } from "@/components/SettingsModal";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
+import { Book, BookOpen, LogOut, Settings } from "lucide-react";
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_IMAGE_SIZE = 4 * 1024 * 1024;
@@ -186,18 +187,6 @@ export function TopBar() {
                       <span className="truncate font-sans text-sm font-medium text-stone-600 dark:text-stone-400">
                         {recipe.title}
                       </span>
-                      <svg
-                        className={`h-3.5 w-3.5 flex-shrink-0 text-stone-400 dark:text-stone-500 transition-transform ${recipeSwitcherOpen ? "rotate-180" : ""}`}
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="m6 9 6 6 6-6" />
-                      </svg>
                     </button>
 
                     {recipeSwitcherOpen && (
@@ -206,7 +195,7 @@ export function TopBar() {
                           className="fixed inset-0 z-30"
                           onClick={() => setRecipeSwitcherOpen(false)}
                         />
-                        <div className="popover-animate absolute left-0 top-full z-40 mt-2 w-[min(16rem,calc(100vw-3rem))] rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 py-1 shadow-lg">
+                        <div className="animate-in fade-in-0 zoom-in-95 slide-in-from-top-1 duration-150 absolute left-0 top-full z-40 mt-2 w-[min(16rem,calc(100vw-3rem))] rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 py-1 shadow-lg">
                           <p className="px-3 py-1.5 font-sans text-xs font-medium text-stone-400 dark:text-stone-500">
                             Recent recipes
                           </p>
@@ -219,9 +208,12 @@ export function TopBar() {
                                   setRecipe(entry.recipe);
                                   setRecipeSwitcherOpen(false);
                                 }}
-                                className="w-full px-3 py-2 text-left font-sans text-sm text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors truncate"
+                                className="flex w-full items-center gap-2.5 px-3 py-2 text-left font-sans text-sm text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
                               >
-                                {entry.recipe.title}
+                                <span className="min-w-0 flex-1 truncate">
+                                  {entry.recipe.title}
+                                </span>
+                                <BookOpen className="h-4 w-4 flex-shrink-0 text-stone-400 dark:text-stone-500" />
                               </button>
                             ))}
                         </div>
@@ -323,7 +315,7 @@ export function TopBar() {
                     {quickAddOpen && (
                       <>
                         <div className="fixed inset-0 z-30" onClick={closeQuickAdd} />
-                        <div className="popover-animate absolute right-0 top-full z-40 mt-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-lg overflow-hidden">
+                        <div className="animate-in fade-in-0 zoom-in-95 slide-in-from-top-1 duration-150 absolute right-0 top-full z-40 mt-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-lg overflow-hidden">
                           {quickAddMode === "menu" ? (
                             <div className="py-1 w-44">
                               <p className="px-3 py-1.5 font-sans text-xs font-medium text-stone-400 dark:text-stone-500">
@@ -374,7 +366,7 @@ export function TopBar() {
                             </div>
                           ) : (
                             <div className="p-2 w-72">
-                              <div className="flex items-center gap-2 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50 px-2.5 py-1.5 focus-within:border-stone-400 dark:focus-within:border-stone-500 transition-colors">
+                              <div className="flex items-center gap-2 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50 px-2.5 py-1.5 focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 transition-[border-color,box-shadow]">
                                 <svg
                                   className="h-3.5 w-3.5 flex-shrink-0 text-stone-400 dark:text-stone-500"
                                   xmlns="http://www.w3.org/2000/svg"
@@ -474,7 +466,7 @@ export function TopBar() {
                   {menuOpen && user && (
                     <>
                       <div className="fixed inset-0 z-30" onClick={() => setMenuOpen(false)} />
-                      <div className="popover-animate absolute right-0 top-full z-40 mt-2 w-48 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 py-1 shadow-lg">
+                      <div className="animate-in fade-in-0 zoom-in-95 slide-in-from-top-1 duration-150 absolute right-0 top-full z-40 mt-2 w-48 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 py-1 shadow-lg">
                         <div className="border-b border-stone-100 dark:border-stone-800 px-3 py-2">
                           <p className="truncate font-sans text-sm font-medium text-stone-900 dark:text-stone-100">
                             {name}
@@ -486,25 +478,28 @@ export function TopBar() {
                         <Link
                           href="/cookbook"
                           onClick={() => setMenuOpen(false)}
-                          className="block px-3 py-2 font-sans text-sm text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
+                          className="flex items-center gap-2.5 px-3 py-2 font-sans text-sm text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
                         >
-                          Cookbook
+                          <span className="min-w-0 flex-1 truncate">Cookbook</span>
+                          <Book className="h-4 w-4 flex-shrink-0 text-stone-400 dark:text-stone-500" />
                         </Link>
                         <button
                           onClick={() => {
                             setMenuOpen(false);
                             setSettingsOpen(true);
                           }}
-                          className="w-full px-3 py-2 text-left font-sans text-sm text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
+                          className="flex w-full items-center gap-2.5 px-3 py-2 text-left font-sans text-sm text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
                         >
-                          Settings
+                          <span className="min-w-0 flex-1 truncate">Settings</span>
+                          <Settings className="h-4 w-4 flex-shrink-0 text-stone-400 dark:text-stone-500" />
                         </button>
                         <form action="/api/auth/signout" method="post">
                           <button
                             type="submit"
-                            className="w-full px-3 py-2 text-left font-sans text-sm text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
+                            className="flex w-full items-center gap-2.5 px-3 py-2 text-left font-sans text-sm text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
                           >
-                            Sign out
+                            <span className="min-w-0 flex-1 truncate">Sign out</span>
+                            <LogOut className="h-4 w-4 flex-shrink-0 text-stone-400 dark:text-stone-500" />
                           </button>
                         </form>
                       </div>

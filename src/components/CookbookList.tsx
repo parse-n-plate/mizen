@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
+import { FileText, ImageIcon, LinkIcon, type LucideIcon } from "lucide-react";
 import { useRecipe } from "@/context/RecipeContext";
 import {
   DropdownMenu,
@@ -12,13 +13,26 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import LinkSquare from "@solar-icons/react/csr/text-formatting/LinkSquare";
 import TrashBinMinimalistic from "@solar-icons/react/csr/ui/TrashBinMinimalistic";
 import MenuDots from "@solar-icons/react/csr/ui/MenuDots";
 import Book from "@solar-icons/react/csr/school/Book";
 
 import type { SavedRecipe } from "@/lib/types";
+
+type SourceKind = "image" | "url" | "text";
+
+const SOURCE_KIND_ICON: Record<SourceKind, LucideIcon> = {
+  image: ImageIcon,
+  url: LinkIcon,
+  text: FileText,
+};
+
+const SOURCE_KIND_LABEL: Record<SourceKind, string> = {
+  image: "Image recipe",
+  url: "Web recipe",
+  text: "Text recipe",
+};
 
 function getTimeGroup(dateStr: string): string {
   const date = new Date(dateStr);
@@ -57,6 +71,42 @@ function groupRecipes(recipes: SavedRecipe[]) {
   }
 
   return groups;
+}
+
+function getSourceKind(item: SavedRecipe): SourceKind {
+  if (item.source_url || item.recipe.sourceUrl) return "url";
+  if (item.recipe.imageTranscription || item.recipe.imageUrl) return "image";
+  return "text";
+}
+
+function RecipeSourceIcon({ domain, kind }: { domain: string | null; kind: SourceKind }) {
+  const [faviconFailed, setFaviconFailed] = useState(false);
+
+  if (domain && !faviconFailed) {
+    return (
+      <Image
+        src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
+        alt=""
+        width={16}
+        height={16}
+        unoptimized
+        onError={() => setFaviconFailed(true)}
+        className="shrink-0 rounded-sm"
+      />
+    );
+  }
+
+  const Icon = SOURCE_KIND_ICON[kind];
+
+  return (
+    <span
+      className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-stone-400 dark:text-stone-500"
+      title={SOURCE_KIND_LABEL[kind]}
+      aria-label={SOURCE_KIND_LABEL[kind]}
+    >
+      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+    </span>
+  );
 }
 
 interface CookbookListProps {
@@ -132,105 +182,53 @@ export function CookbookList({ initialRecipes }: CookbookListProps) {
                     handleOpen(item);
                   }
                 }}
-                className={`group -mx-3 flex items-center justify-between rounded-xl px-3 py-3.5 cursor-pointer outline-none hover:bg-stone-200/60 dark:hover:bg-stone-700/35 focus-visible:ring-2 focus-visible:ring-[var(--color-blue)] focus-visible:ring-offset-2 ${menuOpenId === item.id ? "bg-stone-200/60 dark:bg-stone-700/35" : ""}`}
+                className={`group -mx-3 flex items-center justify-between rounded-xl px-3 py-3.5 cursor-pointer outline-none hover:bg-muted focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 ${menuOpenId === item.id ? "bg-muted" : ""}`}
               >
                 <div className="min-w-0 flex-1 flex items-center gap-3">
-                  {domain && (
-                    <Image
-                      src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
-                      alt=""
-                      width={16}
-                      height={16}
-                      unoptimized
-                      className="shrink-0 rounded-sm"
-                    />
-                  )}
-                  <div className="min-w-0">
-                    <span className="font-serif text-base font-semibold leading-snug text-stone-900 dark:text-stone-50">
+                  <RecipeSourceIcon domain={domain} kind={getSourceKind(item)} />
+                  <div className="min-w-0 flex items-baseline">
+                    <span className="truncate font-serif text-base font-semibold leading-snug text-stone-900 dark:text-stone-50">
                       {item.recipe.title}
                     </span>
                     {domain && (
-                      <span className="ml-2 font-sans text-[13px] text-stone-400 dark:text-stone-500">
+                      <span className="ml-2 shrink-0 font-sans text-[13px] text-stone-400 dark:text-stone-500">
                         {domain}
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div
-                  className={`flex items-center gap-0.5 shrink-0 ml-4 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 ${menuOpenId === item.id ? "!opacity-100" : ""}`}
-                >
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (item.source_url) {
-                            window.open(item.source_url, "_blank", "noopener");
-                          } else {
-                            handleOpen(item);
-                          }
-                        }}
-                        className="flex h-8 w-8 items-center justify-center rounded-md text-stone-400 dark:text-stone-500 hover:bg-stone-300 dark:hover:bg-stone-600 hover:text-stone-700 dark:hover:text-stone-200 transition-colors"
-                        aria-label="Open original"
-                      >
-                        <LinkSquare className="h-4 w-4" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Open original</TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(item.id);
-                        }}
-                        className="flex h-8 w-8 items-center justify-center rounded-md text-stone-400 dark:text-stone-500 hover:bg-red-100 dark:hover:bg-red-900/40 hover:text-red-500 dark:hover:text-red-400 transition-colors"
-                        aria-label="Delete recipe"
-                      >
-                        <TrashBinMinimalistic className="h-4 w-4" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent>Delete</TooltipContent>
-                  </Tooltip>
-
+                <div className="flex shrink-0 items-center ml-4">
                   <DropdownMenu onOpenChange={(open) => setMenuOpenId(open ? item.id : null)}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            type="button"
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex h-8 w-8 items-center justify-center rounded-md text-stone-400 dark:text-stone-500 hover:bg-stone-300 dark:hover:bg-stone-600 hover:text-stone-700 dark:hover:text-stone-200 transition-colors"
-                            aria-label="More actions"
-                            suppressHydrationWarning
-                          >
-                            <MenuDots className="h-4 w-4" />
-                          </button>
-                        </DropdownMenuTrigger>
-                      </TooltipTrigger>
-                      <TooltipContent>More</TooltipContent>
-                    </Tooltip>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex h-8 w-8 items-center justify-center rounded-md text-stone-400 dark:text-stone-500 hover:bg-stone-300 dark:hover:bg-stone-600 hover:text-stone-700 dark:hover:text-stone-200 transition-colors"
+                        aria-label="More actions"
+                        suppressHydrationWarning
+                      >
+                        <MenuDots className="h-4 w-4" />
+                      </button>
+                    </DropdownMenuTrigger>
                     <DropdownMenuContent
                       align="end"
                       className="bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700"
                     >
                       <DropdownMenuItem
                         onSelect={() => handleOpen(item)}
-                        className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+                        className="text-foreground focus:bg-accent focus:text-accent-foreground"
                       >
                         Open recipe
+                        <Book className="ml-auto h-4 w-4" />
                       </DropdownMenuItem>
                       {item.source_url && (
                         <DropdownMenuItem
                           onSelect={() => window.open(item.source_url!, "_blank", "noopener")}
-                          className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+                          className="text-foreground focus:bg-accent focus:text-accent-foreground"
                         >
                           Open original
+                          <LinkSquare className="ml-auto h-4 w-4" />
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />
@@ -239,6 +237,7 @@ export function CookbookList({ initialRecipes }: CookbookListProps) {
                         className="text-red-600 dark:text-red-400 focus:bg-red-50 dark:focus:bg-red-950 focus:text-red-700 dark:focus:text-red-300"
                       >
                         Delete
+                        <TrashBinMinimalistic className="ml-auto h-4 w-4" />
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

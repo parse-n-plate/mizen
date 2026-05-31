@@ -31,8 +31,7 @@ export function RecipeSwitcher({ title, variant }: RecipeSwitcherProps) {
     if (!hasOthers) {
       return <h1 className={H1_CLASSES}>{title}</h1>;
     }
-    // The mobile h1 stays a plain heading; the dropdown trigger appears only
-    // at md+, since the compact variant in the back-button row handles mobile.
+    // The mobile h1 stays a plain heading; the dropdown trigger appears only at md+.
     return (
       <>
         <h1 className={`md:hidden ${H1_CLASSES}`}>{title}</h1>

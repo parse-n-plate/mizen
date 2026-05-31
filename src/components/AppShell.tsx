@@ -1,11 +1,12 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { RecipeProvider } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { SplashScreen } from "@/components/SplashScreen";
 import { cn } from "@/lib/utils";
 import SidebarMinimalistic from "@solar-icons/react/csr/it/SidebarMinimalistic";
 import type { ReactNode } from "react";
@@ -34,12 +35,28 @@ export function AppShell({ children }: { children: ReactNode }) {
   const showMobileNav = !!user && ["/", "/cookbook", "/profile"].includes(pathname);
   // Pages that render their own inline expand button — suppress the shell-level gutter
   const hasInlineExpand = pathname.startsWith("/recipe");
+  const showSplash = !!user && !isLanding;
+
+  useEffect(() => {
+    try {
+      if (user) {
+        localStorage.setItem("mizen:core-app-seen", "true");
+        document.documentElement.removeAttribute("data-early-splash");
+      } else if (!loading) {
+        localStorage.removeItem("mizen:core-app-seen");
+        document.documentElement.removeAttribute("data-early-splash");
+      }
+    } catch {
+      document.documentElement.removeAttribute("data-early-splash");
+    }
+  }, [loading, user]);
 
   return (
     <SidebarContext.Provider
       value={{ collapsed: sidebarCollapsed, setCollapsed: setSidebarCollapsed }}
     >
       <RecipeProvider>
+        <SplashScreen enabled={showSplash} ready={!loading} />
         {isLanding ? (
           <div className="landing-scroll min-h-screen lg:min-h-0 lg:h-screen flex flex-col">
             {children}

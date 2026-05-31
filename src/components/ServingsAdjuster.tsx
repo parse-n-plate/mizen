@@ -158,7 +158,7 @@ export function ServingsAdjuster({
             <div className="flex items-center gap-3">
               {/* Indicator pill */}
               <div
-                className={`relative flex items-center gap-1.5 rounded-lg pl-3 py-1.5 border focus-within:outline focus-within:outline-1 transition-[padding] duration-150 ${hasChanged ? "pr-8 bg-[var(--color-blue)]/5 border-[var(--color-blue)]/25 focus-within:border-[var(--color-blue)] focus-within:outline-[var(--color-blue)]" : "pr-3 bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 focus-within:border-primary focus-within:outline-primary"}`}
+                className={`relative flex items-center gap-1.5 rounded-lg border py-1.5 pl-3 transition-[padding,border-color,box-shadow] duration-150 focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 ${hasChanged ? "pr-8 bg-primary/5 border-primary/25" : "pr-3 bg-muted border-input"}`}
               >
                 <span
                   className={`flex items-center justify-center w-4 h-4 ${hasChanged ? "text-[var(--color-blue)]" : "text-stone-500 dark:text-stone-400"}`}

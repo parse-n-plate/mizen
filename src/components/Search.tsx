@@ -291,7 +291,7 @@ function ImageThumbnail({ src, onRemove }: { src: string; onRemove: () => void }
         <img
           src={src}
           alt="Recipe"
-          className="w-full h-full object-cover rounded-xl"
+          className="w-full h-full object-cover rounded-xl cursor-zoom-in"
           onClick={(e) =>
             setLightbox({ rect: e.currentTarget.getBoundingClientRect(), el: e.currentTarget })
           }
@@ -688,7 +688,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                     : !isExpanded && mode === "loading"
                       ? "smart-bar-loading-ring"
                       : !isExpanded && mode === "focused"
-                        ? "smart-bar-focus-ring"
+                        ? "border-ring ring-ring/50 ring-[3px]"
                         : ""
                 }`
           }`}
@@ -748,7 +748,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                       clearContent();
                     }
                   }}
-                  className="outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-blue)] focus-visible:ring-offset-2 rounded-xl min-w-0"
+                  className="min-w-0 rounded-xl outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                   ref={(el) => el?.focus()}
                 >
                   <UrlChip url={url.trim()} onRemove={clearContent} />

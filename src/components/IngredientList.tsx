@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import Magnifer from "@solar-icons/react/csr/search/Magnifer";
-import { X } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import type { Ingredient, IngredientGroup } from "@/lib/types";
@@ -44,12 +48,28 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [mobileSearchContainer, setMobileSearchContainer] = useState<HTMLElement | null>(null);
+  const desktopSearchInputRef = useRef<HTMLInputElement>(null);
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const isSearchExpanded = isSearchOpen || !!searchQuery;
   const numberFormat = useNumberFormat();
 
   useEffect(() => {
-    if (isSearchOpen) searchInputRef.current?.focus({ preventScroll: true });
+    const frame = requestAnimationFrame(() => {
+      setMobileSearchContainer(
+        document.getElementById("mobile-recipe-search-action") ??
+          document.getElementById("mobile-ingredient-search-action")
+      );
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    if (!isSearchOpen) return;
+    const isMobileViewport = window.matchMedia("(max-width: 767px)").matches;
+    const input = isMobileViewport ? mobileSearchInputRef.current : desktopSearchInputRef.current;
+    input?.focus({ preventScroll: true });
   }, [isSearchOpen]);
 
   const toggleCheck = (key: string) => {
@@ -100,33 +120,40 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
     });
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4 pl-3 mb-4">
-        <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 flex-shrink-0">
-          Ingredients
-        </h3>
-        <div
-          className={`group relative h-9 transition-[width] duration-200 ease-in-out ${
-            isSearchExpanded ? "w-[260px] max-w-full" : "w-7"
-          }`}
-        >
+  const searchControl = (placement: "desktop" | "mobile") => {
+    const isMobile = placement === "mobile";
+
+    return (
+      <div
+        className={`group relative h-9 transition-[width] duration-200 ease-in-out ${
+          isSearchExpanded
+            ? isMobile
+              ? "w-[min(260px,calc(100vw-5.25rem))]"
+              : "w-[260px] max-w-full"
+            : isMobile
+              ? "w-9"
+              : "w-7"
+        }`}
+      >
+        <div className={isMobile && isSearchExpanded ? "absolute right-0 top-0 h-9 w-full" : ""}>
           {!searchQuery && (
             <Magnifer
               className={`absolute right-1.5 top-1/2 -translate-y-1/2 size-[16px] text-muted-foreground pointer-events-none z-10 transition-colors ${
-                isSearchExpanded ? "" : "group-hover:text-stone-600 dark:group-hover:text-stone-300"
+                isSearchExpanded ? "" : "group-hover:text-foreground"
               }`}
             />
           )}
           <Tooltip>
             <TooltipTrigger asChild>
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setIsSearchOpen(true)}
                 aria-label="Search ingredients"
                 aria-hidden={isSearchExpanded}
                 tabIndex={isSearchExpanded ? -1 : 0}
-                className={`press-scale absolute inset-0 rounded-xl transition-opacity duration-150 ease-out hover:bg-stone-100 dark:hover:bg-stone-800 ${
+                className={`absolute inset-0 size-auto rounded-xl transition-opacity duration-150 ease-out ${
                   isSearchExpanded ? "opacity-0 pointer-events-none" : "opacity-100"
                 }`}
               />
@@ -134,7 +161,7 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
             <TooltipContent side="bottom">Search ingredients</TooltipContent>
           </Tooltip>
           <Input
-            ref={searchInputRef}
+            ref={isMobile ? mobileSearchInputRef : desktopSearchInputRef}
             type="text"
             placeholder="Search Ingredients"
             value={searchQuery}
@@ -145,24 +172,43 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
             aria-label="Search ingredients"
             tabIndex={isSearchExpanded ? 0 : -1}
             aria-hidden={!isSearchExpanded}
-            className={`absolute inset-0 w-full pl-3 pr-9 h-9 rounded-xl border-transparent bg-stone-100 dark:bg-stone-800 font-sans text-[13px] placeholder:text-muted-foreground focus-visible:bg-background focus-visible:border-input transition-opacity duration-200 ease-out ${
+            className={`absolute inset-0 h-9 w-full rounded-xl bg-muted pl-3 pr-9 text-[13px] transition-opacity duration-200 ease-out ${
               isSearchExpanded ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
           />
           {searchQuery && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="icon-xs"
               onClick={() => {
                 setSearchQuery("");
                 setIsSearchOpen(false);
               }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-sm text-muted-foreground hover:text-foreground transition-colors z-10"
+              className="absolute right-2 top-1/2 z-10 -translate-y-1/2 text-muted-foreground"
               aria-label="Clear search"
             >
               <X className="size-4" />
-            </button>
+            </Button>
           )}
         </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {mobileSearchContainer &&
+        createPortal(
+          <div className="md:hidden">{searchControl("mobile")}</div>,
+          mobileSearchContainer
+        )}
+
+      <div className="flex items-center justify-between gap-4 md:pl-3 mb-4">
+        <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-muted-foreground flex-shrink-0">
+          Ingredients
+        </h3>
+        <div className="hidden md:block">{searchControl("desktop")}</div>
       </div>
 
       {filteredGroups.length === 0 && searchQuery.trim() ? (
@@ -214,64 +260,47 @@ function IngredientGroupSection({
   const progressPercentage = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
 
   return (
-    <div className="ingredient-group">
-      <button
-        type="button"
-        onClick={() => setCollapsed(!collapsed)}
-        className="w-full flex items-center py-2.5 px-3 group cursor-pointer transition-colors duration-[180ms] hover:opacity-80 rounded-lg"
-        aria-expanded={!collapsed}
-      >
-        <div className="flex items-center gap-3 flex-1">
-          <h3 className="font-sans text-base font-semibold text-stone-900 dark:text-stone-100 capitalize">
-            {group.groupName}
-          </h3>
+    <div className="mb-6">
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => setCollapsed(!collapsed)}
+          className="group h-auto min-w-0 flex-1 justify-start rounded-lg py-2.5 md:px-3"
+          aria-expanded={!collapsed}
+        >
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <h3 className="font-sans text-base font-semibold text-foreground capitalize">
+              {group.groupName}
+            </h3>
 
-          {/* Progress Pie - appears when at least one ingredient is checked */}
-          <div
-            className={`flex items-center flex-shrink-0 transition-[opacity,transform] duration-150 ease-out ${
-              checkedCount > 0
-                ? "opacity-100"
-                : "opacity-0 w-0 -ml-3 overflow-hidden pointer-events-none"
-            }`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleAll(ingredientKeys);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                e.stopPropagation();
-                onToggleAll(ingredientKeys);
-              }
-            }}
-            role="button"
-            tabIndex={checkedCount > 0 ? 0 : -1}
-            aria-label={`${checkedCount === totalCount ? "Uncheck" : "Check"} all ingredients in ${group.groupName}`}
-          >
-            <ProgressPie
-              percentage={progressPercentage}
-              size={18}
-              strokeWidth={1.5}
-              color="var(--primary)"
+            <ChevronDown
+              className={`size-4 text-muted-foreground transition-transform duration-200 ${
+                collapsed ? "-rotate-90" : ""
+              }`}
             />
           </div>
+        </Button>
 
-          <svg
-            className={`w-4 h-4 text-stone-400 dark:text-stone-500 transition-transform duration-200 ${
-              collapsed ? "-rotate-90" : ""
-            } ${!collapsed ? "ingredient-group-chevron" : ""}`}
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="m6 9 6 6 6-6" />
-          </svg>
-        </div>
-      </button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className={`shrink-0 transition-[opacity,width] ${
+            checkedCount > 0 ? "opacity-100" : "w-0 overflow-hidden opacity-0 pointer-events-none"
+          }`}
+          onClick={() => onToggleAll(ingredientKeys)}
+          tabIndex={checkedCount > 0 ? 0 : -1}
+          aria-label={`${checkedCount === totalCount ? "Uncheck" : "Check"} all ingredients in ${group.groupName}`}
+        >
+          <ProgressPie
+            percentage={progressPercentage}
+            size={18}
+            strokeWidth={1.5}
+            color="var(--primary)"
+          />
+        </Button>
+      </div>
 
       <div
         className={`grid transition-[grid-template-rows] duration-300 ease-out ${
@@ -288,25 +317,19 @@ function IngredientGroupSection({
             const hasAlerts = Boolean(ing.alerts && ing.alerts.length > 0);
 
             return (
-              <div
-                key={key}
-                className={`ingredient-list-item group ${isChecked ? "is-checked" : ""}`}
-              >
+              <div key={key} className="group relative w-full rounded-md">
                 <div
-                  className="ingredient-list-content cursor-pointer"
+                  className="relative flex cursor-pointer items-center gap-3 px-0 py-3.5 md:px-3 hover:bg-muted/60 rounded-md"
                   onClick={() => onToggle(key)}
                 >
                   <div className="flex-shrink-0 flex items-center">
-                    <input
-                      type="checkbox"
-                      className="ingredient-checkbox-input cursor-pointer"
+                    <Checkbox
                       aria-label={ing.ingredient}
                       checked={isChecked}
-                      onChange={(e) => {
+                      onCheckedChange={() => onToggle(key)}
+                      onClick={(e) => {
                         e.stopPropagation();
-                        onToggle(key);
                       }}
-                      onClick={(e) => e.stopPropagation()}
                     />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -317,8 +340,8 @@ function IngredientGroupSection({
                     >
                       <div className="flex items-baseline gap-1.5 min-w-0">
                         <p
-                          className={`font-sans font-medium text-base text-stone-800 dark:text-stone-200 capitalize truncate ${
-                            isChecked ? "line-through" : ""
+                          className={`font-sans font-medium text-base text-foreground capitalize truncate ${
+                            isChecked ? "line-through text-muted-foreground" : ""
                           }`}
                         >
                           {ing.ingredient}
@@ -326,7 +349,7 @@ function IngredientGroupSection({
                       </div>
                       <div className="flex items-baseline gap-2 ml-3 flex-shrink-0">
                         {amount && (
-                          <p className="font-sans text-sm text-stone-400 dark:text-stone-500">
+                          <p className="font-sans text-sm text-muted-foreground">
                             {diffEntry ? (
                               <span key={diffGeneration}>
                                 <span className="amount-diff-old">{diffEntry.oldAmount}</span>{" "}
@@ -341,16 +364,13 @@ function IngredientGroupSection({
                     </div>
                     {hasAlerts && (
                       <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                        <span className="font-sans text-[11px] text-amber-600 dark:text-amber-400">
+                        <span className="font-sans text-[11px] text-muted-foreground">
                           Conflicts:
                         </span>
                         {ing.alerts?.map((alert) => (
-                          <span
-                            key={alert}
-                            className="rounded-md bg-amber-50 px-1.5 py-0.5 font-sans text-[11px] text-amber-700 dark:bg-amber-950/50 dark:text-amber-300"
-                          >
+                          <Badge key={alert} variant="secondary" className="text-[11px]">
                             {alert}
-                          </span>
+                          </Badge>
                         ))}
                       </div>
                     )}
@@ -358,7 +378,7 @@ function IngredientGroupSection({
                 </div>
 
                 {!isLast && (
-                  <div className="ingredient-list-divider absolute bottom-0 h-px bg-stone-100 dark:bg-stone-800 transition-opacity duration-150 group-hover:opacity-0" />
+                  <div className="absolute bottom-0 left-8 right-0 h-px bg-border md:left-11 md:right-3" />
                 )}
               </div>
             );
