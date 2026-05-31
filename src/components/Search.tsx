@@ -688,7 +688,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                     : !isExpanded && mode === "loading"
                       ? "smart-bar-loading-ring"
                       : !isExpanded && mode === "focused"
-                        ? "border-ring ring-ring/50 ring-[3px]"
+                        ? "smart-bar-focus-ring"
                         : ""
                 }`
           }`}
@@ -748,7 +748,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                       clearContent();
                     }
                   }}
-                  className="min-w-0 rounded-xl outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                  className="outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-blue)] focus-visible:ring-offset-2 rounded-xl min-w-0"
                   ref={(el) => el?.focus()}
                 >
                   <UrlChip url={url.trim()} onRemove={clearContent} />

@@ -262,7 +262,7 @@ export function FeedbackDialog({
                 </div>
               )}
               {/* Textarea with inline attach button */}
-              <div className="flex flex-col rounded-md border border-input shadow-xs transition-[color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50">
+              <div className="flex flex-col rounded-md border border-input shadow-xs transition-[color,box-shadow] focus-within:border-[#18A1F7] focus-within:ring-[3px] focus-within:ring-[#18A1F7]/25">
                 <textarea
                   placeholder={
                     category === "bug"

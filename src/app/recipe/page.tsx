@@ -33,7 +33,6 @@ import {
   setUnitSystem,
 } from "@/lib/preferences";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
@@ -486,12 +485,9 @@ export default function RecipePage() {
         <div className="max-w-[800px] duration-[220ms] group-data-[sidebar-collapsed=true]/shell:max-w-[1040px] group-data-[sidebar-collapsed=true]/shell:duration-[180ms] transition-[max-width] ease-[cubic-bezier(0.165,0.84,0.44,1)] motion-reduce:transition-none px-6 md:px-3 w-full flex-1 flex flex-col">
           {/* Desktop: top folder tabs + quick actions (hidden on mobile) */}
           <div className="group/tabs hidden md:flex items-end w-full relative gap-0">
-            <Button
-              type="button"
-              variant={activeTab === "prep" ? "secondary" : "ghost"}
-              data-recipe-tab-trigger
+            <button
               onClick={() => setActiveTab("prep")}
-              className={`h-12 rounded-b-none px-10 text-[15px] ${
+              className={`folder-tab-trigger press-scale h-12 px-10 font-sans text-[15px] ${
                 activeTab === "prep" ? "font-semibold" : "font-medium"
               }`}
               data-state={activeTab === "prep" ? "active" : "inactive"}
@@ -506,17 +502,14 @@ export default function RecipePage() {
               />
               Prep
               {recipe.prepTimeMinutes ? (
-                <span className="ml-1.5 font-normal text-muted-foreground">
+                <span className="font-normal text-stone-400 dark:text-stone-500 ml-1.5">
                   {formatTime(recipe.prepTimeMinutes)}
                 </span>
               ) : null}
-            </Button>
-            <Button
-              type="button"
-              variant={activeTab === "cook" ? "secondary" : "ghost"}
-              data-recipe-tab-trigger
+            </button>
+            <button
               onClick={() => setActiveTab("cook")}
-              className={`h-12 rounded-b-none px-10 text-[15px] ${
+              className={`folder-tab-trigger press-scale h-12 px-10 font-sans text-[15px] ${
                 activeTab === "cook" ? "font-semibold" : "font-medium"
               }`}
               data-state={activeTab === "cook" ? "active" : "inactive"}
@@ -531,11 +524,11 @@ export default function RecipePage() {
               />
               Cook
               {recipe.cookTimeMinutes ? (
-                <span className="ml-1.5 font-normal text-muted-foreground">
+                <span className="font-normal text-stone-400 dark:text-stone-500 ml-1.5">
                   {formatTime(recipe.cookTimeMinutes)}
                 </span>
               ) : null}
-            </Button>
+            </button>
 
             {/* Quick actions — right-aligned */}
             <div className="ml-auto flex items-center gap-1 pb-2">
@@ -571,7 +564,7 @@ export default function RecipePage() {
                   >
                     <DropdownMenuRadioItem
                       value="original"
-                      className="text-foreground focus:bg-accent focus:text-accent-foreground"
+                      className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                     >
                       <span className="min-w-0 flex-1 truncate">
                         Original ({recipeUnitSystem === "metric" ? "Metric" : "Imperial"})
@@ -580,14 +573,14 @@ export default function RecipePage() {
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem
                       value="metric"
-                      className="text-foreground focus:bg-accent focus:text-accent-foreground"
+                      className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                     >
                       <span className="min-w-0 flex-1 truncate">Metric</span>
                       <Scale className="ml-auto h-4 w-4" />
                     </DropdownMenuRadioItem>
                     <DropdownMenuRadioItem
                       value="imperial"
-                      className="text-foreground focus:bg-accent focus:text-accent-foreground"
+                      className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                     >
                       <span className="min-w-0 flex-1 truncate">Imperial</span>
                       <Ruler className="ml-auto h-4 w-4" />
@@ -668,7 +661,7 @@ export default function RecipePage() {
                 >
                   <DropdownMenuItem
                     onSelect={() => window.print()}
-                    className="text-foreground focus:bg-accent focus:text-accent-foreground"
+                    className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                   >
                     Print
                     <svg
@@ -688,7 +681,7 @@ export default function RecipePage() {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onSelect={handleShare}
-                    className="text-foreground focus:bg-accent focus:text-accent-foreground"
+                    className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                   >
                     Share
                     <svg
@@ -709,7 +702,7 @@ export default function RecipePage() {
                   <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />
                   <DropdownMenuItem
                     onSelect={handleDelete}
-                    className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                    className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-red-600 dark:focus:text-red-400"
                   >
                     Delete
                     <svg
@@ -851,15 +844,13 @@ export default function RecipePage() {
         actionSlot={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
+              <button
                 type="button"
-                variant="outline"
-                size="icon-lg"
                 aria-label="More recipe actions"
-                className="h-14 w-14 rounded-full"
+                className="press-scale inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-[var(--color-border-light)]/80 bg-[var(--color-surface)] text-[var(--color-text-heading)] shadow-[0_12px_30px_rgba(0,0,0,0.08)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-blue)] dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100"
               >
                 <EllipsisVertical className="h-5 w-5" aria-hidden="true" />
-              </Button>
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
@@ -868,21 +859,21 @@ export default function RecipePage() {
             >
               <DropdownMenuItem
                 onSelect={handleCopyRecipe}
-                className="text-foreground focus:bg-accent focus:text-accent-foreground"
+                className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
               >
                 Copy
                 <Copy className="ml-auto h-4 w-4" />
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={handleShare}
-                className="text-foreground focus:bg-accent focus:text-accent-foreground"
+                className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
               >
                 Share
                 <Share2 className="ml-auto h-4 w-4" />
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={() => window.print()}
-                className="text-foreground focus:bg-accent focus:text-accent-foreground"
+                className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
               >
                 Print
                 <Printer className="ml-auto h-4 w-4" />
@@ -890,7 +881,7 @@ export default function RecipePage() {
               {feedbackFeaturesEnabled && user && (
                 <DropdownMenuItem
                   onSelect={() => setReportOpen(true)}
-                  className="text-foreground focus:bg-accent focus:text-accent-foreground"
+                  className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                 >
                   Feedback
                   <MessageSquare className="ml-auto h-4 w-4" />
@@ -899,7 +890,7 @@ export default function RecipePage() {
               <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />
               <DropdownMenuItem
                 onSelect={handleDelete}
-                className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-red-600 dark:focus:text-red-400"
               >
                 Delete
                 <Trash2 className="ml-auto h-4 w-4 text-red-500 dark:text-red-400" />
