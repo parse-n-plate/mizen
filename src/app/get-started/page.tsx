@@ -14,6 +14,38 @@ import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 const DISCORD_URL = "https://discord.gg/Pt4t8K8h9";
 const BEEF_UDON_URL = "https://www.justonecookbook.com/beef-udon/";
 
+const heroItems = [
+  {
+    src: "/assets/get-started/tomato-slice.png",
+    alt: "Tomato slice.",
+    width: 1024,
+    height: 1024,
+    className: "rotate-[-10deg] scale-[0.82] group-hover:rotate-[-14deg] group-hover:scale-[0.9]",
+  },
+  {
+    src: "/assets/get-started/hero-pot.svg",
+    alt: "Plate.",
+    width: 248,
+    height: 204,
+    className:
+      "rotate-[1deg] scale-[1.06] group-hover:translate-y-1 group-hover:rotate-[-1deg] group-hover:scale-[1.12]",
+  },
+  {
+    src: "/assets/get-started/icon-prep.png",
+    alt: "Knife.",
+    width: 360,
+    height: 360,
+    className: "rotate-[4deg] scale-[0.92] group-hover:rotate-[10deg] group-hover:scale-100",
+  },
+  {
+    src: "/assets/get-started/icon-cook.svg",
+    alt: "Pan.",
+    width: 1200,
+    height: 1200,
+    className: "rotate-[8deg] scale-[0.9] group-hover:rotate-[13deg] group-hover:scale-[0.98]",
+  },
+];
+
 const steps = [
   {
     title: "Source",
@@ -117,20 +149,14 @@ function GetStartedPageContent() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(255,255,255,0.24),transparent_34%)]" />
             <div className="relative flex h-full items-center justify-center">
               <div className="flex w-[76%] max-w-[720px] items-center justify-between gap-[clamp(20px,5vw,66px)] transition-transform duration-300 ease-out group-hover:-translate-y-1">
-                {[
-                  "rotate-[-10deg] scale-[0.86] group-hover:rotate-[-14deg] group-hover:scale-[0.93]",
-                  "rotate-[4deg] scale-[0.98] group-hover:rotate-[1deg] group-hover:scale-[1.05]",
-                  "rotate-[-3deg] scale-[1.06] group-hover:rotate-[3deg] group-hover:scale-[1.12]",
-                  "rotate-[11deg] scale-[0.92] group-hover:rotate-[15deg] group-hover:scale-100",
-                ].map((className, index) => (
+                {heroItems.map((item, index) => (
                   <div
-                    key={className}
-                    className={`relative aspect-[387/338] w-[20%] min-w-[76px] max-w-[150px] transition-transform duration-300 ease-out ${className}`}
+                    key={item.src}
+                    className={`relative aspect-square w-[20%] min-w-[76px] max-w-[150px] transition-transform duration-300 ease-out ${item.className}`}
                   >
                     <Image
-                      src="/assets/icons/Fish Logo.png"
-                      alt=""
-                      aria-hidden
+                      src={item.src}
+                      alt={item.alt}
                       fill
                       className="object-contain drop-shadow-[0_18px_24px_rgba(29,91,121,0.16)]"
                       sizes="(min-width: 1120px) 150px, 20vw"
