@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
@@ -45,6 +45,8 @@ const steps = [
 function GetStartedPageContent() {
   const [authOpen, setAuthOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showNav, setShowNav] = useState(false);
+  const heroRef = useRef<HTMLDivElement | null>(null);
   const [lightbox, setLightbox] = useState<{
     src: string;
     alt: string;
@@ -52,10 +54,34 @@ function GetStartedPageContent() {
     el: HTMLElement;
   } | null>(null);
 
+  useEffect(() => {
+    const updateNavVisibility = () => {
+      const hero = heroRef.current;
+      if (!hero) return;
+
+      const rect = hero.getBoundingClientRect();
+      const threshold = window.scrollY + rect.top + rect.height / 2;
+      setShowNav(window.scrollY >= threshold);
+    };
+
+    updateNavVisibility();
+    window.addEventListener("scroll", updateNavVisibility, { passive: true });
+    window.addEventListener("resize", updateNavVisibility);
+
+    return () => {
+      window.removeEventListener("scroll", updateNavVisibility);
+      window.removeEventListener("resize", updateNavVisibility);
+    };
+  }, []);
+
   return (
     <>
       <div className="min-h-screen bg-white text-stone-900 dark:bg-stone-950 dark:text-stone-100">
-        <header className="border-b border-stone-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 dark:border-stone-800 dark:bg-stone-950/95 dark:supports-[backdrop-filter]:bg-stone-950/85">
+        <header
+          className={`fixed inset-x-0 top-0 z-40 border-b border-stone-200 bg-white/95 backdrop-blur transition-[opacity,transform] duration-200 ease-out supports-[backdrop-filter]:bg-white/85 dark:border-stone-800 dark:bg-stone-950/95 dark:supports-[backdrop-filter]:bg-stone-950/85 ${
+            showNav ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"
+          }`}
+        >
           <nav className="mx-auto flex h-20 w-full max-w-[1120px] items-center justify-between px-5 sm:px-8">
             <Link href="/" className="flex min-w-0 items-center gap-2">
               <Image
@@ -81,16 +107,27 @@ function GetStartedPageContent() {
             </h1>
           </section>
 
-          <div className="mt-8 overflow-hidden rounded-lg border border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-900">
-            <Image
-              src="/assets/get-started/hero.jpg"
-              alt="Illustration of a tomato, plate, knife, and pan on a blue background."
-              width={1920}
-              height={1080}
-              className="h-auto w-full"
-              sizes="(min-width: 1120px) 1056px, calc(100vw - 40px)"
-              priority
-            />
+          <div
+            ref={heroRef}
+            className="group relative mt-8 aspect-video overflow-hidden rounded-lg border border-stone-200 bg-[#78c7df] dark:border-stone-800"
+          >
+            <div className="absolute inset-0 bg-[linear-gradient(135deg,#86d8e8_0%,#78c7df_38%,#f6d88f_100%)] transition-transform duration-500 ease-out group-hover:scale-105" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_22%,rgba(255,255,255,0.42),transparent_26%),radial-gradient(circle_at_76%_72%,rgba(25,112,133,0.2),transparent_30%)] opacity-80 transition-opacity duration-500 group-hover:opacity-100" />
+            <div className="absolute inset-x-0 top-1/2 h-px bg-white/35 transition-transform duration-500 ease-out group-hover:translate-y-[-8px]" />
+            <div className="absolute inset-y-0 left-1/2 w-px bg-white/25 transition-transform duration-500 ease-out group-hover:translate-x-2" />
+            <div className="relative flex h-full items-center justify-center">
+              <div className="flex aspect-square w-[22%] min-w-[104px] max-w-[190px] items-center justify-center rounded-[18%] bg-white/85 shadow-[0_28px_80px_rgba(20,83,95,0.22)] ring-1 ring-white/70 backdrop-blur-sm transition-[transform,box-shadow,background-color] duration-300 ease-out group-hover:rotate-[-4deg] group-hover:scale-105 group-hover:bg-white group-hover:shadow-[0_34px_96px_rgba(20,83,95,0.3)]">
+                <Image
+                  src="/assets/icons/Fish Logo.svg"
+                  alt=""
+                  aria-hidden
+                  width={96}
+                  height={96}
+                  className="h-[54%] w-[54%] transition-transform duration-300 ease-out group-hover:rotate-[8deg] group-hover:scale-110"
+                  priority
+                />
+              </div>
+            </div>
           </div>
 
           <section className="mt-[38px] max-w-[720px]">
