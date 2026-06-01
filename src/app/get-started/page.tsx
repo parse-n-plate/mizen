@@ -111,7 +111,7 @@ function GetStartedPageContent() {
 
   return (
     <>
-      <div className="landing-scroll min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_64%,#f4efeb_64%,#f4efeb_100%)] text-stone-900 dark:bg-[linear-gradient(180deg,#050505_0%,#050505_64%,#171211_64%,#171211_100%)] dark:text-stone-100">
+      <div className="landing-scroll min-h-screen bg-white text-stone-900 dark:bg-[#050505] dark:text-stone-100">
         <header
           className={`fixed inset-x-0 top-0 z-40 border-b border-stone-200 bg-white/95 backdrop-blur transition-[opacity,transform] duration-200 ease-out supports-[backdrop-filter]:bg-white/85 dark:border-stone-800 dark:bg-stone-950/95 dark:supports-[backdrop-filter]:bg-stone-950/85 ${
             showNav ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"
