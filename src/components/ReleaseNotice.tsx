@@ -29,6 +29,7 @@ type ReleaseNoticeProps = {
   isNew?: boolean;
   modalAnimated?: boolean;
   title?: string;
+  triggerStyle?: "button" | "badge";
   triggerBadgeLabel?: string;
   triggerLabel?: string;
 };
@@ -49,6 +50,7 @@ export function ReleaseNotice({
   isNew = true,
   modalAnimated = true,
   title = "Mizen Early Access",
+  triggerStyle = "button",
   triggerBadgeLabel = "New",
   triggerLabel = "Welcome to Beta",
 }: ReleaseNoticeProps) {
@@ -72,22 +74,37 @@ export function ReleaseNotice({
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
-          <Button
-            type="button"
-            variant="notice"
-            size={compact ? "notice" : "default"}
-            aria-label={isNew ? `${triggerLabel} ${triggerBadgeLabel}` : triggerLabel}
-            className={cn("w-full justify-start active:!scale-100", className)}
-          >
-            <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
-              <span className="min-w-0 truncate text-center font-medium">{triggerLabel}</span>
-              {isNew && (
-                <Badge variant="secondary" className="text-[11px] font-semibold leading-none">
-                  {triggerBadgeLabel}
-                </Badge>
+          {triggerStyle === "badge" ? (
+            <button
+              type="button"
+              aria-label={isNew ? `${triggerLabel} ${triggerBadgeLabel}` : triggerLabel}
+              className={cn(
+                "rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                className
               )}
-            </span>
-          </Button>
+            >
+              <Badge variant="secondary" className="tabular-nums">
+                {triggerLabel}
+              </Badge>
+            </button>
+          ) : (
+            <Button
+              type="button"
+              variant="notice"
+              size={compact ? "notice" : "default"}
+              aria-label={isNew ? `${triggerLabel} ${triggerBadgeLabel}` : triggerLabel}
+              className={cn("w-full justify-start active:!scale-100", className)}
+            >
+              <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                <span className="min-w-0 truncate text-center font-medium">{triggerLabel}</span>
+                {isNew && (
+                  <Badge variant="secondary" className="text-[11px] font-semibold leading-none">
+                    {triggerBadgeLabel}
+                  </Badge>
+                )}
+              </span>
+            </Button>
+          )}
         </DialogTrigger>
 
         <DialogContent
