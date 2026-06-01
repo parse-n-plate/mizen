@@ -20,7 +20,8 @@ const heroItems = [
     alt: "Tomato slice.",
     width: 1024,
     height: 1024,
-    className: "rotate-[-10deg] scale-[0.82] group-hover/icon:rotate-[-14deg] group-hover/icon:scale-[0.9]",
+    className:
+      "rotate-[-10deg] scale-[0.82] group-hover/icon:rotate-[-14deg] group-hover/icon:scale-[0.9]",
   },
   {
     src: "/assets/get-started/hero-pot.svg",
@@ -35,14 +36,16 @@ const heroItems = [
     alt: "Knife.",
     width: 360,
     height: 360,
-    className: "rotate-[4deg] scale-[0.92] group-hover/icon:rotate-[10deg] group-hover/icon:scale-100",
+    className:
+      "rotate-[4deg] scale-[0.92] group-hover/icon:rotate-[10deg] group-hover/icon:scale-100",
   },
   {
     src: "/assets/get-started/icon-cook.svg",
     alt: "Pan.",
     width: 1200,
     height: 1200,
-    className: "rotate-[8deg] scale-[0.9] group-hover/icon:rotate-[13deg] group-hover/icon:scale-[0.98]",
+    className:
+      "rotate-[8deg] scale-[0.9] group-hover/icon:rotate-[13deg] group-hover/icon:scale-[0.98]",
   },
 ];
 
