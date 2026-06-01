@@ -254,12 +254,16 @@ interface WaitlistRecipePreviewProps {
   recipe: ParsedRecipe;
   sourceType?: SourceType;
   pastedText?: string;
+  disableScroll?: boolean;
+  showSourceAttachment?: boolean;
 }
 
 export function WaitlistRecipePreview({
   recipe,
   sourceType,
   pastedText,
+  disableScroll = false,
+  showSourceAttachment = true,
 }: WaitlistRecipePreviewProps) {
   const isDesktop = useMediaQuery("(min-width: 640px)");
   const originalServings = recipe.servings ?? 1;
@@ -289,42 +293,43 @@ export function WaitlistRecipePreview({
           />
         </div>
 
-        {/* Source attachment */}
-        <div className="mb-4 -mx-1">
-          {sourceType === "url" && recipe.sourceUrl && (
-            <UrlAttachment url={recipe.sourceUrl} onClick={() => setUrlOpen(true)} />
-          )}
-          {sourceType === "photo" && recipe.imageUrl && (
-            <button
-              onClick={(e) => {
-                (e.currentTarget as HTMLElement).blur();
-                const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
-                setLightbox({
-                  rect: img.getBoundingClientRect(),
-                  el: img as HTMLElement,
-                });
-              }}
-              className="group flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors cursor-zoom-in"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={recipe.imageUrl}
-                alt={recipe.title}
-                className="w-12 h-12 rounded-lg object-cover border border-stone-200 dark:border-stone-700 group-hover:border-stone-300 dark:group-hover:border-stone-600 transition-colors"
-                draggable={false}
+        {showSourceAttachment && (
+          <div className="mb-4 -mx-1 flex h-[60px] items-center">
+            {sourceType === "url" && recipe.sourceUrl && (
+              <UrlAttachment url={recipe.sourceUrl} onClick={() => setUrlOpen(true)} />
+            )}
+            {sourceType === "photo" && recipe.imageUrl && (
+              <button
+                onClick={(e) => {
+                  (e.currentTarget as HTMLElement).blur();
+                  const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
+                  setLightbox({
+                    rect: img.getBoundingClientRect(),
+                    el: img as HTMLElement,
+                  });
+                }}
+                className="group flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors cursor-zoom-in"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={recipe.imageUrl}
+                  alt={recipe.title}
+                  className="w-12 h-12 rounded-lg object-cover border border-stone-200 dark:border-stone-700 group-hover:border-stone-300 dark:group-hover:border-stone-600 transition-colors"
+                  draggable={false}
+                />
+                <span className="font-sans text-sm text-stone-400 dark:text-stone-500 group-hover:text-stone-500 dark:group-hover:text-stone-400 transition-colors">
+                  1 photo
+                </span>
+              </button>
+            )}
+            {sourceType === "text" && (
+              <TextAttachment
+                onClick={() => setTextOpen(true)}
+                charCount={pastedTextContent.length}
               />
-              <span className="font-sans text-sm text-stone-400 dark:text-stone-500 group-hover:text-stone-500 dark:group-hover:text-stone-400 transition-colors">
-                1 photo
-              </span>
-            </button>
-          )}
-          {sourceType === "text" && (
-            <TextAttachment
-              onClick={() => setTextOpen(true)}
-              charCount={pastedTextContent.length}
-            />
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
@@ -377,8 +382,12 @@ export function WaitlistRecipePreview({
         )}
       </div>
 
-      {/* Tab content — scrollable */}
-      <div className="flex-1 overflow-y-auto bg-white dark:bg-stone-900">
+      {/* Tab content */}
+      <div
+        className={`flex-1 bg-white dark:bg-stone-900 ${
+          disableScroll ? "overflow-hidden" : "overflow-y-auto"
+        }`}
+      >
         <div className="px-5 sm:px-8 pt-5 pb-6">
           {activeTab === "prep" ? (
             <div key="prep" className="tab-content-animate">
