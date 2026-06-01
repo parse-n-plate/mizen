@@ -44,6 +44,11 @@
   --color-mizen-dark-surface: var(--color-dark-surface);
   --color-mizen-overlay: var(--color-overlay);
 
+  /* Foreground for solid/colored buttons (blue, destructive). Theme-invariant:
+     unlike --color-white, this is NOT inverted in dark mode, so text/icons stay
+     legible on saturated backgrounds in both themes. */
+  --color-static-white: #ffffff;
+
   /* Breakpoints */
   --breakpoint-md: 913px;
 
