@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import ChatRoundDots from "@solar-icons/react/csr/messages/ChatRoundDots";
 import { ImageLightbox } from "@/components/ImageLightbox";
@@ -59,6 +59,7 @@ export function ReleaseNotice({
   )}&body=${encodeURIComponent("Hi Mizen,\n\nI wanted to share:\n")}`;
   const previewSrc = "/assets/changelog-notice-header.png";
   const [open, setOpen] = useState(false);
+  const scrollPositionRef = useRef(0);
   const [lightbox, setLightbox] = useState<{
     rect: DOMRect;
     el: HTMLElement;
@@ -66,6 +67,12 @@ export function ReleaseNotice({
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen && lightbox) {
       return;
+    }
+    if (nextOpen) {
+      scrollPositionRef.current = window.scrollY;
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollPositionRef.current });
+      });
     }
     setOpen(nextOpen);
   };
@@ -110,6 +117,10 @@ export function ReleaseNotice({
         <DialogContent
           animated={modalAnimated}
           className="flex w-[min(584px,calc(100vw-2rem))] flex-col gap-6 overflow-hidden p-0 pb-6 sm:max-w-none"
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            window.scrollTo({ top: scrollPositionRef.current });
+          }}
         >
           <DialogHeader className="border-b px-6 py-4 pr-12">
             <div className="flex min-w-0 items-center gap-2 text-left">

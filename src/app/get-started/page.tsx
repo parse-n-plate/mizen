@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Check, Copy } from "lucide-react";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { LandingAuthCta } from "@/components/LandingAuthCta";
@@ -80,7 +79,22 @@ function GetStartedPageContent() {
             <h1 className="font-serif text-[36px] font-bold leading-[42px] tracking-[-0.02em] text-stone-950 dark:text-stone-50 sm:text-[48px] sm:leading-[58px]">
               Get started with Mizen.
             </h1>
-            <p className="mt-5 text-[17px] leading-[29px] text-stone-700 dark:text-stone-300">
+          </section>
+
+          <div className="mt-8 overflow-hidden rounded-lg border border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-900">
+            <Image
+              src="/assets/get-started/hero.jpg"
+              alt="Illustration of a tomato, plate, knife, and pan on a blue background."
+              width={1920}
+              height={1080}
+              className="h-auto w-full"
+              sizes="(min-width: 1120px) 1056px, calc(100vw - 40px)"
+              priority
+            />
+          </div>
+
+          <section className="mt-[38px] max-w-[720px]">
+            <p className="text-[17px] leading-[29px] text-stone-700 dark:text-stone-300">
               Mizen is a recipe app for saving recipes and coming back to them later. If anything is
               confusing, broken, or missing, send feedback in{" "}
               <a
@@ -101,15 +115,36 @@ function GetStartedPageContent() {
               {steps.map((step, index) => (
                 <li
                   key={step.description}
-                  className="grid grid-cols-1 gap-5 border-t border-stone-200 pt-8 dark:border-stone-800 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-10"
+                  className="grid grid-cols-1 gap-5 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-10"
                 >
-                  <div>
-                    <h3 className="text-[14px] font-medium leading-6 text-stone-500 dark:text-stone-400">
+                  <div className="flex h-full flex-col">
+                    <h3 className="font-sans text-[14px] font-medium leading-6 text-stone-500 dark:text-stone-400">
                       {step.title}
                     </h3>
                     <p className="mt-1 text-[17px] leading-[29px] text-stone-950 dark:text-stone-50">
                       {step.description}
                     </p>
+                    {index === steps.length - 1 && (
+                      <p className="mt-auto pt-4 text-[13px] leading-5 text-stone-500 dark:text-stone-400">
+                        If you want one to try first,{" "}
+                        <a
+                          href={BEEF_UDON_URL}
+                          aria-label={
+                            copied ? "Recipe link copied" : "Copy Just One Cookbook recipe link"
+                          }
+                          className={`${copied ? "copy-link-confirm " : ""}inline-block font-medium text-stone-700 underline underline-offset-4 transition-colors duration-150 ease-out hover:text-stone-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 focus-visible:ring-offset-2 dark:text-stone-300 dark:hover:text-stone-50 dark:focus-visible:ring-stone-100 dark:focus-visible:ring-offset-stone-950`}
+                          onClick={async (event) => {
+                            event.preventDefault();
+                            await navigator.clipboard.writeText(BEEF_UDON_URL);
+                            setCopied(true);
+                            window.setTimeout(() => setCopied(false), 1800);
+                          }}
+                        >
+                          {copied ? "copied" : "copy Just One Cookbook"}
+                        </a>{" "}
+                        and credit them when you use it.
+                      </p>
+                    )}
                   </div>
                   <button
                     type="button"
@@ -137,34 +172,6 @@ function GetStartedPageContent() {
                 </li>
               ))}
             </ol>
-          </section>
-
-          <section className="mt-12 rounded-lg border border-stone-200 bg-stone-50 p-5 dark:border-stone-800 dark:bg-stone-900 sm:p-6">
-            <p className="text-[17px] leading-[29px] text-stone-700 dark:text-stone-300">
-              If you want one to try first, copy this recipe URL and credit Just One Cookbook when
-              you use it.
-            </p>
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <code className="min-w-0 flex-1 overflow-hidden text-ellipsis rounded-md border border-stone-200 bg-white px-3 py-2 text-[13px] leading-5 text-stone-700 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-300">
-                {BEEF_UDON_URL}
-              </code>
-              <button
-                type="button"
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-stone-950 px-4 text-[14px] font-medium text-white transition-colors hover:bg-stone-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 focus-visible:ring-offset-2 dark:bg-stone-100 dark:text-stone-950 dark:hover:bg-stone-200 dark:focus-visible:ring-stone-100 dark:focus-visible:ring-offset-stone-950"
-                onClick={async () => {
-                  await navigator.clipboard.writeText(BEEF_UDON_URL);
-                  setCopied(true);
-                  window.setTimeout(() => setCopied(false), 1800);
-                }}
-              >
-                {copied ? (
-                  <Check className="size-4" strokeWidth={2} aria-hidden />
-                ) : (
-                  <Copy className="size-4" strokeWidth={2} aria-hidden />
-                )}
-                {copied ? "Copied" : "Copy URL"}
-              </button>
-            </div>
           </section>
         </main>
 
