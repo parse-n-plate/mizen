@@ -29,6 +29,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const isHomePage = pathname === "/";
   const isPublicStandalonePage = pathname === "/get-started" || pathname === "/homepage";
+  // Tall, document-scrolling landing pages must NOT be locked to viewport height. A fixed-height
+  // (lg:h-screen) wrapper whose taller content overflows visibly relies on <html> scrolling that
+  // overflow — but when a dialog opens, react-remove-scroll sets body{overflow:hidden}, which
+  // clips that overflow, collapses the html scroll area, and snaps the page to the top. Letting
+  // the wrapper grow with its content keeps body tall so the lock can't collapse the scroll.
+  const isScrollingLanding = pathname === "/get-started";
   // Treat loading state as landing on homepage so sidebar don't flash
   // before auth resolves
   const isLanding = isPublicStandalonePage || (isHomePage && (loading || !user));
@@ -58,7 +64,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       <RecipeProvider>
         <SplashScreen enabled={showSplash} ready={!loading} />
         {isLanding ? (
-          <div className="landing-scroll min-h-screen lg:min-h-0 lg:h-screen flex flex-col">
+          <div
+            className={cn(
+              "landing-scroll flex flex-col",
+              isScrollingLanding ? "min-h-screen" : "min-h-screen lg:min-h-0 lg:h-screen"
+            )}
+          >
             {children}
           </div>
         ) : (
