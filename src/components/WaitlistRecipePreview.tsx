@@ -9,7 +9,6 @@ import { ImageLightbox } from "@/components/ImageLightbox";
 import { scaleIngredients } from "@/utils/ingredientScaler";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
-import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 type SourceType = "url" | "photo" | "text";
@@ -335,12 +334,9 @@ export function WaitlistRecipePreview({
 
       {/* Tabs */}
       <div className="flex items-end w-full relative gap-0 px-5 sm:px-8 border-b border-stone-200 dark:border-stone-700">
-        <Button
-          type="button"
-          variant={activeTab === "prep" ? "secondary" : "ghost"}
-          data-recipe-tab-trigger
+        <button
           onClick={() => setActiveTab("prep")}
-          className={`h-12 rounded-b-none px-5 text-[15px] sm:px-10 ${
+          className={`folder-tab-trigger press-scale h-12 px-5 sm:px-10 font-sans text-[15px] ${
             activeTab === "prep" ? "font-semibold" : "font-medium"
           }`}
           data-state={activeTab === "prep" ? "active" : "inactive"}
@@ -355,18 +351,15 @@ export function WaitlistRecipePreview({
           />
           Prep
           {recipe.prepTimeMinutes ? (
-            <span className="ml-1.5 font-normal text-muted-foreground">
+            <span className="font-normal text-stone-400 dark:text-stone-500 ml-1.5">
               {formatTime(recipe.prepTimeMinutes)}
             </span>
           ) : null}
-        </Button>
+        </button>
         {hasInstructions && (
-          <Button
-            type="button"
-            variant={activeTab === "cook" ? "secondary" : "ghost"}
-            data-recipe-tab-trigger
+          <button
             onClick={() => setActiveTab("cook")}
-            className={`h-12 rounded-b-none px-5 text-[15px] sm:px-10 ${
+            className={`folder-tab-trigger press-scale h-12 px-5 sm:px-10 font-sans text-[15px] ${
               activeTab === "cook" ? "font-semibold" : "font-medium"
             }`}
             data-state={activeTab === "cook" ? "active" : "inactive"}
@@ -381,11 +374,11 @@ export function WaitlistRecipePreview({
             />
             Cook
             {recipe.cookTimeMinutes ? (
-              <span className="ml-1.5 font-normal text-muted-foreground">
+              <span className="font-normal text-stone-400 dark:text-stone-500 ml-1.5">
                 {formatTime(recipe.cookTimeMinutes)}
               </span>
             ) : null}
-          </Button>
+          </button>
         )}
       </div>
 
