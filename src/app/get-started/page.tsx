@@ -114,7 +114,7 @@ function GetStartedPageContent() {
             showNav ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"
           }`}
         >
-          <nav className="mx-auto flex h-20 w-full max-w-[1120px] items-center justify-between px-5 sm:px-8">
+          <nav className="mx-auto flex h-16 w-full max-w-[1120px] items-center justify-between px-5 sm:h-20 sm:px-8">
             <Link href="/" className="flex min-w-0 items-center gap-2">
               <Image
                 src="/assets/icons/Fish Logo.svg"
@@ -122,9 +122,9 @@ function GetStartedPageContent() {
                 aria-hidden
                 width={28}
                 height={28}
-                className="h-7 w-7 shrink-0"
+                className="h-6 w-6 shrink-0 sm:h-7 sm:w-7"
               />
-              <span className="font-serif text-lg font-semibold text-stone-900 dark:text-stone-50">
+              <span className="font-serif text-base font-semibold text-stone-900 dark:text-stone-50 sm:text-lg">
                 Mizen
               </span>
             </Link>
@@ -143,23 +143,23 @@ function GetStartedPageContent() {
             ref={heroRef}
             role="img"
             aria-label="Mizen icons on a blue background."
-            className="group relative mt-8 aspect-video overflow-hidden rounded-lg border border-stone-200 bg-[#99d5f5] dark:border-stone-800"
+            className="group relative mt-8 aspect-[4/3] overflow-hidden rounded-lg border border-stone-200 bg-[#99d5f5] sm:aspect-video dark:border-stone-800"
           >
             <div className="absolute inset-0 bg-[linear-gradient(180deg,#75bef1_0%,#9ad8f4_58%,#b9e4f5_100%)] transition-transform duration-700 ease-out group-hover:scale-[1.015]" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(255,255,255,0.24),transparent_34%)]" />
             <div className="relative flex h-full items-center justify-center">
-              <div className="flex w-[76%] max-w-[720px] items-center justify-between gap-[clamp(20px,5vw,66px)] transition-transform duration-300 ease-out group-hover:-translate-y-1">
+              <div className="flex w-[84%] max-w-[720px] items-center justify-between gap-[clamp(10px,3vw,66px)] transition-transform duration-300 ease-out group-hover:-translate-y-1 sm:w-[76%] sm:gap-[clamp(20px,5vw,66px)]">
                 {heroItems.map((item, index) => (
                   <div
                     key={item.src}
-                    className={`relative aspect-square w-[20%] min-w-[76px] max-w-[150px] transition-transform duration-300 ease-out ${item.className}`}
+                    className={`relative aspect-square w-[21%] min-w-[50px] max-w-[150px] transition-transform duration-300 ease-out sm:w-[20%] sm:min-w-[76px] ${item.className}`}
                   >
                     <Image
                       src={item.src}
                       alt={item.alt}
                       fill
                       className="object-contain drop-shadow-[0_18px_24px_rgba(29,91,121,0.16)]"
-                      sizes="(min-width: 1120px) 150px, 20vw"
+                      sizes="(min-width: 1120px) 150px, (min-width: 640px) 20vw, 21vw"
                       priority={index === 0}
                     />
                   </div>
