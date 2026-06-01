@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import ChatRoundDots from "@solar-icons/react/csr/messages/ChatRoundDots";
 import { ImageLightbox } from "@/components/ImageLightbox";
@@ -29,6 +29,7 @@ type ReleaseNoticeProps = {
   isNew?: boolean;
   modalAnimated?: boolean;
   title?: string;
+  triggerStyle?: "button" | "badge";
   triggerBadgeLabel?: string;
   triggerLabel?: string;
 };
@@ -49,6 +50,7 @@ export function ReleaseNotice({
   isNew = true,
   modalAnimated = true,
   title = "Mizen Early Access",
+  triggerStyle = "button",
   triggerBadgeLabel = "New",
   triggerLabel = "Welcome to Beta",
 }: ReleaseNoticeProps) {
@@ -57,6 +59,7 @@ export function ReleaseNotice({
   )}&body=${encodeURIComponent("Hi Mizen,\n\nI wanted to share:\n")}`;
   const previewSrc = "/assets/changelog-notice-header.png";
   const [open, setOpen] = useState(false);
+  const scrollPositionRef = useRef(0);
   const [lightbox, setLightbox] = useState<{
     rect: DOMRect;
     el: HTMLElement;
@@ -65,6 +68,12 @@ export function ReleaseNotice({
     if (!nextOpen && lightbox) {
       return;
     }
+    if (nextOpen) {
+      scrollPositionRef.current = window.scrollY;
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: scrollPositionRef.current });
+      });
+    }
     setOpen(nextOpen);
   };
 
@@ -72,27 +81,46 @@ export function ReleaseNotice({
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
-          <Button
-            type="button"
-            variant="notice"
-            size={compact ? "notice" : "default"}
-            aria-label={isNew ? `${triggerLabel} ${triggerBadgeLabel}` : triggerLabel}
-            className={cn("w-full justify-start active:!scale-100", className)}
-          >
-            <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
-              <span className="min-w-0 truncate text-center font-medium">{triggerLabel}</span>
-              {isNew && (
-                <Badge variant="secondary" className="text-[11px] font-semibold leading-none">
-                  {triggerBadgeLabel}
-                </Badge>
+          {triggerStyle === "badge" ? (
+            <button
+              type="button"
+              aria-label={isNew ? `${triggerLabel} ${triggerBadgeLabel}` : triggerLabel}
+              className={cn(
+                "rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                className
               )}
-            </span>
-          </Button>
+            >
+              <Badge variant="secondary" className="tabular-nums">
+                {triggerLabel}
+              </Badge>
+            </button>
+          ) : (
+            <Button
+              type="button"
+              variant="notice"
+              size={compact ? "notice" : "default"}
+              aria-label={isNew ? `${triggerLabel} ${triggerBadgeLabel}` : triggerLabel}
+              className={cn("w-full justify-start active:!scale-100", className)}
+            >
+              <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+                <span className="min-w-0 truncate text-center font-medium">{triggerLabel}</span>
+                {isNew && (
+                  <Badge variant="secondary" className="text-[11px] font-semibold leading-none">
+                    {triggerBadgeLabel}
+                  </Badge>
+                )}
+              </span>
+            </Button>
+          )}
         </DialogTrigger>
 
         <DialogContent
           animated={modalAnimated}
           className="flex w-[min(584px,calc(100vw-2rem))] flex-col gap-6 overflow-hidden p-0 pb-6 sm:max-w-none"
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            window.scrollTo({ top: scrollPositionRef.current });
+          }}
         >
           <DialogHeader className="border-b px-6 py-4 pr-12">
             <div className="flex min-w-0 items-center gap-2 text-left">
