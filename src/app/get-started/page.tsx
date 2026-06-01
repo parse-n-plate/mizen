@@ -20,7 +20,7 @@ const heroItems = [
     alt: "Tomato slice.",
     width: 1024,
     height: 1024,
-    className: "rotate-[-10deg] scale-[0.82] group-hover:rotate-[-14deg] group-hover:scale-[0.9]",
+    className: "rotate-[-10deg] scale-[0.82] group-hover/icon:rotate-[-14deg] group-hover/icon:scale-[0.9]",
   },
   {
     src: "/assets/get-started/hero-pot.svg",
@@ -28,21 +28,21 @@ const heroItems = [
     width: 248,
     height: 204,
     className:
-      "rotate-[1deg] scale-[1.06] group-hover:translate-y-1 group-hover:rotate-[-1deg] group-hover:scale-[1.12]",
+      "rotate-[1deg] scale-[1.06] group-hover/icon:translate-y-1 group-hover/icon:rotate-[-1deg] group-hover/icon:scale-[1.12]",
   },
   {
     src: "/assets/get-started/icon-prep.png",
     alt: "Knife.",
     width: 360,
     height: 360,
-    className: "rotate-[4deg] scale-[0.92] group-hover:rotate-[10deg] group-hover:scale-100",
+    className: "rotate-[4deg] scale-[0.92] group-hover/icon:rotate-[10deg] group-hover/icon:scale-100",
   },
   {
     src: "/assets/get-started/icon-cook.svg",
     alt: "Pan.",
     width: 1200,
     height: 1200,
-    className: "rotate-[8deg] scale-[0.9] group-hover:rotate-[13deg] group-hover:scale-[0.98]",
+    className: "rotate-[8deg] scale-[0.9] group-hover/icon:rotate-[13deg] group-hover/icon:scale-[0.98]",
   },
 ];
 
@@ -108,7 +108,7 @@ function GetStartedPageContent() {
 
   return (
     <>
-      <div className="min-h-screen bg-white text-stone-900 dark:bg-stone-950 dark:text-stone-100">
+      <div className="min-h-screen bg-white text-stone-900 dark:bg-[linear-gradient(180deg,#050505_0%,#050505_64%,#171211_64%,#171211_100%)] dark:text-stone-100">
         <header
           className={`fixed inset-x-0 top-0 z-40 border-b border-stone-200 bg-white/95 backdrop-blur transition-[opacity,transform] duration-200 ease-out supports-[backdrop-filter]:bg-white/85 dark:border-stone-800 dark:bg-stone-950/95 dark:supports-[backdrop-filter]:bg-stone-950/85 ${
             showNav ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"
@@ -135,7 +135,7 @@ function GetStartedPageContent() {
         <main className="mx-auto w-full max-w-[1120px] px-5 py-10 sm:px-8 sm:py-14">
           <section className="max-w-[720px]">
             <h1 className="font-serif text-[36px] font-bold leading-[42px] tracking-[-0.02em] text-stone-950 dark:text-stone-50 sm:text-[48px] sm:leading-[58px]">
-              Get started with Mizen.
+              Get started with Mizen
             </h1>
           </section>
 
@@ -145,14 +145,14 @@ function GetStartedPageContent() {
             aria-label="Mizen icons on a blue background."
             className="group relative mt-8 aspect-[4/3] overflow-hidden rounded-lg border border-stone-200 bg-[#99d5f5] sm:aspect-video dark:border-stone-800"
           >
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,#75bef1_0%,#9ad8f4_58%,#b9e4f5_100%)] transition-transform duration-700 ease-out group-hover:scale-[1.015]" />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,#75bef1_0%,#9ad8f4_58%,#b9e4f5_100%)]" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(255,255,255,0.24),transparent_34%)]" />
             <div className="relative flex h-full items-center justify-center">
-              <div className="flex w-[84%] max-w-[720px] items-center justify-between gap-[clamp(10px,3vw,66px)] transition-transform duration-300 ease-out group-hover:-translate-y-1 sm:w-[76%] sm:gap-[clamp(20px,5vw,66px)]">
+              <div className="flex w-[84%] max-w-[720px] items-center justify-between gap-[clamp(10px,3vw,66px)] sm:w-[76%] sm:gap-[clamp(20px,5vw,66px)]">
                 {heroItems.map((item, index) => (
                   <div
                     key={item.src}
-                    className={`relative aspect-square w-[21%] min-w-[50px] max-w-[150px] transition-transform duration-300 ease-out sm:w-[20%] sm:min-w-[76px] ${item.className}`}
+                    className={`group/icon relative aspect-square w-[21%] min-w-[50px] max-w-[150px] transition-transform duration-300 ease-out sm:w-[20%] sm:min-w-[76px] ${item.className}`}
                   >
                     <Image
                       src={item.src}
@@ -176,7 +176,7 @@ function GetStartedPageContent() {
                 href={DISCORD_URL}
                 target="_blank"
                 rel="noreferrer"
-                className="font-medium text-stone-950 underline underline-offset-4 dark:text-stone-50"
+                className="font-medium text-stone-950 underline underline-offset-4 transition-colors duration-150 ease-out hover:text-[var(--color-blue)] dark:text-stone-50 dark:hover:text-[var(--color-blue)]"
               >
                 Discord
               </a>{" "}
@@ -207,7 +207,7 @@ function GetStartedPageContent() {
                           aria-label={
                             copied ? "Recipe link copied" : "Copy Just One Cookbook recipe link"
                           }
-                          className={`${copied ? "copy-link-confirm " : ""}inline-block font-medium text-stone-700 underline underline-offset-4 transition-colors duration-150 ease-out hover:text-stone-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 focus-visible:ring-offset-2 dark:text-stone-300 dark:hover:text-stone-50 dark:focus-visible:ring-stone-100 dark:focus-visible:ring-offset-stone-950`}
+                          className={`${copied ? "copy-link-confirm " : ""}inline-block font-medium text-stone-700 underline underline-offset-4 transition-colors duration-150 ease-out hover:text-[var(--color-blue)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-900 focus-visible:ring-offset-2 dark:text-stone-300 dark:hover:text-[var(--color-blue)] dark:focus-visible:ring-stone-100 dark:focus-visible:ring-offset-stone-950`}
                           onClick={async (event) => {
                             event.preventDefault();
                             await navigator.clipboard.writeText(BEEF_UDON_URL);
