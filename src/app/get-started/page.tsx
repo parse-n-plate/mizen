@@ -110,46 +110,34 @@ function GetStartedPageContent() {
           <div
             ref={heroRef}
             role="img"
-            aria-label="Illustration of a tomato, plate, knife, and pan on a blue background."
+            aria-label="Mizen icons on a blue background."
             className="group relative mt-8 aspect-video overflow-hidden rounded-lg border border-stone-200 bg-[#99d5f5] dark:border-stone-800"
           >
             <div className="absolute inset-0 bg-[linear-gradient(180deg,#75bef1_0%,#9ad8f4_58%,#b9e4f5_100%)] transition-transform duration-700 ease-out group-hover:scale-[1.015]" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(255,255,255,0.24),transparent_34%)]" />
             <div className="relative flex h-full items-center justify-center">
               <div className="flex w-[76%] max-w-[720px] items-center justify-between gap-[clamp(20px,5vw,66px)] transition-transform duration-300 ease-out group-hover:-translate-y-1">
-                <div className="relative aspect-square w-[17%] min-w-[70px] max-w-[128px] transition-transform duration-300 ease-out group-hover:rotate-[-2deg] group-hover:scale-105">
-                  <div className="absolute inset-[10%] rounded-full bg-[#ff3b12] shadow-[inset_-14px_-16px_0_rgba(184,35,10,0.12),0_16px_26px_rgba(29,91,121,0.12)]" />
-                  <div className="absolute left-[32%] top-[-2%] h-[36%] w-[12%] rounded-full bg-[#3f9406]" />
-                  <div className="absolute left-[11%] top-[10%] h-[15%] w-[42%] rotate-[22deg] rounded-full bg-[#43a707]" />
-                  <div className="absolute right-[10%] top-[11%] h-[15%] w-[42%] rotate-[-28deg] rounded-full bg-[#43a707]" />
-                  <div className="absolute left-[33%] top-[7%] h-[16%] w-[34%] rounded-[70%_70%_45%_45%] bg-[#4aa90a]" />
-                  <div className="absolute bottom-[22%] right-[19%] h-[42%] w-[13%] rotate-[17deg] rounded-full bg-[#cf260e]/55" />
-                </div>
-
-                <div className="relative aspect-[1.55] w-[26%] min-w-[112px] max-w-[190px] transition-transform duration-300 ease-out group-hover:translate-y-1 group-hover:scale-[1.03]">
-                  <div className="absolute inset-[8%_4%] rounded-[50%] bg-[#fffdf2] shadow-[inset_0_0_0_8px_rgba(214,210,184,0.38),0_12px_22px_rgba(29,91,121,0.1)]" />
-                  <div className="absolute inset-[24%_14%] rounded-[50%] bg-[#f4f0da]" />
-                  <div className="absolute inset-x-[18%] top-[27%] h-[16%] rounded-full bg-white/45" />
-                </div>
-
-                <div className="relative aspect-[0.86] w-[15%] min-w-[72px] max-w-[118px] rotate-[39deg] transition-transform duration-300 ease-out group-hover:rotate-[45deg] group-hover:scale-105">
-                  <div className="absolute left-[34%] top-[4%] h-[56%] w-[37%] rounded-[52%_52%_20%_20%] bg-[#dedede] shadow-[inset_-7px_0_0_rgba(132,132,132,0.24)]" />
-                  <div className="absolute left-[49%] top-[12%] h-[36%] w-[5%] rounded-full bg-[#9d9d9d]" />
-                  <div className="absolute left-[28%] top-[50%] h-[16%] w-[47%] rounded-[30%_30%_45%_45%] bg-[#c9c9c9]" />
-                  <div className="absolute bottom-[3%] left-[25%] h-[47%] w-[34%] rounded-full bg-[#129832] shadow-[inset_-8px_-4px_0_rgba(0,101,33,0.18)]" />
-                  <div className="absolute bottom-[30%] left-[37%] h-[7%] w-[7%] rounded-full bg-[#f7bd12]" />
-                  <div className="absolute bottom-[16%] left-[41%] h-[7%] w-[7%] rounded-full bg-[#f7bd12]" />
-                </div>
-
-                <div className="relative aspect-[1.25] w-[22%] min-w-[96px] max-w-[164px] rotate-[8deg] transition-transform duration-300 ease-out group-hover:rotate-[3deg] group-hover:scale-105">
-                  <div className="absolute bottom-[8%] left-[4%] h-[72%] w-[80%] rounded-full bg-[#075ee3] shadow-[inset_0_-10px_0_rgba(1,57,180,0.24),0_14px_24px_rgba(29,91,121,0.14)]" />
-                  <div className="absolute bottom-[26%] left-[17%] h-[44%] w-[58%] rounded-full bg-[#ffba1c]" />
-                  <div className="absolute right-[-4%] top-[4%] h-[24%] w-[44%] rotate-[-43deg] rounded-full bg-[#075ee3]" />
-                  <div className="absolute bottom-[45%] left-[39%] h-[14%] w-[14%] rounded-full bg-[#ed7210]" />
-                  <div className="absolute bottom-[39%] left-[58%] h-[13%] w-[13%] rounded-full bg-[#ed7210]" />
-                  <div className="absolute bottom-[30%] left-[47%] h-[12%] w-[12%] rounded-full bg-[#ed7210]" />
-                  <div className="absolute bottom-[33%] left-[22%] h-[10%] w-[12%] rounded-full bg-[#ef8b10]/75" />
-                </div>
+                {[
+                  "rotate-[-10deg] scale-[0.86] group-hover:rotate-[-14deg] group-hover:scale-[0.93]",
+                  "rotate-[4deg] scale-[0.98] group-hover:rotate-[1deg] group-hover:scale-[1.05]",
+                  "rotate-[-3deg] scale-[1.06] group-hover:rotate-[3deg] group-hover:scale-[1.12]",
+                  "rotate-[11deg] scale-[0.92] group-hover:rotate-[15deg] group-hover:scale-100",
+                ].map((className, index) => (
+                  <div
+                    key={className}
+                    className={`relative aspect-[387/338] w-[20%] min-w-[76px] max-w-[150px] transition-transform duration-300 ease-out ${className}`}
+                  >
+                    <Image
+                      src="/assets/icons/Fish Logo.png"
+                      alt=""
+                      aria-hidden
+                      fill
+                      className="object-contain drop-shadow-[0_18px_24px_rgba(29,91,121,0.16)]"
+                      sizes="(min-width: 1120px) 150px, 20vw"
+                      priority={index === 0}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           </div>
