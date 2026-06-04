@@ -28,7 +28,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const isHomePage = pathname === "/";
-  const isPublicStandalonePage = pathname === "/get-started" || pathname === "/homepage";
+  const isPublicStandalonePage =
+    pathname === "/get-started" || pathname === "/homepage" || pathname === "/links";
   // Tall, document-scrolling landing pages must NOT be locked to viewport height. A fixed-height
   // (lg:h-screen) wrapper whose taller content overflows visibly relies on <html> scrolling that
   // overflow — but when a dialog opens, react-remove-scroll sets body{overflow:hidden}, which

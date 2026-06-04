@@ -1437,6 +1437,61 @@ body {
   animation: banner-fade-out 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
+.links-card-arrow {
+  opacity: 0.55;
+}
+
+.links-card-media,
+.links-card-arrow,
+.links-recipe-row {
+  transition:
+    background-color 150ms ease,
+    opacity 150ms ease,
+    transform 200ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .links-link-card {
+    transform-origin: 50% 60%;
+    transition:
+      border-color 150ms ease,
+      transform 200ms ease-out;
+    will-change: transform;
+  }
+
+  .links-card-arrow {
+    opacity: 0;
+  }
+
+  .links-link-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .links-link-card:hover .links-card-media {
+    transform: rotate(-8deg) scale(1.1);
+  }
+
+  .links-link-card:active {
+    transform: translateY(-1px) scale(0.99);
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .links-card-arrow {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .links-link-card,
+  .links-card-media,
+  .links-card-arrow,
+  .links-recipe-row {
+    animation: none;
+    transition: none;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    REDUCED MOTION — Accessibility support
 ═══════════════════════════════════════════════════════════════════════════ */
