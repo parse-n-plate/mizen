@@ -8,6 +8,7 @@ import AltArrowRight from "@solar-icons/react/csr/arrows/AltArrowRight";
 import Plain from "@solar-icons/react/csr/messages/Plain";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { LandingAuthCta } from "@/components/LandingAuthCta";
+import { favoriteRecipes } from "@/lib/favorite-recipes";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 
 const connectCards = [
@@ -28,23 +29,6 @@ const connectCards = [
     href: "https://www.linkedin.com/in/michelle-tran-a48a14203/",
     image: "/assets/avatars/Michelle_Avatar_2026.jpg",
     imageAlt: "Michelle",
-  },
-];
-
-const favoriteRecipes = [
-  {
-    title: "Banana Bread Cookies",
-    domain: "flouringkitchen.com",
-    href: "/recipes/banana-bread-cookies",
-    avatar: "/assets/avatars/Michelle_Avatar_2026.jpg",
-    avatarAlt: "Michelle",
-  },
-  {
-    title: "Kimchi Ragu",
-    domain: "shychef.com",
-    href: "/recipes/kimchi-ragu",
-    avatar: "/assets/avatars/Gage_Avatar_2026.jpg",
-    avatarAlt: "Gage",
   },
 ];
 
@@ -211,7 +195,7 @@ export function LinksPageContent() {
 
               <section className="mt-8 sm:mt-10">
                 <h2 className="max-w-[18rem] pb-4 font-serif text-[24px] font-semibold leading-tight text-stone-950 dark:text-stone-50 min-[420px]:max-w-none sm:text-[28px]">
-                  Our Current Fave Recipes
+                  Our favorite recipes.
                 </h2>
                 <div className="min-w-0 rounded-lg border border-stone-200 bg-white px-3 py-4 dark:border-stone-700 dark:bg-stone-900 sm:px-6 sm:py-5">
                   {favoriteRecipes.map((favorite) => (
