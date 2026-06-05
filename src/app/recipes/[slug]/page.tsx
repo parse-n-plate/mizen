@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { DemoRecipeView } from "@/components/DemoRecipeView";
 import { RecipeHeader } from "@/components/RecipeHeader";
+import { getFavoriteRecipe } from "@/lib/favorite-recipes";
 import { getDemoRecipe, getDemoRecipeSlugs } from "@/lib/demo-recipes";
 
 interface DemoRecipePageProps {
@@ -31,6 +32,7 @@ export async function generateMetadata({ params }: DemoRecipePageProps) {
 export default async function DemoRecipePage({ params }: DemoRecipePageProps) {
   const { slug } = await params;
   const recipe = getDemoRecipe(slug);
+  const favoriteRecipe = getFavoriteRecipe(slug);
 
   if (!recipe) {
     notFound();
@@ -67,6 +69,21 @@ export default async function DemoRecipePage({ params }: DemoRecipePageProps) {
             </div>
           </div>
           <RecipeHeader recipe={recipe} />
+          {favoriteRecipe && (
+            <div className="mt-5 rounded-lg border border-[#F4D6A3] bg-[#FFF7E8] px-4 py-3 font-sans text-sm leading-6 text-stone-700 dark:border-amber-700/40 dark:bg-amber-950/25 dark:text-stone-200">
+              <span className="font-medium text-stone-900 dark:text-stone-100">
+                This recipe was from and posted by
+              </span>{" "}
+              <Link
+                href={favoriteRecipe.authorUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-[var(--color-blue)] underline decoration-[var(--color-blue)]/30 underline-offset-4 hover:decoration-[var(--color-blue)]"
+              >
+                {favoriteRecipe.authorName}
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 
