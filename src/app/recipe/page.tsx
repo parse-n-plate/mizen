@@ -14,7 +14,8 @@ import {
   getPreferredServings,
 } from "@/lib/recipe-preferences";
 import { toast } from "sonner";
-import { RecipeHeader, formatTime } from "@/components/RecipeHeader";
+import { RecipeHeader } from "@/components/RecipeHeader";
+import { RecipeDesktopTabsBar } from "@/components/RecipeDesktopTabsBar";
 import { ServingsAdjuster } from "@/components/ServingsAdjuster";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
@@ -33,19 +34,15 @@ import {
   setUnitSystem,
 } from "@/lib/preferences";
 import Link from "next/link";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { HeartButton } from "@/components/HeartButton";
 import { ReportRecipeDialog } from "@/components/ReportRecipeDialog";
-import Flag from "@solar-icons/react/csr/ui/Flag";
 import AltArrowLeft from "@solar-icons/react/csr/arrows/AltArrowLeft";
 import Ruler from "@solar-icons/react/csr/tools/Ruler";
 import Eye from "@solar-icons/react/csr/security/Eye";
@@ -53,10 +50,8 @@ import EyeClosed from "@solar-icons/react/csr/security/EyeClosed";
 import {
   Copy,
   EllipsisVertical,
-  FileText,
   MessageSquare,
   Printer,
-  Scale,
   Share2,
   Trash2,
   UsersRound,
@@ -483,248 +478,21 @@ export default function RecipePage() {
       {/* Tabs + content */}
       <div className="flex-1 flex flex-col md:pb-6 print:hidden">
         <div className="max-w-[800px] duration-[220ms] group-data-[sidebar-collapsed=true]/shell:max-w-[1040px] group-data-[sidebar-collapsed=true]/shell:duration-[180ms] transition-[max-width] ease-[cubic-bezier(0.165,0.84,0.44,1)] motion-reduce:transition-none px-6 md:px-3 w-full flex-1 flex flex-col">
-          {/* Desktop: top folder tabs + quick actions (hidden on mobile) */}
-          <div className="group/tabs hidden md:flex items-end w-full relative gap-0">
-            <button
-              onClick={() => setActiveTab("prep")}
-              className={`folder-tab-trigger press-scale h-12 px-10 font-sans text-[15px] ${
-                activeTab === "prep" ? "font-semibold" : "font-medium"
-              }`}
-              data-state={activeTab === "prep" ? "active" : "inactive"}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/assets/icon-prep.png"
-                alt=""
-                width={24}
-                height={24}
-                className="tab-icon-prep h-6 w-6"
-              />
-              Prep
-              {recipe.prepTimeMinutes ? (
-                <span className="font-normal text-stone-400 dark:text-stone-500 ml-1.5">
-                  {formatTime(recipe.prepTimeMinutes)}
-                </span>
-              ) : null}
-            </button>
-            <button
-              onClick={() => setActiveTab("cook")}
-              className={`folder-tab-trigger press-scale h-12 px-10 font-sans text-[15px] ${
-                activeTab === "cook" ? "font-semibold" : "font-medium"
-              }`}
-              data-state={activeTab === "cook" ? "active" : "inactive"}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/assets/icon-cook.svg"
-                alt=""
-                width={24}
-                height={24}
-                className="tab-icon-cook h-6 w-6"
-              />
-              Cook
-              {recipe.cookTimeMinutes ? (
-                <span className="font-normal text-stone-400 dark:text-stone-500 ml-1.5">
-                  {formatTime(recipe.cookTimeMinutes)}
-                </span>
-              ) : null}
-            </button>
-
-            {/* Quick actions — right-aligned */}
-            <div className="ml-auto flex items-center gap-1 pb-2">
-              {/* Convert units — ruler icon with dropdown */}
-              <DropdownMenu>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        aria-label="Convert units"
-                        className={`press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg transition ${
-                          isConverted
-                            ? "text-[var(--color-blue)] bg-[var(--color-blue-light)] border border-[var(--color-blue)]/15"
-                            : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
-                        }`}
-                      >
-                        <Ruler size={16} weight={isConverted ? "Bold" : undefined} />
-                      </button>
-                    </DropdownMenuTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent>Convert units</TooltipContent>
-                </Tooltip>
-                <DropdownMenuContent
-                  align="end"
-                  className="bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700"
-                >
-                  <DropdownMenuRadioGroup
-                    value={unitSystem}
-                    onValueChange={(value) =>
-                      setUnitSystem(value as "original" | "metric" | "imperial")
-                    }
-                  >
-                    <DropdownMenuRadioItem
-                      value="original"
-                      className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
-                    >
-                      <span className="min-w-0 flex-1 truncate">
-                        Original ({recipeUnitSystem === "metric" ? "Metric" : "Imperial"})
-                      </span>
-                      <FileText className="ml-auto h-4 w-4" />
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem
-                      value="metric"
-                      className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
-                    >
-                      <span className="min-w-0 flex-1 truncate">Metric</span>
-                      <Scale className="ml-auto h-4 w-4" />
-                    </DropdownMenuRadioItem>
-                    <DropdownMenuRadioItem
-                      value="imperial"
-                      className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
-                    >
-                      <span className="min-w-0 flex-1 truncate">Imperial</span>
-                      <Ruler className="ml-auto h-4 w-4" />
-                    </DropdownMenuRadioItem>
-                  </DropdownMenuRadioGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Copy recipe */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    onClick={handleCopyRecipe}
-                    aria-label="Copy recipe"
-                    className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition"
-                  >
-                    <svg
-                      className="h-4 w-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                    </svg>
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>{copied ? "Copied!" : "Copy recipe"}</TooltipContent>
-              </Tooltip>
-
-              {/* Report — icon-only (only for logged-in users) */}
-              {feedbackFeaturesEnabled && user && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      onClick={() => setReportOpen(true)}
-                      aria-label="Report recipe"
-                      className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition"
-                    >
-                      <Flag size={16} aria-hidden="true" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>Report recipe</TooltipContent>
-                </Tooltip>
-              )}
-
-              {/* More actions (Print, Share) */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    aria-label="More actions"
-                    className="press-scale inline-flex items-center justify-center h-8 w-8 rounded-lg text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition"
-                  >
-                    <svg
-                      className="h-4 w-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <circle cx="5" cy="12" r="1.5" />
-                      <circle cx="12" cy="12" r="1.5" />
-                      <circle cx="19" cy="12" r="1.5" />
-                    </svg>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  side="top"
-                  className="bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700"
-                >
-                  <DropdownMenuItem
-                    onSelect={() => window.print()}
-                    className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
-                  >
-                    Print
-                    <svg
-                      className="ml-auto h-4 w-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polyline points="6 9 6 2 18 2 18 9" />
-                      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                      <rect width="12" height="8" x="6" y="14" />
-                    </svg>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onSelect={handleShare}
-                    className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
-                  >
-                    Share
-                    <svg
-                      className="ml-auto h-4 w-4"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                      <polyline points="16 6 12 2 8 6" />
-                      <line x1="12" x2="12" y1="2" y2="15" />
-                    </svg>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />
-                  <DropdownMenuItem
-                    onSelect={handleDelete}
-                    className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-red-600 dark:focus:text-red-400"
-                  >
-                    Delete
-                    <svg
-                      className="ml-auto h-4 w-4 text-red-500 dark:text-red-400"
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                      <line x1="10" x2="10" y1="11" y2="17" />
-                      <line x1="14" x2="14" y1="11" y2="17" />
-                    </svg>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
+          <RecipeDesktopTabsBar
+            recipe={recipe}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            isConverted={isConverted}
+            recipeUnitSystem={recipeUnitSystem}
+            unitSystem={unitSystem}
+            onUnitSystemChange={setUnitSystem}
+            copied={copied}
+            onCopyRecipe={handleCopyRecipe}
+            onShare={handleShare}
+            onDelete={handleDelete}
+            showReport={feedbackFeaturesEnabled && !!user}
+            onReport={() => setReportOpen(true)}
+          />
 
           {/* Content card */}
           <div

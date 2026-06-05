@@ -808,25 +808,94 @@ body {
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
-     INGREDIENT GROUP — Collapsible group with chevron animation
+     INGREDIENT GROUP — Primitive accordion with height and chevron animation
   ═══════════════════════════════════════════════════════════════════════════ */
 
-  .ingredient-group {
-    margin-bottom: 1.5rem;
-  }
-
   .ingredient-group-chevron {
-    opacity: 0;
-    transition: opacity 150ms ease;
+    opacity: 1;
+    transform: rotate(0deg);
+    transition:
+      transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      color 150ms ease,
+      opacity 150ms ease;
   }
 
-  [aria-expanded="false"] .ingredient-group-chevron {
-    opacity: 1;
+  .ingredient-group-trigger[data-state="closed"] .ingredient-group-chevron {
+    transform: rotate(-90deg);
   }
 
   @media (hover: hover) and (pointer: fine) {
-    .group:hover .ingredient-group-chevron {
+    .ingredient-group-trigger:hover .ingredient-group-chevron {
+      color: var(--foreground);
+    }
+  }
+
+  .ingredient-group-content[data-state="open"] {
+    animation: ingredient-group-slide-down 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .ingredient-group-content[data-state="closed"] {
+    animation: ingredient-group-slide-up 220ms cubic-bezier(0.55, 0, 0.1, 1);
+  }
+
+  .ingredient-group-content[data-state="open"] .ingredient-group-content-inner {
+    animation: ingredient-group-fade-in 180ms cubic-bezier(0.22, 1, 0.36, 1) 40ms both;
+  }
+
+  .ingredient-group-content[data-state="closed"] .ingredient-group-content-inner {
+    animation: ingredient-group-fade-out 140ms ease both;
+  }
+
+  @keyframes ingredient-group-slide-down {
+    from {
+      height: 0;
+    }
+
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+
+  @keyframes ingredient-group-slide-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+
+    to {
+      height: 0;
+    }
+  }
+
+  @keyframes ingredient-group-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(-2px);
+    }
+
+    to {
       opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes ingredient-group-fade-out {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    to {
+      opacity: 0;
+      transform: translateY(-2px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ingredient-group-chevron,
+    .ingredient-group-content,
+    .ingredient-group-content-inner {
+      animation: none !important;
+      transition: none !important;
     }
   }
 
@@ -1437,12 +1506,8 @@ body {
   animation: banner-fade-out 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
-.links-card-arrow {
-  opacity: 0.55;
-}
-
 .links-card-media,
-.links-card-arrow,
+.links-card-title-arrow,
 .links-recipe-row {
   transition:
     background-color 150ms ease,
@@ -1453,39 +1518,18 @@ body {
 @media (hover: hover) and (pointer: fine) {
   .links-link-card {
     transform-origin: 50% 60%;
-    transition:
-      border-color 150ms ease,
-      transform 200ms ease-out;
-    will-change: transform;
-  }
-
-  .links-card-arrow {
-    opacity: 0;
-  }
-
-  .links-link-card:hover {
-    transform: translateY(-2px);
+    transition: border-color 150ms ease;
   }
 
   .links-link-card:hover .links-card-media {
     transform: rotate(-8deg) scale(1.1);
-  }
-
-  .links-link-card:active {
-    transform: translateY(-1px) scale(0.99);
-  }
-}
-
-@media (hover: none), (pointer: coarse) {
-  .links-card-arrow {
-    opacity: 0.55;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .links-link-card,
   .links-card-media,
-  .links-card-arrow,
+  .links-card-title-arrow,
   .links-recipe-row {
     animation: none;
     transition: none;
