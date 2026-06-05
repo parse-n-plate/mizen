@@ -37,9 +37,9 @@ export default async function DemoRecipePage({ params }: DemoRecipePageProps) {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col bg-[#FAFAF9] pb-[calc(7.25rem+env(safe-area-inset-bottom)+1rem)] dark:bg-stone-950 md:pb-0">
-      <div className="px-6 pb-0 pt-6">
-        <div className="mx-auto w-full max-w-3xl pb-8">
+    <div className="flex min-h-[calc(100vh-3.5rem)] min-w-0 flex-col overflow-x-hidden bg-[#FAFAF9] pb-[calc(7.25rem+env(safe-area-inset-bottom)+1rem)] dark:bg-stone-950 md:pb-0">
+      <div className="min-w-0 px-4 pb-0 pt-6 sm:px-6">
+        <div className="mx-auto w-full max-w-3xl min-w-0 pb-8">
           <div className="-ml-1 mb-3.5 flex min-w-0 items-center gap-2 md:hidden">
             <Link
               href="/links"
@@ -59,10 +59,10 @@ export default async function DemoRecipePage({ params }: DemoRecipePageProps) {
                 <path d="m15 18-6-6 6-6" />
               </svg>
             </Link>
-            <div className="ml-auto flex items-center gap-1">
+            <div className="ml-auto flex min-w-0 items-center gap-1">
               <div
                 id="mobile-recipe-search-action"
-                className="flex h-9 w-9 items-center justify-center"
+                className="flex h-9 min-w-0 items-center justify-end"
               />
             </div>
           </div>
@@ -70,8 +70,8 @@ export default async function DemoRecipePage({ params }: DemoRecipePageProps) {
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col px-6 pb-16">
-        <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col px-4 pb-16 sm:px-6">
+        <div className="mx-auto flex w-full max-w-3xl min-w-0 flex-1 flex-col">
           <DemoRecipeView recipe={recipe} />
         </div>
       </div>
