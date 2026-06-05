@@ -9,7 +9,7 @@ const team = [
   },
   {
     name: "Michelle",
-    src: "/assets/avatars/Michelle_Avatar.jpg",
+    src: "/assets/avatars/Michelle_Avatar_2026.jpg",
     href: "https://www.linkedin.com/in/michelle-tran-a48a14203/",
   },
   {

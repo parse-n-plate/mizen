@@ -10,50 +10,40 @@ import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { LandingAuthCta } from "@/components/LandingAuthCta";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 
-const linkCards = [
+const connectCards = [
   {
-    title: "Try out Mizen",
-    description: "Cook from cleaner recipes.",
-    href: "/get-started",
-    image: "/assets/icons/Fish Logo.svg",
-    imageAlt: "",
-  },
-  {
-    title: "negi.studio",
-    description: "See the studio behind Mizen.",
+    title: "Negi Studio's Website",
     href: "https://negi.studio/",
     image: "/assets/icons/negi-studio.svg",
     imageAlt: "",
   },
   {
-    title: "Michelle",
-    description: "Sunlit recipes and notes.",
-    href: "https://www.michellesunnyside.com/",
-    image: "/assets/avatars/Michelle_Avatar.jpg",
-    imageAlt: "Michelle",
+    title: "Gage's LinkedIn",
+    href: "https://www.linkedin.com/in/gageminamoto/",
+    image: "/assets/avatars/Gage_Avatar_2026.jpg",
+    imageAlt: "Gage",
   },
   {
-    title: "Gage",
-    description: "Projects, writing, and work.",
-    href: "https://gageminamoto.com/",
-    image: "/assets/avatars/Gage_Avatar.jpg",
-    imageAlt: "Gage",
+    title: "Michelle's LinkedIn",
+    href: "https://www.linkedin.com/in/michelle-tran-a48a14203/",
+    image: "/assets/avatars/Michelle_Avatar_2026.jpg",
+    imageAlt: "Michelle",
   },
 ];
 
 const favoriteRecipes = [
   {
-    title: "Cookies",
-    domain: "allrecipes.com",
-    href: "https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/",
-    avatar: "/assets/avatars/Michelle_Avatar.jpg",
+    title: "Banana Bread Cookies",
+    domain: "flouringkitchen.com",
+    href: "/recipes/banana-bread-cookies",
+    avatar: "/assets/avatars/Michelle_Avatar_2026.jpg",
     avatarAlt: "Michelle",
   },
   {
     title: "Kimchi Ragu",
     domain: "shychef.com",
-    href: "https://shychef.com/kimchi-ragu",
-    avatar: "/assets/avatars/Gage_Avatar.jpg",
+    href: "/recipes/kimchi-ragu",
+    avatar: "/assets/avatars/Gage_Avatar_2026.jpg",
     avatarAlt: "Gage",
   },
 ];
@@ -119,13 +109,61 @@ export function LinksPageContent() {
         </header>
 
         <main className="mx-auto w-full max-w-[800px] flex-1 px-5 pb-10 pt-24 sm:px-8 sm:pb-14 sm:pt-28">
+          <section className="grid gap-5 sm:h-[100px] sm:grid-cols-[minmax(360px,1fr)_minmax(300px,420px)] sm:items-center">
+            <div>
+              <h1 className="font-serif text-[28px] font-semibold leading-9 text-stone-950 dark:text-stone-50">
+                Try Mizen early.
+              </h1>
+              <p className="mt-2 max-w-[420px] text-pretty font-sans text-[16px] leading-7 text-stone-600 dark:text-stone-300">
+                Join the waitlist for access to clean recipe imports and a calmer cooking view.
+              </p>
+            </div>
+
+            <form
+              onSubmit={handleWaitlistSubmit}
+              className="flex h-full w-full flex-col items-start justify-end"
+            >
+              <div className="flex min-h-[52px] w-full flex-col overflow-hidden rounded-[14px] border border-[#E7E5E4] bg-[#F5F5F4] focus-within:border-[#18a1f7] focus-within:ring-[3px] focus-within:ring-[#18a1f7]/30 dark:border-stone-700 dark:bg-stone-900 min-[420px]:flex-row">
+                <input
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  required={!(submitted || alreadyOnList)}
+                  disabled={submitted || alreadyOnList}
+                  className="min-h-[50px] min-w-0 flex-1 bg-transparent py-0 pl-5 pr-4 font-sans text-[15px] leading-[18px] text-stone-700 outline-none placeholder:text-[#A8A29E] disabled:opacity-0 dark:text-stone-200 dark:placeholder:text-stone-500"
+                />
+                <button
+                  type="submit"
+                  disabled={submitting || submitted || alreadyOnList}
+                  className="m-1.5 inline-flex h-10 items-center justify-center gap-1.5 rounded-[10px] bg-[#18A1F7] px-5 font-sans text-[14px] font-semibold leading-[18px] text-white disabled:pointer-events-none disabled:opacity-80 min-[420px]:shrink-0"
+                >
+                  {submitted || alreadyOnList ? (
+                    <span>{alreadyOnList ? "Already on the list" : "You're on the list"}</span>
+                  ) : submitting ? (
+                    <span>Sending...</span>
+                  ) : (
+                    <>
+                      <Plain size={16} weight="Bold" className="shrink-0" />
+                      <span>Join waitlist</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </section>
+
           <div className="grid gap-8">
-            <div className="w-full">
+            <div className="w-full pt-8 sm:pt-10">
+              <h2 className="pb-4 font-serif text-[28px] font-semibold leading-9 text-stone-950 dark:text-stone-50">
+                Connect With Us
+              </h2>
               <section
                 aria-label="Mizen links"
-                className="grid grid-cols-1 gap-3 min-[560px]:grid-cols-2 sm:gap-4"
+                className="grid grid-cols-1 gap-3 min-[640px]:grid-cols-3 sm:gap-4"
               >
-                {linkCards.map((card) => {
+                {connectCards.map((card) => {
                   return (
                     <Link
                       key={card.title}
@@ -136,9 +174,9 @@ export function LinksPageContent() {
                           : undefined
                       }
                       rel={card.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                      className="links-link-card group relative flex min-h-[174px] flex-col justify-between overflow-hidden rounded-[24px] border border-stone-200 bg-white p-4 text-stone-950 outline-none ring-stone-950/10 focus-visible:ring-4 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-50 sm:min-h-[206px] sm:p-5"
+                      className="links-link-card group relative flex min-h-[174px] flex-col justify-between overflow-hidden rounded-[14px] border border-stone-200 bg-white p-4 text-stone-950 outline-none ring-stone-950/10 focus-visible:ring-4 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-50 sm:min-h-[190px] sm:p-5"
                     >
-                      <div className="flex min-h-20 items-start justify-between gap-4 sm:min-h-24">
+                      <div className="flex min-h-20 items-start justify-center gap-4 sm:min-h-24">
                         <div className="flex min-h-20 flex-1 justify-center sm:min-h-24">
                           {card.image && (
                             <div className="links-card-media relative h-20 w-20 overflow-hidden sm:h-24 sm:w-24">
@@ -154,20 +192,17 @@ export function LinksPageContent() {
                             </div>
                           )}
                         </div>
-                        <AltArrowRight
-                          size={18}
-                          aria-hidden
-                          className="links-card-arrow mt-2 shrink-0 text-stone-400"
-                        />
                       </div>
 
                       <div className="relative z-10 mt-4">
-                        <h2 className="font-serif text-[26px] font-semibold leading-8">
+                        <h3 className="flex items-center gap-1 whitespace-nowrap font-serif text-[16px] font-semibold leading-6 text-stone-950 dark:text-stone-50">
                           {card.title}
-                        </h2>
-                        <p className="mt-1 max-w-[240px] font-sans text-[15px] leading-6 text-stone-600 dark:text-stone-300">
-                          {card.description}
-                        </p>
+                          <AltArrowRight
+                            size={16}
+                            aria-hidden
+                            className="links-card-title-arrow shrink-0 text-stone-900 dark:text-stone-100"
+                          />
+                        </h3>
                       </div>
                     </Link>
                   );
@@ -176,15 +211,13 @@ export function LinksPageContent() {
 
               <section className="mt-8 sm:mt-10">
                 <h2 className="pb-4 font-serif text-[28px] font-semibold leading-9 text-stone-950 dark:text-stone-50">
-                  Our favorite recipes
+                  Our Current Fave Recipes
                 </h2>
                 <div className="rounded-lg border border-stone-200 bg-white px-6 py-5 dark:border-stone-700 dark:bg-stone-900">
                   {favoriteRecipes.map((favorite) => (
                     <Link
                       key={favorite.title}
                       href={favorite.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
                       className="group -mx-3 flex cursor-pointer items-center justify-between rounded-xl px-3 py-3.5 outline-none hover:bg-stone-200/60 focus-visible:ring-2 focus-visible:ring-[var(--color-blue)] focus-visible:ring-offset-2 dark:hover:bg-stone-700/35"
                     >
                       <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -221,48 +254,6 @@ export function LinksPageContent() {
               </section>
             </div>
           </div>
-
-          <section className="mt-10 grid gap-5 pt-8 sm:mt-12 sm:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] sm:items-center sm:pt-10">
-            <div>
-              <h2 className="font-serif text-[28px] font-semibold leading-9 text-stone-950 dark:text-stone-50">
-                Try Mizen early.
-              </h2>
-              <p className="mt-2 max-w-[420px] text-pretty font-sans text-[16px] leading-7 text-stone-600 dark:text-stone-300">
-                Join the waitlist for access to clean recipe imports and a calmer cooking view.
-              </p>
-            </div>
-
-            <form onSubmit={handleWaitlistSubmit} className="w-full">
-              <div className="flex min-h-[52px] flex-col overflow-hidden rounded-xl border border-[#E7E5E4] bg-[#F5F5F4] focus-within:border-[#18a1f7] focus-within:ring-[3px] focus-within:ring-[#18a1f7]/30 dark:border-stone-700 dark:bg-stone-900 min-[420px]:flex-row">
-                <input
-                  type="email"
-                  autoComplete="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  required={!(submitted || alreadyOnList)}
-                  disabled={submitted || alreadyOnList}
-                  className="min-h-[50px] min-w-0 flex-1 bg-transparent px-4 font-sans text-[15px] leading-[18px] text-stone-700 outline-none placeholder:text-[#A8A29E] disabled:opacity-0 dark:text-stone-200 dark:placeholder:text-stone-500 min-[420px]:pl-5"
-                />
-                <button
-                  type="submit"
-                  disabled={submitting || submitted || alreadyOnList}
-                  className="m-1.5 inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-[#18A1F7] px-5 font-sans text-[14px] font-semibold leading-[18px] text-white disabled:pointer-events-none disabled:opacity-80 min-[420px]:shrink-0"
-                >
-                  {submitted || alreadyOnList ? (
-                    <span>{alreadyOnList ? "Already on the list" : "You're on the list"}</span>
-                  ) : submitting ? (
-                    <span>Sending...</span>
-                  ) : (
-                    <>
-                      <Plain size={16} weight="Bold" className="shrink-0" />
-                      <span>Join waitlist</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </section>
         </main>
       </div>
 
