@@ -9,6 +9,7 @@ import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { UnitSystemSelect } from "@/components/ui/unit-system-select";
 import { cn } from "@/lib/utils";
 import { type Theme, getTheme, setTheme } from "@/lib/theme";
 import {
@@ -66,10 +67,10 @@ const THEME_OPTIONS: { value: Theme; label: string }[] = [
   { value: "system", label: "System" },
 ];
 
-const UNIT_OPTIONS: { value: UnitSystem; label: string }[] = [
-  { value: "original", label: "Original" },
-  { value: "metric", label: "Metric" },
-  { value: "imperial", label: "Imperial" },
+const UNIT_OPTIONS: { value: UnitSystem; label: string; meta: string }[] = [
+  { value: "original", label: "Original", meta: "source" },
+  { value: "metric", label: "Metric", meta: "g / ml" },
+  { value: "imperial", label: "Imperial", meta: "oz / cup" },
 ];
 
 const TEMP_OPTIONS: { value: TemperatureUnit; label: string }[] = [
@@ -438,23 +439,11 @@ function CookingSection() {
         label="Unit system"
         description="Ingredient amounts switch between the original recipe, metric, or imperial units."
       >
-        <ToggleGroup
-          type="single"
-          variant="outline"
+        <UnitSystemSelect
           value={unitSystem}
+          options={UNIT_OPTIONS}
           onValueChange={handleUnitChange}
-          className="rounded-lg"
-        >
-          {UNIT_OPTIONS.map((option) => (
-            <ToggleGroupItem
-              key={option.value}
-              value={option.value}
-              className="h-auto px-3 py-1 font-sans text-[13px] data-[state=on]:bg-stone-900 data-[state=on]:text-white dark:data-[state=on]:bg-stone-100 dark:data-[state=on]:text-stone-900"
-            >
-              {option.label}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+        />
       </SettingRow>
 
       <SettingRow

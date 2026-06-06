@@ -41,6 +41,8 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer";
+import { UnitSystemSelect } from "@/components/ui/unit-system-select";
 import { HeartButton } from "@/components/HeartButton";
 import { ReportRecipeDialog } from "@/components/ReportRecipeDialog";
 import AltArrowLeft from "@solar-icons/react/csr/arrows/AltArrowLeft";
@@ -68,6 +70,7 @@ export default function RecipePage() {
   useTabScrollMemory(activeTab);
   const [reportOpen, setReportOpen] = useState(false);
   const [mobileServingsOpen, setMobileServingsOpen] = useState(false);
+  const [mobileUnitsOpen, setMobileUnitsOpen] = useState(false);
   const numberFormat = useSyncExternalStore(
     (cb) => {
       window.addEventListener("storage", cb);
@@ -91,6 +94,18 @@ export default function RecipePage() {
     [recipe]
   );
   const isConverted = unitSystem !== "original";
+  const unitOptions = useMemo(
+    () => [
+      {
+        value: "original" as const,
+        label: `Original (${recipeUnitSystem === "metric" ? "Metric" : "Imperial"})`,
+        meta: "source",
+      },
+      { value: "metric" as const, label: "Metric", meta: "g / ml" },
+      { value: "imperial" as const, label: "Imperial", meta: "oz / cup" },
+    ],
+    [recipeUnitSystem]
+  );
   const temperatureUnit = usePreference(getTemperatureUnit);
   const dietaryProfile = usePreference(getDietaryProfile);
   const substitutions = usePreference(getSubstitutions);
@@ -310,12 +325,14 @@ export default function RecipePage() {
     );
   }
 
-  const toggleMobileUnits = () => {
-    if (isConverted) {
-      setUnitSystem("original");
-    } else {
-      setUnitSystem(recipeUnitSystem === "metric" ? "imperial" : "metric");
-    }
+  const openMobileUnits = () => {
+    setMobileServingsOpen(false);
+    setMobileUnitsOpen(true);
+  };
+
+  const handleMobileUnitChange = (next: "original" | "metric" | "imperial") => {
+    setUnitSystem(next);
+    setMobileUnitsOpen(false);
   };
 
   const recipeMobileNavItems: MobileNavItem[] = [
@@ -366,15 +383,12 @@ export default function RecipePage() {
               />
               <button
                 type="button"
-                aria-label={
-                  isConverted
-                    ? "Reset to original units"
-                    : `Convert to ${recipeUnitSystem === "metric" ? "imperial" : "metric"}`
-                }
+                aria-label={isConverted ? "Change unit display" : `Convert units`}
+                aria-expanded={mobileUnitsOpen}
                 aria-pressed={isConverted}
-                onClick={toggleMobileUnits}
+                onClick={openMobileUnits}
                 className={`press-scale inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
-                  isConverted
+                  isConverted || mobileUnitsOpen
                     ? "bg-[var(--color-blue-light)] text-[var(--color-blue)]"
                     : "text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:text-stone-500 dark:hover:bg-stone-800 dark:hover:text-stone-300"
                 }`}
@@ -602,6 +616,33 @@ export default function RecipePage() {
           </div>
         </div>
       )}
+
+      <Drawer open={mobileUnitsOpen} onOpenChange={setMobileUnitsOpen}>
+        <DrawerContent
+          aria-describedby="mobile-unit-display-description"
+          className="md:hidden px-4 pb-[calc(env(safe-area-inset-bottom)+1.375rem)] pt-0 dark:bg-stone-950"
+        >
+          <div className="mx-auto flex w-full max-w-[22rem] flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <DrawerTitle className="font-sans text-base font-semibold text-stone-900 dark:text-stone-100">
+                Unit display
+              </DrawerTitle>
+              <DrawerDescription
+                id="mobile-unit-display-description"
+                className="font-sans text-[13px] leading-5 text-stone-500 dark:text-stone-400"
+              >
+                Choose how ingredient amounts display in this recipe.
+              </DrawerDescription>
+            </div>
+            <UnitSystemSelect
+              value={unitSystem}
+              options={unitOptions}
+              density="mobile"
+              onValueChange={handleMobileUnitChange}
+            />
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       {/* Mobile: soft content fade above the floating nav */}
       <div className="md:hidden print:hidden fixed bottom-0 left-0 right-0 z-[19] h-28 pointer-events-none bg-gradient-to-t from-white/90 via-white/45 to-transparent dark:from-stone-950/80 dark:via-stone-950/35 dark:to-transparent" />

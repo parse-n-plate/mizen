@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { UnitSystemSelect } from "@/components/ui/unit-system-select";
 import { Switch } from "@/components/ui/switch";
 import { type NumberFormat, getNumberFormat, setNumberFormat } from "@/lib/numberFormat";
 import {
@@ -22,10 +23,10 @@ const THEME_OPTIONS: { value: Theme; label: string }[] = [
   { value: "system", label: "System" },
 ];
 
-const UNIT_OPTIONS: { value: UnitSystem; label: string }[] = [
-  { value: "original", label: "Original" },
-  { value: "metric", label: "Metric" },
-  { value: "imperial", label: "Imperial" },
+const UNIT_OPTIONS: { value: UnitSystem; label: string; meta: string }[] = [
+  { value: "original", label: "Original", meta: "source" },
+  { value: "metric", label: "Metric", meta: "g / ml" },
+  { value: "imperial", label: "Imperial", meta: "oz / cup" },
 ];
 
 const TEMP_OPTIONS: { value: TemperatureUnit; label: string }[] = [
@@ -109,28 +110,15 @@ export function ProfileSettingsPanel() {
         label="Unit system"
         description="Switch recipe amounts between original, metric, and imperial."
       >
-        <ToggleGroup
-          type="single"
-          variant="outline"
+        <UnitSystemSelect
           value={unitSystem}
           onValueChange={(value) => {
-            if (!value) return;
             const next = value as UnitSystem;
             setUnitSystemValue(next);
             setUnitSystem(next);
           }}
-          className="rounded-lg"
-        >
-          {UNIT_OPTIONS.map((option) => (
-            <ToggleGroupItem
-              key={option.value}
-              value={option.value}
-              className="h-auto px-3 py-1 font-sans text-[13px] data-[state=on]:bg-stone-900 data-[state=on]:text-white dark:data-[state=on]:bg-stone-100 dark:data-[state=on]:text-stone-900"
-            >
-              {option.label}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+          options={UNIT_OPTIONS}
+        />
       </SettingRow>
 
       <SettingRow
