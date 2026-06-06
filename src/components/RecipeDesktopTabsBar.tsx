@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Flag from "@solar-icons/react/csr/ui/Flag";
 import Ruler from "@solar-icons/react/csr/tools/Ruler";
-import { FileText, Scale } from "lucide-react";
 
 export type RecipeTabValue = "prep" | "cook";
 export type RecipeUnitSystem = "original" | "metric" | "imperial";
@@ -121,7 +120,7 @@ export function RecipeDesktopTabsBar({
           </Tooltip>
           <DropdownMenuContent
             align="end"
-            className="border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900"
+            className="w-[244px] rounded-lg border-stone-200 bg-white p-1.5 shadow-[0_10px_24px_rgba(44,42,37,0.12)] dark:border-stone-700 dark:bg-stone-900"
           >
             <DropdownMenuRadioGroup
               value={unitSystem}
@@ -129,26 +128,32 @@ export function RecipeDesktopTabsBar({
             >
               <DropdownMenuRadioItem
                 value="original"
-                className="text-stone-700 focus:bg-stone-100 focus:text-stone-900 dark:text-stone-300 dark:focus:bg-stone-800 dark:focus:text-stone-50"
+                className="h-[38px] text-stone-700 dark:text-stone-300"
               >
                 <span className="min-w-0 flex-1 truncate">
                   Original ({recipeUnitSystem === "metric" ? "Metric" : "Imperial"})
                 </span>
-                <FileText className="ml-auto h-4 w-4" />
+                <span className="shrink-0 text-xs font-normal text-stone-500 dark:text-stone-400">
+                  source
+                </span>
               </DropdownMenuRadioItem>
               <DropdownMenuRadioItem
                 value="metric"
-                className="text-stone-700 focus:bg-stone-100 focus:text-stone-900 dark:text-stone-300 dark:focus:bg-stone-800 dark:focus:text-stone-50"
+                className="h-9 text-stone-700 dark:text-stone-300"
               >
                 <span className="min-w-0 flex-1 truncate">Metric</span>
-                <Scale className="ml-auto h-4 w-4" />
+                <span className="shrink-0 text-xs font-normal text-stone-500 dark:text-stone-400">
+                  g / ml
+                </span>
               </DropdownMenuRadioItem>
               <DropdownMenuRadioItem
                 value="imperial"
-                className="text-stone-700 focus:bg-stone-100 focus:text-stone-900 dark:text-stone-300 dark:focus:bg-stone-800 dark:focus:text-stone-50"
+                className="h-9 text-stone-700 dark:text-stone-300"
               >
                 <span className="min-w-0 flex-1 truncate">Imperial</span>
-                <Ruler className="ml-auto h-4 w-4" />
+                <span className="shrink-0 text-xs font-normal text-stone-500 dark:text-stone-400">
+                  oz / cup
+                </span>
               </DropdownMenuRadioItem>
             </DropdownMenuRadioGroup>
           </DropdownMenuContent>

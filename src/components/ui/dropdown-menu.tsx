@@ -3,7 +3,6 @@
 import * as React from "react";
 import CheckCircle from "@solar-icons/react/csr/ui/CheckCircle";
 import AltArrowRight from "@solar-icons/react/csr/arrows/AltArrowRight";
-import MenuDots from "@solar-icons/react/csr/ui/MenuDots";
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
 
 import { cn } from "@/lib/utils";
@@ -112,14 +111,14 @@ function DropdownMenuRadioItem({
     <DropdownMenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
       className={cn(
-        "relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "group/dropdown-radio relative flex cursor-default items-center gap-2 rounded-md py-2 pr-2 pl-8 text-sm outline-hidden select-none focus:bg-[#F6F6F6] focus:text-stone-900 data-[state=checked]:bg-[#F6F6F6] data-[disabled]:pointer-events-none data-[disabled]:opacity-50 dark:focus:bg-stone-800 dark:focus:text-stone-50 dark:data-[state=checked]:bg-stone-800 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
     >
-      <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
+      <span className="pointer-events-none absolute left-2 flex size-[18px] items-center justify-center rounded-full border border-[#D7D3CA] group-data-[state=checked]/dropdown-radio:border-[var(--color-blue)]">
         <DropdownMenuPrimitive.ItemIndicator>
-          <MenuDots className="size-2" />
+          <span className="block size-2.5 rounded-full bg-[var(--color-blue)]" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
       {children}
