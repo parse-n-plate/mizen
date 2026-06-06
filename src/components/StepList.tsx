@@ -20,28 +20,6 @@ import {
 import { displayAmount, displayText } from "@/utils/ingredientScaler";
 import { ImageLightbox } from "@/components/ImageLightbox";
 
-const REVEAL_EASE = "cubic-bezier(0.215, 0.61, 0.355, 1)";
-const REVEAL_DURATION = 200;
-const REVEAL_TRANSLATE_Y = 8;
-const REVEAL_STAGGER = 50;
-
-function photoRevealStyle(show: boolean, index = 0): React.CSSProperties {
-  const delay = index * REVEAL_STAGGER;
-  if (show) {
-    return {
-      opacity: 1,
-      transform: "translateY(0)",
-      transition: `opacity ${REVEAL_DURATION}ms ${REVEAL_EASE} ${delay}ms, transform ${REVEAL_DURATION}ms ${REVEAL_EASE} ${delay}ms`,
-      willChange: "opacity, transform",
-    };
-  }
-  return {
-    opacity: 0,
-    transform: `translateY(${REVEAL_TRANSLATE_Y}px)`,
-    transition: "opacity 0ms, transform 0ms",
-  };
-}
-
 function useImageAspectRatio(src: string | undefined) {
   const [state, setState] = useState<{ ratio: number | null; error: boolean }>({
     ratio: null,
@@ -330,7 +308,7 @@ function StepRow({
         <div className="flex-1 min-w-0">
           {step.title && (
             <h4 className="mb-2.5 font-sans text-body-md-sm font-medium text-heading">
-              {step.title}
+              <span className="tabular-nums">{index + 1}.</span> {step.title}
             </h4>
           )}
           <p className="font-sans text-base leading-relaxed text-stone-600 dark:text-stone-300">
@@ -375,16 +353,10 @@ function StepRow({
 
         {/* Side-by-side: portrait/square/mild landscape (0.7–1.4) */}
         {hasImage && isSideBySide && (
-          <div
-            className="hidden md:grid flex-shrink-0"
-            style={{
-              gridTemplateColumns: showImages ? "1fr" : "0fr",
-              transition: `grid-template-columns ${REVEAL_DURATION}ms ${REVEAL_EASE}`,
-            }}
-          >
+          <div className="step-image-reveal-x hidden flex-shrink-0 md:grid" data-open={showImages}>
             <div className="overflow-hidden">
               <div
-                className="w-[40vw] max-w-[180px] cursor-zoom-in"
+                className="step-image-reveal-inner w-[40vw] max-w-[180px] cursor-zoom-in"
                 onClick={(e) => {
                   const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
                   onImageClick({
@@ -400,7 +372,6 @@ function StepRow({
                   width={180}
                   height={Math.round(180 / (ratio ?? 1))}
                   className="w-full h-auto rounded-[10px]"
-                  style={photoRevealStyle(showImages)}
                   unoptimized
                 />
               </div>
@@ -411,16 +382,10 @@ function StepRow({
 
       {/* Mobile: all single images stack full-width below the step copy. */}
       {hasImage && !isMulti && (
-        <div
-          className="grid md:hidden"
-          style={{
-            gridTemplateRows: showImages ? "1fr" : "0fr",
-            transition: `grid-template-rows ${REVEAL_DURATION}ms ${REVEAL_EASE}`,
-          }}
-        >
+        <div className="step-image-reveal grid md:hidden" data-open={showImages}>
           <div className="overflow-hidden">
             <div
-              className="mt-6"
+              className="step-image-reveal-inner mt-6"
               onClick={(e) => {
                 const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
                 onImageClick({
@@ -436,7 +401,6 @@ function StepRow({
                 width={496}
                 height={Math.round(496 / (ratio ?? 1))}
                 className="w-full h-auto rounded-[10px]"
-                style={photoRevealStyle(showImages)}
                 unoptimized
               />
             </div>
@@ -446,16 +410,10 @@ function StepRow({
 
       {/* Inline: tall portrait (<0.7) or landscape (>1.4) — no crop, max-height capped */}
       {hasImage && isInline && (
-        <div
-          className="hidden md:grid"
-          style={{
-            gridTemplateRows: showImages ? "1fr" : "0fr",
-            transition: `grid-template-rows ${REVEAL_DURATION}ms ${REVEAL_EASE}`,
-          }}
-        >
+        <div className="step-image-reveal hidden md:grid" data-open={showImages}>
           <div className="overflow-hidden">
             <div
-              className="mt-6 flex cursor-zoom-in"
+              className="step-image-reveal-inner mt-6 cursor-zoom-in"
               onClick={(e) => {
                 const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
                 onImageClick({
@@ -470,8 +428,7 @@ function StepRow({
                 alt={`Step ${index + 1}`}
                 width={496}
                 height={Math.round(496 / (ratio ?? 1))}
-                className="max-w-full max-h-[280px] w-auto h-auto rounded-[10px]"
-                style={photoRevealStyle(showImages)}
+                className="w-full h-auto rounded-[10px]"
                 unoptimized
               />
             </div>
@@ -481,20 +438,13 @@ function StepRow({
 
       {/* Multiple images — stacked on mobile, horizontal thumbnails on desktop */}
       {hasImage && isMulti && (
-        <div
-          className="grid"
-          style={{
-            gridTemplateRows: showImages ? "1fr" : "0fr",
-            transition: `grid-template-rows ${REVEAL_DURATION}ms ${REVEAL_EASE}`,
-          }}
-        >
+        <div className="step-image-reveal grid" data-open={showImages}>
           <div className="overflow-hidden">
-            <div className="mt-3 md:mt-2 flex flex-col md:flex-row gap-3 md:gap-2">
+            <div className="step-image-reveal-inner mt-3 md:mt-2 flex flex-col md:flex-row gap-3 md:gap-2">
               {images.map((src, i) => (
                 <div
                   key={i}
                   className="flex-1 min-w-0 cursor-zoom-in"
-                  style={photoRevealStyle(showImages, i)}
                   onClick={(e) => {
                     const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
                     onImageClick({

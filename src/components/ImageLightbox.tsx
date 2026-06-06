@@ -29,7 +29,7 @@ export function ImageLightbox({
   const sourceElRef = useRef(sourceEl);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sourceRestoredRef = useRef(false);
-  const borderRadius = active ? 24 : 10;
+  const borderRadius = 10;
   const [duration] = useState(() =>
     window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 240
   );
@@ -161,7 +161,7 @@ export function ImageLightbox({
           transformOrigin: "top left",
           borderRadius,
           clipPath: `inset(0 round ${borderRadius}px)`,
-          transition: `transform ${duration}ms ${easing}, border-radius ${duration}ms ${easing}, clip-path ${duration}ms ${easing}`,
+          transition: `transform ${duration}ms ${easing}`,
           cursor: "zoom-out",
           willChange: "transform",
         }}
