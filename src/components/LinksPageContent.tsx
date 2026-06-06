@@ -8,6 +8,7 @@ import AltArrowRight from "@solar-icons/react/csr/arrows/AltArrowRight";
 import Plain from "@solar-icons/react/csr/messages/Plain";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { LandingAuthCta } from "@/components/LandingAuthCta";
+import { favoriteRecipes } from "@/lib/favorite-recipes";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 
 const connectCards = [
@@ -28,23 +29,6 @@ const connectCards = [
     href: "https://www.linkedin.com/in/michelle-tran-a48a14203/",
     image: "/assets/avatars/Michelle_Avatar_2026.jpg",
     imageAlt: "Michelle",
-  },
-];
-
-const favoriteRecipes = [
-  {
-    title: "Banana Bread Cookies",
-    domain: "flouringkitchen.com",
-    href: "/recipes/banana-bread-cookies",
-    avatar: "/assets/avatars/Michelle_Avatar_2026.jpg",
-    avatarAlt: "Michelle",
-  },
-  {
-    title: "Kimchi Ragu",
-    domain: "shychef.com",
-    href: "/recipes/kimchi-ragu",
-    avatar: "/assets/avatars/Gage_Avatar_2026.jpg",
-    avatarAlt: "Gage",
   },
 ];
 
@@ -87,9 +71,9 @@ export function LinksPageContent() {
 
   return (
     <>
-      <div className="landing-scroll flex min-h-screen flex-col bg-[#FAFAF9] text-stone-900 dark:bg-[var(--color-dark-surface)] dark:text-stone-100">
+      <div className="landing-scroll flex min-h-screen min-w-0 flex-col overflow-x-hidden bg-[#FAFAF9] text-stone-900 dark:bg-[var(--color-dark-surface)] dark:text-stone-100">
         <header className="fixed inset-x-0 top-0 z-40 border-b border-stone-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 dark:border-stone-800 dark:bg-stone-950/95 dark:supports-[backdrop-filter]:bg-stone-950/85">
-          <nav className="mx-auto flex h-16 w-full max-w-[800px] items-center justify-between px-5 sm:h-20 sm:px-8">
+          <nav className="mx-auto flex h-16 w-full max-w-[800px] min-w-0 items-center justify-between gap-3 px-4 sm:h-20 sm:px-8">
             <Link href="/" className="group flex min-w-0 items-center gap-2">
               <Image
                 src="/apple-touch-icon.png"
@@ -108,10 +92,10 @@ export function LinksPageContent() {
           </nav>
         </header>
 
-        <main className="mx-auto w-full max-w-[800px] flex-1 px-5 pb-10 pt-24 sm:px-8 sm:pb-14 sm:pt-28">
+        <main className="mx-auto w-full max-w-[800px] min-w-0 flex-1 px-4 pb-10 pt-24 sm:px-8 sm:pb-14 sm:pt-28">
           <section className="grid gap-5 sm:h-[100px] sm:grid-cols-[minmax(360px,1fr)_minmax(300px,420px)] sm:items-center">
             <div>
-              <h1 className="font-serif text-[28px] font-semibold leading-9 text-stone-950 dark:text-stone-50">
+              <h1 className="font-serif text-[30px] font-semibold leading-tight text-stone-950 dark:text-stone-50 sm:text-[32px]">
                 Try Mizen early.
               </h1>
               <p className="mt-2 max-w-[420px] text-pretty font-sans text-[16px] leading-7 text-stone-600 dark:text-stone-300">
@@ -156,7 +140,7 @@ export function LinksPageContent() {
 
           <div className="grid gap-8">
             <div className="w-full pt-8 sm:pt-10">
-              <h2 className="pb-4 font-serif text-[28px] font-semibold leading-9 text-stone-950 dark:text-stone-50">
+              <h2 className="pb-4 font-serif text-[24px] font-semibold leading-tight text-stone-950 dark:text-stone-50 sm:text-[28px]">
                 Connect With Us
               </h2>
               <section
@@ -174,7 +158,7 @@ export function LinksPageContent() {
                           : undefined
                       }
                       rel={card.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                      className="links-link-card group relative flex min-h-[174px] flex-col justify-between overflow-hidden rounded-[14px] border border-stone-200 bg-white p-4 text-stone-950 outline-none ring-stone-950/10 focus-visible:ring-4 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-50 sm:min-h-[190px] sm:p-5"
+                      className="links-link-card group relative flex min-h-[174px] min-w-0 flex-col justify-between overflow-hidden rounded-[14px] border border-stone-200 bg-white p-4 text-stone-950 outline-none ring-stone-950/10 focus-visible:ring-4 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-50 sm:min-h-[190px] sm:p-5"
                     >
                       <div className="flex min-h-20 items-start justify-center gap-4 sm:min-h-24">
                         <div className="flex min-h-20 flex-1 justify-center sm:min-h-24">
@@ -195,8 +179,8 @@ export function LinksPageContent() {
                       </div>
 
                       <div className="relative z-10 mt-4">
-                        <h3 className="flex items-center gap-1 whitespace-nowrap font-serif text-[16px] font-semibold leading-6 text-stone-950 dark:text-stone-50">
-                          {card.title}
+                        <h3 className="flex min-w-0 items-center gap-1 font-serif text-[16px] font-semibold leading-6 text-stone-950 dark:text-stone-50">
+                          <span className="min-w-0 break-words">{card.title}</span>
                           <AltArrowRight
                             size={16}
                             aria-hidden
@@ -210,15 +194,15 @@ export function LinksPageContent() {
               </section>
 
               <section className="mt-8 sm:mt-10">
-                <h2 className="pb-4 font-serif text-[28px] font-semibold leading-9 text-stone-950 dark:text-stone-50">
-                  Our Current Fave Recipes
+                <h2 className="max-w-[18rem] pb-4 font-serif text-[24px] font-semibold leading-tight text-stone-950 dark:text-stone-50 min-[420px]:max-w-none sm:text-[28px]">
+                  Our favorite recipes.
                 </h2>
-                <div className="rounded-lg border border-stone-200 bg-white px-6 py-5 dark:border-stone-700 dark:bg-stone-900">
+                <div className="min-w-0 rounded-lg border border-stone-200 bg-white px-3 py-4 dark:border-stone-700 dark:bg-stone-900 sm:px-6 sm:py-5">
                   {favoriteRecipes.map((favorite) => (
                     <Link
                       key={favorite.title}
                       href={favorite.href}
-                      className="group -mx-3 flex cursor-pointer items-center justify-between rounded-xl px-3 py-3.5 outline-none hover:bg-stone-200/60 focus-visible:ring-2 focus-visible:ring-[var(--color-blue)] focus-visible:ring-offset-2 dark:hover:bg-stone-700/35"
+                      className="group flex min-w-0 cursor-pointer items-center justify-between rounded-xl px-2 py-3.5 outline-none hover:bg-stone-200/60 focus-visible:ring-2 focus-visible:ring-[var(--color-blue)] focus-visible:ring-offset-2 dark:hover:bg-stone-700/35 sm:-mx-3 sm:px-3"
                     >
                       <div className="flex min-w-0 flex-1 items-center gap-3">
                         <Image
@@ -229,16 +213,16 @@ export function LinksPageContent() {
                           unoptimized
                           className="shrink-0 rounded-sm"
                         />
-                        <div className="flex min-w-0 items-baseline">
+                        <div className="flex min-w-0 flex-1 flex-col min-[420px]:flex-row min-[420px]:items-baseline">
                           <span className="truncate font-serif text-base font-semibold leading-snug text-stone-900 dark:text-stone-50">
                             {favorite.title}
                           </span>
-                          <span className="ml-2 shrink-0 font-sans text-[13px] text-stone-400 dark:text-stone-500">
+                          <span className="min-w-0 truncate font-sans text-[13px] text-stone-400 dark:text-stone-500 min-[420px]:ml-2">
                             {favorite.domain}
                           </span>
                         </div>
                       </div>
-                      <div className="ml-4 flex shrink-0 items-center gap-2">
+                      <div className="ml-2 flex shrink-0 items-center gap-1.5 sm:ml-4 sm:gap-2">
                         <Image
                           src={favorite.avatar}
                           alt={favorite.avatarAlt}

@@ -56,8 +56,8 @@ export function RecipeHeader({
   const hasServings = !!(recipe.servings && recipe.servings > 0);
 
   return (
-    <div className="flex flex-col gap-1 md:gap-1.5">
-      <div className="flex items-start">
+    <div className="flex min-w-0 flex-col gap-1 md:gap-1.5">
+      <div className="flex min-w-0 items-start">
         {/* Inline expand-sidebar button — sits to the left of the recipe title when sidebar is collapsed */}
         <div
           className={`hidden md:block shrink-0 overflow-hidden transition-[width] ease-[cubic-bezier(0.165,0.84,0.44,1)] motion-reduce:transition-none ${
@@ -79,11 +79,11 @@ export function RecipeHeader({
             <SidebarMinimalistic size={14} />
           </button>
         </div>
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           {showSwitcher ? (
             <RecipeSwitcher title={recipe.title} variant="h1" />
           ) : (
-            <h1 className="font-serif text-3xl font-bold leading-tight md:text-4xl tracking-tight text-pretty">
+            <h1 className="break-words font-serif text-3xl font-bold leading-tight tracking-tight text-pretty md:text-4xl">
               {recipe.title}
             </h1>
           )}
@@ -91,13 +91,13 @@ export function RecipeHeader({
       </div>
 
       {recipe.summary && (
-        <p className="font-sans text-lg text-stone-500 dark:text-stone-400 max-w-2xl leading-relaxed">
+        <p className="max-w-2xl break-words font-sans text-base leading-relaxed text-stone-500 dark:text-stone-400 md:text-lg">
           {recipe.summary}
         </p>
       )}
 
       {/* Inline metadata row */}
-      <div className="flex items-center gap-x-2 gap-y-1 md:gap-3 flex-wrap font-sans text-sm text-stone-500 dark:text-stone-400">
+      <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 font-sans text-sm text-stone-500 dark:text-stone-400 md:gap-3">
         {recipe.author && <span className="text-base">{recipe.author}</span>}
 
         {recipe.sourceUrl && (
@@ -105,7 +105,7 @@ export function RecipeHeader({
             href={recipe.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[16px] text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 transition-colors hover:underline underline-offset-4 decoration-stone-300 dark:decoration-stone-600"
+            className="max-w-full truncate text-[16px] text-stone-400 transition-colors hover:text-stone-600 hover:underline dark:text-stone-500 dark:hover:text-stone-300"
           >
             {new URL(recipe.sourceUrl).hostname.replace("www.", "")}
           </a>

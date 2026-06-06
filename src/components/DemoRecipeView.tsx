@@ -242,11 +242,12 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
                   steps={recipe.instructions}
                   equipment={recipe.equipment}
                   onStepClick={handleStepClick}
+                  enableMobileSearchPortal={false}
                 />
               </div>
             ) : (
               <div key="cook" className="tab-content-animate">
-                <StepList steps={recipe.instructions} />
+                <StepList steps={recipe.instructions} enableMobileSearchPortal={false} />
               </div>
             )}
           </div>

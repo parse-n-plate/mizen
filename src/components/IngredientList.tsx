@@ -31,6 +31,7 @@ interface IngredientListProps {
   groups: IngredientGroup[];
   diffMap?: DiffMap;
   diffGeneration?: number;
+  enableMobileSearchPortal?: boolean;
 }
 
 interface FilteredIngredient {
@@ -43,7 +44,12 @@ interface FilteredIngredientGroup {
   ingredients: FilteredIngredient[];
 }
 
-export function IngredientList({ groups, diffMap, diffGeneration }: IngredientListProps) {
+export function IngredientList({
+  groups,
+  diffMap,
+  diffGeneration,
+  enableMobileSearchPortal = true,
+}: IngredientListProps) {
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -54,6 +60,8 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
   const numberFormat = useNumberFormat();
 
   useEffect(() => {
+    if (!enableMobileSearchPortal) return;
+
     const frame = requestAnimationFrame(() => {
       setMobileSearchContainer(
         document.getElementById("mobile-recipe-search-action") ??
@@ -62,7 +70,7 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
     });
 
     return () => cancelAnimationFrame(frame);
-  }, []);
+  }, [enableMobileSearchPortal]);
 
   useEffect(() => {
     if (!isSearchOpen) return;
@@ -137,8 +145,10 @@ export function IngredientList({ groups, diffMap, diffGeneration }: IngredientLi
         <div className={isMobile && isSearchExpanded ? "absolute right-0 top-0 h-9 w-full" : ""}>
           {!searchQuery && (
             <Magnifer
-              className={`absolute right-1.5 top-1/2 -translate-y-1/2 size-[16px] text-muted-foreground pointer-events-none z-10 transition-colors ${
-                isSearchExpanded ? "" : "group-hover:text-stone-600 dark:group-hover:text-stone-300"
+              className={`absolute top-1/2 size-[16px] -translate-y-1/2 text-muted-foreground pointer-events-none z-10 transition-colors ${
+                isSearchExpanded
+                  ? "right-2"
+                  : "left-1/2 -translate-x-1/2 group-hover:text-stone-600 dark:group-hover:text-stone-300"
               }`}
             />
           )}
