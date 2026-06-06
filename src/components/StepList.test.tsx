@@ -4,7 +4,16 @@ import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StepList } from "@/components/StepList";
-import type { InstructionStep } from "@/lib/types";
+import type { IngredientGroup, InstructionStep } from "@/lib/types";
+
+const dialState = vi.hoisted(() => ({
+  mode: "Hover amounts",
+  inlineAmountColor: "#DDF4FF",
+}));
+
+vi.mock("dialkit", () => ({
+  useDialKit: () => dialState,
+}));
 
 /* eslint-disable @typescript-eslint/no-unused-vars, @next/next/no-img-element */
 vi.mock("next/image", () => ({
@@ -50,15 +59,17 @@ describe("StepList", () => {
     IS_REACT_ACT_ENVIRONMENT?: boolean;
   };
 
-  async function render(steps: InstructionStep[]) {
+  async function render(steps: InstructionStep[], ingredientGroups?: IngredientGroup[]) {
     await act(async () => {
-      root.render(<StepList steps={steps} />);
+      root.render(<StepList steps={steps} ingredientGroups={ingredientGroups} />);
       await Promise.resolve();
     });
   }
 
   beforeEach(() => {
     reactActEnv.IS_REACT_ACT_ENVIRONMENT = true;
+    dialState.mode = "Hover amounts";
+    dialState.inlineAmountColor = "#DDF4FF";
     localStorage.clear();
     globalThis.Image = MockImage as unknown as typeof Image;
     container = document.createElement("div");
@@ -131,5 +142,109 @@ describe("StepList", () => {
 
     const lightbox = container.querySelector('[data-testid="lightbox"]');
     expect(lightbox?.getAttribute("data-src")).toBe("https://cdn.example.com/step-1b.jpg");
+  });
+
+  it("renders matched ingredient amounts in tooltips for hits mode", async () => {
+    await render(
+      [{ title: "Step 1", detail: "Fold the flour into the butter." }],
+      [
+        {
+          groupName: "Main",
+          ingredients: [
+            { amount: "2", units: "cups", ingredient: "all-purpose flour" },
+            { amount: "1", units: "cup", ingredient: "unsalted butter" },
+          ],
+        },
+      ]
+    );
+
+    expect(container.querySelector('[aria-label="Ingredients in this step"]')).toBeNull();
+    expect(container.textContent).toContain("2 cups");
+    expect(container.textContent).toContain("1 cup");
+  });
+
+  it("uses matched ingredient text as tooltip triggers in hits mode", async () => {
+    await render(
+      [{ title: "Step 1", detail: "Fold the flour into the butter." }],
+      [
+        {
+          groupName: "Main",
+          ingredients: [
+            { amount: "2", units: "cups", ingredient: "all-purpose flour" },
+            { amount: "1", units: "cup", ingredient: "unsalted butter" },
+          ],
+        },
+      ]
+    );
+
+    const triggers = Array.from(container.querySelectorAll('[tabindex="0"]'))
+      .map((node) => node.textContent)
+      .filter(Boolean);
+    expect(triggers).toEqual(["flour", "butter"]);
+  });
+
+  it("renders matched ingredients inline when the dial mode is inline", async () => {
+    dialState.mode = "Inline amounts";
+    dialState.inlineAmountColor = "#fff3bf";
+
+    await render(
+      [{ title: "Step 1", detail: "Fold the flour into the butter." }],
+      [
+        {
+          groupName: "Main",
+          ingredients: [
+            { amount: "2", units: "cups", ingredient: "all-purpose flour" },
+            { amount: "1", units: "cup", ingredient: "unsalted butter" },
+          ],
+        },
+      ]
+    );
+
+    expect(container.querySelector('[aria-label="Ingredients in this step"]')).toBeNull();
+    expect(container.textContent).toContain("2 cupsflour");
+    expect(container.textContent).toContain("1 cupbutter");
+    const inlineReference = container.querySelector(
+      'span[title="all-purpose flour"]'
+    ) as HTMLElement | null;
+    expect(inlineReference?.style.backgroundColor).toBe("rgb(255, 243, 191)");
+  });
+
+  it("does not repeat an amount already written before an inline ingredient", async () => {
+    dialState.mode = "Inline amounts";
+
+    await render(
+      [{ title: "Step 1", detail: "Add 2 cups water." }],
+      [
+        {
+          groupName: "Main",
+          ingredients: [{ amount: "2", units: "cups", ingredient: "water" }],
+        },
+      ]
+    );
+
+    const matches = container.textContent?.match(/2 cups/g) ?? [];
+    expect(matches).toHaveLength(1);
+    expect(container.textContent).toContain("Add 2 cupswater.");
+  });
+
+  it("renders matched ingredients as a comma-separated text list", async () => {
+    dialState.mode = "Ingredient line";
+
+    await render(
+      [{ title: "Step 1", detail: "Fold the flour into the butter." }],
+      [
+        {
+          groupName: "Main",
+          ingredients: [
+            { amount: "2", units: "cups", ingredient: "all-purpose flour" },
+            { amount: "1", units: "cup", ingredient: "unsalted butter" },
+          ],
+        },
+      ]
+    );
+
+    const list = container.querySelector('[aria-label="Ingredients in this step"]');
+    expect(list).not.toBeNull();
+    expect(list?.textContent).toBe("2 cups flour, 1 cup butter");
   });
 });

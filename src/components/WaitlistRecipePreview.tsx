@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useCallback, useState, useMemo } from "react";
 import type { ParsedRecipe } from "@/lib/types";
 import { RecipeHeader, formatTime } from "@/components/RecipeHeader";
 import { IngredientList } from "@/components/IngredientList";
@@ -268,7 +268,15 @@ export function WaitlistRecipePreview({
   const isDesktop = useMediaQuery("(min-width: 640px)");
   const originalServings = recipe.servings ?? 1;
   const [servings, setServings] = useState(originalServings);
-  const [activeTab, setActiveTab] = useState<"prep" | "cook">("prep");
+  const [activeTabState, setActiveTabState] = useState<{
+    recipeKey: string;
+    tab: "prep" | "cook";
+  }>({ recipeKey: recipe.title, tab: "prep" });
+  const activeTab = activeTabState.recipeKey === recipe.title ? activeTabState.tab : "prep";
+  const setActiveTab = useCallback(
+    (tab: "prep" | "cook") => setActiveTabState({ recipeKey: recipe.title, tab }),
+    [recipe.title]
+  );
   const [lightbox, setLightbox] = useState<{ rect: DOMRect; el: HTMLElement } | null>(null);
   const [textOpen, setTextOpen] = useState(false);
   const [urlOpen, setUrlOpen] = useState(false);
@@ -395,7 +403,7 @@ export function WaitlistRecipePreview({
             </div>
           ) : (
             <div key="cook" className="tab-content-animate">
-              <StepList steps={recipe.instructions} />
+              <StepList steps={recipe.instructions} ingredientGroups={scaledIngredients} />
             </div>
           )}
         </div>

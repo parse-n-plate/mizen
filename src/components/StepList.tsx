@@ -1,18 +1,23 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
+import { useDialKit } from "dialkit";
 import Magnifer from "@solar-icons/react/csr/search/Magnifer";
 import { X } from "lucide-react";
 import Gallery from "@solar-icons/react/csr/video/Gallery";
 import Lightbulb from "@solar-icons/react/csr/devices/Lightbulb";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import type { InstructionStep } from "@/lib/types";
+import type { IngredientGroup, InstructionStep } from "@/lib/types";
 import { type NumberFormat, getNumberFormat } from "@/lib/numberFormat";
 import { subscribePreferences, getShowStepImages, setShowStepImages } from "@/lib/preferences";
-import { displayText } from "@/utils/ingredientScaler";
+import {
+  matchIngredientReferences,
+  type IngredientStepReference,
+} from "@/lib/ingredient-step-references";
+import { displayAmount, displayText } from "@/utils/ingredientScaler";
 import { ImageLightbox } from "@/components/ImageLightbox";
 
 const REVEAL_EASE = "cubic-bezier(0.215, 0.61, 0.355, 1)";
@@ -73,10 +78,26 @@ function useNumberFormat(): NumberFormat {
 
 interface StepListProps {
   steps: InstructionStep[];
+  ingredientGroups?: IngredientGroup[];
   enableMobileSearchPortal?: boolean;
 }
 
-export function StepList({ steps, enableMobileSearchPortal = true }: StepListProps) {
+export function StepList({
+  steps,
+  ingredientGroups,
+  enableMobileSearchPortal = true,
+}: StepListProps) {
+  const referenceDial = useDialKit("Ingredient References", {
+    mode: {
+      type: "select",
+      options: ["Inline amounts", "Ingredient line", "Hover amounts", "Hidden"],
+      default: "Inline amounts",
+    },
+    inlineAmountColor: {
+      type: "color",
+      default: "#DDF4FF",
+    },
+  });
   const numberFormat = useNumberFormat();
   const [lightbox, setLightbox] = useState<{ src: string; rect: DOMRect; el: HTMLElement } | null>(
     null
@@ -242,6 +263,9 @@ export function StepList({ steps, enableMobileSearchPortal = true }: StepListPro
           key={originalIndex}
           step={step}
           index={originalIndex}
+          ingredientGroups={ingredientGroups}
+          referenceMode={referenceDial.mode as IngredientReferenceMode}
+          inlineAmountColor={referenceDial.inlineAmountColor as string}
           numberFormat={numberFormat}
           onImageClick={setLightbox}
           showImages={showImages}
@@ -260,15 +284,23 @@ export function StepList({ steps, enableMobileSearchPortal = true }: StepListPro
   );
 }
 
+type IngredientReferenceMode = "Inline amounts" | "Ingredient line" | "Hover amounts" | "Hidden";
+
 function StepRow({
   step,
   index,
+  ingredientGroups,
+  referenceMode,
+  inlineAmountColor,
   numberFormat,
   onImageClick,
   showImages,
 }: {
   step: InstructionStep;
   index: number;
+  ingredientGroups?: IngredientGroup[];
+  referenceMode: IngredientReferenceMode;
+  inlineAmountColor: string;
   numberFormat: NumberFormat;
   onImageClick: (state: { src: string; rect: DOMRect; el: HTMLElement }) => void;
   showImages: boolean;
@@ -282,21 +314,63 @@ function StepRow({
   // Three zones: < 0.7 tall portrait → inline, 0.7–1.4 → side-by-side, > 1.4 → inline
   const isSideBySide = !isMulti && ratio !== null && ratio >= 0.7 && ratio <= 1.4;
   const isInline = !isMulti && ratio !== null && !isSideBySide;
+  const detailText = displayText(step.detail, numberFormat);
+  const ingredientReferences = useMemo(
+    () => matchIngredientReferences(step, ingredientGroups, detailText),
+    [detailText, ingredientGroups, step]
+  );
 
   return (
     <div
       id={`step-${index + 1}`}
       className="relative flex flex-col py-3.5 md:px-3 rounded-lg group hover:bg-[var(--color-cream)]"
     >
-      <div className="md:flex md:gap-4">
+      <div className="md:flex md:gap-6">
         {/* Content */}
-        <div className="flex-1 min-w-0 space-y-2.5">
+        <div className="flex-1 min-w-0">
           {step.title && (
-            <h4 className="font-sans text-body-md-sm font-medium text-heading">{step.title}</h4>
+            <h4 className="mb-2.5 font-sans text-body-md-sm font-medium text-heading">
+              {step.title}
+            </h4>
           )}
           <p className="font-sans text-base leading-relaxed text-stone-600 dark:text-stone-300">
-            {displayText(step.detail, numberFormat)}
+            {referenceMode === "Inline amounts" ? (
+              <StepDetailWithInlineIngredientReferences
+                text={detailText}
+                references={ingredientReferences}
+                inlineAmountColor={inlineAmountColor}
+                numberFormat={numberFormat}
+              />
+            ) : referenceMode === "Hover amounts" ? (
+              <StepDetailWithBoldIngredientReferences
+                text={detailText}
+                references={ingredientReferences}
+                numberFormat={numberFormat}
+              />
+            ) : (
+              detailText
+            )}
           </p>
+          {referenceMode === "Inline amounts" &&
+            ingredientReferences.some((reference) => reference.start === undefined) && (
+              <div className="mt-6 flex flex-wrap gap-1.5" aria-label="Ingredients in this step">
+                {ingredientReferences
+                  .filter((reference) => reference.start === undefined)
+                  .map((reference) => (
+                    <IngredientReferenceHit
+                      key={reference.key}
+                      reference={reference}
+                      numberFormat={numberFormat}
+                    />
+                  ))}
+              </div>
+            )}
+          {referenceMode === "Ingredient line" && ingredientReferences.length > 0 && (
+            <IngredientReferenceTextList
+              references={ingredientReferences}
+              numberFormat={numberFormat}
+            />
+          )}
         </div>
 
         {/* Side-by-side: portrait/square/mild landscape (0.7–1.4) */}
@@ -346,7 +420,7 @@ function StepRow({
         >
           <div className="overflow-hidden">
             <div
-              className="mt-3"
+              className="mt-6"
               onClick={(e) => {
                 const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
                 onImageClick({
@@ -381,7 +455,7 @@ function StepRow({
         >
           <div className="overflow-hidden">
             <div
-              className="mt-2 flex cursor-zoom-in"
+              className="mt-6 flex cursor-zoom-in"
               onClick={(e) => {
                 const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
                 onImageClick({
@@ -452,5 +526,263 @@ function StepRow({
         </p>
       )}
     </div>
+  );
+}
+
+function IngredientReferenceHit({
+  reference,
+  numberFormat,
+}: {
+  reference: IngredientStepReference;
+  numberFormat: NumberFormat;
+}) {
+  const { amount, label } = getIngredientReferenceDisplay(reference, numberFormat);
+
+  return (
+    <span
+      className="inline-flex items-baseline gap-1 rounded-lg bg-stone-100 px-2.5 py-1.5 font-sans text-[14px] leading-none text-stone-500 dark:bg-stone-800 dark:text-stone-400"
+      title={
+        reference.usage === "partial"
+          ? `${reference.ingredient.ingredient}: partial amount`
+          : reference.ingredient.ingredient
+      }
+    >
+      {amount && <span className="font-medium text-stone-700 dark:text-stone-100">{amount}</span>}
+      <span>{label}</span>
+    </span>
+  );
+}
+
+function IngredientReferenceTextList({
+  references,
+  numberFormat,
+}: {
+  references: IngredientStepReference[];
+  numberFormat: NumberFormat;
+}) {
+  return (
+    <p
+      className="mt-6 font-sans text-sm leading-relaxed text-stone-500 dark:text-stone-400"
+      aria-label="Ingredients in this step"
+    >
+      {references.map((reference, index) => {
+        const { amount, label } = getIngredientReferenceDisplay(reference, numberFormat);
+        return (
+          <Fragment key={reference.key}>
+            {index > 0 ? ", " : ""}
+            <span className="font-medium text-stone-700 dark:text-stone-200">{amount}</span>{" "}
+            <span>{label}</span>
+          </Fragment>
+        );
+      })}
+    </p>
+  );
+}
+
+function getIngredientReferenceDisplay(
+  reference: IngredientStepReference,
+  numberFormat: NumberFormat
+) {
+  return {
+    amount:
+      reference.usage === "partial"
+        ? "partial"
+        : [displayAmount(reference.ingredient.amount, numberFormat), reference.ingredient.units]
+            .filter(Boolean)
+            .join(" ")
+            .trim(),
+    label: reference.matchText ?? reference.ingredient.ingredient,
+  };
+}
+
+function StepDetailWithBoldIngredientReferences({
+  text,
+  references,
+  numberFormat,
+}: {
+  text: string;
+  references: IngredientStepReference[];
+  numberFormat: NumberFormat;
+}) {
+  const inlineReferences = references.filter(
+    (reference) => reference.start !== undefined && reference.end !== undefined
+  );
+
+  if (inlineReferences.length === 0) return <>{text}</>;
+
+  const parts: React.ReactNode[] = [];
+  let cursor = 0;
+
+  inlineReferences.forEach((reference) => {
+    const start = reference.start!;
+    const end = reference.end!;
+    if (start > cursor) parts.push(text.slice(cursor, start));
+    parts.push(
+      <IngredientReferenceTooltip
+        key={reference.key}
+        reference={reference}
+        text={text.slice(start, end)}
+        numberFormat={numberFormat}
+      />
+    );
+    cursor = end;
+  });
+
+  if (cursor < text.length) parts.push(text.slice(cursor));
+
+  return <>{parts}</>;
+}
+
+function IngredientReferenceTooltip({
+  reference,
+  text,
+  numberFormat,
+}: {
+  reference: IngredientStepReference;
+  text: string;
+  numberFormat: NumberFormat;
+}) {
+  const amount =
+    reference.usage === "partial"
+      ? "Partial amount"
+      : [displayAmount(reference.ingredient.amount, numberFormat), reference.ingredient.units]
+          .filter(Boolean)
+          .join(" ")
+          .trim() || "Amount not listed";
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          tabIndex={0}
+          className="cursor-help font-semibold text-stone-700 underline decoration-stone-300 decoration-dotted underline-offset-[3px] outline-none transition-colors hover:text-stone-900 focus-visible:text-stone-900 dark:text-stone-100 dark:decoration-stone-500 dark:hover:text-white dark:focus-visible:text-white"
+        >
+          {text}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent
+        side="top"
+        sideOffset={8}
+        hideArrow
+        className="rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:border-stone-600 dark:bg-stone-800 dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)]"
+      >
+        <span className="font-sans text-xs leading-none text-stone-500 dark:text-stone-400">
+          <span className="font-semibold text-stone-700 dark:text-stone-100">{amount}</span>{" "}
+          {reference.ingredient.ingredient}
+        </span>
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+function StepDetailWithInlineIngredientReferences({
+  text,
+  references,
+  inlineAmountColor,
+  numberFormat,
+}: {
+  text: string;
+  references: IngredientStepReference[];
+  inlineAmountColor: string;
+  numberFormat: NumberFormat;
+}) {
+  const inlineReferences = references.filter(
+    (reference) => reference.start !== undefined && reference.end !== undefined
+  );
+
+  if (inlineReferences.length === 0) return <>{text}</>;
+
+  const parts: React.ReactNode[] = [];
+  let cursor = 0;
+
+  inlineReferences.forEach((reference) => {
+    const start = reference.start!;
+    const end = reference.end!;
+    const inlineStart = findInlineReferenceStart(text, reference, numberFormat);
+    if (inlineStart < cursor) return;
+
+    if (inlineStart > cursor) parts.push(text.slice(cursor, inlineStart));
+    parts.push(
+      <InlineIngredientReference
+        key={reference.key}
+        reference={reference}
+        text={text.slice(start, end)}
+        inlineAmountColor={inlineAmountColor}
+        numberFormat={numberFormat}
+      />
+    );
+    cursor = end;
+  });
+
+  if (cursor < text.length) parts.push(text.slice(cursor));
+
+  return <>{parts}</>;
+}
+
+function findInlineReferenceStart(
+  text: string,
+  reference: IngredientStepReference,
+  numberFormat: NumberFormat
+) {
+  const start = reference.start;
+  if (start === undefined || reference.usage === "partial") return start ?? 0;
+
+  const amount = [
+    displayAmount(reference.ingredient.amount, numberFormat),
+    reference.ingredient.units,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+  if (!amount) return start;
+
+  const beforeMatch = text.slice(0, start);
+  const amountPattern = escapeInlineRegExp(amount).replace(/\s+/g, "\\s+");
+  const match = beforeMatch.match(new RegExp(`(?:^|\\s)(${amountPattern})\\s*$`, "i"));
+  if (!match || match.index === undefined) return start;
+
+  return match.index + match[0].indexOf(match[1]);
+}
+
+function escapeInlineRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function InlineIngredientReference({
+  reference,
+  text,
+  inlineAmountColor,
+  numberFormat,
+}: {
+  reference: IngredientStepReference;
+  text: string;
+  inlineAmountColor: string;
+  numberFormat: NumberFormat;
+}) {
+  const amount =
+    reference.usage === "partial"
+      ? "partial"
+      : [displayAmount(reference.ingredient.amount, numberFormat), reference.ingredient.units]
+          .filter(Boolean)
+          .join(" ")
+          .trim();
+
+  return (
+    <span
+      className="mx-0.5 inline-flex translate-y-[-1px] items-baseline gap-1 rounded-lg px-2 py-1 align-middle font-sans leading-none text-stone-500 dark:text-stone-400"
+      style={{ backgroundColor: inlineAmountColor }}
+      title={
+        reference.usage === "partial"
+          ? `${reference.ingredient.ingredient}: partial amount`
+          : reference.ingredient.ingredient
+      }
+    >
+      {amount && (
+        <span className="text-[0.86em] font-semibold text-stone-700 dark:text-stone-100">
+          {amount}
+        </span>
+      )}
+      <span className="font-normal text-stone-500 dark:text-stone-400">{text}</span>
+    </span>
   );
 }

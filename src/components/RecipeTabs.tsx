@@ -13,17 +13,25 @@ interface RecipeTabsProps {
 }
 
 export function RecipeTabs({ recipe }: RecipeTabsProps) {
-  const [tab, setTab] = useState("prep");
+  const [tabState, setTabState] = useState({ recipeKey: recipe.title, tab: "prep" });
+  const tab = tabState.recipeKey === recipe.title ? tabState.tab : "prep";
+  const setTab = useCallback(
+    (nextTab: string) => setTabState({ recipeKey: recipe.title, tab: nextTab }),
+    [recipe.title]
+  );
   useTabScrollMemory(tab);
 
-  const handleStepClick = useCallback((stepNumber: number) => {
-    setTab("cook");
-    requestAnimationFrame(() => {
-      document
-        .getElementById(`step-${stepNumber}`)
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
-  }, []);
+  const handleStepClick = useCallback(
+    (stepNumber: number) => {
+      setTab("cook");
+      requestAnimationFrame(() => {
+        document
+          .getElementById(`step-${stepNumber}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    },
+    [setTab]
+  );
 
   return (
     <Tabs value={tab} onValueChange={setTab} className="flex-1 flex flex-col">
@@ -74,7 +82,7 @@ export function RecipeTabs({ recipe }: RecipeTabsProps) {
             />
           </TabsContent>
           <TabsContent value="cook" className="space-y-0">
-            <StepList steps={recipe.instructions} />
+            <StepList steps={recipe.instructions} ingredientGroups={recipe.ingredients} />
           </TabsContent>
         </div>
       </div>
