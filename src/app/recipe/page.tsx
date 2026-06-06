@@ -7,6 +7,7 @@ import { useUser } from "@/hooks/useUser";
 import { usePreference } from "@/hooks/usePreference";
 import { useIngredientDiff } from "@/hooks/useIngredientDiff";
 import { useTabScrollMemory } from "@/hooks/useTabScrollMemory";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   annotateIngredientGroups,
   convertIngredientGroups,
@@ -39,6 +40,8 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer";
@@ -68,6 +71,7 @@ export default function RecipePage() {
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"prep" | "cook">("prep");
   useTabScrollMemory(activeTab);
+  const isPhoneViewport = useIsMobile();
   const [reportOpen, setReportOpen] = useState(false);
   const [mobileServingsOpen, setMobileServingsOpen] = useState(false);
   const [mobileUnitsOpen, setMobileUnitsOpen] = useState(false);
@@ -381,20 +385,70 @@ export default function RecipePage() {
                 id="mobile-recipe-search-action"
                 className="flex h-9 w-9 items-center justify-center"
               />
-              <button
-                type="button"
-                aria-label={isConverted ? "Change unit display" : `Convert units`}
-                aria-expanded={mobileUnitsOpen}
-                aria-pressed={isConverted}
-                onClick={openMobileUnits}
-                className={`press-scale inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
-                  isConverted || mobileUnitsOpen
-                    ? "bg-[var(--color-blue-light)] text-[var(--color-blue)]"
-                    : "text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:text-stone-500 dark:hover:bg-stone-800 dark:hover:text-stone-300"
-                }`}
-              >
-                <Ruler size={18} weight={isConverted ? "Bold" : undefined} aria-hidden="true" />
-              </button>
+              {isPhoneViewport ? (
+                <button
+                  type="button"
+                  aria-label={isConverted ? "Change unit display" : `Convert units`}
+                  aria-expanded={mobileUnitsOpen}
+                  aria-pressed={isConverted}
+                  onClick={openMobileUnits}
+                  className={`press-scale inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
+                    isConverted || mobileUnitsOpen
+                      ? "bg-[var(--color-blue-light)] text-[var(--color-blue)]"
+                      : "text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:text-stone-500 dark:hover:bg-stone-800 dark:hover:text-stone-300"
+                  }`}
+                >
+                  <Ruler size={18} weight={isConverted ? "Bold" : undefined} aria-hidden="true" />
+                </button>
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label={isConverted ? "Change unit display" : `Convert units`}
+                      aria-pressed={isConverted}
+                      onClick={() => setMobileServingsOpen(false)}
+                      className={`press-scale inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
+                        isConverted
+                          ? "bg-[var(--color-blue-light)] text-[var(--color-blue)]"
+                          : "text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:text-stone-500 dark:hover:bg-stone-800 dark:hover:text-stone-300"
+                      }`}
+                    >
+                      <Ruler
+                        size={18}
+                        weight={isConverted ? "Bold" : undefined}
+                        aria-hidden="true"
+                      />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="w-[244px] rounded-lg border-stone-200 bg-white p-1.5 shadow-[0_10px_24px_rgba(44,42,37,0.12)] dark:border-stone-700 dark:bg-stone-900"
+                  >
+                    <DropdownMenuRadioGroup
+                      value={unitSystem}
+                      onValueChange={(value) =>
+                        setUnitSystem(value as "original" | "metric" | "imperial")
+                      }
+                    >
+                      {unitOptions.map((option, index) => (
+                        <DropdownMenuRadioItem
+                          key={option.value}
+                          value={option.value}
+                          className={`text-stone-700 dark:text-stone-300 ${
+                            index === 0 ? "h-[38px]" : "h-9"
+                          }`}
+                        >
+                          <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                          <span className="shrink-0 text-xs font-normal text-stone-500 dark:text-stone-400">
+                            {option.meta}
+                          </span>
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
               {canAdjustServings && (
                 <button
                   type="button"
