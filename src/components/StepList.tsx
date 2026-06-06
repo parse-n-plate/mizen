@@ -292,7 +292,9 @@ function StepRow({
         {/* Content */}
         <div className="flex-1 min-w-0 space-y-2.5">
           {step.title && (
-            <h4 className="font-sans text-body-md-sm font-medium text-heading">{step.title}</h4>
+            <h4 className="font-sans text-body-md-sm font-medium text-heading">
+              <span className="tabular-nums">{index + 1}.</span> {step.title}
+            </h4>
           )}
           <p className="font-sans text-base leading-relaxed text-stone-600 dark:text-stone-300">
             {displayText(step.detail, numberFormat)}
