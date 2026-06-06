@@ -7,6 +7,8 @@ import { DesignSystemHashRedirect } from "./hash-redirect";
 import { DesignSystemNavActions } from "./nav-actions";
 import { DesignSystemSidebar } from "./sidebar";
 
+const designSystemSearchEnabled = process.env.NEXT_PUBLIC_DESIGN_SYSTEM_SEARCH_ENABLED === "true";
+
 export default function DesignSystemLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="landing-scroll min-h-screen bg-[var(--color-background-cream)] text-stone-900 dark:bg-stone-950 dark:text-stone-100">
@@ -30,17 +32,19 @@ export default function DesignSystemLayout({ children }: { children: React.React
               <DesignSystemAreaSwitcher />
             </div>
           </div>
-          <div className="hidden w-full max-w-[240px] items-center md:flex">
-            <div className="relative w-full">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-              <Input
-                readOnly
-                value=""
-                placeholder="Search docs..."
-                className="h-8 rounded-lg bg-white pl-9 text-sm dark:bg-stone-900"
-              />
+          {designSystemSearchEnabled && (
+            <div className="hidden w-full max-w-[240px] items-center md:flex">
+              <div className="relative w-full">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+                <Input
+                  readOnly
+                  value=""
+                  placeholder="Search docs..."
+                  className="h-8 rounded-lg bg-white pl-9 text-sm dark:bg-stone-900"
+                />
+              </div>
             </div>
-          </div>
+          )}
           <DesignSystemNavActions />
         </nav>
       </header>
