@@ -25,9 +25,9 @@ export function PrepSection({
   onStepClick,
   enableMobileSearchPortal = true,
 }: PrepSectionProps) {
-  const tips = steps
-    .filter((s) => s.tips)
-    .map((s, i) => ({ tip: s.tips!, stepTitle: s.title, index: i }));
+  const tips = steps.flatMap((s, idx) =>
+    s.tips ? [{ tip: s.tips, stepTitle: s.title, stepNumber: idx + 1 }] : []
+  );
 
   const seen = new Set<string>();
   const uniqueTips = tips.filter((t) => {
@@ -39,7 +39,7 @@ export function PrepSection({
 
   return (
     <div className="space-y-6">
-      {uniqueTips.length > 0 && <TipsCallout tips={uniqueTips} />}
+      {uniqueTips.length > 0 && <TipsCallout tips={uniqueTips} onStepClick={onStepClick} />}
 
       <div>
         <IngredientList
@@ -59,7 +59,13 @@ export function PrepSection({
   );
 }
 
-function TipsCallout({ tips }: { tips: { tip: string; stepTitle: string; index: number }[] }) {
+function TipsCallout({
+  tips,
+  onStepClick,
+}: {
+  tips: { tip: string; stepTitle: string; stepNumber: number }[];
+  onStepClick?: (stepNumber: number) => void;
+}) {
   const [collapsed, setCollapsed] = useState(true);
 
   return (
@@ -110,13 +116,25 @@ function TipsCallout({ tips }: { tips: { tip: string; stepTitle: string; index: 
         <div className="overflow-hidden">
           <div className="px-3.5 pb-3 space-y-2">
             {tips.map((t) => (
-              <div key={t.index} className="flex gap-2.5">
+              <div key={t.stepNumber} className="flex gap-2.5">
                 <span className="font-sans text-xs text-amber-400 dark:text-amber-600 flex-shrink-0 pt-0.5">
                   &bull;
                 </span>
-                <p className="font-sans text-base text-amber-900/80 dark:text-amber-200/80 leading-relaxed">
-                  {t.tip}
-                </p>
+                <div className="flex-1 min-w-0">
+                  {onStepClick && (
+                    <button
+                      type="button"
+                      onClick={() => onStepClick(t.stepNumber)}
+                      className="font-sans text-xs font-medium text-amber-600/70 dark:text-amber-400/60 mb-0.5 transition-none hover:text-amber-700 dark:hover:text-amber-300 cursor-pointer"
+                    >
+                      Step {t.stepNumber}
+                      {t.stepTitle ? ` — ${t.stepTitle}` : ""}
+                    </button>
+                  )}
+                  <p className="font-sans text-base text-amber-900/80 dark:text-amber-200/80 leading-relaxed">
+                    {t.tip}
+                  </p>
+                </div>
               </div>
             ))}
           </div>

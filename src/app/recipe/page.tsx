@@ -7,6 +7,7 @@ import { useUser } from "@/hooks/useUser";
 import { usePreference } from "@/hooks/usePreference";
 import { useIngredientDiff } from "@/hooks/useIngredientDiff";
 import { useTabScrollMemory } from "@/hooks/useTabScrollMemory";
+import { useHorizontalSwipe } from "@/hooks/useHorizontalSwipe";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   annotateIngredientGroups,
@@ -122,6 +123,10 @@ export default function RecipePage() {
         ?.scrollIntoView({ behavior: "smooth", block: "center" });
     });
   }, []);
+
+  const swipeToCook = useCallback(() => setActiveTab("cook"), []);
+  const swipeToPrep = useCallback(() => setActiveTab("prep"), []);
+  const swipeHandlers = useHorizontalSwipe(swipeToCook, swipeToPrep);
 
   useEffect(() => {
     setServings(getPreferredServings(recipe?.servings, defaultServings));
@@ -565,6 +570,7 @@ export default function RecipePage() {
           {/* Content card */}
           <div
             className={`md:bg-white md:dark:bg-stone-900 md:rounded-b-lg ${activeTab === "prep" ? "md:rounded-tr-lg" : "md:rounded-t-lg"} md:border md:border-stone-200 md:dark:border-stone-700 flex-1`}
+            {...swipeHandlers}
           >
             <div className="md:px-6 md:pt-5 pb-[calc(7.25rem+env(safe-area-inset-bottom)+1rem)] md:pb-6">
               {/* Unit conversion banner */}
