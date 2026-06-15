@@ -499,7 +499,8 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
             onSubmit={handleSubmit}
             className="space-y-4"
           >
-            {process.env.NODE_ENV === "development" && (
+            {(process.env.NODE_ENV === "development" ||
+              process.env.NEXT_PUBLIC_VERCEL_ENV === "preview") && (
               <Button
                 type="button"
                 variant="outline"
@@ -508,7 +509,7 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
                 disabled={loading}
               >
                 <Login className="h-4 w-4" />
-                Dev sign in (development only)
+                Dev sign in
               </Button>
             )}
 

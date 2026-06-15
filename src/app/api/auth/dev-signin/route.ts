@@ -1,18 +1,20 @@
 // Dev-only sign-in shortcut.
 //
-// Gated on NODE_ENV === "development" — returns 404 in any other environment
-// (preview, staging, production). `next build` / `next start` and Vercel set
-// NODE_ENV="production" on all deploys, so this route is unreachable there.
+// Allowed in local development (NODE_ENV="development") and Vercel preview
+// deployments (VERCEL_ENV="preview"). Blocked in production.
 //
-// Requires DEV_AUTH_EMAIL and DEV_AUTH_PASSWORD in .env.local, pointing to a
-// real Supabase user you've created yourself. No service-role keys, no fake
-// sessions — just an automated call to the normal signInWithPassword flow.
+// Requires DEV_AUTH_EMAIL and DEV_AUTH_PASSWORD — in .env.local for local dev,
+// or set as Vercel environment variables scoped to "Preview" for staging.
+// No service-role keys, no fake sessions — just signInWithPassword.
 
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+const isDevAllowed =
+  process.env.NODE_ENV === "development" || process.env.VERCEL_ENV === "preview";
+
 export async function POST() {
-  if (process.env.NODE_ENV !== "development") {
+  if (!isDevAllowed) {
     return new NextResponse(null, { status: 404 });
   }
 
