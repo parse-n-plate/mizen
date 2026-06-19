@@ -72,6 +72,8 @@ export function IngredientList({
     return () => cancelAnimationFrame(frame);
   }, [enableMobileSearchPortal]);
 
+  const mobileSearchTarget = enableMobileSearchPortal ? mobileSearchContainer : null;
+
   useEffect(() => {
     if (!isSearchOpen) return;
     const isMobileViewport = window.matchMedia("(max-width: 767px)").matches;
@@ -203,10 +205,10 @@ export function IngredientList({
 
   return (
     <div className="space-y-6">
-      {mobileSearchContainer &&
+      {mobileSearchTarget &&
         createPortal(
           <div className="md:hidden">{searchControl("mobile")}</div>,
-          mobileSearchContainer
+          mobileSearchTarget
         )}
 
       <div className="flex items-center justify-between gap-4 md:pl-3 mb-4">

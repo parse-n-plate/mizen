@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { RecipeHeader } from "@/components/RecipeHeader";
 import { RecipeDesktopTabsBar } from "@/components/RecipeDesktopTabsBar";
+import { RecipeSwipeView } from "@/components/RecipeSwipeView";
 import { ServingsAdjuster } from "@/components/ServingsAdjuster";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
@@ -633,8 +634,11 @@ export default function RecipePage() {
                 </div>
               )}
 
-              {activeTab === "prep" ? (
-                <div key="prep" className="tab-content-animate">
+              <RecipeSwipeView
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                enableSwipe={isPhoneViewport}
+                prep={
                   <PrepSection
                     ingredients={scaledIngredients}
                     steps={displayedInstructions}
@@ -642,13 +646,16 @@ export default function RecipePage() {
                     diffMap={showDiff ? diffMap : undefined}
                     diffGeneration={diffGeneration}
                     onStepClick={handleStepClick}
+                    enableMobileSearchPortal={activeTab === "prep"}
                   />
-                </div>
-              ) : (
-                <div key="cook" className="tab-content-animate">
-                  <StepList steps={displayedInstructions} />
-                </div>
-              )}
+                }
+                cook={
+                  <StepList
+                    steps={displayedInstructions}
+                    enableMobileSearchPortal={activeTab === "cook"}
+                  />
+                }
+              />
             </div>
           </div>
         </div>

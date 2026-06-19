@@ -77,6 +77,8 @@ export function StepList({ steps, enableMobileSearchPortal = true }: StepListPro
     return () => cancelAnimationFrame(frame);
   }, [enableMobileSearchPortal]);
 
+  const mobileSearchTarget = enableMobileSearchPortal ? mobileSearchContainer : null;
+
   useEffect(() => {
     if (!isSearchOpen) return;
     const isMobileViewport = window.matchMedia("(max-width: 767px)").matches;
@@ -173,10 +175,10 @@ export function StepList({ steps, enableMobileSearchPortal = true }: StepListPro
 
   return (
     <div>
-      {mobileSearchContainer &&
+      {mobileSearchTarget &&
         createPortal(
           <div className="md:hidden">{searchControl("mobile")}</div>,
-          mobileSearchContainer
+          mobileSearchTarget
         )}
 
       <div className="flex items-center justify-between gap-4 mb-3 md:pl-3">
@@ -205,7 +207,7 @@ export function StepList({ steps, enableMobileSearchPortal = true }: StepListPro
               </TooltipContent>
             </Tooltip>
           )}
-          <div className={mobileSearchContainer ? "hidden md:block" : ""}>
+          <div className={mobileSearchTarget ? "hidden md:block" : ""}>
             {searchControl("desktop")}
           </div>
         </div>
