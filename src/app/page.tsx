@@ -25,6 +25,16 @@ const SOURCES = [
   { label: "Photos", shortLabel: "Photos", icon: "camera", hint: "Snap a photo of any recipe" },
 ] as const;
 
+const CHATGPT_PASTED_TEXT = `Simple Homemade Chocolate
+
+1/2 cup cocoa powder
+1/4 cup melted coconut oil or cocoa butter
+2-4 tbsp honey, maple syrup, or sugar (adjust to taste)
+1/2 tsp vanilla extract
+pinch of salt
+
+Melt the coconut oil or cocoa butter until fully liquid. Stir in the cocoa powder until smooth and no lumps remain. Add the sweetener, vanilla, and a pinch of salt, then mix until fully combined — taste and adjust sweetness if needed. Pour into a mold or small lined container and refrigerate for 1–2 hours, until solid.`;
+
 const LANDING_COPY = {
   sub: "One place for every recipe you find online. Clean ingredients, clear steps.",
   sourceLabel: "Bring recipes from",
@@ -813,7 +823,8 @@ export function WaitlistLanding() {
                 <WaitlistRecipePreview
                   key={displayedSource}
                   recipe={EXAMPLE_RECIPES[displayedSource]}
-                  sourceType={(["url", "url", "photo"] as const)[displayedSource]}
+                  sourceType={(["url", "text", "photo"] as const)[displayedSource]}
+                  pastedText={displayedSource === 1 ? CHATGPT_PASTED_TEXT : undefined}
                 />
               </div>
             </div>
