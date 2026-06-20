@@ -7,8 +7,75 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  return <DialogPrimitive.Root data-slot="dialog" {...props} />;
+function Dialog({
+  open,
+  onOpenChange,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  // On this app the scroll container is <html> (globals.css sets html{overflow:hidden} and
+  // re-enables it with html:has(.landing-scroll){overflow:auto}). When a dialog opens, Radix's
+  // react-remove-scroll locks the <body> with overflow:hidden — which collapses the <html>
+  // scroll area and snaps the page to the top. We can't keep the background scrolled while it's
+  // locked (it's covered by the overlay anyway), but we must restore the original position when
+  // the dialog closes. We track scrollY continuously so we always have the pre-lock value,
+  // regardless of whether the dialog is opened via a trigger or a controlled `open` prop (Radix
+  // only fires onOpenChange for its own interactions, never for external prop changes).
+  const scrollPositionRef = React.useRef(0);
+  const wasOpenRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleScroll = () => {
+      if (!document.body.hasAttribute("data-scroll-locked")) {
+        scrollPositionRef.current = window.scrollY;
+      }
+    };
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const restoreScroll = React.useCallback(() => {
+    if (typeof window === "undefined") return;
+    // The scroll lock isn't removed until the dialog's exit animation finishes, so we can't
+    // restore immediately — while body{overflow:hidden} is active the <html> scroll area is
+    // collapsed and scrollTo clamps to 0. Wait (bounded) for data-scroll-locked to clear.
+    const target = scrollPositionRef.current;
+    let attempts = 0;
+    const tryRestore = () => {
+      if (!document.body.hasAttribute("data-scroll-locked")) {
+        window.scrollTo({ top: target });
+      } else if (attempts++ < 60) {
+        window.requestAnimationFrame(tryRestore);
+      }
+    };
+    window.requestAnimationFrame(tryRestore);
+  }, []);
+
+  // Controlled dialogs (e.g. BetaAuthModal) change via the `open` prop, which never triggers
+  // onOpenChange — restore here when the prop transitions from open to closed.
+  React.useEffect(() => {
+    if (typeof open !== "boolean") return;
+    if (wasOpenRef.current && !open) restoreScroll();
+    wasOpenRef.current = open;
+  }, [open, restoreScroll]);
+
+  const handleOpenChange = React.useCallback(
+    (next: boolean) => {
+      if (!next) restoreScroll();
+      onOpenChange?.(next);
+    },
+    [onOpenChange, restoreScroll]
+  );
+
+  return (
+    <DialogPrimitive.Root
+      data-slot="dialog"
+      open={open}
+      onOpenChange={handleOpenChange}
+      {...props}
+    />
+  );
 }
 
 function DialogTrigger({ ...props }: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
@@ -70,7 +137,7 @@ function DialogContent({
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
-            className="outline-none focus-visible:border-ring focus-visible:ring-ring/50 data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs border border-transparent opacity-70 transition-opacity hover:opacity-100 focus-visible:ring-[3px] disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+            className="ring-offset-background focus-visible:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
           >
             <XIcon />
             <span className="sr-only">Close</span>

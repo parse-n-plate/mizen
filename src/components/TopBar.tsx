@@ -195,7 +195,7 @@ export function TopBar() {
                           className="fixed inset-0 z-30"
                           onClick={() => setRecipeSwitcherOpen(false)}
                         />
-                        <div className="animate-in fade-in-0 zoom-in-95 slide-in-from-top-1 duration-150 absolute left-0 top-full z-40 mt-2 w-[min(16rem,calc(100vw-3rem))] rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 py-1 shadow-lg">
+                        <div className="popover-animate absolute left-0 top-full z-40 mt-2 w-[min(16rem,calc(100vw-3rem))] rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 py-1 shadow-lg">
                           <p className="px-3 py-1.5 font-sans text-xs font-medium text-stone-400 dark:text-stone-500">
                             Recent recipes
                           </p>
@@ -315,7 +315,7 @@ export function TopBar() {
                     {quickAddOpen && (
                       <>
                         <div className="fixed inset-0 z-30" onClick={closeQuickAdd} />
-                        <div className="animate-in fade-in-0 zoom-in-95 slide-in-from-top-1 duration-150 absolute right-0 top-full z-40 mt-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-lg overflow-hidden">
+                        <div className="popover-animate absolute right-0 top-full z-40 mt-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-lg overflow-hidden">
                           {quickAddMode === "menu" ? (
                             <div className="py-1 w-44">
                               <p className="px-3 py-1.5 font-sans text-xs font-medium text-stone-400 dark:text-stone-500">
@@ -366,7 +366,7 @@ export function TopBar() {
                             </div>
                           ) : (
                             <div className="p-2 w-72">
-                              <div className="flex items-center gap-2 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50 px-2.5 py-1.5 focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 transition-[border-color,box-shadow]">
+                              <div className="flex items-center gap-2 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50 px-2.5 py-1.5 focus-within:border-stone-400 dark:focus-within:border-stone-500 transition-colors">
                                 <svg
                                   className="h-3.5 w-3.5 flex-shrink-0 text-stone-400 dark:text-stone-500"
                                   xmlns="http://www.w3.org/2000/svg"
@@ -466,7 +466,7 @@ export function TopBar() {
                   {menuOpen && user && (
                     <>
                       <div className="fixed inset-0 z-30" onClick={() => setMenuOpen(false)} />
-                      <div className="animate-in fade-in-0 zoom-in-95 slide-in-from-top-1 duration-150 absolute right-0 top-full z-40 mt-2 w-48 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 py-1 shadow-lg">
+                      <div className="popover-animate absolute right-0 top-full z-40 mt-2 w-48 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 py-1 shadow-lg">
                         <div className="border-b border-stone-100 dark:border-stone-800 px-3 py-2">
                           <p className="truncate font-sans text-sm font-medium text-stone-900 dark:text-stone-100">
                             {name}

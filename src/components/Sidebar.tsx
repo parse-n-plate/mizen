@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { type FormEvent, useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -12,7 +12,7 @@ import { detectCollectionUrl } from "@/utils/urlPatterns";
 import { SettingsModal } from "@/components/SettingsModal";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { ReleaseNotice } from "@/components/ReleaseNotice";
-import { FeedbackDialog } from "@/components/FeedbackDialog";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,9 +21,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { feedbackFeaturesEnabled } from "@/lib/features";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { createClient } from "@/lib/supabase/client";
+import { favoriteRecipes } from "@/lib/favorite-recipes";
 import HomeSmile from "@solar-icons/react/csr/ui/HomeSmile";
 import BookMinimalistic from "@solar-icons/react/csr/school/BookMinimalistic";
 import Settings from "@solar-icons/react/csr/settings/Settings";
@@ -37,6 +37,17 @@ interface SidebarProps {
   onToggle: () => void;
 }
 
+type SidebarNavItem = {
+  href?: string;
+  onClick?: () => void;
+  label: string;
+  icon?: typeof HomeSmile;
+  avatarSrc?: string;
+  avatarAlt?: string;
+  active: boolean;
+  show?: boolean;
+};
+
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { user, loading: authLoading } = useUser();
   const pathname = usePathname();
@@ -45,8 +56,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { setRecipe } = useRecipe();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [recipeCount, setRecipeCount] = useState<number | null>(null);
+  const [waitlistEmail, setWaitlistEmail] = useState("");
+  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
+  const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
+  const [waitlistAlreadyJoined, setWaitlistAlreadyJoined] = useState(false);
 
   // Quick-add state
   const [quickAddOpen, setQuickAddOpen] = useState(false);
@@ -92,6 +106,39 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       toast.error("Something went wrong. Please try again.");
     } finally {
       setQuickAddLoading(false);
+    }
+  };
+
+  const handleSidebarWaitlistSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!waitlistEmail.trim() || waitlistSubmitting || waitlistSubmitted || waitlistAlreadyJoined) {
+      return;
+    }
+
+    setWaitlistSubmitting(true);
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: waitlistEmail.trim(), source: "Sidebar" }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || "Something went wrong");
+        return;
+      }
+
+      if (data.message === "Already on the waitlist") {
+        setWaitlistAlreadyJoined(true);
+      } else {
+        setWaitlistSubmitted(true);
+      }
+      setWaitlistEmail("");
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setWaitlistSubmitting(false);
     }
   };
 
@@ -146,8 +193,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   }, [user]);
 
   const name = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Guest";
+  const showStaticRecipeLinks = pathname.startsWith("/recipes/");
 
-  const navItems = [
+  const navItems: SidebarNavItem[] = [
     {
       href: "/",
       label: "Home",
@@ -159,7 +207,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       label: "Cookbook",
       icon: BookMinimalistic,
       active: pathname === "/cookbook",
-      show: isSupabaseConfigured,
+      show: user ? isSupabaseConfigured : true,
+      onClick: user ? undefined : () => setAuthOpen(true),
     },
   ];
 
@@ -219,35 +268,95 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           {/* Nav items */}
           <nav className="flex flex-col gap-px">
             {navItems
-              .filter((item) => item.show !== false)
+              .filter((item) => !("show" in item) || item.show !== false)
               .map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-2.5 rounded-lg px-2.5 py-2 font-sans text-sm transition-none",
-                      item.active
-                        ? "bg-stone-200/60 dark:bg-stone-700/35 text-stone-900 dark:text-stone-100 font-medium"
-                        : "text-stone-500 dark:text-stone-400 hover:bg-stone-200/60 dark:hover:bg-stone-700/35 hover:text-stone-700 dark:hover:text-stone-300"
-                    )}
-                  >
-                    <Icon
-                      size={17}
-                      weight={item.active ? "Bold" : undefined}
-                      className="shrink-0"
-                    />
+                const className = cn(
+                  "flex items-center gap-2.5 rounded-lg px-2.5 py-2 font-sans text-sm transition-none",
+                  item.active
+                    ? "bg-stone-200/60 dark:bg-stone-700/35 text-stone-900 dark:text-stone-100 font-medium"
+                    : "text-stone-500 dark:text-stone-400 hover:bg-stone-200/60 dark:hover:bg-stone-700/35 hover:text-stone-700 dark:hover:text-stone-300"
+                );
+                const content = (
+                  <>
+                    {item.avatarSrc ? (
+                      <Image
+                        src={item.avatarSrc}
+                        alt={item.avatarAlt ?? ""}
+                        width={18}
+                        height={18}
+                        className="h-[18px] w-[18px] shrink-0 rounded-full object-cover"
+                      />
+                    ) : item.icon ? (
+                      <item.icon
+                        size={17}
+                        weight={item.active ? "Bold" : undefined}
+                        className="shrink-0"
+                      />
+                    ) : null}
                     <span className="flex-1">{item.label}</span>
-                    {item.label === "Cookbook" && recipeCount != null && (
+                    {item.label === "Cookbook" && user && recipeCount != null && (
                       <span className="font-sans text-xs text-stone-400 dark:text-stone-500">
                         {recipeCount}
                       </span>
                     )}
+                  </>
+                );
+
+                return item.onClick ? (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={item.onClick}
+                    className={cn(className, "w-full text-left")}
+                  >
+                    {content}
+                  </button>
+                ) : (
+                  <Link key={item.href ?? item.label} href={item.href ?? "/"} className={className}>
+                    {content}
                   </Link>
                 );
               })}
           </nav>
+
+          {showStaticRecipeLinks && (
+            <section aria-labelledby="static-recipes-heading" className="flex flex-col gap-2">
+              <h2
+                id="static-recipes-heading"
+                className="px-2.5 font-sans text-xs font-medium text-stone-400 dark:text-stone-500"
+              >
+                Our favorite recipes.
+              </h2>
+              <div className="flex flex-col gap-px">
+                {favoriteRecipes.map((recipe) => {
+                  const active = pathname === recipe.href;
+
+                  return (
+                    <Link
+                      key={recipe.href}
+                      href={recipe.href}
+                      className={cn(
+                        "flex items-center gap-2.5 rounded-lg px-2.5 py-2 font-sans text-sm transition-none",
+                        active
+                          ? "bg-stone-200/60 font-medium text-stone-900 dark:bg-stone-700/35 dark:text-stone-100"
+                          : "text-stone-500 hover:bg-stone-200/60 hover:text-stone-700 dark:text-stone-400 dark:hover:bg-stone-700/35 dark:hover:text-stone-300"
+                      )}
+                    >
+                      <Image
+                        src={`https://www.google.com/s2/favicons?domain=${recipe.domain}&sz=32`}
+                        alt=""
+                        width={18}
+                        height={18}
+                        unoptimized
+                        className="h-[18px] w-[18px] shrink-0 rounded-sm"
+                      />
+                      <span className="min-w-0 flex-1 truncate">{recipe.title}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
           {/* Quick-add recipe */}
           {user && (
@@ -304,7 +413,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               {quickAddOpen && (
                 <>
                   <div className="fixed inset-0 z-30" onClick={closeQuickAdd} />
-                  <div className="animate-in fade-in-0 zoom-in-95 slide-in-from-top-1 duration-150 absolute left-0 top-full z-40 mt-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-lg overflow-hidden">
+                  <div className="popover-animate absolute left-0 top-full z-40 mt-2 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-lg overflow-hidden">
                     {quickAddMode === "menu" ? (
                       <div className="py-1 w-44">
                         <p className="px-3 py-1.5 font-sans text-xs font-medium text-stone-400 dark:text-stone-500">
@@ -355,7 +464,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                       </div>
                     ) : (
                       <div className="p-2 w-72">
-                        <div className="flex items-center gap-2 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50 px-2.5 py-1.5 focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 transition-[border-color,box-shadow]">
+                        <div className="flex items-center gap-2 rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800/50 px-2.5 py-1.5 focus-within:border-stone-400 dark:focus-within:border-stone-500 transition-colors">
                           <svg
                             className="h-3.5 w-3.5 flex-shrink-0 text-stone-400 dark:text-stone-500"
                             xmlns="http://www.w3.org/2000/svg"
@@ -421,17 +530,28 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
         {/* Bottom section */}
         <div className="flex flex-col px-4 pb-6 w-[240px]">
-          {feedbackFeaturesEnabled && (
+          {!authLoading && !user && (
             <button
-              onClick={() => setFeedbackOpen(true)}
-              className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 font-sans text-sm text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 hover:text-stone-700 dark:hover:text-stone-300 transition-none"
+              type="button"
+              onClick={() => setAuthOpen(true)}
+              className="flex min-h-10 w-full items-center justify-between rounded-xl border border-stone-200 bg-white px-3 py-2 text-left font-sans text-sm text-stone-900 transition-colors hover:border-stone-300 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:hover:border-stone-600 dark:hover:bg-stone-800"
             >
-              <ChatRoundDots size={17} className="shrink-0" />
-              Feedback
+              <span>Welcome to Beta</span>
+              <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-300">
+                New
+              </span>
             </button>
           )}
 
-          {user && <ReleaseNotice compact className="mt-2" />}
+          {user && <ReleaseNotice compact />}
+
+          <a
+            href="mailto:hello@mizen.recipes?subject=Mizen%20feedback"
+            className="mt-4 flex items-center gap-2.5 rounded-lg px-2.5 py-2 font-sans text-sm text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 hover:text-stone-700 dark:hover:text-stone-300 transition-none first:mt-0"
+          >
+            <ChatRoundDots size={17} className="shrink-0" />
+            Share feedback
+          </a>
 
           {user && (
             <DropdownMenu>
@@ -493,14 +613,14 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />
                 <DropdownMenuItem
                   onSelect={() => setSettingsOpen(true)}
-                  className="font-sans text-foreground focus:bg-accent focus:text-accent-foreground"
+                  className="font-sans text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                 >
                   Settings
                   <Settings className="ml-auto size-4" />
                 </DropdownMenuItem>
                 <form action="/api/auth/signout" method="post">
                   <DropdownMenuItem
-                    className="font-sans text-foreground focus:bg-accent focus:text-accent-foreground"
+                    className="font-sans text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
                     asChild
                   >
                     <button type="submit" className="flex w-full items-center gap-2 text-left">
@@ -513,22 +633,67 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             </DropdownMenu>
           )}
 
-          {!authLoading && !user && isSupabaseConfigured && (
-            <button
-              onClick={() => setAuthOpen(true)}
-              className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 mt-2 font-sans text-sm font-medium text-white bg-stone-900 dark:bg-stone-100 dark:text-stone-900 hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors"
-            >
-              Sign in
-            </button>
+          {!authLoading && !user && (
+            <div className="mt-3 flex flex-col">
+              <form
+                onSubmit={handleSidebarWaitlistSubmit}
+                className="rounded-xl border border-stone-200 bg-white p-3 dark:border-stone-700 dark:bg-stone-900"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-full bg-[#FAFAF9] ring-1 ring-stone-200 dark:bg-stone-800 dark:ring-stone-700">
+                    <Image
+                      src="/apple-touch-icon.png"
+                      alt=""
+                      width={28}
+                      height={28}
+                      className="h-7 w-7 scale-90 object-cover"
+                      aria-hidden
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate font-sans text-sm font-medium text-stone-900 dark:text-stone-100">
+                      Join waitlist
+                    </p>
+                    <p className="truncate font-sans text-xs text-stone-500 dark:text-stone-400">
+                      Get early access
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-3 grid gap-2">
+                  <input
+                    type="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    value={waitlistEmail}
+                    onChange={(event) => setWaitlistEmail(event.target.value)}
+                    required={!(waitlistSubmitted || waitlistAlreadyJoined)}
+                    disabled={waitlistSubmitted || waitlistAlreadyJoined}
+                    className="h-9 min-w-0 rounded-lg border border-stone-200 bg-[#FAFAF9] px-3 font-sans text-sm text-stone-800 outline-none transition-colors placeholder:text-stone-400 focus:border-[#18A1F7] focus:ring-2 focus:ring-[#18A1F7]/20 disabled:opacity-70 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:placeholder:text-stone-500"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={waitlistSubmitting || waitlistSubmitted || waitlistAlreadyJoined}
+                    variant="primary-blue"
+                    className="h-9 w-full rounded-lg px-3 font-sans text-sm font-semibold"
+                  >
+                    {waitlistSubmitted || waitlistAlreadyJoined
+                      ? waitlistAlreadyJoined
+                        ? "Already joined"
+                        : "You're on the list"
+                      : waitlistSubmitting
+                        ? "Joining..."
+                        : "Join waitlist"}
+                  </Button>
+                </div>
+              </form>
+            </div>
           )}
         </div>
       </aside>
 
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
       <BetaAuthModal open={authOpen} onOpenChange={setAuthOpen} />
-      {feedbackFeaturesEnabled && (
-        <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} showTrigger={false} />
-      )}
     </>
   );
 }

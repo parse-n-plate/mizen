@@ -9,7 +9,6 @@ import { ImageLightbox } from "@/components/ImageLightbox";
 import { scaleIngredients } from "@/utils/ingredientScaler";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
-import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 type SourceType = "url" | "photo" | "text";
@@ -255,12 +254,16 @@ interface WaitlistRecipePreviewProps {
   recipe: ParsedRecipe;
   sourceType?: SourceType;
   pastedText?: string;
+  disableScroll?: boolean;
+  showSourceAttachment?: boolean;
 }
 
 export function WaitlistRecipePreview({
   recipe,
   sourceType,
   pastedText,
+  disableScroll = false,
+  showSourceAttachment = true,
 }: WaitlistRecipePreviewProps) {
   const isDesktop = useMediaQuery("(min-width: 640px)");
   const originalServings = recipe.servings ?? 1;
@@ -290,52 +293,50 @@ export function WaitlistRecipePreview({
           />
         </div>
 
-        {/* Source attachment */}
-        <div className="mb-4 -mx-1">
-          {sourceType === "url" && recipe.sourceUrl && (
-            <UrlAttachment url={recipe.sourceUrl} onClick={() => setUrlOpen(true)} />
-          )}
-          {sourceType === "photo" && recipe.imageUrl && (
-            <button
-              onClick={(e) => {
-                (e.currentTarget as HTMLElement).blur();
-                const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
-                setLightbox({
-                  rect: img.getBoundingClientRect(),
-                  el: img as HTMLElement,
-                });
-              }}
-              className="group flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors cursor-zoom-in"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={recipe.imageUrl}
-                alt={recipe.title}
-                className="w-12 h-12 rounded-lg object-cover border border-stone-200 dark:border-stone-700 group-hover:border-stone-300 dark:group-hover:border-stone-600 transition-colors"
-                draggable={false}
+        {showSourceAttachment && (
+          <div className="mb-4 -mx-1 flex h-[60px] items-center">
+            {sourceType === "url" && recipe.sourceUrl && (
+              <UrlAttachment url={recipe.sourceUrl} onClick={() => setUrlOpen(true)} />
+            )}
+            {sourceType === "photo" && recipe.imageUrl && (
+              <button
+                onClick={(e) => {
+                  (e.currentTarget as HTMLElement).blur();
+                  const img = e.currentTarget.querySelector("img") ?? e.currentTarget;
+                  setLightbox({
+                    rect: img.getBoundingClientRect(),
+                    el: img as HTMLElement,
+                  });
+                }}
+                className="group flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-stone-50 dark:hover:bg-stone-800/50 transition-colors cursor-zoom-in"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={recipe.imageUrl}
+                  alt={recipe.title}
+                  className="w-12 h-12 rounded-lg object-cover border border-stone-200 dark:border-stone-700 group-hover:border-stone-300 dark:group-hover:border-stone-600 transition-colors"
+                  draggable={false}
+                />
+                <span className="font-sans text-sm text-stone-400 dark:text-stone-500 group-hover:text-stone-500 dark:group-hover:text-stone-400 transition-colors">
+                  1 photo
+                </span>
+              </button>
+            )}
+            {sourceType === "text" && (
+              <TextAttachment
+                onClick={() => setTextOpen(true)}
+                charCount={pastedTextContent.length}
               />
-              <span className="font-sans text-sm text-stone-400 dark:text-stone-500 group-hover:text-stone-500 dark:group-hover:text-stone-400 transition-colors">
-                1 photo
-              </span>
-            </button>
-          )}
-          {sourceType === "text" && (
-            <TextAttachment
-              onClick={() => setTextOpen(true)}
-              charCount={pastedTextContent.length}
-            />
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Tabs */}
       <div className="flex items-end w-full relative gap-0 px-5 sm:px-8 border-b border-stone-200 dark:border-stone-700">
-        <Button
-          type="button"
-          variant={activeTab === "prep" ? "secondary" : "ghost"}
-          data-recipe-tab-trigger
+        <button
           onClick={() => setActiveTab("prep")}
-          className={`h-12 rounded-b-none px-5 text-[15px] sm:px-10 ${
+          className={`folder-tab-trigger press-scale h-12 px-5 sm:px-10 font-sans text-[15px] ${
             activeTab === "prep" ? "font-semibold" : "font-medium"
           }`}
           data-state={activeTab === "prep" ? "active" : "inactive"}
@@ -350,18 +351,15 @@ export function WaitlistRecipePreview({
           />
           Prep
           {recipe.prepTimeMinutes ? (
-            <span className="ml-1.5 font-normal text-muted-foreground">
+            <span className="font-normal text-stone-400 dark:text-stone-500 ml-1.5">
               {formatTime(recipe.prepTimeMinutes)}
             </span>
           ) : null}
-        </Button>
+        </button>
         {hasInstructions && (
-          <Button
-            type="button"
-            variant={activeTab === "cook" ? "secondary" : "ghost"}
-            data-recipe-tab-trigger
+          <button
             onClick={() => setActiveTab("cook")}
-            className={`h-12 rounded-b-none px-5 text-[15px] sm:px-10 ${
+            className={`folder-tab-trigger press-scale h-12 px-5 sm:px-10 font-sans text-[15px] ${
               activeTab === "cook" ? "font-semibold" : "font-medium"
             }`}
             data-state={activeTab === "cook" ? "active" : "inactive"}
@@ -376,16 +374,20 @@ export function WaitlistRecipePreview({
             />
             Cook
             {recipe.cookTimeMinutes ? (
-              <span className="ml-1.5 font-normal text-muted-foreground">
+              <span className="font-normal text-stone-400 dark:text-stone-500 ml-1.5">
                 {formatTime(recipe.cookTimeMinutes)}
               </span>
             ) : null}
-          </Button>
+          </button>
         )}
       </div>
 
-      {/* Tab content — scrollable */}
-      <div className="flex-1 overflow-y-auto bg-white dark:bg-stone-900">
+      {/* Tab content */}
+      <div
+        className={`flex-1 bg-white dark:bg-stone-900 ${
+          disableScroll ? "overflow-hidden" : "overflow-y-auto"
+        }`}
+      >
         <div className="px-5 sm:px-8 pt-5 pb-6">
           {activeTab === "prep" ? (
             <div key="prep" className="tab-content-animate">

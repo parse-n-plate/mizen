@@ -35,7 +35,7 @@ export default async function SharedRecipePage({ params }: { params: Promise<{ s
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-white dark:bg-stone-950 flex flex-col">
+    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col bg-[#FAFAF9] dark:bg-stone-950">
       {/* Header section with cream background */}
       <div className="px-6 pt-6 pb-0">
         <div className="max-w-3xl mx-auto w-full pb-8">

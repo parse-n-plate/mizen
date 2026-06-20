@@ -44,6 +44,11 @@
   --color-mizen-dark-surface: var(--color-dark-surface);
   --color-mizen-overlay: var(--color-overlay);
 
+  /* Foreground for solid/colored buttons (blue, destructive). Theme-invariant:
+     unlike --color-white, this is NOT inverted in dark mode, so text/icons stay
+     legible on saturated backgrounds in both themes. */
+  --color-static-white: #ffffff;
+
   /* Breakpoints */
   --breakpoint-md: 913px;
 
@@ -75,6 +80,28 @@ html {
 /* Landing page needs its own scroll since html has overflow: hidden */
 html:has(.landing-scroll) {
   overflow: auto;
+}
+
+.copy-link-confirm {
+  animation: copy-link-confirm 140ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@keyframes copy-link-confirm {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .copy-link-confirm {
+    animation: none;
+  }
 }
 
 html body[data-scroll-locked] {
@@ -270,7 +297,7 @@ html[data-early-splash="true"] #mizen-early-splash {
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: var(--color-primary-blue);
 
   /* Mizen palette — Neutrals */
   --color-white: #ffffff;
@@ -353,7 +380,7 @@ html[data-early-splash="true"] #mizen-early-splash {
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.32 0 0);
   --input: oklch(0.32 0 0);
-  --ring: oklch(0.556 0 0);
+  --ring: var(--color-primary-blue);
 
   /* Mizen palette — Neutrals (inverted) */
   --color-white: #292524;
@@ -502,6 +529,123 @@ body {
 
 /* Component Styles */
 @layer components {
+  /* ═══════════════════════════════════════════════════════════════════════════
+     FOLDER TABS — Modern tab navigation that looks like file folders
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  .folder-tab-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 8px;
+    white-space: nowrap;
+    border-radius: 16px 16px 0 0 !important;
+    transition:
+      color 150ms ease,
+      background-color 150ms ease,
+      transform 100ms ease;
+    background-color: transparent !important;
+    color: var(--color-text-muted);
+    border: 1px solid transparent !important;
+    position: relative;
+    cursor: pointer;
+    outline: none;
+    margin-bottom: -1px;
+    z-index: 1;
+    box-shadow: none !important;
+  }
+
+  .folder-tab-trigger:focus-visible {
+    outline: 2px solid var(--color-blue);
+    outline-offset: -2px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .folder-tab-trigger:hover:not([data-state="active"]) {
+      background-color: color-mix(in srgb, var(--color-gray-light) 40%, transparent) !important;
+      color: var(--color-black);
+    }
+  }
+
+  .folder-tab-trigger[data-state="active"] {
+    background-color: var(--color-surface) !important;
+    color: var(--color-black);
+    border-color: var(--color-border-light) !important;
+    border-bottom-color: transparent !important;
+    border-top-color: var(--color-border-light) !important;
+    z-index: 3;
+    box-shadow: none !important;
+    transform-origin: top center;
+  }
+
+  /* Hide the line-style active indicator */
+  .folder-tab-trigger::after {
+    display: none !important;
+  }
+
+  @media (max-width: 640px) {
+    .folder-tab-trigger {
+      padding: 0 4px;
+      gap: 4px;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     FOLDER TABS (BOTTOM) — Flipped folder tabs anchored to bottom of screen
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  .folder-tab-trigger-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 8px;
+    white-space: nowrap;
+    border-radius: 16px 16px 0 0 !important;
+    transition:
+      color 150ms ease,
+      background-color 150ms ease,
+      transform 100ms ease;
+    background-color: transparent !important;
+    color: var(--color-text-muted);
+    border: 1px solid transparent !important;
+    position: relative;
+    cursor: pointer;
+    outline: none;
+    margin-bottom: -1px;
+    z-index: 1;
+    box-shadow: none !important;
+  }
+
+  .folder-tab-trigger-bottom:focus-visible {
+    outline: 2px solid var(--color-blue);
+    outline-offset: -2px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .folder-tab-trigger-bottom:hover:not([data-state="active"]) {
+      background-color: color-mix(in srgb, var(--color-gray-light) 40%, transparent) !important;
+      color: var(--color-black);
+    }
+  }
+
+  .folder-tab-trigger-bottom[data-state="active"] {
+    background-color: var(--color-surface) !important;
+    color: var(--color-black);
+    border-color: var(--color-border-light) !important;
+    border-bottom-color: var(--color-surface) !important;
+    z-index: 3;
+    box-shadow: none !important;
+  }
+
+  @media (max-width: 640px) {
+    .folder-tab-trigger-bottom {
+      padding: 0 4px;
+      gap: 4px;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .source-preview-enter,
     .source-preview-enter-initial,
@@ -601,6 +745,279 @@ body {
     will-change: transform, opacity;
   }
 
+  @keyframes cleaning-mockup-card-in {
+    from {
+      opacity: 0.72;
+      transform: translateY(8px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes cleaning-mockup-progress {
+    0% {
+      transform: scaleX(0);
+      opacity: 0.72;
+    }
+    78% {
+      transform: scaleX(1);
+      opacity: 1;
+    }
+    100% {
+      transform: scaleX(1);
+      opacity: 0;
+    }
+  }
+
+  @keyframes cleaning-mockup-icon {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(0.92);
+      opacity: 0.78;
+    }
+  }
+
+  .cleaning-mockup-card {
+    animation: cleaning-mockup-card-in 280ms var(--ease-out-quint) both;
+    will-change: transform, opacity;
+  }
+
+  .cleaning-mockup-progress {
+    animation: cleaning-mockup-progress 1800ms var(--ease-in-out-quart) infinite;
+    transform-origin: left center;
+    will-change: transform, opacity;
+  }
+
+  .cleaning-mockup-icon {
+    animation: cleaning-mockup-icon 1400ms ease infinite;
+    will-change: transform, opacity;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cleaning-mockup-card,
+    .cleaning-mockup-progress,
+    .cleaning-mockup-icon {
+      animation: none;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     INGREDIENT GROUP — Primitive accordion with height and chevron animation
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  .ingredient-group-chevron {
+    opacity: 1;
+    transform: rotate(0deg);
+    transition:
+      transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      color 150ms ease,
+      opacity 150ms ease;
+  }
+
+  .ingredient-group-trigger[data-state="closed"] .ingredient-group-chevron {
+    transform: rotate(-90deg);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ingredient-group-trigger:hover .ingredient-group-chevron {
+      color: var(--foreground);
+    }
+  }
+
+  .ingredient-group-content[data-state="open"] {
+    animation: ingredient-group-slide-down 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .ingredient-group-content[data-state="closed"] {
+    animation: ingredient-group-slide-up 220ms cubic-bezier(0.55, 0, 0.1, 1);
+  }
+
+  .ingredient-group-content[data-state="open"] .ingredient-group-content-inner {
+    animation: ingredient-group-fade-in 180ms cubic-bezier(0.22, 1, 0.36, 1) 40ms both;
+  }
+
+  .ingredient-group-content[data-state="closed"] .ingredient-group-content-inner {
+    animation: ingredient-group-fade-out 140ms ease both;
+  }
+
+  @keyframes ingredient-group-slide-down {
+    from {
+      height: 0;
+    }
+
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+
+  @keyframes ingredient-group-slide-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+
+    to {
+      height: 0;
+    }
+  }
+
+  @keyframes ingredient-group-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(-2px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes ingredient-group-fade-out {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    to {
+      opacity: 0;
+      transform: translateY(-2px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ingredient-group-chevron,
+    .ingredient-group-content,
+    .ingredient-group-content-inner {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     INGREDIENT LIST — Linear list style with native checkboxes
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  .ingredient-list-item {
+    position: relative;
+    width: 100%;
+    cursor: pointer;
+    border-radius: var(--radius-md);
+    transition: background-color 150ms ease;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .ingredient-list-item:hover {
+      background-color: var(--color-cream);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ingredient-list-item {
+      transition: none;
+    }
+  }
+
+  /* Hide the previous item's divider when the next item is hovered */
+  @media (hover: hover) and (pointer: fine) {
+    .ingredient-list-item:has(+ .ingredient-list-item:hover) .ingredient-list-divider,
+    .group:has(+ .group:hover) .step-list-divider {
+      opacity: 0;
+    }
+  }
+
+  .ingredient-list-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 12px;
+    position: relative;
+  }
+
+  .ingredient-list-divider {
+    position: absolute;
+    bottom: 0;
+    left: 42px;
+    right: 12px;
+    height: 1px;
+    background-color: var(--color-border-light);
+  }
+
+  @media (max-width: 912px) {
+    .ingredient-list-content {
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    .ingredient-list-divider {
+      left: 30px;
+      right: 0;
+    }
+  }
+
+  /* Native checkbox styled to match production */
+  .ingredient-checkbox-input {
+    width: 20px;
+    height: 20px;
+    border: 1.5px solid var(--color-gray-light);
+    border-radius: 4px;
+    background-color: transparent;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    position: relative;
+    flex-shrink: 0;
+    transform: translateY(-1px);
+  }
+
+  .ingredient-checkbox-input:checked {
+    background-color: var(--color-primary-blue);
+    border: none;
+  }
+
+  .ingredient-checkbox-input:checked::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+
+  .ingredient-list-name {
+    font-family: "Albert Sans", "Helvetica", "system-ui", sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    margin: 0;
+  }
+
+  .ingredient-list-description {
+    font-family: "Albert Sans", "Helvetica", "system-ui", sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  /* Checked state */
+  .ingredient-list-item.is-checked .ingredient-list-name,
+  .ingredient-list-item.is-checked .ingredient-list-name span,
+  .ingredient-list-item.is-checked .ingredient-list-description {
+    text-decoration: line-through;
+    color: var(--color-text-muted);
+  }
+
   /* ═══════════════════════════════════════════════════════════════════════════
      LOADING ANIMATION — Vertical step state
   ═══════════════════════════════════════════════════════════════════════════ */
@@ -639,10 +1056,11 @@ body {
   ═══════════════════════════════════════════════════════════════════════════ */
 
   .step-image-reveal {
-    display: grid;
+    overflow: hidden;
+    grid-template-rows: 0fr;
     transition:
-      grid-template-rows 250ms var(--ease-out-quart),
-      opacity 250ms var(--ease-out-quart);
+      grid-template-rows 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 260ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .step-image-reveal[data-open="true"] {
@@ -655,8 +1073,71 @@ body {
     opacity: 0;
   }
 
-  .step-image-reveal > div {
+  .step-image-reveal-x {
     overflow: hidden;
+    grid-template-columns: 0fr;
+    transition:
+      grid-template-columns 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .step-image-reveal-x[data-open="true"] {
+    grid-template-columns: 1fr;
+    opacity: 1;
+  }
+
+  .step-image-reveal-x[data-open="false"] {
+    grid-template-columns: 0fr;
+    opacity: 0;
+  }
+
+  .step-image-reveal > div,
+  .step-image-reveal-x > div {
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .step-image-reveal[data-open="true"] .step-image-reveal-inner,
+  .step-image-reveal-x[data-open="true"] .step-image-reveal-inner {
+    animation: ingredient-group-fade-in 180ms cubic-bezier(0.22, 1, 0.36, 1) 40ms both;
+  }
+
+  .step-image-reveal[data-open="false"] .step-image-reveal-inner,
+  .step-image-reveal-x[data-open="false"] .step-image-reveal-inner {
+    animation: ingredient-group-fade-out 140ms ease both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .step-image-reveal,
+    .step-image-reveal-x,
+    .step-image-reveal-inner {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     RECIPE STEP LIST
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  .recipe-step-list-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--color-border-light);
+    transition: background-color 150ms ease;
+  }
+
+  .recipe-step-list-item:last-child {
+    border-bottom: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .recipe-step-list-item:hover {
+      background-color: color-mix(in srgb, var(--color-background-cream) 50%, transparent);
+    }
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
@@ -690,6 +1171,26 @@ body {
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
+     POPOVER / DROPDOWN — Enter animation for floating panels
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  @keyframes popover-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .popover-animate {
+    animation: popover-in 150ms var(--ease-out-quart) forwards;
+    transform-origin: top right;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
      TAB CONTENT — Crossfade on tab switch
   ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -709,6 +1210,26 @@ body {
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
+     CHECKBOX — Satisfying pop on check
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  @keyframes checkbox-pop {
+    0% {
+      transform: translateY(-1px) scale(1);
+    }
+    50% {
+      transform: translateY(-1px) scale(1.2);
+    }
+    100% {
+      transform: translateY(-1px) scale(1);
+    }
+  }
+
+  .ingredient-checkbox-input:checked {
+    animation: checkbox-pop 180ms var(--ease-out-quart);
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
      SMART BAR — Morphing container transitions
   ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -719,6 +1240,11 @@ body {
       background-color 150ms ease,
       box-shadow 150ms ease;
     overflow: hidden;
+  }
+
+  .smart-bar-focus-ring {
+    border-color: var(--color-blue);
+    box-shadow: 0 0 0 3px rgba(24, 161, 247, 0.2);
   }
 
   .smart-bar-loading-ring {
@@ -844,7 +1370,8 @@ body {
     transform: scale(0.98);
   }
 
-  #primary-sidebar > .flex > .press-scale:active {
+  #primary-sidebar > .flex > .press-scale:active,
+  .folder-tab-trigger[data-state="active"]:active {
     transform: none;
   }
 
@@ -1020,6 +1547,36 @@ body {
   animation: banner-fade-out 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
 
+.links-card-media,
+.links-card-title-arrow,
+.links-recipe-row {
+  transition:
+    background-color 150ms ease,
+    opacity 150ms ease,
+    transform 200ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .links-link-card {
+    transform-origin: 50% 60%;
+    transition: border-color 150ms ease;
+  }
+
+  .links-link-card:hover .links-card-media {
+    transform: rotate(-8deg) scale(1.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .links-link-card,
+  .links-card-media,
+  .links-card-title-arrow,
+  .links-recipe-row {
+    animation: none;
+    transition: none;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    REDUCED MOTION — Accessibility support
 ═══════════════════════════════════════════════════════════════════════════ */
@@ -1054,7 +1611,8 @@ body {
 
   /* Hide non-print elements */
   header,
-  [data-recipe-tab-trigger],
+  .folder-tab-trigger,
+  .folder-tab-trigger-bottom,
   .vault-animate,
   [data-sonner-toaster],
   .clipboard-pill-animate,
@@ -1063,7 +1621,23 @@ body {
   }
 
   /* Clean card appearance */
-  [data-slot="checkbox"] {
+  .ingredient-group {
+    break-inside: avoid;
+  }
+
+  .recipe-step-list-item {
+    break-inside: avoid;
+  }
+
+  .ingredient-checkbox-input {
     display: none !important;
+  }
+
+  .ingredient-list-content {
+    padding: 6px 0 !important;
+  }
+
+  .ingredient-list-divider {
+    left: 0 !important;
   }
 }

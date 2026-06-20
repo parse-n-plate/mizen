@@ -12,8 +12,8 @@ import { Search } from "@/components/Search";
 import { RecentRecipes } from "@/components/RecentRecipes";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
+import { LandingAuthCta } from "@/components/LandingAuthCta";
 import { WhoMadeIt } from "@/components/WhoMadeIt";
-import { Button } from "@/components/ui/button";
 import { useRecipe } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
@@ -26,7 +26,6 @@ const SOURCES = [
 ] as const;
 
 const LANDING_COPY = {
-  badge: "Your recipe collection",
   sub: "One place for every recipe you find online. Clean ingredients, clear steps.",
   sourceLabel: "Bring recipes from",
 };
@@ -490,7 +489,7 @@ export default function HomePage() {
   return <WaitlistLanding />;
 }
 
-function WaitlistLanding() {
+export function WaitlistLanding() {
   const [activeSource, setActiveSource] = useState(0);
   const [displayedSource, setDisplayedSource] = useState(0);
   const [displayedPreview, setDisplayedPreview] = useState(0);
@@ -612,25 +611,12 @@ function WaitlistLanding() {
               />
               Mizen
             </Link>
-            {isSupabaseConfigured && (
-              <button
-                onClick={() => setAuthOpen(true)}
-                className="lg:hidden px-3 py-1.5 rounded-lg bg-stone-100 dark:bg-stone-800 font-sans text-sm font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors"
-              >
-                Sign in
-              </button>
-            )}
+            <LandingAuthCta onSignIn={() => setAuthOpen(true)} className="lg:hidden" />
           </div>
 
           {/* Center: Hero content */}
           <div className="flex-1 flex flex-col justify-center py-12 lg:py-0 lg:pb-16 lg:items-start items-center">
             <div className="w-full text-center lg:text-left">
-              <div className="mb-6">
-                <span className="inline-block px-3 py-1 rounded-full border border-stone-200 dark:border-stone-700 font-sans text-xs text-stone-500 dark:text-stone-400">
-                  {LANDING_COPY.badge}
-                </span>
-              </div>
-
               <h1 className="flex flex-col items-center gap-1 lg:items-start font-serif text-[clamp(32px,9vw,56px)] lg:text-[clamp(24px,2.6vw,44px)] xl:text-[clamp(32px,2.8vw,52px)] font-bold leading-[1.3] tracking-[-0.02em] text-stone-900 dark:text-stone-100 mb-5">
                 <HeroHeadline />
               </h1>
@@ -641,7 +627,7 @@ function WaitlistLanding() {
 
               {/* Email form */}
               <form onSubmit={handleSubmit} className="max-w-md mx-auto lg:mx-0">
-                <div className="flex h-[52px] shrink-0 items-center overflow-clip rounded-xl border border-input bg-muted transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50">
+                <div className="flex items-center h-[52px] rounded-xl border border-[#E7E5E4] bg-[#F5F5F4] dark:border-stone-700 dark:bg-stone-900 overflow-clip shrink-0 focus-within:border-[#18a1f7] focus-within:ring-[3px] focus-within:ring-[#18a1f7]/30 transition-[border-color,box-shadow]">
                   {/* Input — collapses on success */}
                   <motion.div
                     initial={false}
@@ -665,75 +651,75 @@ function WaitlistLanding() {
                   </motion.div>
 
                   {/* Button — expands to fill, then shows success */}
-                  <Button asChild variant="primary" className="m-1.5 h-10 overflow-hidden px-5">
-                    <motion.button
-                      type="submit"
-                      disabled={submitting || submitted || alreadyOnList}
-                      initial={false}
-                      animate={{
-                        flex: submitted || alreadyOnList ? "1 1 0%" : "0 0 auto",
-                      }}
-                      whileTap={
-                        submitted || alreadyOnList || submitting ? undefined : { scale: 0.96 }
-                      }
-                      transition={{ duration: 0.25, ease: [0.77, 0, 0.175, 1] }}
-                      className={
-                        submitted || alreadyOnList ? "!opacity-100 pointer-events-none" : ""
-                      }
-                    >
-                      <AnimatePresence mode="wait" initial={false}>
-                        {submitted || alreadyOnList ? (
-                          <motion.span
-                            key="success"
-                            initial={{ opacity: 0, scale: 0.96, y: 4 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            transition={{
-                              delay: 0.1,
-                              duration: 0.2,
-                              ease: [0.23, 1, 0.32, 1],
-                            }}
-                            className="flex items-center gap-2 whitespace-nowrap"
+                  <motion.button
+                    type="submit"
+                    disabled={submitting || submitted || alreadyOnList}
+                    initial={false}
+                    animate={{
+                      flex: submitted || alreadyOnList ? "1 1 0%" : "0 0 auto",
+                    }}
+                    whileTap={
+                      submitted || alreadyOnList || submitting ? undefined : { scale: 0.96 }
+                    }
+                    transition={{ duration: 0.25, ease: [0.77, 0, 0.175, 1] }}
+                    className={`px-5 h-10 rounded-lg bg-[#18A1F7] font-sans text-[14px] text-[#ffffff] font-semibold leading-[18px] m-1.5 flex items-center justify-center gap-1.5 transition-[opacity] overflow-hidden ${
+                      submitted || alreadyOnList
+                        ? "!opacity-100 pointer-events-none"
+                        : "hover:bg-[#1590de] disabled:opacity-60"
+                    }`}
+                  >
+                    <AnimatePresence mode="wait" initial={false}>
+                      {submitted || alreadyOnList ? (
+                        <motion.span
+                          key="success"
+                          initial={{ opacity: 0, scale: 0.96, y: 4 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          transition={{
+                            delay: 0.1,
+                            duration: 0.2,
+                            ease: [0.23, 1, 0.32, 1],
+                          }}
+                          className="flex items-center gap-2 whitespace-nowrap"
+                        >
+                          <svg
+                            className="w-4 h-4 flex-shrink-0"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
                           >
-                            <svg
-                              className="w-4 h-4 flex-shrink-0"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M20 6 9 17l-5-5" />
-                            </svg>
-                            <span className="font-medium">
-                              {alreadyOnList
-                                ? "You\u2019re already on the list!"
-                                : "You\u2019re on the list!"}
-                            </span>
-                          </motion.span>
-                        ) : submitting ? (
-                          <motion.span
-                            key="sending"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
-                            transition={{ duration: 0.1, ease: [0.23, 1, 0.32, 1] }}
-                          >
-                            Sending...
-                          </motion.span>
-                        ) : (
-                          <motion.span
-                            key="cta"
-                            exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
-                            transition={{ duration: 0.1, ease: [0.23, 1, 0.32, 1] }}
-                            className="flex items-center gap-1.5"
-                          >
-                            <Plain size={16} weight="Bold" className="shrink-0" /> Notify Me
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
-                    </motion.button>
-                  </Button>
+                            <path d="M20 6 9 17l-5-5" />
+                          </svg>
+                          <span className="font-medium">
+                            {alreadyOnList
+                              ? "You\u2019re already on the list!"
+                              : "You\u2019re on the list!"}
+                          </span>
+                        </motion.span>
+                      ) : submitting ? (
+                        <motion.span
+                          key="sending"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
+                          transition={{ duration: 0.1, ease: [0.23, 1, 0.32, 1] }}
+                        >
+                          Sending...
+                        </motion.span>
+                      ) : (
+                        <motion.span
+                          key="cta"
+                          exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
+                          transition={{ duration: 0.1, ease: [0.23, 1, 0.32, 1] }}
+                          className="flex items-center gap-1.5"
+                        >
+                          <Plain size={16} weight="Bold" className="shrink-0" /> Notify Me
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </motion.button>
                 </div>
               </form>
             </div>
@@ -749,17 +735,13 @@ function WaitlistLanding() {
         </div>
 
         {/* Right panel */}
-        <div className="relative flex-1 flex flex-col pt-6 lg:pt-0 bg-[#f5f5f0] dark:bg-stone-900 overflow-hidden">
+        <div className="relative flex-1 flex flex-col pt-6 lg:pt-0 bg-[#FAFAF9] dark:bg-stone-900 overflow-hidden">
           {/* Top nav */}
           <div className="hidden lg:flex items-center justify-end px-8 lg:px-10 pt-5 pb-2 relative z-20">
-            {isSupabaseConfigured && (
-              <button
-                onClick={() => setAuthOpen(true)}
-                className="hidden lg:block px-3 py-1.5 rounded-lg bg-white dark:bg-stone-800 font-sans text-sm font-medium text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors"
-              >
-                Sign in
-              </button>
-            )}
+            <LandingAuthCta
+              onSignIn={() => setAuthOpen(true)}
+              className="hidden bg-white hover:bg-stone-50 lg:block"
+            />
           </div>
 
           {/* Source tabs */}
@@ -839,11 +821,11 @@ function WaitlistLanding() {
         </div>
 
         {/* Mobile footer */}
-        <div className="flex lg:hidden items-center justify-between px-8 py-6 bg-[#f5f5f0] dark:bg-stone-900">
+        <div className="flex lg:hidden items-center justify-between px-8 py-6 bg-[#FAFAF9] dark:bg-stone-900">
           <span className="font-sans text-xs text-stone-400 dark:text-stone-500">
             Closed Beta v0.1.0
           </span>
-          <WhoMadeIt borderColor="border-[#f5f5f0] dark:border-stone-900" />
+          <WhoMadeIt borderColor="border-[#FAFAF9] dark:border-stone-900" />
         </div>
       </div>
 
