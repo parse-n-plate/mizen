@@ -5,30 +5,15 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RecipeSwipeView } from "@/components/RecipeSwipeView";
 
-class MockResizeObserver {
-  constructor(private callback: ResizeObserverCallback) {}
-  observe(target: Element) {
-    this.callback(
-      [{ contentRect: { width: 400 } } as ResizeObserverEntry],
-      this as unknown as ResizeObserver
-    );
-    void target;
-  }
-  unobserve() {}
-  disconnect() {}
-}
-
 describe("RecipeSwipeView", () => {
   let container: HTMLDivElement;
   let root: Root;
-  const originalResizeObserver = globalThis.ResizeObserver;
   const reactActEnv = globalThis as typeof globalThis & {
     IS_REACT_ACT_ENVIRONMENT?: boolean;
   };
 
   beforeEach(() => {
     reactActEnv.IS_REACT_ACT_ENVIRONMENT = true;
-    globalThis.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
@@ -39,7 +24,6 @@ describe("RecipeSwipeView", () => {
       root.unmount();
     });
     container.remove();
-    globalThis.ResizeObserver = originalResizeObserver;
     delete reactActEnv.IS_REACT_ACT_ENVIRONMENT;
     vi.clearAllMocks();
   });

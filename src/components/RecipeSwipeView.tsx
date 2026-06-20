@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { motion, useReducedMotion, type PanInfo } from "framer-motion";
 
 const SWIPE_THRESHOLD_RATIO = 0.2;
@@ -22,18 +22,10 @@ export function RecipeSwipeView({
   cook,
 }: RecipeSwipeViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(0);
   const prefersReducedMotion = useReducedMotion();
 
-  useLayoutEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
   const handleDragEnd = (_: unknown, info: PanInfo) => {
+    const width = containerRef.current?.offsetWidth ?? 0;
     if (!width) return;
     const passedThreshold = Math.abs(info.offset.x) > width * SWIPE_THRESHOLD_RATIO;
     const passedVelocity = Math.abs(info.velocity.x) > SWIPE_VELOCITY_THRESHOLD;
@@ -64,10 +56,10 @@ export function RecipeSwipeView({
       <motion.div
         className="flex w-[200%]"
         drag="x"
-        dragConstraints={{ left: -width, right: 0 }}
+        dragConstraints={containerRef}
         dragElastic={0.12}
         dragMomentum={false}
-        animate={{ x: activeTab === "prep" ? 0 : -width }}
+        animate={{ x: activeTab === "prep" ? "0%" : "-50%" }}
         transition={
           prefersReducedMotion ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 38 }
         }
