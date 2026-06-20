@@ -26,7 +26,6 @@ const SOURCES = [
 ] as const;
 
 const LANDING_COPY = {
-  badge: "Your recipe collection",
   sub: "One place for every recipe you find online. Clean ingredients, clear steps.",
   sourceLabel: "Bring recipes from",
 };
@@ -618,12 +617,6 @@ export function WaitlistLanding() {
           {/* Center: Hero content */}
           <div className="flex-1 flex flex-col justify-center py-12 lg:py-0 lg:pb-16 lg:items-start items-center">
             <div className="w-full text-center lg:text-left">
-              <div className="mb-6">
-                <span className="inline-block px-3 py-1 rounded-full border border-stone-200 dark:border-stone-700 font-sans text-xs text-stone-500 dark:text-stone-400">
-                  {LANDING_COPY.badge}
-                </span>
-              </div>
-
               <h1 className="flex flex-col items-center gap-1 lg:items-start font-serif text-[clamp(32px,9vw,56px)] lg:text-[clamp(24px,2.6vw,44px)] xl:text-[clamp(32px,2.8vw,52px)] font-bold leading-[1.3] tracking-[-0.02em] text-stone-900 dark:text-stone-100 mb-5">
                 <HeroHeadline />
               </h1>
