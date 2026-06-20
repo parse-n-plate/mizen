@@ -19,6 +19,7 @@ export const DESIGN_SYSTEM_GROUPS = [
       { title: "Selection controls", slug: "selection-controls" },
       { title: "Tabs", slug: "tabs" },
       { title: "Menus", slug: "menus" },
+      { title: "Command palette", slug: "command-palette" },
       { title: "Dialogs", slug: "dialogs" },
       { title: "Drawers", slug: "drawers" },
       { title: "Tooltips", slug: "tooltips" },

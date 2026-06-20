@@ -23,6 +23,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -146,6 +154,50 @@ function SmartInputExample() {
           Text
         </Badge>
       </div>
+    </div>
+  );
+}
+
+function CommandPaletteExample() {
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-sm">
+      <Command>
+        <CommandInput placeholder="Search or paste a URL" />
+        <CommandList>
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading="Add Recipe">
+            <CommandItem value="add recipe via url">
+              <LinkIcon className="size-5 text-muted-foreground" aria-hidden="true" />
+              <div className="min-w-0 flex-1">
+                <p className="font-medium">Add via URL</p>
+                <p className="text-xs text-muted-foreground">Paste a recipe link</p>
+              </div>
+            </CommandItem>
+            <CommandItem value="add recipe via image">
+              <ImageIcon className="size-5 text-muted-foreground" aria-hidden="true" />
+              <div className="min-w-0 flex-1">
+                <p className="font-medium">Add via Image</p>
+                <p className="text-xs text-muted-foreground">Upload a recipe photo</p>
+              </div>
+            </CommandItem>
+          </CommandGroup>
+          <CommandGroup heading="Navigation">
+            <CommandItem value="cookbook saved recipes">
+              <BookOpen className="size-5 text-muted-foreground" aria-hidden="true" />
+              <div className="min-w-0 flex-1">
+                <p className="font-medium">Cookbook</p>
+                <p className="text-xs text-muted-foreground">Saved recipes</p>
+              </div>
+            </CommandItem>
+          </CommandGroup>
+        </CommandList>
+        <div className="flex items-center justify-end gap-1 border-t border-border px-4 py-2">
+          <kbd className="rounded border border-border bg-muted px-2 py-1 font-sans text-xs text-muted-foreground">
+            Esc
+          </kbd>
+          <span className="font-sans text-xs text-muted-foreground">to close</span>
+        </div>
+      </Command>
     </div>
   );
 }
@@ -740,6 +792,75 @@ import Flag from "@solar-icons/react/csr/ui/Flag";`}</CodeBlock>
               "Prefer radio menu items when the menu changes a persistent mode.",
             ]}
           />
+        ),
+      },
+    ],
+  },
+  "command-palette": {
+    slug: "command-palette",
+    title: "Command palette",
+    description:
+      "Command palettes combine search, navigation, and high-frequency app actions in one keyboard-first surface.",
+    sections: [
+      {
+        title: "Palette",
+        body: (
+          <div className="space-y-4">
+            <Example>
+              <CommandPaletteExample />
+            </Example>
+            <p>
+              The app command-K surface uses <Code>CommandDialog</Code>, <Code>CommandInput</Code>,{" "}
+              <Code>CommandList</Code>, <Code>CommandGroup</Code>, and <Code>CommandItem</Code> from{" "}
+              <Code>src/components/ui/command.tsx</Code>.
+            </p>
+          </div>
+        ),
+      },
+      {
+        title: "Command lists",
+        body: (
+          <GuidanceList
+            items={[
+              "Use command lists when the user can search across mixed actions, destinations, and recipes.",
+              "Group results by intent: add actions first, navigation second, recipe results after.",
+              "Keep rows compact with one leading icon, one primary label, and optional muted metadata.",
+              "Use `CommandEmpty` for no-result states so empty search feedback stays consistent.",
+            ]}
+          />
+        ),
+      },
+      {
+        title: "Sizing",
+        body: (
+          <GuidanceList
+            items={[
+              "Use `max-w-[52rem]` for the desktop command dialog.",
+              "Use a full-screen command surface below the `md` breakpoint.",
+              "Keep the input at `h-14` and the default list capped at `max-h-[360px]` unless the flow needs full-height mobile scrolling.",
+              "Use `border-border`, `bg-popover`, `text-popover-foreground`, `bg-accent`, and `text-muted-foreground` for command surfaces.",
+            ]}
+          />
+        ),
+      },
+      {
+        title: "Implementation",
+        body: (
+          <CodeBlock>{`<CommandDialog
+  open={open}
+  onOpenChange={setOpen}
+  title="Search recipes"
+  description="Find recipes, add recipes, and navigate Mizen"
+  className="max-w-[52rem] gap-0 rounded-xl border-border bg-popover text-popover-foreground"
+>
+  <CommandInput placeholder="Search or paste a URL" />
+  <CommandList>
+    <CommandEmpty>No results found.</CommandEmpty>
+    <CommandGroup heading="Add Recipe">
+      <CommandItem value="add recipe via url">Add via URL</CommandItem>
+    </CommandGroup>
+  </CommandList>
+</CommandDialog>`}</CodeBlock>
         ),
       },
     ],
