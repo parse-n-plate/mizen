@@ -276,7 +276,7 @@ function IngredientGroupSection({
               <Button
                 type="button"
                 variant="ghost"
-                className="ingredient-group-trigger group h-auto min-w-0 flex-1 justify-start rounded-lg py-2.5 active:!transform-none md:px-3"
+                className="ingredient-group-trigger group h-auto min-w-0 flex-1 justify-start rounded-lg py-2.5 px-0 active:!transform-none md:px-3"
               >
                 <div className="flex min-w-0 flex-1 items-center gap-3">
                   <h3 className="font-sans text-base font-semibold text-foreground capitalize">
