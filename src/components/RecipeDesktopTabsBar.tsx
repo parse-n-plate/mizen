@@ -31,6 +31,7 @@ interface RecipeDesktopTabsBarProps {
   onShare: () => void;
   onPrint?: () => void;
   onDelete?: (event: Event) => void;
+  onEdit?: () => void;
   onReport?: () => void;
   showReport?: boolean;
 }
@@ -48,6 +49,7 @@ export function RecipeDesktopTabsBar({
   onShare,
   onPrint,
   onDelete,
+  onEdit,
   onReport,
   showReport = false,
 }: RecipeDesktopTabsBarProps) {
@@ -226,6 +228,27 @@ export function RecipeDesktopTabsBar({
             side="top"
             className="border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900"
           >
+            {onEdit && (
+              <DropdownMenuItem
+                onSelect={onEdit}
+                className="text-stone-700 focus:bg-stone-100 focus:text-stone-900 dark:text-stone-300 dark:focus:bg-stone-800 dark:focus:text-stone-50"
+              >
+                Edit
+                <svg
+                  className="ml-auto h-4 w-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                  <path d="m15 5 4 4" />
+                </svg>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               onSelect={() => (onPrint ? onPrint() : window.print())}
               className="text-stone-700 focus:bg-stone-100 focus:text-stone-900 dark:text-stone-300 dark:focus:bg-stone-800 dark:focus:text-stone-50"

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { useRecipe } from "@/context/RecipeContext";
+import type { ParsedRecipe } from "@/lib/types";
 import { useUser } from "@/hooks/useUser";
 import { usePreference } from "@/hooks/usePreference";
 import { useIngredientDiff } from "@/hooks/useIngredientDiff";
@@ -48,6 +49,7 @@ import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/compone
 import { UnitSystemSelect } from "@/components/ui/unit-system-select";
 import { HeartButton } from "@/components/HeartButton";
 import { ReportRecipeDialog } from "@/components/ReportRecipeDialog";
+import { EditRecipeDrawer } from "@/components/EditRecipeDrawer";
 import AltArrowLeft from "@solar-icons/react/csr/arrows/AltArrowLeft";
 import Ruler from "@solar-icons/react/csr/tools/Ruler";
 import Eye from "@solar-icons/react/csr/security/Eye";
@@ -56,6 +58,7 @@ import {
   Copy,
   EllipsisVertical,
   MessageSquare,
+  Pencil,
   Printer,
   Share2,
   Trash2,
@@ -64,7 +67,7 @@ import {
 
 export default function RecipePage() {
   const router = useRouter();
-  const { recipe, savedMeta, setSavedMeta, removeFromHistory } = useRecipe();
+  const { recipe, savedMeta, setSavedMeta, removeFromHistory, updateRecipe } = useRecipe();
   const { user } = useUser();
   const [saving, setSaving] = useState(false);
   const [unsaving, setUnsaving] = useState(false);
@@ -73,6 +76,7 @@ export default function RecipePage() {
   useTabScrollMemory(activeTab);
   const isPhoneViewport = useIsMobile();
   const [reportOpen, setReportOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [mobileServingsOpen, setMobileServingsOpen] = useState(false);
   const [mobileUnitsOpen, setMobileUnitsOpen] = useState(false);
   const numberFormat = useSyncExternalStore(
@@ -318,6 +322,29 @@ export default function RecipePage() {
     });
   };
 
+  const handleEditSave = async (
+    updated: ParsedRecipe
+  ): Promise<{ ok: boolean; error?: string }> => {
+    if (savedMeta) {
+      try {
+        const res = await fetch(`/api/recipes/${savedMeta.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recipe: updated }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          return { ok: false, error: data.error || "Failed to save changes. Please try again." };
+        }
+      } catch {
+        return { ok: false, error: "Failed to save changes. Please try again." };
+      }
+    }
+    updateRecipe(updated);
+    toast.success("Recipe updated");
+    return { ok: true };
+  };
+
   if (!recipe) {
     return (
       <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center gap-4 px-6">
@@ -558,6 +585,7 @@ export default function RecipePage() {
             onCopyRecipe={handleCopyRecipe}
             onShare={handleShare}
             onDelete={handleDelete}
+            onEdit={() => setEditOpen(true)}
             showReport={feedbackFeaturesEnabled && !!user}
             onReport={() => setReportOpen(true)}
           />
@@ -721,6 +749,13 @@ export default function RecipePage() {
               className="bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700"
             >
               <DropdownMenuItem
+                onSelect={() => setEditOpen(true)}
+                className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+              >
+                Edit
+                <Pencil className="ml-auto h-4 w-4" />
+              </DropdownMenuItem>
+              <DropdownMenuItem
                 onSelect={handleCopyRecipe}
                 className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
               >
@@ -761,6 +796,13 @@ export default function RecipePage() {
             </DropdownMenuContent>
           </DropdownMenu>
         }
+      />
+
+      <EditRecipeDrawer
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        recipe={recipe}
+        onSave={handleEditSave}
       />
 
       {/* Report recipe dialog */}
