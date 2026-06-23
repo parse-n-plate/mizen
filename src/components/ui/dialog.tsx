@@ -109,19 +109,22 @@ function DialogOverlay({
 function DialogContent({
   className,
   children,
+  overlayClassName,
   showCloseButton = true,
   animated = true,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
+  overlayClassName?: string;
   showCloseButton?: boolean;
   animated?: boolean;
 }) {
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogOverlay
-        className={
-          animated ? undefined : "data-[state=open]:animate-none data-[state=closed]:animate-none"
-        }
+        className={cn(
+          !animated && "data-[state=open]:animate-none data-[state=closed]:animate-none",
+          overlayClassName
+        )}
       />
       <DialogPrimitive.Content
         data-slot="dialog-content"

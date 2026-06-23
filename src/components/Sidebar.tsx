@@ -35,6 +35,7 @@ import { LogOut } from "lucide-react";
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
+  onOpenSearch: () => void;
 }
 
 type SidebarNavItem = {
@@ -48,7 +49,7 @@ type SidebarNavItem = {
   show?: boolean;
 };
 
-export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export function Sidebar({ collapsed, onToggle, onOpenSearch }: SidebarProps) {
   const { user, loading: authLoading } = useUser();
   const pathname = usePathname();
   const router = useRouter();
@@ -250,11 +251,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
           {/* Search bar */}
           <button
+            type="button"
             className="flex items-center justify-between rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 px-2.5 py-2 gap-2 w-full hover:border-stone-300 dark:hover:border-stone-600 transition-colors"
-            onClick={() => {
-              // Focus the home search or trigger ⌘K
-              router.push("/");
-            }}
+            onClick={user ? onOpenSearch : () => setAuthOpen(true)}
           >
             <div className="flex items-center gap-2">
               <Magnifer size={15} className="text-stone-400 dark:text-stone-500 shrink-0" />
