@@ -12,7 +12,6 @@ import { detectCollectionUrl } from "@/utils/urlPatterns";
 import { SettingsModal } from "@/components/SettingsModal";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { ReleaseNotice } from "@/components/ReleaseNotice";
-import { FeedbackDialog } from "@/components/FeedbackDialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,7 +21,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { feedbackFeaturesEnabled } from "@/lib/features";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { createClient } from "@/lib/supabase/client";
 import { favoriteRecipes } from "@/lib/favorite-recipes";
@@ -59,7 +57,6 @@ export function Sidebar({ collapsed, onToggle, onOpenSearch }: SidebarProps) {
   const { setRecipe } = useRecipe();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [recipeCount, setRecipeCount] = useState<number | null>(null);
   const [waitlistEmail, setWaitlistEmail] = useState("");
   const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
@@ -532,17 +529,28 @@ export function Sidebar({ collapsed, onToggle, onOpenSearch }: SidebarProps) {
 
         {/* Bottom section */}
         <div className="flex flex-col px-4 pb-6 w-[240px]">
-          {feedbackFeaturesEnabled && (
+          {!authLoading && !user && (
             <button
-              onClick={() => setFeedbackOpen(true)}
-              className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 font-sans text-sm text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 hover:text-stone-700 dark:hover:text-stone-300 transition-none"
+              type="button"
+              onClick={() => setAuthOpen(true)}
+              className="flex min-h-10 w-full items-center justify-between rounded-xl border border-stone-200 bg-white px-3 py-2 text-left font-sans text-sm text-stone-900 transition-colors hover:border-stone-300 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:hover:border-stone-600 dark:hover:bg-stone-800"
             >
-              <ChatRoundDots size={17} className="shrink-0" />
-              Feedback
+              <span>Welcome to Beta</span>
+              <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-300">
+                New
+              </span>
             </button>
           )}
 
-          {user && <ReleaseNotice compact className="mt-2" />}
+          {user && <ReleaseNotice compact />}
+
+          <a
+            href="mailto:hello@mizen.recipes?subject=Mizen%20feedback"
+            className="mt-4 flex items-center gap-2.5 rounded-lg px-2.5 py-2 font-sans text-sm text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800/50 hover:text-stone-700 dark:hover:text-stone-300 transition-none first:mt-0"
+          >
+            <ChatRoundDots size={17} className="shrink-0" />
+            Share feedback
+          </a>
 
           {user && (
             <DropdownMenu>
@@ -625,18 +633,7 @@ export function Sidebar({ collapsed, onToggle, onOpenSearch }: SidebarProps) {
           )}
 
           {!authLoading && !user && (
-            <div className="mt-2 flex flex-col gap-3">
-              <button
-                type="button"
-                onClick={() => setAuthOpen(true)}
-                className="flex min-h-10 w-full items-center justify-between rounded-xl border border-stone-200 bg-white px-3 py-2 text-left font-sans text-sm text-stone-900 transition-colors hover:border-stone-300 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:hover:border-stone-600 dark:hover:bg-stone-800"
-              >
-                <span>Welcome to Beta</span>
-                <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-300">
-                  New
-                </span>
-              </button>
-
+            <div className="mt-3 flex flex-col">
               <form
                 onSubmit={handleSidebarWaitlistSubmit}
                 className="rounded-xl border border-stone-200 bg-white p-3 dark:border-stone-700 dark:bg-stone-900"
@@ -696,9 +693,6 @@ export function Sidebar({ collapsed, onToggle, onOpenSearch }: SidebarProps) {
 
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
       <BetaAuthModal open={authOpen} onOpenChange={setAuthOpen} />
-      {feedbackFeaturesEnabled && (
-        <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} showTrigger={false} />
-      )}
     </>
   );
 }
