@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Link as LinkIcon, Plus, X } from "lucide-react";
+import { BookOpen, Link as LinkIcon, Upload, X } from "lucide-react";
 import UndoLeftRound from "@solar-icons/react/csr/arrows-action/UndoLeftRound";
 import BookMinimalistic from "@solar-icons/react/csr/school/BookMinimalistic";
 import ClockCircle from "@solar-icons/react/csr/time/ClockCircle";
+import { toast } from "sonner";
 
 import {
   Command,
@@ -20,6 +21,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useRecipe, type HistoryEntry } from "@/context/RecipeContext";
 import type { ParsedRecipe, SavedRecipe } from "@/lib/types";
+
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 
 interface SearchCommandModalProps {
   open: boolean;
@@ -135,9 +139,10 @@ export function SearchCommandView({
   showDesktopFooter = false,
 }: SearchCommandViewProps) {
   const router = useRouter();
-  const { history, setRecipe, setSavedMeta } = useRecipe();
+  const { history, isLoading, setError, setIsLoading, setRecipe, setSavedMeta } = useRecipe();
   const [search, setSearch] = useState("");
   const [savedRecipes, setSavedRecipes] = useState<SavedRecipe[]>([]);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!active) return;
@@ -203,8 +208,61 @@ export function SearchCommandView({
     [closeAndGo, setRecipe, setSavedMeta]
   );
 
+  const parseImageFile = useCallback(
+    async (file: File) => {
+      if (isLoading) return;
+
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        toast.error("Only JPEG, PNG, and WebP images are supported.");
+        return;
+      }
+
+      if (file.size > MAX_IMAGE_SIZE) {
+        toast.error("Image is too large (max 10 MB).");
+        return;
+      }
+
+      setSearch("");
+      setIsLoading(true);
+      setError(null);
+      if (closeOnNavigate) onClose?.();
+
+      try {
+        const body = new FormData();
+        body.append("file", file);
+
+        const response = await fetch("/api/parse", { method: "POST", body });
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          setRecipe(result.data);
+          router.push("/recipe");
+        } else {
+          toast.error(result.error || "Failed to parse recipe");
+        }
+      } catch {
+        toast.error("Something went wrong. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [closeOnNavigate, isLoading, onClose, router, setError, setIsLoading, setRecipe]
+  );
+
   return (
     <>
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept={ALLOWED_IMAGE_TYPES.join(",")}
+        className="sr-only"
+        onChange={(event) => {
+          const input = event.currentTarget;
+          const file = input.files?.[0];
+          input.value = "";
+          if (file) void parseImageFile(file);
+        }}
+      />
       {showMobileHeader && (
         <div className="flex items-center justify-between px-3 pt-3 md:hidden">
           {showMobileTitle && (
@@ -268,13 +326,14 @@ export function SearchCommandView({
               </div>
             </CommandItem>
             <CommandItem
-              value="add recipe paste url text upload image"
-              onSelect={() => closeAndGo("/?action=add-recipe")}
+              value="add recipe via image upload photo"
+              onSelect={() => imageInputRef.current?.click()}
+              disabled={isLoading}
             >
-              <Plus className="size-5 text-muted-foreground" aria-hidden="true" />
+              <Upload className="size-5 text-muted-foreground" aria-hidden="true" />
               <div className="min-w-0 flex-1">
-                <p className="font-medium">Add Recipe</p>
-                <p className="text-xs text-muted-foreground">Paste a URL, text, or image</p>
+                <p className="font-medium">Add via Image</p>
+                <p className="text-xs text-muted-foreground">Upload a recipe photo</p>
               </div>
             </CommandItem>
           </CommandGroup>
