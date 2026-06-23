@@ -25,7 +25,6 @@
     "cheerio": "^1.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "dialkit": "^1.1.0",
     "framer-motion": "^12.34.5",
     "groq-sdk": "^0.37.0",
     "lucide-react": "^0.574.0",

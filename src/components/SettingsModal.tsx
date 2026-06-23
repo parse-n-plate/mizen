@@ -5,7 +5,7 @@ import { useUser } from "@/hooks/useUser";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogCloseX, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -44,7 +44,6 @@ import InfoCircle from "@solar-icons/react/csr/ui/InfoCircle";
 import Letter from "@solar-icons/react/csr/messages/Letter";
 import Tuning2 from "@solar-icons/react/csr/settings/Tuning2";
 import User from "@solar-icons/react/csr/users/User";
-import CloseSquare from "@solar-icons/react/csr/ui/CloseSquare";
 
 type Section = "account" | "preferences" | "cooking" | "about";
 
@@ -117,11 +116,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
               </p>
             </div>
 
-            <DialogClose asChild>
-              <Button variant="ghost" size="icon" className="shrink-0" aria-label="Close settings">
-                <CloseSquare className="size-4" />
-              </Button>
-            </DialogClose>
+            <DialogCloseX className="shrink-0" label="Close settings" />
           </div>
 
           <div className="flex min-h-0 flex-1 flex-col sm:flex-row">

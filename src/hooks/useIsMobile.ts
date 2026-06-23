@@ -4,6 +4,8 @@ const MOBILE_BREAKPOINT = 640; // matches Tailwind `sm:`
 const MOBILE_QUERY = `(max-width: ${MOBILE_BREAKPOINT - 1}px)`;
 
 function subscribe(callback: () => void) {
+  if (typeof window.matchMedia !== "function") return () => {};
+
   const mediaQuery = window.matchMedia(MOBILE_QUERY);
 
   mediaQuery.addEventListener("change", callback);
@@ -12,6 +14,8 @@ function subscribe(callback: () => void) {
 }
 
 function getSnapshot() {
+  if (typeof window.matchMedia !== "function") return false;
+
   return window.matchMedia(MOBILE_QUERY).matches;
 }
 

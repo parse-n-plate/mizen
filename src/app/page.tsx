@@ -6,8 +6,6 @@ import Link from "next/link";
 import { toast } from "sonner";
 import Plain from "@solar-icons/react/csr/messages/Plain";
 import { motion, AnimatePresence } from "motion/react";
-import { useDialKit } from "dialkit";
-import { getTheme, setTheme } from "@/lib/theme";
 import { Search } from "@/components/Search";
 import { RecentRecipes } from "@/components/RecentRecipes";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
@@ -505,25 +503,6 @@ export function WaitlistLanding() {
   const [alreadyOnList, setAlreadyOnList] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-
-  const dial = useDialKit("Theme", {
-    mode: {
-      type: "select",
-      options: ["System", "Light", "Dark"],
-      default: getTheme() === "dark" ? "Dark" : getTheme() === "light" ? "Light" : "System",
-    },
-  });
-
-  // Sync theme from dial panel
-  useEffect(() => {
-    const map: Record<string, "system" | "light" | "dark"> = {
-      System: "system",
-      Light: "light",
-      Dark: "dark",
-    };
-    const theme = map[dial.mode as string];
-    if (theme) setTheme(theme);
-  }, [dial.mode]);
 
   // Run the animation sequence whenever phase changes
   useEffect(() => {
