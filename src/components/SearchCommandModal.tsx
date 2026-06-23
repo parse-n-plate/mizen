@@ -80,6 +80,25 @@ function sourceLabel(item: RecipeResult): string {
   }
 }
 
+function recipeSearchText(item: RecipeResult): string {
+  const sourceUrl = item.sourceUrl || item.recipe.sourceUrl || "";
+  const sourceHostname = sourceLabel(item);
+
+  return [
+    item.recipe.title,
+    item.recipe.author,
+    item.recipe.summary,
+    item.recipe.sourceSiteDescription,
+    sourceUrl,
+    sourceHostname,
+    item.date,
+    recipeTime(item.recipe),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
 function toHistoryResult(entry: HistoryEntry): RecipeResult {
   return {
     key: `history:${entry.parsedAt}:${entry.recipe.title}`,
@@ -154,7 +173,12 @@ export function SearchCommandView({
     return merged;
   }, [history, savedRecipes]);
 
-  const displayedRecipes = search ? recipes : recipes.slice(0, 4);
+  const displayedRecipes = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return recipes.slice(0, 4);
+
+    return recipes.filter((item) => recipeSearchText(item).includes(query));
+  }, [recipes, search]);
 
   const handleClose = useCallback(() => {
     setSearch("");
