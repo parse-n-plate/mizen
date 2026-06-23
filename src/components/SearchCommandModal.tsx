@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Link as LinkIcon, Upload, X } from "lucide-react";
+import { BookOpen, Link as LinkIcon, Plus, X } from "lucide-react";
 import UndoLeftRound from "@solar-icons/react/csr/arrows-action/UndoLeftRound";
 import BookMinimalistic from "@solar-icons/react/csr/school/BookMinimalistic";
 import ClockCircle from "@solar-icons/react/csr/time/ClockCircle";
@@ -268,13 +268,13 @@ export function SearchCommandView({
               </div>
             </CommandItem>
             <CommandItem
-              value="add recipe via image upload photo"
-              onSelect={() => closeAndGo("/?action=upload-image")}
+              value="add recipe paste url text upload image"
+              onSelect={() => closeAndGo("/?action=add-recipe")}
             >
-              <Upload className="size-5 text-muted-foreground" aria-hidden="true" />
+              <Plus className="size-5 text-muted-foreground" aria-hidden="true" />
               <div className="min-w-0 flex-1">
-                <p className="font-medium">Add via Image</p>
-                <p className="text-xs text-muted-foreground">Upload a recipe photo</p>
+                <p className="font-medium">Add Recipe</p>
+                <p className="text-xs text-muted-foreground">Paste a URL, text, or image</p>
               </div>
             </CommandItem>
           </CommandGroup>

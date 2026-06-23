@@ -437,7 +437,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
       setPastedText(null);
       setInlineError(null);
       inputRef.current?.focus();
-    } else if (action === "upload-image") {
+    } else if (action === "add-recipe" || action === "upload-image") {
       setIsFocused(true);
       inputRef.current?.focus();
     } else {
