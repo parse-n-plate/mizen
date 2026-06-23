@@ -1,14 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { createPortal } from "react-dom";
-import Magnifer from "@solar-icons/react/csr/search/Magnifer";
-import { ChevronDown, X } from "lucide-react";
+import { useState, useSyncExternalStore } from "react";
+import { ChevronDown } from "lucide-react";
 import { Accordion as AccordionPrimitive } from "radix-ui";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import type { Ingredient, IngredientGroup } from "@/lib/types";
+import type { IngredientGroup } from "@/lib/types";
 import { ProgressPie } from "@/components/shared/progress-pie";
 import { type NumberFormat, getNumberFormat } from "@/lib/numberFormat";
 import { displayAmount } from "@/utils/ingredientScaler";
@@ -31,53 +27,11 @@ interface IngredientListProps {
   groups: IngredientGroup[];
   diffMap?: DiffMap;
   diffGeneration?: number;
-  enableMobileSearchPortal?: boolean;
 }
 
-interface FilteredIngredient {
-  ingredient: Ingredient;
-  sourceIndex: number;
-}
-
-interface FilteredIngredientGroup {
-  groupName: string;
-  ingredients: FilteredIngredient[];
-}
-
-export function IngredientList({
-  groups,
-  diffMap,
-  diffGeneration,
-  enableMobileSearchPortal = true,
-}: IngredientListProps) {
+export function IngredientList({ groups, diffMap, diffGeneration }: IngredientListProps) {
   const [checked, setChecked] = useState<Set<string>>(new Set());
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [mobileSearchContainer, setMobileSearchContainer] = useState<HTMLElement | null>(null);
-  const desktopSearchInputRef = useRef<HTMLInputElement>(null);
-  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
-  const isSearchExpanded = isSearchOpen || !!searchQuery;
   const numberFormat = useNumberFormat();
-
-  useEffect(() => {
-    if (!enableMobileSearchPortal) return;
-
-    const frame = requestAnimationFrame(() => {
-      setMobileSearchContainer(
-        document.getElementById("mobile-recipe-search-action") ??
-          document.getElementById("mobile-ingredient-search-action")
-      );
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [enableMobileSearchPortal]);
-
-  useEffect(() => {
-    if (!isSearchOpen) return;
-    const isMobileViewport = window.matchMedia("(max-width: 767px)").matches;
-    const input = isMobileViewport ? mobileSearchInputRef.current : desktopSearchInputRef.current;
-    input?.focus({ preventScroll: true });
-  }, [isSearchOpen]);
 
   const toggleCheck = (key: string) => {
     setChecked((prev) => {
@@ -91,27 +45,6 @@ export function IngredientList({
     });
   };
 
-  const filteredGroups = useMemo(() => {
-    const normalizedGroups: FilteredIngredientGroup[] = groups.map((group) => ({
-      groupName: group.groupName,
-      ingredients: group.ingredients.map((ingredient, sourceIndex) => ({
-        ingredient,
-        sourceIndex,
-      })),
-    }));
-
-    if (!searchQuery.trim()) return normalizedGroups;
-
-    const query = searchQuery.toLowerCase().trim();
-    return normalizedGroups
-      .map((group) => ({
-        ...group,
-        ingredients: group.ingredients.filter(({ ingredient }) =>
-          ingredient.ingredient.toLowerCase().includes(query)
-        ),
-      }))
-      .filter((group) => group.ingredients.length > 0);
-  }, [groups, searchQuery]);
   const toggleAll = (keys: string[]) => {
     setChecked((prev) => {
       const next = new Set(prev);
@@ -127,113 +60,26 @@ export function IngredientList({
     });
   };
 
-  const searchControl = (placement: "desktop" | "mobile") => {
-    const isMobile = placement === "mobile";
-
-    return (
-      <div
-        className={`group relative h-9 transition-[width] duration-200 ease-in-out ${
-          isSearchExpanded
-            ? isMobile
-              ? "w-[min(260px,calc(100vw-5.25rem))]"
-              : "w-[260px] max-w-full"
-            : isMobile
-              ? "w-9"
-              : "w-7"
-        }`}
-      >
-        <div className={isMobile && isSearchExpanded ? "absolute right-0 top-0 h-9 w-full" : ""}>
-          {!searchQuery && (
-            <Magnifer
-              className={`absolute top-1/2 size-[16px] -translate-y-1/2 text-muted-foreground pointer-events-none z-10 transition-colors ${
-                isSearchExpanded
-                  ? "right-2"
-                  : "left-1/2 -translate-x-1/2 group-hover:text-stone-600 dark:group-hover:text-stone-300"
-              }`}
-            />
-          )}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={() => setIsSearchOpen(true)}
-                aria-label="Search ingredients"
-                aria-hidden={isSearchExpanded}
-                tabIndex={isSearchExpanded ? -1 : 0}
-                className={`press-scale absolute inset-0 rounded-xl transition-opacity duration-150 ease-out hover:bg-stone-100 dark:hover:bg-stone-800 ${
-                  isSearchExpanded ? "opacity-0 pointer-events-none" : "opacity-100"
-                }`}
-              />
-            </TooltipTrigger>
-            <TooltipContent side="bottom">Search ingredients</TooltipContent>
-          </Tooltip>
-          <Input
-            ref={isMobile ? mobileSearchInputRef : desktopSearchInputRef}
-            type="text"
-            placeholder="Search Ingredients"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onBlur={() => {
-              if (!searchQuery) setIsSearchOpen(false);
-            }}
-            aria-label="Search ingredients"
-            tabIndex={isSearchExpanded ? 0 : -1}
-            aria-hidden={!isSearchExpanded}
-            className={`absolute inset-0 w-full pl-3 pr-9 h-9 rounded-xl border-transparent bg-stone-100 dark:bg-stone-800 font-sans text-[13px] placeholder:text-muted-foreground focus-visible:bg-background focus-visible:border-input transition-opacity duration-200 ease-out ${
-              isSearchExpanded ? "opacity-100" : "opacity-0 pointer-events-none"
-            }`}
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearchQuery("");
-                setIsSearchOpen(false);
-              }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-sm text-muted-foreground hover:text-foreground transition-colors z-10"
-              aria-label="Clear search"
-            >
-              <X className="size-4" />
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-6">
-      {mobileSearchContainer &&
-        createPortal(
-          <div className="md:hidden">{searchControl("mobile")}</div>,
-          mobileSearchContainer
-        )}
-
       <div className="flex items-center justify-between gap-4 md:pl-3 mb-4">
         <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 flex-shrink-0">
           Ingredients
         </h3>
-        <div className="hidden md:block">{searchControl("desktop")}</div>
       </div>
 
-      {filteredGroups.length === 0 && searchQuery.trim() ? (
-        <p className="font-sans text-sm text-muted-foreground text-center py-4">
-          No ingredients match &ldquo;{searchQuery}&rdquo;
-        </p>
-      ) : (
-        filteredGroups.map((group) => (
-          <IngredientGroupSection
-            key={group.groupName}
-            group={group}
-            checked={checked}
-            onToggle={toggleCheck}
-            onToggleAll={toggleAll}
-            numberFormat={numberFormat}
-            diffMap={diffMap}
-            diffGeneration={diffGeneration}
-          />
-        ))
-      )}
+      {groups.map((group) => (
+        <IngredientGroupSection
+          key={group.groupName}
+          group={group}
+          checked={checked}
+          onToggle={toggleCheck}
+          onToggleAll={toggleAll}
+          numberFormat={numberFormat}
+          diffMap={diffMap}
+          diffGeneration={diffGeneration}
+        />
+      ))}
     </div>
   );
 }
@@ -247,7 +93,7 @@ function IngredientGroupSection({
   diffMap,
   diffGeneration,
 }: {
-  group: FilteredIngredientGroup;
+  group: IngredientGroup;
   checked: Set<string>;
   onToggle: (key: string) => void;
   onToggleAll: (keys: string[]) => void;
@@ -256,7 +102,7 @@ function IngredientGroupSection({
   diffGeneration?: number;
 }) {
   const ingredientKeys = group.ingredients.map(
-    ({ sourceIndex }) => `${group.groupName}-${sourceIndex}`
+    (_, sourceIndex) => `${group.groupName}-${sourceIndex}`
   );
   const totalCount = ingredientKeys.length;
   const checkedCount = ingredientKeys.filter((key) => checked.has(key)).length;
@@ -311,8 +157,8 @@ function IngredientGroupSection({
 
         <AccordionPrimitive.Content className="ingredient-group-content overflow-hidden">
           <div className="ingredient-group-content-inner">
-            {group.ingredients.map(({ ingredient: ing, sourceIndex }, i) => {
-              const key = `${group.groupName}-${sourceIndex}`;
+            {group.ingredients.map((ing, i) => {
+              const key = `${group.groupName}-${i}`;
               const isChecked = checked.has(key);
               const isLast = i === group.ingredients.length - 1;
               const amount = `${displayAmount(ing.amount, numberFormat)} ${ing.units || ""}`.trim();
