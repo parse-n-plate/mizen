@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Image as ImageIcon, Link as LinkIcon, Upload, X } from "lucide-react";
+import { BookOpen, Link as LinkIcon, Upload, X } from "lucide-react";
 import UndoLeftRound from "@solar-icons/react/csr/arrows-action/UndoLeftRound";
 import BookMinimalistic from "@solar-icons/react/csr/school/BookMinimalistic";
 import ClockCircle from "@solar-icons/react/csr/time/ClockCircle";
@@ -294,9 +294,7 @@ export function SearchCommandView({
                   onSelect={() => openRecipe(item)}
                   className="group"
                 >
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-                    <ImageIcon size={18} aria-hidden="true" />
-                  </div>
+                  <BookOpen className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{item.recipe.title}</p>
                     {meta && <p className="truncate text-xs text-muted-foreground">{meta}</p>}

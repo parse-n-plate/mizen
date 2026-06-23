@@ -19,6 +19,12 @@ type SidebarContextValue = {
 
 const SidebarContext = createContext<SidebarContextValue | null>(null);
 
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  return !!target.closest("input, textarea, select, [contenteditable='true']");
+}
+
 export function useSidebar(): SidebarContextValue {
   return useContext(SidebarContext) ?? { collapsed: false, setCollapsed: () => {} };
 }
@@ -70,6 +76,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        if (isEditableTarget(event.target)) return;
         event.preventDefault();
         setSearchOpen((open) => !open);
       }

@@ -438,7 +438,8 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
       setInlineError(null);
       inputRef.current?.focus();
     } else if (action === "upload-image") {
-      fileInputRef.current?.click();
+      setIsFocused(true);
+      inputRef.current?.focus();
     } else {
       return;
     }

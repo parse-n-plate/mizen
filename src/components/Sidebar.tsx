@@ -256,7 +256,7 @@ export function Sidebar({ collapsed, onToggle, onOpenSearch }: SidebarProps) {
           <button
             type="button"
             className="flex items-center justify-between rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 px-2.5 py-2 gap-2 w-full hover:border-stone-300 dark:hover:border-stone-600 transition-colors"
-            onClick={onOpenSearch}
+            onClick={user ? onOpenSearch : () => setAuthOpen(true)}
           >
             <div className="flex items-center gap-2">
               <Magnifer size={15} className="text-stone-400 dark:text-stone-500 shrink-0" />
