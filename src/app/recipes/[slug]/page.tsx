@@ -61,12 +61,6 @@ export default async function DemoRecipePage({ params }: DemoRecipePageProps) {
                 <path d="m15 18-6-6 6-6" />
               </svg>
             </Link>
-            <div className="ml-auto flex min-w-0 items-center gap-1">
-              <div
-                id="mobile-recipe-search-action"
-                className="flex h-9 min-w-0 items-center justify-end"
-              />
-            </div>
           </div>
           <RecipeHeader recipe={recipe} />
           {favoriteRecipe && (

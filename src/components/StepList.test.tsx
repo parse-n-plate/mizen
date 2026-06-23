@@ -19,12 +19,6 @@ vi.mock("next/image", () => ({
 }));
 /* eslint-enable @typescript-eslint/no-unused-vars, @next/next/no-img-element */
 
-vi.mock("@/components/ui/tooltip", () => ({
-  Tooltip: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  TooltipTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  TooltipContent: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
 vi.mock("@/components/ImageLightbox", () => ({
   ImageLightbox: ({ src, alt }: { src: string; alt: string }) => (
     <div data-testid="lightbox" data-src={src} aria-label={alt} />
@@ -76,10 +70,7 @@ describe("StepList", () => {
     vi.clearAllMocks();
   });
 
-  it("shows the photo toggle only when at least one step has images", async () => {
-    await render([{ title: "Step 1", detail: "Stir until combined." }]);
-    expect(container.querySelector('button[aria-label="Hide photos"]')).toBeNull();
-
+  it("shows step images by default", async () => {
     await render([
       {
         title: "Step 1",
@@ -88,10 +79,12 @@ describe("StepList", () => {
       },
     ]);
 
-    expect(container.querySelector('button[aria-label="Hide photos"]')).not.toBeNull();
+    expect(container.querySelector('img[alt="Step 1"]')).not.toBeNull();
   });
 
-  it("persists the photo visibility preference when toggled", async () => {
+  it("hides step images when the photo visibility preference is disabled", async () => {
+    localStorage.setItem("show-step-images", "false");
+
     await render([
       {
         title: "Step 1",
@@ -100,16 +93,7 @@ describe("StepList", () => {
       },
     ]);
 
-    const toggle = container.querySelector('button[aria-label="Hide photos"]');
-    expect(toggle).not.toBeNull();
-
-    await act(async () => {
-      toggle?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await Promise.resolve();
-    });
-
-    expect(localStorage.getItem("show-step-images")).toBe("false");
-    expect(container.querySelector('button[aria-label="Show photos"]')).not.toBeNull();
+    expect(container.querySelector("[data-open='false'] img[alt='Step 1']")).not.toBeNull();
   });
 
   it("opens the clicked step image in the lightbox for multi-image steps", async () => {
