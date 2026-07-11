@@ -197,7 +197,7 @@ export function MobileBottomNav({ searchHref }: { searchHref?: string }) {
       id: "profile",
       type: "link",
       href: "/profile",
-      label: "Profile",
+      label: "Settings",
       active: pathname === "/profile",
       icon: <User size={22} aria-hidden="true" />,
     },
