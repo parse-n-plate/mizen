@@ -426,6 +426,30 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
     };
   }, [imageFile]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const initialUrl = params.get("url");
+    const action = params.get("action");
+
+    if (initialUrl) {
+      setUrl(initialUrl);
+      setImageFile(null);
+      setPastedText(null);
+      setInlineError(null);
+      inputRef.current?.focus();
+    } else if (action === "add-recipe" || action === "upload-image") {
+      setIsFocused(true);
+      inputRef.current?.focus();
+    } else {
+      return;
+    }
+
+    params.delete("url");
+    params.delete("action");
+    const nextQuery = params.toString();
+    window.history.replaceState(null, "", nextQuery ? `/?${nextQuery}` : "/");
+  }, []);
+
   const handleFile = useCallback(
     (file: File) => {
       if (!ALLOWED_TYPES.includes(file.type)) {

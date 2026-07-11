@@ -32,7 +32,10 @@ import {
   getSubstitutions,
   getTemperatureUnit,
   getUnitSystem,
+  getShowStepImages,
+  setShowStepImages,
   setUnitSystem,
+  subscribePreferences,
 } from "@/lib/preferences";
 import Link from "next/link";
 import {
@@ -52,6 +55,7 @@ import AltArrowLeft from "@solar-icons/react/csr/arrows/AltArrowLeft";
 import Ruler from "@solar-icons/react/csr/tools/Ruler";
 import Eye from "@solar-icons/react/csr/security/Eye";
 import EyeClosed from "@solar-icons/react/csr/security/EyeClosed";
+import Gallery from "@solar-icons/react/csr/video/Gallery";
 import {
   Copy,
   EllipsisVertical,
@@ -92,6 +96,7 @@ export default function RecipePage() {
     getNumberFormat,
     () => "fractions" as const
   );
+  const showStepImages = useSyncExternalStore(subscribePreferences, getShowStepImages, () => true);
 
   const originalServings = useMemo(() => recipe?.servings, [recipe?.servings]);
   const [servings, setServings] = useState<number | undefined>(recipe?.servings);
@@ -202,6 +207,11 @@ export default function RecipePage() {
     if (!recipe) return [];
     return convertInstructionTemperatures(recipe.instructions, temperatureUnit);
   }, [recipe, temperatureUnit]);
+  const hasStepImages = useMemo(
+    () =>
+      displayedInstructions.some((step) => (step.imageUrls?.length ?? 0) > 0 || !!step.imageUrl),
+    [displayedInstructions]
+  );
 
   const shareUrl = savedMeta
     ? `${typeof window !== "undefined" ? window.location.origin : ""}/r/${savedMeta.slug}`
@@ -393,10 +403,6 @@ export default function RecipePage() {
               <AltArrowLeft className="size-4" />
             </Link>
             <div className="ml-auto flex items-center gap-1">
-              <div
-                id="mobile-recipe-search-action"
-                className="flex h-9 w-9 items-center justify-center"
-              />
               {isPhoneViewport ? (
                 <button
                   type="button"
@@ -572,6 +578,9 @@ export default function RecipePage() {
             onDelete={handleDelete}
             showReport={feedbackFeaturesEnabled && !!user}
             onReport={() => setReportOpen(true)}
+            hasStepImages={hasStepImages}
+            showStepImages={showStepImages}
+            onShowStepImagesChange={setShowStepImages}
           />
 
           {/* Content card */}
@@ -760,6 +769,15 @@ export default function RecipePage() {
                 >
                   Feedback
                   <MessageSquare className="ml-auto h-4 w-4" />
+                </DropdownMenuItem>
+              )}
+              {hasStepImages && (
+                <DropdownMenuItem
+                  onSelect={() => setShowStepImages(!showStepImages)}
+                  className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+                >
+                  {showStepImages ? "Hide photos" : "Show photos"}
+                  <Gallery className="ml-auto h-4 w-4" />
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />

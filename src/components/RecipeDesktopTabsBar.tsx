@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Flag from "@solar-icons/react/csr/ui/Flag";
 import Ruler from "@solar-icons/react/csr/tools/Ruler";
+import Gallery from "@solar-icons/react/csr/video/Gallery";
 
 export type RecipeTabValue = "prep" | "cook";
 export type RecipeUnitSystem = "original" | "metric" | "imperial";
@@ -33,6 +34,9 @@ interface RecipeDesktopTabsBarProps {
   onDelete?: (event: Event) => void;
   onReport?: () => void;
   showReport?: boolean;
+  hasStepImages?: boolean;
+  showStepImages?: boolean;
+  onShowStepImagesChange?: (show: boolean) => void;
 }
 
 export function RecipeDesktopTabsBar({
@@ -50,6 +54,9 @@ export function RecipeDesktopTabsBar({
   onDelete,
   onReport,
   showReport = false,
+  hasStepImages = false,
+  showStepImages = true,
+  onShowStepImagesChange,
 }: RecipeDesktopTabsBarProps) {
   return (
     <div className="group/tabs hidden w-full items-end gap-0 md:flex">
@@ -266,6 +273,15 @@ export function RecipeDesktopTabsBar({
                 <line x1="12" x2="12" y1="2" y2="15" />
               </svg>
             </DropdownMenuItem>
+            {hasStepImages && onShowStepImagesChange && (
+              <DropdownMenuItem
+                onSelect={() => onShowStepImagesChange(!showStepImages)}
+                className="text-stone-700 focus:bg-stone-100 focus:text-stone-900 dark:text-stone-300 dark:focus:bg-stone-800 dark:focus:text-stone-50"
+              >
+                {showStepImages ? "Hide photos" : "Show photos"}
+                <Gallery className="ml-auto h-4 w-4" />
+              </DropdownMenuItem>
+            )}
             {onDelete && (
               <>
                 <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />

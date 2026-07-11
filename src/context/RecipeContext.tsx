@@ -36,6 +36,12 @@ const META_STORAGE_KEY = "baby-mizen-recipe-meta";
 const HISTORY_KEY = "baby-mizen-history";
 const MAX_HISTORY = 10;
 
+function recipeIdentityKey(recipe: ParsedRecipe): string {
+  const sourceUrl = recipe.sourceUrl?.trim();
+  if (sourceUrl) return `url:${sourceUrl}`;
+  return `title:${recipe.title.trim().toLowerCase()}`;
+}
+
 export function RecipeProvider({ children }: { children: ReactNode }) {
   const [recipe, setRecipeState] = useState<ParsedRecipe | null>(null);
   const [savedMeta, setSavedMetaState] = useState<SavedMeta | null>(null);
@@ -104,14 +110,17 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
         const saved = (await res.json()) as SavedRecipe[];
         if (cancelled || !Array.isArray(saved)) return;
 
-        const byUrl = new Map<string, SavedRecipe>();
-        const byTitle = new Map<string, SavedRecipe>();
+        const byKey = new Map<string, SavedRecipe>();
         for (const s of saved) {
-          if (s.source_url) byUrl.set(s.source_url, s);
-          if (s.recipe?.title) byTitle.set(s.recipe.title, s);
+          const sourceUrl = s.source_url || s.recipe?.sourceUrl;
+          if (sourceUrl) {
+            byKey.set(`url:${sourceUrl.trim()}`, s);
+          } else if (s.recipe?.title) {
+            byKey.set(`title:${s.recipe.title.trim().toLowerCase()}`, s);
+          }
         }
         const matchFor = (r: ParsedRecipe): SavedMeta | null => {
-          const hit = (r.sourceUrl && byUrl.get(r.sourceUrl)) || byTitle.get(r.title);
+          const hit = byKey.get(recipeIdentityKey(r));
           return hit ? { id: hit.id, slug: hit.slug } : null;
         };
 
@@ -185,7 +194,8 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
       if (newRecipe) {
         // If this recipe already has a saved-meta record in history, restore it
         // so navigating back to it shows the saved (filled heart) state.
-        const existing = history.find((h) => h.recipe.title === newRecipe.title);
+        const newRecipeKey = recipeIdentityKey(newRecipe);
+        const existing = history.find((h) => recipeIdentityKey(h.recipe) === newRecipeKey);
         const restoredMeta = existing?.savedMeta ?? null;
         setSavedMetaState(restoredMeta);
 
@@ -196,16 +206,16 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
           localStorage.removeItem(META_STORAGE_KEY);
         }
 
-        // Add to parse history (dedup by title, newest first)
+        // Add to parse history, newest first.
         const entry: HistoryEntry = {
           recipe: newRecipe,
           parsedAt: new Date().toISOString(),
           savedMeta: restoredMeta,
         };
-        const updated = [entry, ...history.filter((h) => h.recipe.title !== newRecipe.title)].slice(
-          0,
-          MAX_HISTORY
-        );
+        const updated = [
+          entry,
+          ...history.filter((h) => recipeIdentityKey(h.recipe) !== newRecipeKey),
+        ].slice(0, MAX_HISTORY);
         setHistory(updated);
         localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
       } else {
@@ -221,7 +231,8 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
   const removeFromHistory = () => {
     if (!recipe) return;
     try {
-      const updated = history.filter((h) => h.recipe.title !== recipe.title);
+      const currentRecipeKey = recipeIdentityKey(recipe);
+      const updated = history.filter((h) => recipeIdentityKey(h.recipe) !== currentRecipeKey);
       setHistory(updated);
       localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
       // Clear current recipe state
@@ -245,8 +256,9 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
       // Sync saved status into the matching history entry so the recipe
       // switcher dropdown can indicate which recent recipes are saved.
       if (recipe) {
+        const currentRecipeKey = recipeIdentityKey(recipe);
         const updated = history.map((h) =>
-          h.recipe.title === recipe.title ? { ...h, savedMeta: meta } : h
+          recipeIdentityKey(h.recipe) === currentRecipeKey ? { ...h, savedMeta: meta } : h
         );
         setHistory(updated);
         localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
