@@ -24,6 +24,9 @@ import { displayAmount, displayText } from "@/utils/ingredientScaler";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
+const ingredientReferenceDetailsEnabled =
+  process.env.NEXT_PUBLIC_INGREDIENT_REFERENCE_DETAILS_ENABLED === "true";
+
 function useImageAspectRatio(src: string | undefined) {
   const [state, setState] = useState<{ ratio: number | null; error: boolean }>({
     ratio: null,
@@ -304,7 +307,9 @@ function StepRow({
               text={detailText}
               references={ingredientReferences}
               numberFormat={numberFormat}
-              onSelectIngredient={setSelectedIngredient}
+              onSelectIngredient={
+                ingredientReferenceDetailsEnabled ? setSelectedIngredient : undefined
+              }
             />
           </p>
           {ingredientReferences.some((reference) => reference.start === undefined) && (
@@ -316,7 +321,7 @@ function StepRow({
                     key={reference.key}
                     reference={reference}
                     numberFormat={numberFormat}
-                    onSelect={setSelectedIngredient}
+                    onSelect={ingredientReferenceDetailsEnabled ? setSelectedIngredient : undefined}
                   />
                 ))}
             </div>
@@ -448,15 +453,17 @@ function StepRow({
         </p>
       )}
 
-      <IngredientReferenceDetails
-        reference={selectedIngredient}
-        step={step}
-        stepNumber={index + 1}
-        numberFormat={numberFormat}
-        onOpenChange={(open) => {
-          if (!open) setSelectedIngredient(null);
-        }}
-      />
+      {ingredientReferenceDetailsEnabled && (
+        <IngredientReferenceDetails
+          reference={selectedIngredient}
+          step={step}
+          stepNumber={index + 1}
+          numberFormat={numberFormat}
+          onOpenChange={(open) => {
+            if (!open) setSelectedIngredient(null);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -468,9 +475,13 @@ function IngredientReferenceHit({
 }: {
   reference: IngredientStepReference;
   numberFormat: NumberFormat;
-  onSelect: (reference: IngredientStepReference) => void;
+  onSelect?: (reference: IngredientStepReference) => void;
 }) {
   const { amount, label } = getIngredientReferenceDisplay(reference, numberFormat);
+
+  if (!onSelect) {
+    return <IngredientReferencePill leadingText={amount} label={label} />;
+  }
 
   return (
     <IngredientReferencePill
@@ -748,7 +759,7 @@ function StepDetailWithInlineIngredientReferences({
   text: string;
   references: IngredientStepReference[];
   numberFormat: NumberFormat;
-  onSelectIngredient: (reference: IngredientStepReference) => void;
+  onSelectIngredient?: (reference: IngredientStepReference) => void;
 }) {
   const inlineReferences = references.filter(
     (reference) => reference.start !== undefined && reference.end !== undefined
@@ -821,7 +832,7 @@ function InlineIngredientReference({
   reference: IngredientStepReference;
   text: string;
   numberFormat: NumberFormat;
-  onSelect: (reference: IngredientStepReference) => void;
+  onSelect?: (reference: IngredientStepReference) => void;
 }) {
   const amount =
     reference.usage === "partial"
@@ -831,23 +842,37 @@ function InlineIngredientReference({
           .join(" ")
           .trim();
 
-  return (
-    <button
-      type="button"
-      onClick={() => onSelect(reference)}
-      className="press-scale mx-0.5 inline-flex translate-y-[-1px] items-baseline gap-1 rounded-lg bg-stone-100 px-2 py-1 align-middle font-sans leading-none text-stone-500 transition-colors hover:bg-stone-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-stone-800 dark:text-stone-400 dark:hover:bg-stone-700"
-      title={
-        reference.usage === "partial"
-          ? `${reference.ingredient.ingredient}: partial amount`
-          : reference.ingredient.ingredient
-      }
-    >
+  const contents = (
+    <>
       {amount && (
         <span className="text-[0.86em] font-semibold text-stone-700 dark:text-stone-100">
           {amount}
         </span>
       )}
       <span className="font-normal text-stone-500 dark:text-stone-400">{text}</span>
+    </>
+  );
+
+  if (!onSelect) {
+    return (
+      <span className="mx-px inline-flex translate-y-[-1px] items-baseline gap-1 rounded-lg bg-stone-100 px-2 py-1 align-middle font-sans leading-none text-stone-500 dark:bg-stone-800 dark:text-stone-400">
+        {contents}
+      </span>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(reference)}
+      className="press-scale mx-px inline-flex translate-y-[-1px] items-baseline gap-1 rounded-lg bg-stone-100 px-2 py-1 align-middle font-sans leading-none text-stone-500 transition-colors hover:bg-stone-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-stone-800 dark:text-stone-400 dark:hover:bg-stone-700"
+      title={
+        reference.usage === "partial"
+          ? `${reference.ingredient.ingredient}: partial amount`
+          : reference.ingredient.ingredient
+      }
+    >
+      {contents}
     </button>
   );
 }

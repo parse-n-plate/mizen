@@ -152,7 +152,7 @@ describe("StepList", () => {
     expect(container.textContent).toContain("1 cupbutter");
   });
 
-  it("renders matched ingredients as interactive inline pills", async () => {
+  it("renders matched ingredients as non-interactive inline pills while details are disabled", async () => {
     await render(
       [{ title: "Step 1", detail: "Fold the flour into the butter." }],
       [
@@ -166,15 +166,14 @@ describe("StepList", () => {
       ]
     );
 
-    const inlineReference = container.querySelector(
-      'button[title="all-purpose flour"]'
-    ) as HTMLElement | null;
+    const inlineReference = container.querySelector("p > span") as HTMLElement | null;
     expect(inlineReference).not.toBeNull();
-    expect(inlineReference?.tagName).toBe("BUTTON");
+    expect(container.querySelector('button[title="all-purpose flour"]')).toBeNull();
+    expect(inlineReference?.tagName).toBe("SPAN");
     expect(inlineReference?.className).toContain("rounded-lg");
   });
 
-  it("opens ingredient details from a step ingredient pill", async () => {
+  it("does not open ingredient details from a step ingredient pill while disabled", async () => {
     await render(
       [{ title: "Step 1", detail: "Season the dough.", ingredients: ["kosher salt"] }],
       [
@@ -193,7 +192,7 @@ describe("StepList", () => {
     );
 
     const ingredientPill = container.querySelector(
-      '[aria-label="Ingredients in this step"] button'
+      '[aria-label="Ingredients in this step"] > span'
     );
     expect(ingredientPill).not.toBeNull();
 
@@ -203,11 +202,10 @@ describe("StepList", () => {
     });
 
     expect(document.body.textContent).toContain("kosher salt");
-    expect(document.body.textContent).toContain("Kosher Salt");
-    expect(document.body.textContent).toContain("1 tsp");
-    expect(document.body.textContent).toContain("This recipe lists 1 tsp of kosher salt");
-    expect(document.body.textContent).toContain("Use less if using fine salt.");
-    expect(document.body.textContent).toContain("Step 1:");
+    expect(document.body.textContent).not.toContain("Kosher Salt");
+    expect(document.body.textContent).not.toContain("This recipe lists 1 tsp of kosher salt");
+    expect(document.body.textContent).not.toContain("Use less if using fine salt.");
+    expect(document.body.textContent).not.toContain("Step 1:");
   });
 
   it("does not repeat an amount already written before an inline ingredient", async () => {
