@@ -13,7 +13,6 @@ interface PrepSectionProps {
   diffMap?: DiffMap;
   diffGeneration?: number;
   onStepClick?: (stepNumber: number) => void;
-  enableMobileSearchPortal?: boolean;
 }
 
 export function PrepSection({
@@ -23,7 +22,6 @@ export function PrepSection({
   diffMap,
   diffGeneration,
   onStepClick,
-  enableMobileSearchPortal = true,
 }: PrepSectionProps) {
   const tips = steps
     .filter((s) => s.tips)
@@ -42,12 +40,7 @@ export function PrepSection({
       {uniqueTips.length > 0 && <TipsCallout tips={uniqueTips} />}
 
       <div>
-        <IngredientList
-          groups={ingredients}
-          diffMap={diffMap}
-          diffGeneration={diffGeneration}
-          enableMobileSearchPortal={enableMobileSearchPortal}
-        />
+        <IngredientList groups={ingredients} diffMap={diffMap} diffGeneration={diffGeneration} />
       </div>
 
       {equipment && equipment.length > 0 && (

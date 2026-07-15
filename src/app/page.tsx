@@ -6,8 +6,6 @@ import Link from "next/link";
 import { toast } from "sonner";
 import Plain from "@solar-icons/react/csr/messages/Plain";
 import { motion, AnimatePresence } from "motion/react";
-import { useDialKit } from "dialkit";
-import { getTheme, setTheme } from "@/lib/theme";
 import { Search } from "@/components/Search";
 import { RecentRecipes } from "@/components/RecentRecipes";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
@@ -25,8 +23,17 @@ const SOURCES = [
   { label: "Photos", shortLabel: "Photos", icon: "camera", hint: "Snap a photo of any recipe" },
 ] as const;
 
+const CHATGPT_PASTED_TEXT = `Simple Homemade Chocolate
+
+1/2 cup cocoa powder
+1/4 cup melted coconut oil or cocoa butter
+2-4 tbsp honey, maple syrup, or sugar (adjust to taste)
+1/2 tsp vanilla extract
+pinch of salt
+
+Melt the coconut oil or cocoa butter until fully liquid. Stir in the cocoa powder until smooth and no lumps remain. Add the sweetener, vanilla, and a pinch of salt, then mix until fully combined — taste and adjust sweetness if needed. Pour into a mold or small lined container and refrigerate for 1–2 hours, until solid.`;
+
 const LANDING_COPY = {
-  badge: "Your recipe collection",
   sub: "One place for every recipe you find online. Clean ingredients, clear steps.",
   sourceLabel: "Bring recipes from",
 };
@@ -506,25 +513,6 @@ export function WaitlistLanding() {
   const [authOpen, setAuthOpen] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  const dial = useDialKit("Theme", {
-    mode: {
-      type: "select",
-      options: ["System", "Light", "Dark"],
-      default: getTheme() === "dark" ? "Dark" : getTheme() === "light" ? "Light" : "System",
-    },
-  });
-
-  // Sync theme from dial panel
-  useEffect(() => {
-    const map: Record<string, "system" | "light" | "dark"> = {
-      System: "system",
-      Light: "light",
-      Dark: "dark",
-    };
-    const theme = map[dial.mode as string];
-    if (theme) setTheme(theme);
-  }, [dial.mode]);
-
   // Run the animation sequence whenever phase changes
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
@@ -618,12 +606,6 @@ export function WaitlistLanding() {
           {/* Center: Hero content */}
           <div className="flex-1 flex flex-col justify-center py-12 lg:py-0 lg:pb-16 lg:items-start items-center">
             <div className="w-full text-center lg:text-left">
-              <div className="mb-6">
-                <span className="inline-block px-3 py-1 rounded-full border border-stone-200 dark:border-stone-700 font-sans text-xs text-stone-500 dark:text-stone-400">
-                  {LANDING_COPY.badge}
-                </span>
-              </div>
-
               <h1 className="flex flex-col items-center gap-1 lg:items-start font-serif text-[clamp(32px,9vw,56px)] lg:text-[clamp(24px,2.6vw,44px)] xl:text-[clamp(32px,2.8vw,52px)] font-bold leading-[1.3] tracking-[-0.02em] text-stone-900 dark:text-stone-100 mb-5">
                 <HeroHeadline />
               </h1>
@@ -820,7 +802,8 @@ export function WaitlistLanding() {
                 <WaitlistRecipePreview
                   key={displayedSource}
                   recipe={EXAMPLE_RECIPES[displayedSource]}
-                  sourceType={(["url", "url", "photo"] as const)[displayedSource]}
+                  sourceType={(["url", "text", "photo"] as const)[displayedSource]}
+                  pastedText={displayedSource === 1 ? CHATGPT_PASTED_TEXT : undefined}
                 />
               </div>
             </div>

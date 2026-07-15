@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import Home from "@solar-icons/react/csr/ui/Home";
 import BookBookmark from "@solar-icons/react/csr/school/BookBookmark";
+import Magnifer from "@solar-icons/react/csr/search/Magnifer";
 import User from "@solar-icons/react/csr/users/User";
 
 type BaseMobileNavItem = {
@@ -61,7 +62,7 @@ function NavIconButton({
 
   const sharedClassName = cn(
     "press-scale inline-flex h-12 items-center justify-center rounded-full transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-blue)] disabled:pointer-events-none disabled:opacity-40",
-    showLabel ? "min-w-[5.75rem] gap-1.5 px-4 font-sans text-xs font-semibold" : "min-w-12 px-3",
+    showLabel ? "min-w-[5.75rem] gap-1.5 px-4 font-sans text-xs font-semibold" : "min-w-16 px-4",
     stateClass,
     className
   );
@@ -116,7 +117,7 @@ function MobileNavTabLayer({
 
 function MobileNavPrimaryAction({ action }: { action: MobileNavAction }) {
   const className = cn(
-    "press-scale inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-[var(--color-border-light)]/80 bg-[var(--color-surface)] text-[var(--color-text-heading)] shadow-[0_12px_30px_rgba(0,0,0,0.08)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-blue)] disabled:pointer-events-none disabled:opacity-40 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100",
+    "press-scale inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-[var(--color-border-light)]/80 bg-[var(--color-surface)] text-[var(--color-text-heading)] shadow-[0_12px_30px_rgba(0,0,0,0.08)] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-blue)] disabled:pointer-events-none disabled:opacity-40 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100",
     action.active && "bg-stone-100 text-[var(--color-blue)] dark:bg-stone-800"
   );
 
@@ -156,8 +157,8 @@ export function MobileNavShell({
       )}
       aria-label="Mobile navigation"
     >
-      <div className="mx-auto flex max-w-3xl items-center justify-center gap-3 px-4 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3">
-        <div className="pointer-events-auto relative min-w-0 rounded-full border border-[var(--color-border-light)]/80 bg-[var(--color-surface)]/95 shadow-[0_12px_34px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-stone-700 dark:bg-stone-900/95">
+      <div className="mx-auto flex max-w-3xl items-center justify-center gap-3 px-4 pb-[calc(env(safe-area-inset-bottom)+2rem)] pt-3">
+        <div className="pointer-events-auto relative min-w-0 rounded-full border border-[var(--color-border-light)]/80 bg-[var(--color-surface)]/95 p-1.5 shadow-[0_12px_34px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-stone-700 dark:bg-stone-900/95">
           <MobileNavTabLayer items={items} showLabels={showLabels} />
         </div>
         {actionSlot ? (
@@ -172,7 +173,7 @@ export function MobileNavShell({
   );
 }
 
-export function MobileBottomNav() {
+export function MobileBottomNav({ searchHref }: { searchHref?: string }) {
   const pathname = usePathname();
 
   const items: MobileNavItem[] = [
@@ -196,11 +197,24 @@ export function MobileBottomNav() {
       id: "profile",
       type: "link",
       href: "/profile",
-      label: "Profile",
+      label: "Settings",
       active: pathname === "/profile",
       icon: <User size={22} aria-hidden="true" />,
     },
   ];
 
-  return <MobileNavShell items={items} />;
+  return (
+    <MobileNavShell
+      items={items}
+      action={
+        searchHref
+          ? {
+              label: "Search",
+              icon: <Magnifer size={22} aria-hidden="true" />,
+              href: searchHref,
+            }
+          : undefined
+      }
+    />
+  );
 }

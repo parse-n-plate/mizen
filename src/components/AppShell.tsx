@@ -6,6 +6,7 @@ import { RecipeProvider } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { SearchCommandModal } from "@/components/SearchCommandModal";
 import { SplashScreen } from "@/components/SplashScreen";
 import { cn } from "@/lib/utils";
 import SidebarMinimalistic from "@solar-icons/react/csr/it/SidebarMinimalistic";
@@ -18,6 +19,12 @@ type SidebarContextValue = {
 
 const SidebarContext = createContext<SidebarContextValue | null>(null);
 
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.isContentEditable) return true;
+  return !!target.closest("input, textarea, select, [contenteditable='true']");
+}
+
 export function useSidebar(): SidebarContextValue {
   return useContext(SidebarContext) ?? { collapsed: false, setCollapsed: () => {} };
 }
@@ -26,6 +33,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user, loading } = useUser();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const isHomePage = pathname === "/";
   const isDesignSystemPage =
@@ -44,7 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   // Treat loading state as landing on homepage so sidebar don't flash
   // before auth resolves
   const isLanding = isPublicStandalonePage || (isHomePage && (loading || !user));
-  const showMobileNav = !!user && ["/", "/cookbook", "/profile"].includes(pathname);
+  const showMobileNav = !!user && ["/", "/cookbook", "/profile", "/search"].includes(pathname);
   // Pages that render their own inline expand button — suppress the shell-level gutter
   const hasInlineExpand = pathname.startsWith("/recipe");
   const showSplash = !!user && !isLanding;
@@ -62,6 +70,21 @@ export function AppShell({ children }: { children: ReactNode }) {
       document.documentElement.removeAttribute("data-early-splash");
     }
   }, [loading, user]);
+
+  useEffect(() => {
+    if (!user || isLanding) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        if (isEditableTarget(event.target)) return;
+        event.preventDefault();
+        setSearchOpen((open) => !open);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isLanding, user]);
 
   return (
     <SidebarContext.Provider
@@ -85,6 +108,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <Sidebar
                   collapsed={sidebarCollapsed}
                   onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  onOpenSearch={() => setSearchOpen(true)}
                 />
                 {/* Expand-sidebar gutter — animates in from 0 when sidebar collapses, never overlaps content */}
                 <div
@@ -121,7 +145,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {children}
               </main>
             </div>
-            {showMobileNav && <MobileBottomNav />}
+            {showMobileNav && <MobileBottomNav searchHref="/search" />}
+            <SearchCommandModal open={searchOpen} onOpenChange={setSearchOpen} />
           </div>
         )}
       </RecipeProvider>
