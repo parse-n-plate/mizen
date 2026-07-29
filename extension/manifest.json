@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Mizen Recipe Saver",
+  "description": "Save the recipe on the current page to your Mizen cookbook.",
+  "version": "0.1.0",
+  "permissions": ["activeTab"],
+  "host_permissions": ["https://mizen.recipes/*"],
+  "action": {
+    "default_title": "Save recipe to Mizen",
+    "default_popup": "popup.html",
+    "default_icon": "icons/icon.png"
+  },
+  "icons": {
+    "16": "icons/icon.png",
+    "32": "icons/icon.png",
+    "48": "icons/icon.png",
+    "128": "icons/icon.png"
+  }
+}
