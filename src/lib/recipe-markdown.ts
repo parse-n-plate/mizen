@@ -15,6 +15,7 @@ const NUMBERED = /^(\d+)\.\s+(.*)$/;
 const BLOCKQUOTE = /^>\s?(.*)$/;
 const TIP_LINE = /^\*Tip:\s*(.+?)\*?$/i;
 const LEADING_QUANTITY = /^[\d¼½¾⅓⅔⅛⅜⅝⅞.]/;
+const QUANTITY_TOKEN = /^(?:\d+(?:\.\d+)?(?:-\d+(?:\.\d+)?)?|\d+\/\d+|[¼½¾⅓⅔⅛⅜⅝⅞])$/;
 
 const META_LABELS: Array<{
   key: "servings" | "prepTimeMinutes" | "cookTimeMinutes";
@@ -44,6 +45,42 @@ function splitOnDelimiter(text: string, delimiters: string[]): [string, string |
 
 function normalizeForMatch(text: string): string {
   return text.trim().toLowerCase();
+}
+
+function parseQuantityText(quantity: string): { amount: string; units: string } {
+  if (!LEADING_QUANTITY.test(quantity)) {
+    return { amount: quantity, units: "" };
+  }
+
+  const spaceIndex = quantity.search(/\s/);
+  if (spaceIndex === -1) {
+    return { amount: quantity, units: "" };
+  }
+
+  return {
+    amount: quantity.slice(0, spaceIndex).trim(),
+    units: quantity.slice(spaceIndex + 1).trim(),
+  };
+}
+
+function splitPlainQuantity(text: string): { amount: string; units: string; rest: string } {
+  const tokens = text.trim().split(/\s+/);
+  const amountTokens: string[] = [];
+
+  while (tokens.length > 0 && QUANTITY_TOKEN.test(tokens[0])) {
+    amountTokens.push(tokens.shift()!);
+  }
+
+  if (amountTokens.length === 0 || tokens.length < 2) {
+    return { amount: "", units: "", rest: text.trim() };
+  }
+
+  const units = tokens.shift()!;
+  return {
+    amount: amountTokens.join(" "),
+    units,
+    rest: tokens.join(" ").trim(),
+  };
 }
 
 /** Serializes a recipe's editable content (everything but the title) to plain-text Markdown. */
@@ -117,16 +154,13 @@ function parseIngredientLine(text: string): Ingredient {
   if (boldMatch) {
     const quantity = boldMatch[1].trim();
     rest = boldMatch[2].trim();
-    if (LEADING_QUANTITY.test(quantity)) {
-      const spaceIndex = quantity.search(/\s/);
-      if (spaceIndex === -1) {
-        amount = quantity;
-      } else {
-        amount = quantity.slice(0, spaceIndex).trim();
-        units = quantity.slice(spaceIndex + 1).trim();
-      }
-    } else {
-      amount = quantity;
+    ({ amount, units } = parseQuantityText(quantity));
+  } else if (LEADING_QUANTITY.test(rest)) {
+    const parsed = splitPlainQuantity(rest);
+    if (parsed.amount) {
+      amount = parsed.amount;
+      units = parsed.units;
+      rest = parsed.rest;
     }
   }
 

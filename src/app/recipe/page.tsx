@@ -25,6 +25,7 @@ import { MobileNavShell, type MobileNavItem } from "@/components/MobileBottomNav
 import { scaleIngredients, displayAmount, displayText } from "@/utils/ingredientScaler";
 import { detectUnitSystem } from "@/utils/unitConverter";
 import { getNumberFormat } from "@/lib/numberFormat";
+import { recipeToCopyMarkdown } from "@/lib/recipe-copy";
 import { feedbackFeaturesEnabled } from "@/lib/features";
 import {
   getDefaultServings,
@@ -240,31 +241,23 @@ export default function RecipePage() {
 
   const handleCopyRecipe = async () => {
     if (!recipe) return;
-    const lines: string[] = [recipe.title, ""];
-
-    if (servings) lines.push(`Servings: ${servings}`, "");
-
-    lines.push("Ingredients");
-    for (const group of scaledIngredients) {
-      if (group.groupName) lines.push(`\n${group.groupName}`);
-      for (const ing of group.ingredients) {
-        const amt = ing.amount ? displayAmount(ing.amount, numberFormat) : "";
-        const parts = [amt, ing.units, ing.ingredient].filter(Boolean).join(" ");
-        const line = ing.description ? `${parts}, ${ing.description}` : parts;
-        lines.push(`- ${line}`);
-      }
-    }
-
-    lines.push("", "Instructions");
-    displayedInstructions.forEach((step, i) => {
-      lines.push(`${i + 1}. ${step.title}`);
-      lines.push(displayText(step.detail, numberFormat));
-      if (step.tips) lines.push(`Tip: ${step.tips}`);
-      lines.push("");
+    const copyText = recipeToCopyMarkdown({
+      recipe: { ...recipe, servings },
+      ingredients: scaledIngredients.map((group) => ({
+        ...group,
+        ingredients: group.ingredients.map((ingredient) => ({
+          ...ingredient,
+          amount: ingredient.amount ? displayAmount(ingredient.amount, numberFormat) : "",
+        })),
+      })),
+      instructions: displayedInstructions.map((step) => ({
+        ...step,
+        detail: displayText(step.detail, numberFormat),
+      })),
     });
 
     try {
-      await navigator.clipboard.writeText(lines.join("\n").trim());
+      await navigator.clipboard.writeText(copyText);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       toast.success("Recipe copied");
@@ -757,9 +750,10 @@ export default function RecipePage() {
               </DropdownMenuItem>
               <DropdownMenuItem
                 onSelect={handleCopyRecipe}
+                aria-label="Copy recipe formatted for an AI chat"
                 className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
               >
-                Copy
+                Copy recipe
                 <Copy className="ml-auto h-4 w-4" />
               </DropdownMenuItem>
               <DropdownMenuItem

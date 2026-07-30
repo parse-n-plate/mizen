@@ -87,6 +87,24 @@ describe("recipeToMarkdown + parseRecipeMarkdown round-trip", () => {
 
     expect(parsed.equipment).toEqual([{ name: "large skillet", stepNumbers: [] }]);
   });
+
+  it("parses plain ingredient quantities from user-added bullets", () => {
+    const parsed = parseRecipeMarkdown(`
+## Ingredients
+
+- 2 cups flour
+- 1 1/2 tsp salt - fine sea salt
+
+## Instructions
+
+1. Whisk together.
+`);
+
+    expect(parsed.ingredients[0].ingredients).toEqual([
+      { amount: "2", units: "cups", ingredient: "flour" },
+      { amount: "1 1/2", units: "tsp", ingredient: "salt", description: "fine sea salt" },
+    ]);
+  });
 });
 
 describe("buildUpdatedRecipe", () => {

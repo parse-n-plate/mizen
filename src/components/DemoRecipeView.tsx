@@ -20,6 +20,7 @@ import {
 import { useTabScrollMemory } from "@/hooks/useTabScrollMemory";
 import { convertIngredientGroups } from "@/lib/recipe-preferences";
 import { getNumberFormat } from "@/lib/numberFormat";
+import { recipeToCopyMarkdown } from "@/lib/recipe-copy";
 import { displayAmount, displayText } from "@/utils/ingredientScaler";
 import { detectUnitSystem } from "@/utils/unitConverter";
 import { Copy, EllipsisVertical, Printer, Share2 } from "lucide-react";
@@ -65,30 +66,23 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
   }, []);
 
   const handleCopyRecipe = async () => {
-    const lines: string[] = [recipe.title, ""];
-
-    if (recipe.servings) lines.push(`Servings: ${recipe.servings}`, "");
-
-    lines.push("Ingredients");
-    for (const group of displayedIngredients) {
-      if (group.groupName) lines.push(`\n${group.groupName}`);
-      for (const ing of group.ingredients) {
-        const amount = ing.amount ? displayAmount(ing.amount, numberFormat) : "";
-        const parts = [amount, ing.units, ing.ingredient].filter(Boolean).join(" ");
-        lines.push(`- ${ing.description ? `${parts}, ${ing.description}` : parts}`);
-      }
-    }
-
-    lines.push("", "Instructions");
-    recipe.instructions.forEach((step, index) => {
-      lines.push(`${index + 1}. ${step.title}`);
-      lines.push(displayText(step.detail, numberFormat));
-      if (step.tips) lines.push(`Tip: ${step.tips}`);
-      lines.push("");
+    const copyText = recipeToCopyMarkdown({
+      recipe,
+      ingredients: displayedIngredients.map((group) => ({
+        ...group,
+        ingredients: group.ingredients.map((ingredient) => ({
+          ...ingredient,
+          amount: ingredient.amount ? displayAmount(ingredient.amount, numberFormat) : "",
+        })),
+      })),
+      instructions: recipe.instructions.map((step) => ({
+        ...step,
+        detail: displayText(step.detail, numberFormat),
+      })),
     });
 
     try {
-      await navigator.clipboard.writeText(lines.join("\n").trim());
+      await navigator.clipboard.writeText(copyText);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       toast.success("Recipe copied");
@@ -190,9 +184,10 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
               >
                 <DropdownMenuItem
                   onSelect={handleCopyRecipe}
+                  aria-label="Copy recipe formatted for an AI chat"
                   className="text-stone-700 focus:bg-stone-100 focus:text-stone-900 dark:text-stone-300 dark:focus:bg-stone-800 dark:focus:text-stone-50"
                 >
-                  Copy
+                  Copy recipe
                   <Copy className="ml-auto h-4 w-4" />
                 </DropdownMenuItem>
                 <DropdownMenuItem

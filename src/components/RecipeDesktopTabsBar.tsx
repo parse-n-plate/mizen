@@ -166,7 +166,7 @@ export function RecipeDesktopTabsBar({
             <button
               type="button"
               onClick={onCopyRecipe}
-              aria-label="Copy recipe"
+              aria-label="Copy recipe for an AI chat"
               className="press-scale inline-flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 transition hover:bg-stone-100 hover:text-stone-600 dark:text-stone-500 dark:hover:bg-stone-800 dark:hover:text-stone-300"
             >
               <svg
@@ -184,7 +184,9 @@ export function RecipeDesktopTabsBar({
               </svg>
             </button>
           </TooltipTrigger>
-          <TooltipContent>{copied ? "Copied!" : "Copy recipe"}</TooltipContent>
+          <TooltipContent>
+            {copied ? "Copied!" : "Copy recipe for ChatGPT, Claude, or another AI chat"}
+          </TooltipContent>
         </Tooltip>
 
         {showReport && onReport && (
