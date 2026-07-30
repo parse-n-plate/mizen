@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { useRecipe } from "@/context/RecipeContext";
+import type { ParsedRecipe } from "@/lib/types";
 import { useUser } from "@/hooks/useUser";
 import { usePreference } from "@/hooks/usePreference";
 import { useIngredientDiff } from "@/hooks/useIngredientDiff";
@@ -24,6 +25,7 @@ import { MobileNavShell, type MobileNavItem } from "@/components/MobileBottomNav
 import { scaleIngredients, displayAmount, displayText } from "@/utils/ingredientScaler";
 import { detectUnitSystem } from "@/utils/unitConverter";
 import { getNumberFormat } from "@/lib/numberFormat";
+import { recipeToCopyMarkdown } from "@/lib/recipe-copy";
 import { feedbackFeaturesEnabled } from "@/lib/features";
 import {
   getDefaultServings,
@@ -51,6 +53,7 @@ import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/compone
 import { UnitSystemSelect } from "@/components/ui/unit-system-select";
 import { HeartButton } from "@/components/HeartButton";
 import { ReportRecipeDialog } from "@/components/ReportRecipeDialog";
+import { EditRecipeDrawer } from "@/components/EditRecipeDrawer";
 import AltArrowLeft from "@solar-icons/react/csr/arrows/AltArrowLeft";
 import Ruler from "@solar-icons/react/csr/tools/Ruler";
 import Eye from "@solar-icons/react/csr/security/Eye";
@@ -60,6 +63,7 @@ import {
   Copy,
   EllipsisVertical,
   MessageSquare,
+  Pencil,
   Printer,
   Share2,
   Trash2,
@@ -68,7 +72,7 @@ import {
 
 export default function RecipePage() {
   const router = useRouter();
-  const { recipe, savedMeta, setSavedMeta, removeFromHistory } = useRecipe();
+  const { recipe, savedMeta, setSavedMeta, removeFromHistory, updateRecipe } = useRecipe();
   const { user } = useUser();
   const [saving, setSaving] = useState(false);
   const [unsaving, setUnsaving] = useState(false);
@@ -77,6 +81,7 @@ export default function RecipePage() {
   useTabScrollMemory(activeTab);
   const isPhoneViewport = useIsMobile();
   const [reportOpen, setReportOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [mobileServingsOpen, setMobileServingsOpen] = useState(false);
   const [mobileUnitsOpen, setMobileUnitsOpen] = useState(false);
   const numberFormat = useSyncExternalStore(
@@ -246,31 +251,23 @@ export default function RecipePage() {
 
   const handleCopyRecipe = async () => {
     if (!recipe) return;
-    const lines: string[] = [recipe.title, ""];
-
-    if (servings) lines.push(`Servings: ${servings}`, "");
-
-    lines.push("Ingredients");
-    for (const group of scaledIngredients) {
-      if (group.groupName) lines.push(`\n${group.groupName}`);
-      for (const ing of group.ingredients) {
-        const amt = ing.amount ? displayAmount(ing.amount, numberFormat) : "";
-        const parts = [amt, ing.units, ing.ingredient].filter(Boolean).join(" ");
-        const line = ing.description ? `${parts}, ${ing.description}` : parts;
-        lines.push(`- ${line}`);
-      }
-    }
-
-    lines.push("", "Instructions");
-    displayedInstructions.forEach((step, i) => {
-      lines.push(`${i + 1}. ${step.title}`);
-      lines.push(displayText(step.detail, numberFormat));
-      if (step.tips) lines.push(`Tip: ${step.tips}`);
-      lines.push("");
+    const copyText = recipeToCopyMarkdown({
+      recipe: { ...recipe, servings },
+      ingredients: scaledIngredients.map((group) => ({
+        ...group,
+        ingredients: group.ingredients.map((ingredient) => ({
+          ...ingredient,
+          amount: ingredient.amount ? displayAmount(ingredient.amount, numberFormat) : "",
+        })),
+      })),
+      instructions: displayedInstructions.map((step) => ({
+        ...step,
+        detail: displayText(step.detail, numberFormat),
+      })),
     });
 
     try {
-      await navigator.clipboard.writeText(lines.join("\n").trim());
+      await navigator.clipboard.writeText(copyText);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       toast.success("Recipe copied");
@@ -326,6 +323,29 @@ export default function RecipePage() {
         toast.error("Failed to delete recipe");
       }
     });
+  };
+
+  const handleEditSave = async (
+    updated: ParsedRecipe
+  ): Promise<{ ok: boolean; error?: string }> => {
+    if (savedMeta) {
+      try {
+        const res = await fetch(`/api/recipes/${savedMeta.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recipe: updated }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          return { ok: false, error: data.error || "Failed to save changes. Please try again." };
+        }
+      } catch {
+        return { ok: false, error: "Failed to save changes. Please try again." };
+      }
+    }
+    updateRecipe(updated);
+    toast.success("Recipe updated");
+    return { ok: true };
   };
 
   if (!recipe) {
@@ -564,6 +584,7 @@ export default function RecipePage() {
             onCopyRecipe={handleCopyRecipe}
             onShare={handleShare}
             onDelete={handleDelete}
+            onEdit={() => setEditOpen(true)}
             showReport={feedbackFeaturesEnabled && !!user}
             onReport={() => setReportOpen(true)}
             hasStepImages={hasStepImages}
@@ -730,10 +751,18 @@ export default function RecipePage() {
               className="bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-700"
             >
               <DropdownMenuItem
-                onSelect={handleCopyRecipe}
+                onSelect={() => setEditOpen(true)}
                 className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
               >
-                Copy
+                Edit
+                <Pencil className="ml-auto h-4 w-4" />
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={handleCopyRecipe}
+                aria-label="Copy recipe formatted for an AI chat"
+                className="text-stone-700 dark:text-stone-300 focus:bg-stone-100 dark:focus:bg-stone-800 focus:text-stone-900 dark:focus:text-stone-50"
+              >
+                Copy recipe
                 <Copy className="ml-auto h-4 w-4" />
               </DropdownMenuItem>
               <DropdownMenuItem
@@ -779,6 +808,13 @@ export default function RecipePage() {
             </DropdownMenuContent>
           </DropdownMenu>
         }
+      />
+
+      <EditRecipeDrawer
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        recipe={recipe}
+        onSave={handleEditSave}
       />
 
       {/* Report recipe dialog */}
