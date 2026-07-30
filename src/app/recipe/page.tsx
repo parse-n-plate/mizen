@@ -133,6 +133,9 @@ export default function RecipePage() {
   );
 
   const swipeHandlers = useHorizontalTabSwipe(activeTab, selectTab, isMobileRecipeLayout);
+  const tabContentClass = `tab-content-animate${
+    isMobileRecipeLayout ? ` tab-content-slide-${tabTransition}` : ""
+  }`;
 
   const handleStepClick = useCallback(
     (stepNumber: number) => {
@@ -662,10 +665,7 @@ export default function RecipePage() {
               )}
 
               {activeTab === "prep" ? (
-                <div
-                  key="prep"
-                  className={`tab-content-animate tab-content-slide-${tabTransition}`}
-                >
+                <div key="prep" className={tabContentClass}>
                   <PrepSection
                     ingredients={scaledIngredients}
                     steps={displayedInstructions}
@@ -676,10 +676,7 @@ export default function RecipePage() {
                   />
                 </div>
               ) : (
-                <div
-                  key="cook"
-                  className={`tab-content-animate tab-content-slide-${tabTransition}`}
-                >
+                <div key="cook" className={tabContentClass}>
                   <StepList steps={displayedInstructions} />
                 </div>
               )}
