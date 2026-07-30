@@ -255,7 +255,6 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
           className={`flex-1 border border-stone-200 bg-white dark:border-stone-700 dark:bg-stone-900 ${
             activeTab === "prep" ? "rounded-b-lg rounded-tr-lg" : "rounded-lg"
           }`}
-          {...swipeHandlers}
         >
           <div className="px-6 pb-16 pt-5">
             {activeTab === "prep" ? (

@@ -9,6 +9,7 @@ import { useIngredientDiff } from "@/hooks/useIngredientDiff";
 import { useTabScrollMemory } from "@/hooks/useTabScrollMemory";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useHorizontalTabSwipe } from "@/hooks/useHorizontalTabSwipe";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import {
   annotateIngredientGroups,
   convertIngredientGroups,
@@ -78,6 +79,7 @@ export default function RecipePage() {
   const [tabTransition, setTabTransition] = useState<"forward" | "backward">("forward");
   useTabScrollMemory(activeTab);
   const isPhoneViewport = useIsMobile();
+  const isMobileRecipeLayout = useMediaQuery("(max-width: 767px)");
   const [reportOpen, setReportOpen] = useState(false);
   const [mobileServingsOpen, setMobileServingsOpen] = useState(false);
   const [mobileUnitsOpen, setMobileUnitsOpen] = useState(false);
@@ -130,7 +132,7 @@ export default function RecipePage() {
     [activeTab]
   );
 
-  const swipeHandlers = useHorizontalTabSwipe(activeTab, selectTab);
+  const swipeHandlers = useHorizontalTabSwipe(activeTab, selectTab, isMobileRecipeLayout);
 
   const handleStepClick = useCallback(
     (stepNumber: number) => {

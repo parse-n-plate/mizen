@@ -4,24 +4,33 @@ type RecipeTab = "prep" | "cook";
 
 const SWIPE_DISTANCE = 56;
 
-export function useHorizontalTabSwipe(activeTab: RecipeTab, onTabChange: (tab: RecipeTab) => void) {
+export function useHorizontalTabSwipe(
+  activeTab: RecipeTab,
+  onTabChange: (tab: RecipeTab) => void,
+  enabled = true
+) {
   const touchStart = useRef<{ x: number; y: number } | null>(null);
 
-  const onTouchStart = useCallback((event: TouchEvent<HTMLElement>) => {
-    if (event.touches.length !== 1) {
-      touchStart.current = null;
-      return;
-    }
+  const onTouchStart = useCallback(
+    (event: TouchEvent<HTMLElement>) => {
+      if (!enabled) return;
 
-    const touch = event.touches[0];
-    touchStart.current = { x: touch.clientX, y: touch.clientY };
-  }, []);
+      if (event.touches.length !== 1) {
+        touchStart.current = null;
+        return;
+      }
+
+      const touch = event.touches[0];
+      touchStart.current = { x: touch.clientX, y: touch.clientY };
+    },
+    [enabled]
+  );
 
   const onTouchEnd = useCallback(
     (event: TouchEvent<HTMLElement>) => {
       const start = touchStart.current;
       touchStart.current = null;
-      if (!start || event.changedTouches.length !== 1) return;
+      if (!enabled || !start || event.changedTouches.length !== 1) return;
 
       const touch = event.changedTouches[0];
       const deltaX = touch.clientX - start.x;
@@ -32,7 +41,7 @@ export function useHorizontalTabSwipe(activeTab: RecipeTab, onTabChange: (tab: R
       if (deltaX < 0 && activeTab === "prep") onTabChange("cook");
       if (deltaX > 0 && activeTab === "cook") onTabChange("prep");
     },
-    [activeTab, onTabChange]
+    [activeTab, enabled, onTabChange]
   );
 
   return { onTouchStart, onTouchEnd };
