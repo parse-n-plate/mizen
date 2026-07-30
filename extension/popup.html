@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Save to Mizen</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="toast" aria-live="polite">
+      <header class="brand">
+        <img src="icons/icon.png" alt="" class="brand-mark" />
+        <span>Mizen</span>
+      </header>
+
+      <section id="loading-state" class="state">
+        <div class="status-mark status-mark--loading" aria-hidden="true">
+          <span class="spinner"></span>
+        </div>
+        <div class="state-copy">
+          <h1>Saving recipe</h1>
+          <p id="loading-title" class="page-title">Reading this page…</p>
+          <p class="supporting-copy">Mizen is parsing it into your cookbook.</p>
+        </div>
+      </section>
+
+      <section id="success-state" class="state" hidden>
+        <div class="status-mark status-mark--success" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="m6.75 12.25 3.1 3.1 7.4-7.4" />
+          </svg>
+        </div>
+        <div class="state-copy">
+          <h1>Saved to your cookbook</h1>
+          <p id="saved-title" class="page-title"></p>
+        </div>
+        <button id="open-saved" class="primary-action" type="button">
+          Open in Mizen
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 5h11v11M19 5 5 19" />
+          </svg>
+        </button>
+      </section>
+
+      <section id="error-state" class="state" hidden>
+        <div class="status-mark status-mark--error" aria-hidden="true">!</div>
+        <div class="state-copy">
+          <h1 id="error-heading">Couldn’t save this page</h1>
+          <p id="error-message" class="supporting-copy"></p>
+        </div>
+        <button id="error-action" class="primary-action" type="button">Try again</button>
+      </section>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

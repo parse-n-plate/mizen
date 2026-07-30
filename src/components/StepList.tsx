@@ -1,21 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
-import Magnifer from "@solar-icons/react/csr/search/Magnifer";
-import { X } from "lucide-react";
-import Gallery from "@solar-icons/react/csr/video/Gallery";
 import Lightbulb from "@solar-icons/react/csr/devices/Lightbulb";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer";
 import type { IngredientGroup, InstructionStep } from "@/lib/types";
 import { type NumberFormat, getNumberFormat } from "@/lib/numberFormat";
-import { subscribePreferences, getShowStepImages, setShowStepImages } from "@/lib/preferences";
+import { subscribePreferences, getShowStepImages } from "@/lib/preferences";
 import {
   matchIngredientReferences,
   type IngredientStepReference,
@@ -64,175 +58,23 @@ function useNumberFormat(): NumberFormat {
 interface StepListProps {
   steps: InstructionStep[];
   ingredientGroups?: IngredientGroup[];
-  enableMobileSearchPortal?: boolean;
 }
 
-export function StepList({
-  steps,
-  ingredientGroups,
-  enableMobileSearchPortal = true,
-}: StepListProps) {
+export function StepList({ steps, ingredientGroups }: StepListProps) {
   const numberFormat = useNumberFormat();
   const [lightbox, setLightbox] = useState<{ src: string; rect: DOMRect; el: HTMLElement } | null>(
     null
   );
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [mobileSearchContainer, setMobileSearchContainer] = useState<HTMLElement | null>(null);
-  const desktopSearchInputRef = useRef<HTMLInputElement>(null);
-  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
-  const isSearchExpanded = isSearchOpen || !!searchQuery;
   const showImages = useSyncExternalStore(subscribePreferences, getShowStepImages, () => true);
-
-  useEffect(() => {
-    if (!enableMobileSearchPortal) return;
-
-    const frame = requestAnimationFrame(() => {
-      setMobileSearchContainer(document.getElementById("mobile-recipe-search-action"));
-    });
-
-    return () => cancelAnimationFrame(frame);
-  }, [enableMobileSearchPortal]);
-
-  useEffect(() => {
-    if (!isSearchOpen) return;
-    const isMobileViewport = window.matchMedia("(max-width: 767px)").matches;
-    const input = isMobileViewport ? mobileSearchInputRef.current : desktopSearchInputRef.current;
-    input?.focus({ preventScroll: true });
-  }, [isSearchOpen]);
-
-  const hasAnyImages = steps.some((s) => (s.imageUrls?.length ?? 0) > 0 || !!s.imageUrl);
-
-  const filteredSteps = useMemo(() => {
-    if (!searchQuery.trim()) return steps.map((step, i) => ({ step, originalIndex: i }));
-    const query = searchQuery.toLowerCase().trim();
-    return steps
-      .map((step, i) => ({ step, originalIndex: i }))
-      .filter(
-        ({ step }) =>
-          step.title?.toLowerCase().includes(query) || step.detail.toLowerCase().includes(query)
-      );
-  }, [steps, searchQuery]);
-
-  const searchControl = (placement: "desktop" | "mobile") => {
-    const isMobile = placement === "mobile";
-
-    return (
-      <div
-        className={`group relative h-9 transition-[width] duration-200 ease-in-out ${
-          isSearchExpanded
-            ? isMobile
-              ? "w-[min(260px,calc(100vw-5.25rem))]"
-              : "w-[260px] max-w-full"
-            : isMobile
-              ? "w-9"
-              : "w-7"
-        }`}
-      >
-        <div className={isMobile && isSearchExpanded ? "absolute right-0 top-0 h-9 w-full" : ""}>
-          {!searchQuery && (
-            <Magnifer
-              className={`absolute top-1/2 size-[16px] -translate-y-1/2 text-muted-foreground pointer-events-none z-10 transition-colors ${
-                isSearchExpanded
-                  ? "right-2"
-                  : "left-1/2 -translate-x-1/2 group-hover:text-stone-600 dark:group-hover:text-stone-300"
-              }`}
-            />
-          )}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                type="button"
-                onClick={() => setIsSearchOpen(true)}
-                aria-label="Search directions"
-                aria-hidden={isSearchExpanded}
-                tabIndex={isSearchExpanded ? -1 : 0}
-                className={`press-scale absolute inset-0 rounded-xl transition-opacity duration-150 ease-out hover:bg-stone-100 dark:hover:bg-stone-800 ${
-                  isSearchExpanded ? "opacity-0 pointer-events-none" : "opacity-100"
-                }`}
-              />
-            </TooltipTrigger>
-            <TooltipContent side="bottom">Search directions</TooltipContent>
-          </Tooltip>
-          <Input
-            ref={isMobile ? mobileSearchInputRef : desktopSearchInputRef}
-            type="text"
-            placeholder="Search Directions"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onBlur={() => {
-              if (!searchQuery) setIsSearchOpen(false);
-            }}
-            aria-label="Search directions"
-            tabIndex={isSearchExpanded ? 0 : -1}
-            aria-hidden={!isSearchExpanded}
-            className={`absolute inset-0 w-full pl-3 pr-9 h-9 rounded-xl border-transparent bg-stone-100 dark:bg-stone-800 font-sans text-[13px] placeholder:text-muted-foreground focus-visible:bg-background focus-visible:border-input transition-opacity duration-200 ease-out ${
-              isSearchExpanded ? "opacity-100" : "opacity-0 pointer-events-none"
-            }`}
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearchQuery("");
-                setIsSearchOpen(false);
-              }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded-sm text-muted-foreground hover:text-foreground transition-colors z-10"
-              aria-label="Clear search"
-            >
-              <X className="size-4" />
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div>
-      {mobileSearchContainer &&
-        createPortal(
-          <div className="md:hidden">{searchControl("mobile")}</div>,
-          mobileSearchContainer
-        )}
-
       <div className="flex items-center justify-between gap-4 mb-3 md:pl-3">
         <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500 flex-shrink-0">
           Directions
         </h3>
-        <div className="flex items-center gap-1.5">
-          {hasAnyImages && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={() => setShowStepImages(!showImages)}
-                  aria-label={showImages ? "Hide photos" : "Show photos"}
-                  className={`press-scale inline-flex items-center justify-center h-9 w-7 rounded-xl transition-colors cursor-pointer ${
-                    showImages
-                      ? "text-stone-700 bg-stone-100 dark:bg-stone-800 dark:text-stone-200"
-                      : "text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
-                  }`}
-                >
-                  <Gallery size={16} />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                {showImages ? "Hide photos" : "Show photos"}
-              </TooltipContent>
-            </Tooltip>
-          )}
-          <div className={mobileSearchContainer ? "hidden md:block" : ""}>
-            {searchControl("desktop")}
-          </div>
-        </div>
       </div>
-      {filteredSteps.length === 0 && searchQuery.trim() ? (
-        <p className="font-sans text-sm text-muted-foreground text-center py-4 md:px-3">
-          No directions match &ldquo;{searchQuery}&rdquo;
-        </p>
-      ) : null}
-      {filteredSteps.map(({ step, originalIndex }) => (
+      {steps.map((step, originalIndex) => (
         <StepRow
           key={originalIndex}
           step={step}

@@ -257,11 +257,7 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
               </div>
             ) : (
               <div key="cook" className="tab-content-animate">
-                <StepList
-                  steps={recipe.instructions}
-                  ingredientGroups={displayedIngredients}
-                  enableMobileSearchPortal={false}
-                />
+                <StepList steps={recipe.instructions} ingredientGroups={displayedIngredients} />
               </div>
             )}
           </div>
