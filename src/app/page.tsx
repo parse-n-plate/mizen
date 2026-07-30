@@ -40,8 +40,58 @@ const LANDING_COPY = {
   sourceLabel: "Bring recipes from",
 };
 
+function HeroBook() {
+  return (
+    <motion.img
+      src="/assets/hero-book.svg"
+      alt=""
+      aria-hidden
+      className="h-[1.05em] w-auto shrink-0 cursor-pointer"
+      draggable={false}
+      whileHover={{
+        rotate: [0, -4, 4, -4, 0],
+        scale: 1.05,
+        transition: {
+          rotate: { duration: 0.6, ease: "easeInOut" },
+          scale: { duration: 0.2, ease: "easeOut" },
+        },
+      }}
+      whileTap={{ scale: 0.95 }}
+    />
+  );
+}
+
+function HeroPot() {
+  return (
+    <motion.img
+      src="/assets/hero-pot.svg"
+      alt=""
+      aria-hidden
+      className="h-[1.2em] w-auto shrink-0 cursor-pointer"
+      draggable={false}
+      whileHover={{
+        rotate: [0, -3, 3, -3, 2, -1, 0],
+        transition: { duration: 0.5, ease: "easeInOut" },
+      }}
+      whileTap={{ scale: 0.95 }}
+    />
+  );
+}
+
 function HeroHeadline() {
-  return <>Recipes from anywhere, no clutter</>;
+  return (
+    <>
+      <span className="inline-flex items-center gap-2 whitespace-nowrap">
+        <span>Recipes from</span>
+        <HeroBook />
+      </span>
+      <span className="inline-flex items-center gap-2 whitespace-nowrap">
+        <span>anywhere, no</span>
+        <HeroPot />
+        <span>clutter.</span>
+      </span>
+    </>
+  );
 }
 
 const EXAMPLE_RECIPES: ParsedRecipe[] = [
