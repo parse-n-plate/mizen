@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Plus, Trash2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   Dialog,
@@ -22,8 +21,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { validateRecipeTitle } from "@/lib/recipe-markdown";
-import type { Ingredient, InstructionStep, ParsedRecipe } from "@/lib/types";
+import {
+  buildUpdatedRecipe,
+  RecipeMarkdownError,
+  validateRecipeTitle,
+} from "@/lib/recipe-markdown";
+import type { ParsedRecipe } from "@/lib/types";
 
 interface EditRecipeDrawerProps {
   open: boolean;
@@ -32,57 +35,102 @@ interface EditRecipeDrawerProps {
   onSave: (updated: ParsedRecipe) => Promise<{ ok: boolean; error?: string }>;
 }
 
-function cloneRecipe(recipe: ParsedRecipe): ParsedRecipe {
+interface RecipeEditorFields {
+  title: string;
+  description: string;
+  servings: string;
+  prepTime: string;
+  cookTime: string;
+  ingredients: string;
+  instructions: string;
+  equipment: string;
+}
+
+function ingredientsToText(recipe: ParsedRecipe): string {
+  const singleMainGroup =
+    recipe.ingredients.length === 1 && recipe.ingredients[0].groupName.toLowerCase() === "main";
+  const lines: string[] = [];
+  recipe.ingredients.forEach((group) => {
+    if (!singleMainGroup) lines.push(`### ${group.groupName}`, "");
+    group.ingredients.forEach((ingredient) => {
+      const quantity = [ingredient.amount, ingredient.units].filter(Boolean).join(" ");
+      const name = quantity ? `**${quantity}** ${ingredient.ingredient}` : ingredient.ingredient;
+      lines.push(`- ${ingredient.description ? `${name} — ${ingredient.description}` : name}`);
+    });
+    lines.push("");
+  });
+  return lines.join("\n").trim();
+}
+
+function instructionsToText(recipe: ParsedRecipe): string {
+  const lines: string[] = [];
+  recipe.instructions.forEach((step, index) => {
+    lines.push(`${index + 1}. ${step.title ? `**${step.title}** — ` : ""}${step.detail}`);
+    if (step.tips) lines.push(`   *Tip: ${step.tips}*`);
+  });
+  return lines.join("\n");
+}
+
+function equipmentToText(recipe: ParsedRecipe): string {
+  return (recipe.equipment ?? []).map((item) => `- ${item.name}`).join("\n");
+}
+
+function editorFields(recipe: ParsedRecipe): RecipeEditorFields {
   return {
-    ...recipe,
-    ingredients: recipe.ingredients.map((group) => ({
-      ...group,
-      ingredients: group.ingredients.map((ingredient) => ({ ...ingredient })),
-    })),
-    instructions: recipe.instructions.map((step) => ({ ...step })),
-    equipment: recipe.equipment?.map((item) => ({ ...item, stepNumbers: [...item.stepNumbers] })),
+    title: recipe.title,
+    description: recipe.summary ?? "",
+    servings: recipe.servings?.toString() ?? "",
+    prepTime: recipe.prepTimeMinutes?.toString() ?? "",
+    cookTime: recipe.cookTimeMinutes?.toString() ?? "",
+    ingredients: ingredientsToText(recipe),
+    instructions: instructionsToText(recipe),
+    equipment: equipmentToText(recipe),
   };
 }
 
-function moveItem<T>(items: T[], from: number, to: number): T[] {
-  if (to < 0 || to >= items.length) return items;
-  const next = [...items];
-  const [item] = next.splice(from, 1);
-  next.splice(to, 0, item);
-  return next;
+function recipeMarkdownFromFields(fields: RecipeEditorFields): string {
+  const lines: string[] = [];
+  if (fields.description.trim()) {
+    lines.push(
+      ...fields.description
+        .trim()
+        .split("\n")
+        .map((line) => `> ${line}`),
+      ""
+    );
+  }
+
+  const metadata: string[] = [];
+  if (fields.servings.trim()) metadata.push(`**Servings:** ${fields.servings.trim()}`);
+  if (fields.prepTime.trim()) metadata.push(`**Prep:** ${fields.prepTime.trim()} min`);
+  if (fields.cookTime.trim()) metadata.push(`**Cook:** ${fields.cookTime.trim()} min`);
+  if (metadata.length) lines.push(metadata.join(" | "), "");
+
+  lines.push(
+    "## Ingredients",
+    "",
+    fields.ingredients.trim(),
+    "",
+    "## Instructions",
+    "",
+    fields.instructions.trim()
+  );
+  if (fields.equipment.trim()) lines.push("", "## Equipment", "", fields.equipment.trim());
+  return `${lines.join("\n").trim()}\n`;
 }
 
-function ActionButton({
-  label,
-  onClick,
-  disabled = false,
-}: {
-  label: string;
-  onClick: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={label}
-      className="inline-flex h-7 w-7 items-center justify-center rounded-md text-stone-500 transition hover:bg-stone-100 hover:text-stone-900 disabled:pointer-events-none disabled:opacity-35 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
-    >
-      {label.startsWith("Move up") ? (
-        <ChevronUp className="h-4 w-4" />
-      ) : label.startsWith("Move down") ? (
-        <ChevronDown className="h-4 w-4" />
-      ) : (
-        <Trash2 className="h-4 w-4" />
-      )}
-    </button>
-  );
+function validateNumber(value: string, label: string, positive = false): string | null {
+  if (!value.trim()) return null;
+  const numeric = Number(value);
+  if (!Number.isInteger(numeric) || numeric < 0 || (positive && numeric === 0)) {
+    return `${label} must be ${positive ? "a positive" : "a non-negative"} whole number.`;
+  }
+  return null;
 }
 
 export function EditRecipeDrawer({ open, onOpenChange, recipe, onSave }: EditRecipeDrawerProps) {
   const isMobile = useIsMobile();
-  const [draft, setDraft] = useState(() => cloneRecipe(recipe));
+  const [fields, setFields] = useState(() => editorFields(recipe));
   const [formError, setFormError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -90,7 +138,7 @@ export function EditRecipeDrawer({ open, onOpenChange, recipe, onSave }: EditRec
 
   if (open && openedRecipe !== recipe) {
     setOpenedRecipe(recipe);
-    setDraft(cloneRecipe(recipe));
+    setFields(editorFields(recipe));
     setFormError(null);
     setSaveError(null);
     setSaving(false);
@@ -98,161 +146,45 @@ export function EditRecipeDrawer({ open, onOpenChange, recipe, onSave }: EditRec
     setOpenedRecipe(null);
   }
 
-  const update = (updater: (current: ParsedRecipe) => ParsedRecipe) => {
-    setDraft((current) => updater(current));
+  const setField = (field: keyof RecipeEditorFields, value: string) => {
+    setFields((current) => ({ ...current, [field]: value }));
     if (formError) setFormError(null);
   };
 
-  const updateIngredient = (
-    groupIndex: number,
-    ingredientIndex: number,
-    field: keyof Ingredient,
-    value: string
-  ) => {
-    update((current) => ({
-      ...current,
-      ingredients: current.ingredients.map((group, currentGroupIndex) =>
-        currentGroupIndex !== groupIndex
-          ? group
-          : {
-              ...group,
-              ingredients: group.ingredients.map((ingredient, currentIngredientIndex) =>
-                currentIngredientIndex === ingredientIndex
-                  ? { ...ingredient, [field]: value }
-                  : ingredient
-              ),
-            }
-      ),
-    }));
-  };
-
-  const updateStep = (index: number, field: keyof InstructionStep, value: string) => {
-    update((current) => ({
-      ...current,
-      instructions: current.instructions.map((step, stepIndex) =>
-        stepIndex === index ? { ...step, [field]: value || undefined } : step
-      ),
-    }));
-  };
-
-  const moveInstruction = (from: number, to: number) => {
-    update((current) => {
-      if (to < 0 || to >= current.instructions.length) return current;
-      const sourceOrder = current.instructions.map((_, index) => index);
-      const reorderedSources = moveItem(sourceOrder, from, to);
-      const newStepNumberForOld = new Map(
-        reorderedSources.map((oldIndex, newIndex) => [oldIndex + 1, newIndex + 1])
-      );
-      return {
-        ...current,
-        instructions: moveItem(current.instructions, from, to),
-        equipment: current.equipment?.map((item) => ({
-          ...item,
-          stepNumbers: item.stepNumbers.map((number) => newStepNumberForOld.get(number) ?? number),
-        })),
-      };
-    });
-  };
-
-  const removeInstruction = (index: number) => {
-    update((current) => ({
-      ...current,
-      instructions: current.instructions.filter((_, stepIndex) => stepIndex !== index),
-      equipment: current.equipment?.map((item) => ({
-        ...item,
-        stepNumbers: item.stepNumbers
-          .filter((number) => number !== index + 1)
-          .map((number) => (number > index + 1 ? number - 1 : number)),
-      })),
-    }));
-  };
-
-  const toggleEquipmentStep = (equipmentIndex: number, stepNumber: number) => {
-    update((current) => ({
-      ...current,
-      equipment: (current.equipment ?? []).map((item, index) => {
-        if (index !== equipmentIndex) return item;
-        const selected = item.stepNumbers.includes(stepNumber);
-        return {
-          ...item,
-          stepNumbers: selected
-            ? item.stepNumbers.filter((number) => number !== stepNumber)
-            : [...item.stepNumbers, stepNumber].sort((a, b) => a - b),
-        };
-      }),
-    }));
-  };
-
-  function validateDraft(): string | null {
-    const titleError = validateRecipeTitle(draft.title.trim());
-    if (titleError) return titleError;
-    if (draft.servings !== undefined && (!Number.isInteger(draft.servings) || draft.servings <= 0))
-      return "Servings must be a positive whole number.";
-    if (
-      draft.prepTimeMinutes !== undefined &&
-      (!Number.isFinite(draft.prepTimeMinutes) || draft.prepTimeMinutes < 0)
-    )
-      return "Prep time cannot be negative.";
-    if (
-      draft.cookTimeMinutes !== undefined &&
-      (!Number.isFinite(draft.cookTimeMinutes) || draft.cookTimeMinutes < 0)
-    )
-      return "Cook time cannot be negative.";
-    if (
-      !draft.ingredients.some((group) =>
-        group.ingredients.some((ingredient) => ingredient.ingredient.trim())
-      )
-    )
-      return "Add at least one named ingredient.";
-    if (!draft.instructions.some((step) => step.detail?.trim()))
-      return "Add at least one instruction with details.";
-    if (draft.equipment?.some((item) => !item.name.trim()))
-      return "Equipment names cannot be empty.";
-    return null;
-  }
-
   async function handleSave() {
     if (saving) return;
-    const validationError = validateDraft();
+
+    const validationError =
+      validateRecipeTitle(fields.title.trim()) ||
+      validateNumber(fields.servings, "Servings", true) ||
+      validateNumber(fields.prepTime, "Prep time") ||
+      validateNumber(fields.cookTime, "Cook time");
     if (validationError) {
       setFormError(validationError);
       return;
     }
-    const normalized: ParsedRecipe = {
-      ...draft,
-      title: draft.title.trim(),
-      summary: draft.summary?.trim() || undefined,
-      ingredients: draft.ingredients
-        .map((group) => ({
-          ...group,
-          groupName: group.groupName.trim() || "Main",
-          ingredients: group.ingredients.filter((item) => item.ingredient.trim()),
-        }))
-        .filter((group) => group.ingredients.length),
-      instructions: draft.instructions.filter((step) => step.detail?.trim()),
-      equipment:
-        draft.equipment
-          ?.map((item) => ({ ...item, name: item.name.trim() }))
-          .filter((item) => item.name) || undefined,
-    };
+
+    let updated: ParsedRecipe;
+    try {
+      updated = buildUpdatedRecipe(recipe, fields.title.trim(), recipeMarkdownFromFields(fields));
+    } catch (error) {
+      if (error instanceof RecipeMarkdownError) {
+        setFormError(error.message);
+        return;
+      }
+      throw error;
+    }
+
     setSaving(true);
     setSaveError(null);
-    const result = await onSave(normalized);
+    const result = await onSave(updated);
     setSaving(false);
     if (result.ok) onOpenChange(false);
     else setSaveError(result.error || "Failed to save changes. Please try again.");
   }
 
-  const setNumber = (field: "servings" | "prepTimeMinutes" | "cookTimeMinutes", value: string) => {
-    const number = Number(value);
-    update((current) => ({
-      ...current,
-      [field]: value === "" || !Number.isFinite(number) ? undefined : number,
-    }));
-  };
-
   const body = (
-    <div className="-mx-1 flex flex-col gap-6 overflow-y-auto px-5 pb-4 sm:px-1 sm:pb-0">
+    <div className="-mx-1 flex flex-col gap-5 overflow-y-auto px-5 pb-4 sm:px-1 sm:pb-0">
       {(formError || saveError) && (
         <div
           role="alert"
@@ -262,444 +194,107 @@ export function EditRecipeDrawer({ open, onOpenChange, recipe, onSave }: EditRec
         </div>
       )}
 
-      <section className="space-y-3">
-        <h3 className="font-sans text-sm font-semibold">Recipe details</h3>
+      <div className="space-y-1.5">
+        <label htmlFor="edit-recipe-title" className="font-sans text-sm font-medium">
+          Title
+        </label>
+        <Input
+          id="edit-recipe-title"
+          value={fields.title}
+          onChange={(event) => setField("title", event.target.value)}
+          autoFocus
+        />
+      </div>
+      <div className="space-y-1.5">
+        <label htmlFor="edit-recipe-description" className="font-sans text-sm font-medium">
+          Description
+        </label>
+        <Textarea
+          id="edit-recipe-description"
+          value={fields.description}
+          onChange={(event) => setField("description", event.target.value)}
+          rows={3}
+        />
+      </div>
+      <div className="grid grid-cols-3 gap-2">
         <div className="space-y-1.5">
-          <label htmlFor="edit-recipe-title" className="font-sans text-sm font-medium">
-            Title
+          <label htmlFor="edit-recipe-servings" className="font-sans text-xs font-medium">
+            Servings
           </label>
           <Input
-            id="edit-recipe-title"
-            value={draft.title}
-            onChange={(event) => update((current) => ({ ...current, title: event.target.value }))}
-            autoFocus
+            id="edit-recipe-servings"
+            inputMode="numeric"
+            value={fields.servings}
+            onChange={(event) => setField("servings", event.target.value)}
           />
         </div>
         <div className="space-y-1.5">
-          <label htmlFor="edit-recipe-description" className="font-sans text-sm font-medium">
-            Description
+          <label htmlFor="edit-recipe-prep" className="font-sans text-xs font-medium">
+            Prep time (min)
           </label>
-          <Textarea
-            id="edit-recipe-description"
-            value={draft.summary ?? ""}
-            onChange={(event) => update((current) => ({ ...current, summary: event.target.value }))}
-            rows={3}
+          <Input
+            id="edit-recipe-prep"
+            inputMode="numeric"
+            value={fields.prepTime}
+            onChange={(event) => setField("prepTime", event.target.value)}
           />
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          <div className="space-y-1.5">
-            <label htmlFor="edit-recipe-servings" className="font-sans text-xs font-medium">
-              Servings
-            </label>
-            <Input
-              id="edit-recipe-servings"
-              type="number"
-              min="1"
-              step="1"
-              value={draft.servings ?? ""}
-              onChange={(event) => setNumber("servings", event.target.value)}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label htmlFor="edit-recipe-prep" className="font-sans text-xs font-medium">
-              Prep (min)
-            </label>
-            <Input
-              id="edit-recipe-prep"
-              type="number"
-              min="0"
-              value={draft.prepTimeMinutes ?? ""}
-              onChange={(event) => setNumber("prepTimeMinutes", event.target.value)}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <label htmlFor="edit-recipe-cook" className="font-sans text-xs font-medium">
-              Cook (min)
-            </label>
-            <Input
-              id="edit-recipe-cook"
-              type="number"
-              min="0"
-              value={draft.cookTimeMinutes ?? ""}
-              onChange={(event) => setNumber("cookTimeMinutes", event.target.value)}
-            />
-          </div>
+        <div className="space-y-1.5">
+          <label htmlFor="edit-recipe-cook" className="font-sans text-xs font-medium">
+            Cook time (min)
+          </label>
+          <Input
+            id="edit-recipe-cook"
+            inputMode="numeric"
+            value={fields.cookTime}
+            onChange={(event) => setField("cookTime", event.target.value)}
+          />
         </div>
-      </section>
-
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="font-sans text-sm font-semibold">Ingredients</h3>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              update((current) => ({
-                ...current,
-                ingredients: [
-                  ...current.ingredients,
-                  {
-                    groupName: "New group",
-                    ingredients: [{ amount: "", units: "", ingredient: "" }],
-                  },
-                ],
-              }))
-            }
-          >
-            <Plus className="mr-1 h-3.5 w-3.5" />
-            Add group
-          </Button>
-        </div>
-        {draft.ingredients.map((group, groupIndex) => (
-          <div
-            key={groupIndex}
-            className="space-y-3 rounded-lg border border-stone-200 p-3 dark:border-stone-700"
-          >
-            <div className="flex items-center gap-1">
-              <Input
-                aria-label={`Ingredient group ${groupIndex + 1} name`}
-                value={group.groupName}
-                onChange={(event) =>
-                  update((current) => ({
-                    ...current,
-                    ingredients: current.ingredients.map((item, index) =>
-                      index === groupIndex ? { ...item, groupName: event.target.value } : item
-                    ),
-                  }))
-                }
-                className="h-8 font-medium"
-              />
-              <ActionButton
-                label={`Move up ingredient group ${groupIndex + 1}`}
-                onClick={() =>
-                  update((current) => ({
-                    ...current,
-                    ingredients: moveItem(current.ingredients, groupIndex, groupIndex - 1),
-                  }))
-                }
-                disabled={groupIndex === 0}
-              />
-              <ActionButton
-                label={`Move down ingredient group ${groupIndex + 1}`}
-                onClick={() =>
-                  update((current) => ({
-                    ...current,
-                    ingredients: moveItem(current.ingredients, groupIndex, groupIndex + 1),
-                  }))
-                }
-                disabled={groupIndex === draft.ingredients.length - 1}
-              />
-              <ActionButton
-                label={`Delete ingredient group ${groupIndex + 1}`}
-                onClick={() =>
-                  update((current) => ({
-                    ...current,
-                    ingredients: current.ingredients.filter((_, index) => index !== groupIndex),
-                  }))
-                }
-              />
-            </div>
-            {group.ingredients.map((ingredient, ingredientIndex) => (
-              <div
-                key={ingredientIndex}
-                className="grid grid-cols-[minmax(0,0.7fr)_minmax(0,0.8fr)_minmax(0,1.5fr)_auto] gap-1.5"
-              >
-                <Input
-                  aria-label={`Ingredient ${ingredientIndex + 1} amount`}
-                  placeholder="Amount"
-                  value={ingredient.amount}
-                  onChange={(event) =>
-                    updateIngredient(groupIndex, ingredientIndex, "amount", event.target.value)
-                  }
-                />
-                <Input
-                  aria-label={`Ingredient ${ingredientIndex + 1} unit`}
-                  placeholder="Unit"
-                  value={ingredient.units}
-                  onChange={(event) =>
-                    updateIngredient(groupIndex, ingredientIndex, "units", event.target.value)
-                  }
-                />
-                <Input
-                  aria-label={`Ingredient ${ingredientIndex + 1} name`}
-                  placeholder="Ingredient"
-                  value={ingredient.ingredient}
-                  onChange={(event) =>
-                    updateIngredient(groupIndex, ingredientIndex, "ingredient", event.target.value)
-                  }
-                />
-                <div className="flex items-center">
-                  <ActionButton
-                    label={`Move up ingredient ${ingredientIndex + 1}`}
-                    onClick={() =>
-                      update((current) => ({
-                        ...current,
-                        ingredients: current.ingredients.map((item, index) =>
-                          index === groupIndex
-                            ? {
-                                ...item,
-                                ingredients: moveItem(
-                                  item.ingredients,
-                                  ingredientIndex,
-                                  ingredientIndex - 1
-                                ),
-                              }
-                            : item
-                        ),
-                      }))
-                    }
-                    disabled={ingredientIndex === 0}
-                  />
-                  <ActionButton
-                    label={`Move down ingredient ${ingredientIndex + 1}`}
-                    onClick={() =>
-                      update((current) => ({
-                        ...current,
-                        ingredients: current.ingredients.map((item, index) =>
-                          index === groupIndex
-                            ? {
-                                ...item,
-                                ingredients: moveItem(
-                                  item.ingredients,
-                                  ingredientIndex,
-                                  ingredientIndex + 1
-                                ),
-                              }
-                            : item
-                        ),
-                      }))
-                    }
-                    disabled={ingredientIndex === group.ingredients.length - 1}
-                  />
-                  <ActionButton
-                    label={`Delete ingredient ${ingredientIndex + 1}`}
-                    onClick={() =>
-                      update((current) => ({
-                        ...current,
-                        ingredients: current.ingredients.map((item, index) =>
-                          index === groupIndex
-                            ? {
-                                ...item,
-                                ingredients: item.ingredients.filter(
-                                  (_, itemIndex) => itemIndex !== ingredientIndex
-                                ),
-                              }
-                            : item
-                        ),
-                      }))
-                    }
-                  />
-                </div>
-                <div className="col-span-4">
-                  <Input
-                    aria-label={`Ingredient ${ingredientIndex + 1} description`}
-                    placeholder="Description (optional)"
-                    value={ingredient.description ?? ""}
-                    onChange={(event) =>
-                      updateIngredient(
-                        groupIndex,
-                        ingredientIndex,
-                        "description",
-                        event.target.value
-                      )
-                    }
-                  />
-                </div>
-              </div>
-            ))}
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() =>
-                update((current) => ({
-                  ...current,
-                  ingredients: current.ingredients.map((item, index) =>
-                    index === groupIndex
-                      ? {
-                          ...item,
-                          ingredients: [
-                            ...item.ingredients,
-                            { amount: "", units: "", ingredient: "" },
-                          ],
-                        }
-                      : item
-                  ),
-                }))
-              }
-            >
-              <Plus className="mr-1 h-3.5 w-3.5" />
-              Add ingredient
-            </Button>
-          </div>
-        ))}
-      </section>
-
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="font-sans text-sm font-semibold">Instructions</h3>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              update((current) => ({
-                ...current,
-                instructions: [...current.instructions, { title: "", detail: "" }],
-              }))
-            }
-          >
-            <Plus className="mr-1 h-3.5 w-3.5" />
-            Add step
-          </Button>
-        </div>
-        {draft.instructions.map((step, index) => (
-          <div
-            key={index}
-            className="space-y-2 rounded-lg border border-stone-200 p-3 dark:border-stone-700"
-          >
-            <div className="flex items-center gap-1">
-              <span className="w-5 shrink-0 text-sm font-medium text-stone-500">{index + 1}</span>
-              <Input
-                aria-label={`Step ${index + 1} title`}
-                placeholder="Step title (optional)"
-                value={step.title ?? ""}
-                onChange={(event) => updateStep(index, "title", event.target.value)}
-              />
-              <ActionButton
-                label={`Move up instruction ${index + 1}`}
-                onClick={() => moveInstruction(index, index - 1)}
-                disabled={index === 0}
-              />
-              <ActionButton
-                label={`Move down instruction ${index + 1}`}
-                onClick={() => moveInstruction(index, index + 1)}
-                disabled={index === draft.instructions.length - 1}
-              />
-              <ActionButton
-                label={`Delete instruction ${index + 1}`}
-                onClick={() => removeInstruction(index)}
-              />
-            </div>
-            <Textarea
-              aria-label={`Step ${index + 1} details`}
-              placeholder="Instruction details"
-              value={step.detail ?? ""}
-              onChange={(event) => updateStep(index, "detail", event.target.value)}
-              rows={3}
-            />
-            <Input
-              aria-label={`Step ${index + 1} tip`}
-              placeholder="Tip (optional)"
-              value={step.tips ?? ""}
-              onChange={(event) => updateStep(index, "tips", event.target.value)}
-            />
-          </div>
-        ))}
-      </section>
-
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="font-sans text-sm font-semibold">Equipment</h3>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              update((current) => ({
-                ...current,
-                equipment: [...(current.equipment ?? []), { name: "", stepNumbers: [] }],
-              }))
-            }
-          >
-            <Plus className="mr-1 h-3.5 w-3.5" />
-            Add equipment
-          </Button>
-        </div>
-        {(draft.equipment ?? []).map((item, equipmentIndex) => (
-          <div
-            key={equipmentIndex}
-            className="space-y-3 rounded-lg border border-stone-200 p-3 dark:border-stone-700"
-          >
-            <div className="flex items-center gap-1">
-              <Input
-                aria-label={`Equipment ${equipmentIndex + 1} name`}
-                placeholder="Equipment name"
-                value={item.name}
-                onChange={(event) =>
-                  update((current) => ({
-                    ...current,
-                    equipment: (current.equipment ?? []).map((entry, index) =>
-                      index === equipmentIndex ? { ...entry, name: event.target.value } : entry
-                    ),
-                  }))
-                }
-              />
-              <ActionButton
-                label={`Move up equipment ${equipmentIndex + 1}`}
-                onClick={() =>
-                  update((current) => ({
-                    ...current,
-                    equipment: moveItem(
-                      current.equipment ?? [],
-                      equipmentIndex,
-                      equipmentIndex - 1
-                    ),
-                  }))
-                }
-                disabled={equipmentIndex === 0}
-              />
-              <ActionButton
-                label={`Move down equipment ${equipmentIndex + 1}`}
-                onClick={() =>
-                  update((current) => ({
-                    ...current,
-                    equipment: moveItem(
-                      current.equipment ?? [],
-                      equipmentIndex,
-                      equipmentIndex + 1
-                    ),
-                  }))
-                }
-                disabled={equipmentIndex === (draft.equipment?.length ?? 0) - 1}
-              />
-              <ActionButton
-                label={`Delete equipment ${equipmentIndex + 1}`}
-                onClick={() =>
-                  update((current) => ({
-                    ...current,
-                    equipment: (current.equipment ?? []).filter(
-                      (_, index) => index !== equipmentIndex
-                    ),
-                  }))
-                }
-              />
-            </div>
-            <fieldset>
-              <legend className="mb-1.5 text-xs font-medium text-stone-600 dark:text-stone-400">
-                Used in steps
-              </legend>
-              <div className="flex flex-wrap gap-x-3 gap-y-1.5">
-                {draft.instructions.map((step, stepIndex) => (
-                  <label
-                    key={stepIndex}
-                    className="flex items-center gap-1.5 text-xs text-stone-600 dark:text-stone-300"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={item.stepNumbers.includes(stepIndex + 1)}
-                      onChange={() => toggleEquipmentStep(equipmentIndex, stepIndex + 1)}
-                    />
-                    Step {stepIndex + 1}
-                    {step.title ? `: ${step.title}` : ""}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-          </div>
-        ))}
-      </section>
+      </div>
+      <div className="space-y-1.5">
+        <label htmlFor="edit-recipe-ingredients" className="font-sans text-sm font-medium">
+          Ingredients
+        </label>
+        <Textarea
+          id="edit-recipe-ingredients"
+          value={fields.ingredients}
+          onChange={(event) => setField("ingredients", event.target.value)}
+          rows={10}
+          className="font-mono text-sm"
+        />
+        <p className="text-xs text-stone-500 dark:text-stone-400">
+          Use one bullet per ingredient. Optional groups use <code>### Group name</code>.
+        </p>
+      </div>
+      <div className="space-y-1.5">
+        <label htmlFor="edit-recipe-instructions" className="font-sans text-sm font-medium">
+          Instructions
+        </label>
+        <Textarea
+          id="edit-recipe-instructions"
+          value={fields.instructions}
+          onChange={(event) => setField("instructions", event.target.value)}
+          rows={10}
+          className="font-mono text-sm"
+        />
+        <p className="text-xs text-stone-500 dark:text-stone-400">
+          Use numbered steps, for example <code>1. Preheat the oven.</code>
+        </p>
+      </div>
+      <div className="space-y-1.5">
+        <label htmlFor="edit-recipe-equipment" className="font-sans text-sm font-medium">
+          Equipment
+        </label>
+        <Textarea
+          id="edit-recipe-equipment"
+          value={fields.equipment}
+          onChange={(event) => setField("equipment", event.target.value)}
+          rows={4}
+          className="font-mono text-sm"
+          placeholder="- Large skillet"
+        />
+        <p className="text-xs text-stone-500 dark:text-stone-400">Use one bullet per item.</p>
+      </div>
     </div>
   );
 
@@ -718,13 +313,14 @@ export function EditRecipeDrawer({ open, onOpenChange, recipe, onSave }: EditRec
       </Button>
     </>
   );
+
   if (isMobile)
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="max-h-[90vh]">
           <DrawerHeader>
             <DrawerTitle>Edit recipe</DrawerTitle>
-            <DrawerDescription>Make changes to your recipe, then save them.</DrawerDescription>
+            <DrawerDescription>Edit each recipe section, then save your changes.</DrawerDescription>
           </DrawerHeader>
           {body}
           <DrawerFooter className="flex-row gap-2">{footer}</DrawerFooter>
@@ -736,7 +332,7 @@ export function EditRecipeDrawer({ open, onOpenChange, recipe, onSave }: EditRec
       <DialogContent className="flex max-h-[85vh] flex-col gap-4 sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Edit recipe</DialogTitle>
-          <DialogDescription>Make changes to your recipe, then save them.</DialogDescription>
+          <DialogDescription>Edit each recipe section, then save your changes.</DialogDescription>
         </DialogHeader>
         {body}
         <DialogFooter>{footer}</DialogFooter>
