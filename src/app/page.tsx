@@ -84,9 +84,10 @@ function HeroHeadline() {
       <span className="inline-flex items-center gap-2 whitespace-nowrap">
         <span>Recipes from</span>
         <HeroBook />
+        <span>anywhere,</span>
       </span>
       <span className="inline-flex items-center gap-2 whitespace-nowrap">
-        <span>anywhere, no</span>
+        <span>no</span>
         <HeroPot />
         <span>clutter.</span>
       </span>
