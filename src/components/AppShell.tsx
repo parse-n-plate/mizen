@@ -6,6 +6,7 @@ import { RecipeProvider } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
+import { MobileScreenTransition } from "@/components/MobileScreenTransition";
 import { SearchCommandModal } from "@/components/SearchCommandModal";
 import { SplashScreen } from "@/components/SplashScreen";
 import { cn } from "@/lib/utils";
@@ -139,10 +140,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </div>
               </div>
               <main
-                className="group/shell relative flex-1 min-w-0 overflow-y-auto flex flex-col"
+                className="group/shell relative flex-1 min-w-0 overflow-x-hidden overflow-y-auto flex flex-col"
                 data-sidebar-collapsed={sidebarCollapsed}
               >
-                {children}
+                <MobileScreenTransition>{children}</MobileScreenTransition>
               </main>
             </div>
             {showMobileNav && <MobileBottomNav searchHref="/search" />}
