@@ -218,12 +218,12 @@ export function Sidebar({ collapsed, onToggle, onOpenSearch }: SidebarProps) {
       <aside
         id="primary-sidebar"
         className={cn(
-          "flex flex-col justify-between items-end shrink-0 overflow-hidden [will-change:width] transition-[width] ease-[cubic-bezier(0.165,0.84,0.44,1)] motion-reduce:transition-none motion-reduce:duration-0",
+          "h-full min-h-0 flex flex-col justify-between items-end shrink-0 overflow-x-hidden overflow-y-auto [will-change:width] transition-[width] ease-[cubic-bezier(0.165,0.84,0.44,1)] motion-reduce:transition-none motion-reduce:duration-0",
           collapsed ? "w-0 duration-[180ms]" : "w-[240px] duration-[220ms]"
         )}
         inert={collapsed}
       >
-        <div className="flex flex-col gap-6 px-4 pt-6 w-[240px]">
+        <div className="flex shrink-0 flex-col gap-6 px-4 pt-6 w-[240px]">
           {/* Logo + sidebar toggle */}
           <div className="flex items-center justify-between px-1.5 h-7">
             <Link href="/" className="flex items-center gap-2">
@@ -528,7 +528,7 @@ export function Sidebar({ collapsed, onToggle, onOpenSearch }: SidebarProps) {
         </div>
 
         {/* Bottom section */}
-        <div className="flex flex-col px-4 pb-6 w-[240px]">
+        <div className="flex shrink-0 flex-col px-4 pb-6 w-[240px]">
           {!authLoading && !user && (
             <button
               type="button"

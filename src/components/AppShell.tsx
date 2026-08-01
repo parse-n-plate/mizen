@@ -102,7 +102,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             {children}
           </div>
         ) : (
-          <div className="flex h-screen bg-[#FAFAF9] dark:bg-stone-950">
+          <div className="flex h-dvh bg-[#FAFAF9] dark:bg-stone-950">
             <div className="flex h-full w-full max-w-[1100px] mx-auto gap-3 max-md:gap-0 max-md:pl-0 max-md:pr-0 pl-6 pr-6">
               <div className="hidden md:flex shrink-0">
                 <Sidebar
