@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { CookbookList } from "@/components/CookbookList";
+import { CookbookAddRecipeButton } from "@/components/CookbookAddRecipeButton";
 import type { SavedRecipe } from "@/lib/types";
 
 export default async function CookbookPage() {
@@ -51,13 +51,7 @@ export default async function CookbookPage() {
                 {count} {count === 1 ? "recipe" : "recipes"} saved
               </p>
             </div>
-            <Link
-              href="/"
-              className="hidden items-center gap-1.5 rounded-lg bg-stone-800 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-stone-700 dark:bg-stone-200 dark:text-stone-900 dark:hover:bg-stone-300 sm:inline-flex"
-            >
-              <span className="text-base leading-none">+</span>
-              Add Recipe
-            </Link>
+            <CookbookAddRecipeButton />
           </div>
         </div>
       </div>
