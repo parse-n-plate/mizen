@@ -77,7 +77,16 @@ export default function RecipePage() {
   const [saving, setSaving] = useState(false);
   const [unsaving, setUnsaving] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<"prep" | "cook">("prep");
+  const [activeTabState, setActiveTabState] = useState<{
+    recipeKey: string | null;
+    tab: "prep" | "cook";
+  }>({ recipeKey: recipe?.title ?? null, tab: "prep" });
+  const activeTab =
+    activeTabState.recipeKey === (recipe?.title ?? null) ? activeTabState.tab : "prep";
+  const setActiveTab = useCallback(
+    (tab: "prep" | "cook") => setActiveTabState({ recipeKey: recipe?.title ?? null, tab }),
+    [recipe?.title]
+  );
   useTabScrollMemory(activeTab);
   const isPhoneViewport = useIsMobile();
   const [reportOpen, setReportOpen] = useState(false);
@@ -124,14 +133,17 @@ export default function RecipePage() {
   const dietaryProfile = usePreference(getDietaryProfile);
   const substitutions = usePreference(getSubstitutions);
 
-  const handleStepClick = useCallback((stepNumber: number) => {
-    setActiveTab("cook");
-    requestAnimationFrame(() => {
-      document
-        .getElementById(`step-${stepNumber}`)
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
-  }, []);
+  const handleStepClick = useCallback(
+    (stepNumber: number) => {
+      setActiveTab("cook");
+      requestAnimationFrame(() => {
+        document
+          .getElementById(`step-${stepNumber}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    },
+    [setActiveTab]
+  );
 
   useEffect(() => {
     setServings(getPreferredServings(recipe?.servings, defaultServings));
@@ -676,7 +688,7 @@ export default function RecipePage() {
                 </div>
               ) : (
                 <div key="cook" className="tab-content-animate">
-                  <StepList steps={displayedInstructions} />
+                  <StepList steps={displayedInstructions} ingredientGroups={scaledIngredients} />
                 </div>
               )}
             </div>

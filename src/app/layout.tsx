@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
 import { Domine, Albert_Sans } from "next/font/google";
 import { Agentation } from "agentation";
-import { DialRoot } from "dialkit";
 import { AppShell } from "@/components/AppShell";
 import { developerFeedbackToolsEnabled } from "@/lib/features";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeSync } from "@/components/ThemeSync";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
-import "dialkit/styles.css";
 
 /* eslint-disable @next/next/no-img-element */
 
@@ -110,9 +108,6 @@ export default function RootLayout({
         <Toaster />
         {process.env.NODE_ENV === "development" && developerFeedbackToolsEnabled && (
           <Agentation endpoint="http://localhost:4747" />
-        )}
-        {process.env.NODE_ENV === "development" && developerFeedbackToolsEnabled && (
-          <DialRoot position="bottom-right" />
         )}
       </body>
     </html>

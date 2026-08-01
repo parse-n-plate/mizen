@@ -35,7 +35,15 @@ function subscribeToStorage(callback: () => void) {
 }
 
 export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
-  const [activeTab, setActiveTab] = useState<RecipeTabValue>("prep");
+  const [activeTabState, setActiveTabState] = useState<{
+    recipeKey: string;
+    tab: RecipeTabValue;
+  }>({ recipeKey: recipe.title, tab: "prep" });
+  const activeTab = activeTabState.recipeKey === recipe.title ? activeTabState.tab : "prep";
+  const setActiveTab = useCallback(
+    (tab: RecipeTabValue) => setActiveTabState({ recipeKey: recipe.title, tab }),
+    [recipe.title]
+  );
   const [unitSystem, setUnitSystemState] = useState<RecipeUnitSystem>("original");
   const [copied, setCopied] = useState(false);
   useTabScrollMemory(activeTab);
@@ -56,14 +64,17 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
     [recipe.ingredients, unitSystem]
   );
 
-  const handleStepClick = useCallback((stepNumber: number) => {
-    setActiveTab("cook");
-    requestAnimationFrame(() => {
-      document
-        .getElementById(`step-${stepNumber}`)
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
-  }, []);
+  const handleStepClick = useCallback(
+    (stepNumber: number) => {
+      setActiveTab("cook");
+      requestAnimationFrame(() => {
+        document
+          .getElementById(`step-${stepNumber}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    },
+    [setActiveTab]
+  );
 
   const handleCopyRecipe = async () => {
     const copyText = recipeToCopyMarkdown({
@@ -155,7 +166,7 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
               </div>
             ) : (
               <div key="mobile-cook" className="tab-content-animate">
-                <StepList steps={recipe.instructions} />
+                <StepList steps={recipe.instructions} ingredientGroups={displayedIngredients} />
               </div>
             )}
           </div>
@@ -241,7 +252,7 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
               </div>
             ) : (
               <div key="cook" className="tab-content-animate">
-                <StepList steps={recipe.instructions} />
+                <StepList steps={recipe.instructions} ingredientGroups={displayedIngredients} />
               </div>
             )}
           </div>

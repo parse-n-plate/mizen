@@ -90,6 +90,31 @@ function DialogClose({ ...props }: React.ComponentProps<typeof DialogPrimitive.C
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
 }
 
+function DialogCloseX({
+  className,
+  iconClassName,
+  label = "Close",
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Close> & {
+  iconClassName?: string;
+  label?: string;
+}) {
+  return (
+    <DialogPrimitive.Close
+      data-slot="dialog-close-x"
+      aria-label={label}
+      className={cn(
+        "press-scale ring-offset-background focus-visible:ring-ring inline-flex size-9 items-center justify-center rounded-md text-stone-500 transition-[color,background-color,box-shadow,transform,opacity] hover:bg-stone-100 hover:text-stone-900 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        className
+      )}
+      {...props}
+    >
+      <XIcon className={cn("size-4", iconClassName)} />
+      <span className="sr-only">{label}</span>
+    </DialogPrimitive.Close>
+  );
+}
+
 function DialogOverlay({
   className,
   ...props
@@ -137,15 +162,7 @@ function DialogContent({
         {...props}
       >
         {children}
-        {showCloseButton && (
-          <DialogPrimitive.Close
-            data-slot="dialog-close"
-            className="ring-offset-background focus-visible:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
-          >
-            <XIcon />
-            <span className="sr-only">Close</span>
-          </DialogPrimitive.Close>
-        )}
+        {showCloseButton && <DialogCloseX className="absolute top-4 right-4" />}
       </DialogPrimitive.Content>
     </DialogPortal>
   );
@@ -211,6 +228,7 @@ function DialogDescription({
 export {
   Dialog,
   DialogClose,
+  DialogCloseX,
   DialogContent,
   DialogDescription,
   DialogFooter,
