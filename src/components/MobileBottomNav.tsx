@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useSyncExternalStore, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import Home from "@solar-icons/react/csr/ui/Home";
 import BookBookmark from "@solar-icons/react/csr/school/BookBookmark";
@@ -46,6 +47,10 @@ type MobileNavShellProps = {
   className?: string;
   showLabels?: boolean;
 };
+
+function subscribeToHydration() {
+  return () => {};
+}
 
 function NavIconButton({
   item,
@@ -149,7 +154,13 @@ export function MobileNavShell({
   className,
   showLabels,
 }: MobileNavShellProps) {
-  return (
+  const isHydrated = useSyncExternalStore(
+    subscribeToHydration,
+    () => true,
+    () => false
+  );
+
+  const navigation = (
     <nav
       className={cn(
         "md:hidden print:hidden fixed inset-x-0 bottom-0 z-30 pointer-events-none",
@@ -171,6 +182,10 @@ export function MobileNavShell({
       </div>
     </nav>
   );
+
+  // Recipe content scrolls inside the app shell. Portaling prevents that scrolling
+  // container from becoming the fixed-position containing block on mobile browsers.
+  return isHydrated ? createPortal(navigation, document.body) : navigation;
 }
 
 export function MobileBottomNav({ searchHref }: { searchHref?: string }) {

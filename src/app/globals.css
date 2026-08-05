@@ -1217,6 +1217,13 @@ body {
     --tab-enter-x: -24px;
   }
 
+  /* Mobile routes share the same canvas while their outgoing view is removed
+     from layout. This keeps page transitions from changing the scroll height. */
+  .mobile-screen-transition {
+    width: 100%;
+    will-change: transform, opacity;
+  }
+
   /* ═══════════════════════════════════════════════════════════════════════════
      CHECKBOX — Satisfying pop on check
   ═══════════════════════════════════════════════════════════════════════════ */

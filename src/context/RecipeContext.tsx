@@ -27,6 +27,7 @@ interface RecipeContextType {
   history: HistoryEntry[];
   hasHydrated: boolean;
   removeFromHistory: () => void;
+  updateRecipe: (updated: ParsedRecipe) => void;
 }
 
 const RecipeContext = createContext<RecipeContextType | undefined>(undefined);
@@ -228,6 +229,25 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Updates the current recipe in place (e.g. after editing). Unlike setRecipe,
+  // this never touches savedMeta — the underlying saved DB row (if any) is the
+  // same row, just with new content — and it updates the matching history
+  // entry by its previous title rather than treating this as a new recipe.
+  const updateRecipe = (updated: ParsedRecipe) => {
+    const previousTitle = recipe?.title;
+    setRecipeState(updated);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      const next = history.map((h) =>
+        h.recipe.title === previousTitle ? { ...h, recipe: updated } : h
+      );
+      setHistory(next);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+    } catch {
+      // Ignore storage errors
+    }
+  };
+
   const removeFromHistory = () => {
     if (!recipe) return;
     try {
@@ -282,6 +302,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
         history,
         hasHydrated,
         removeFromHistory,
+        updateRecipe,
       }}
     >
       {children}
