@@ -55,7 +55,7 @@ export interface ParserResult {
   success: boolean;
   data?: ParsedRecipe;
   error?: string;
-  method: "json-ld" | "json-ld+ai" | "ai" | "image" | "text" | "none";
+  method: "json-ld" | "json-ld+ai" | "ai" | "image" | "text" | "document" | "none";
 }
 
 export interface SavedRecipe {

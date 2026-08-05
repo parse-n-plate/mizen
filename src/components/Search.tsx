@@ -7,8 +7,10 @@ import { useRecipe } from "@/context/RecipeContext";
 import { toast } from "sonner";
 import { looksLikeRecipeUrl, detectCollectionUrl } from "@/utils/urlPatterns";
 
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const DOCUMENT_NAME_PATTERN = /\.(?:pdf|docx?|odt|rtf|xlsx?|html?|htm)$/i;
+const MAX_IMAGE_SIZE = 4 * 1024 * 1024;
+const MAX_DOCUMENT_SIZE = 10 * 1024 * 1024;
 const TEXT_PASTE_MIN_LENGTH = 50;
 
 // Heights for the morph transition
@@ -22,7 +24,12 @@ interface ImageFile {
   preview: string;
 }
 
-type BarMode = "idle" | "focused" | "loading" | "url" | "image" | "text";
+interface DocumentFile {
+  file: File;
+  name: string;
+}
+
+type BarMode = "idle" | "focused" | "loading" | "url" | "image" | "document" | "text";
 
 function looksLikeUrl(str: string): boolean {
   const trimmed = str.trim();
@@ -38,11 +45,13 @@ function getMode(
   isLoading: boolean,
   url: string,
   imageFile: ImageFile | null,
+  documentFile: DocumentFile | null,
   pastedText: string | null,
   isFocused: boolean
 ): BarMode {
   if (isLoading) return "loading";
   if (imageFile) return "image";
+  if (documentFile) return "document";
   if (pastedText) return "text";
   if (url.trim() && looksLikeUrl(url)) return "url";
   if (isFocused) return "focused";
@@ -266,6 +275,25 @@ function TextPillIcon() {
   );
 }
 
+function DocumentIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M7 3.75h6.5L18 8.25v12H7a1.5 1.5 0 01-1.5-1.5v-13A1.5 1.5 0 017 4.25z"
+        stroke="#18A1F7"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M13.5 3.75v4.5H18M8.5 13h7M8.5 16h5"
+        stroke="#18A1F7"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 // ── Sub-components ───────────────────────────────────────────────────────
 
 function ThumbnailClose({ onClick }: { onClick: () => void }) {
@@ -360,6 +388,7 @@ function TypePill({ mode, text }: { mode: BarMode; text?: string | null }) {
 export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
   const [url, setUrl] = useState("");
   const [imageFile, setImageFile] = useState<ImageFile | null>(null);
+  const [documentFile, setDocumentFile] = useState<DocumentFile | null>(null);
   const [pastedText, setPastedText] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -377,7 +406,9 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
   const [preLoadMode, setPreLoadMode] = useState<BarMode>("idle");
   const [inlineError, setInlineError] = useState<string | null>(null);
 
-  const mode = isLoading ? "loading" : getMode(false, url, imageFile, pastedText, isFocused);
+  const mode = isLoading
+    ? "loading"
+    : getMode(false, url, imageFile, documentFile, pastedText, isFocused);
   const displayMode = isLoading ? preLoadMode : mode;
   const isExpanded = displayMode === "text";
 
@@ -434,6 +465,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
     if (initialUrl) {
       setUrl(initialUrl);
       setImageFile(null);
+      setDocumentFile(null);
       setPastedText(null);
       setInlineError(null);
       inputRef.current?.focus();
@@ -452,12 +484,27 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
 
   const handleFile = useCallback(
     (file: File) => {
-      if (!ALLOWED_TYPES.includes(file.type)) {
-        toast.error("Only JPEG, PNG, and WebP images are supported.");
+      if (!IMAGE_TYPES.includes(file.type) && !DOCUMENT_NAME_PATTERN.test(file.name)) {
+        toast.error("Supported files: images, PDF, Word, spreadsheet, RTF, ODT, or HTML.");
         return;
       }
-      if (file.size > MAX_SIZE) {
-        toast.error("Image is too large (max 10 MB).");
+      if (!IMAGE_TYPES.includes(file.type)) {
+        if (file.size > MAX_DOCUMENT_SIZE) {
+          toast.error("Document is too large (max 10 MB).");
+          return;
+        }
+        setDocumentFile({ file, name: file.name || "document" });
+        setImageFile((prev) => {
+          if (prev?.preview) URL.revokeObjectURL(prev.preview);
+          return null;
+        });
+        setUrl("");
+        setPastedText(null);
+        setError(null);
+        return;
+      }
+      if (file.size > MAX_IMAGE_SIZE) {
+        toast.error("Image is too large (max 4 MB).");
         return;
       }
       setImageFile((prev) => {
@@ -468,6 +515,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
           preview: URL.createObjectURL(file),
         };
       });
+      setDocumentFile(null);
       setUrl("");
       setPastedText(null);
       setError(null);
@@ -478,6 +526,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
   const clearContent = useCallback(() => {
     if (imageFile?.preview) URL.revokeObjectURL(imageFile.preview);
     setImageFile(null);
+    setDocumentFile(null);
     setUrl("");
     setPastedText(null);
     setError(null);
@@ -536,6 +585,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
         setUrl(text);
         setPastedText(null);
         setImageFile(null);
+        setDocumentFile(null);
         if (inlineError) setInlineError(null);
         return;
       }
@@ -546,6 +596,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
         setPastedText(text);
         setUrl("");
         setImageFile(null);
+        setDocumentFile(null);
       }
     },
     [handleFile, inlineError]
@@ -560,7 +611,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
         toast.warning(`${collectionWarning} We'll still try parsing it.`);
       }
 
-      setPreLoadMode(getMode(false, recipeUrl, null, null, true));
+      setPreLoadMode(getMode(false, recipeUrl, null, null, null, true));
       setIsLoading(true);
       setError(null);
       setInlineError(null);
@@ -664,6 +715,37 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
       return;
     }
 
+    if (documentFile) {
+      setPreLoadMode("document");
+      setIsLoading(true);
+      setError(null);
+      setInlineError(null);
+
+      try {
+        const body = new FormData();
+        body.append("file", documentFile.file);
+        const response = await fetch("/api/parse", { method: "POST", body });
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          setRecipe(result.data);
+          onSuccess?.();
+          router.push("/recipe");
+        } else {
+          const msg = result.error || "Failed to parse document";
+          toast.error(msg);
+          setInlineError(msg);
+        }
+      } catch {
+        const msg = "Something went wrong. Please try again.";
+        toast.error(msg);
+        setInlineError(msg);
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
     if (pastedText) {
       submitText(pastedText);
       return;
@@ -681,12 +763,13 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
     submitUrl(clipboardUrl);
   };
 
-  const hasInput = imageFile || pastedText || url.trim();
+  const hasInput = imageFile || documentFile || pastedText || url.trim();
   const showPill =
     clipboardUrl &&
     clipboardUrl !== dismissedUrl &&
     !url &&
     !imageFile &&
+    !documentFile &&
     !pastedText &&
     !isLoading;
 
@@ -703,7 +786,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
             isDragging
               ? "rounded-[20px] border-2 border-dashed border-[var(--color-blue)] bg-[var(--color-blue-light)] dark:bg-blue-950/20"
               : `bg-white dark:bg-stone-900 [border-width:1.5px] border-solid ${
-                  isExpanded || displayMode === "image"
+                  isExpanded || displayMode === "image" || displayMode === "document"
                     ? "rounded-[20px] p-1 border-stone-200 dark:border-stone-700"
                     : "rounded-2xl border-stone-200 dark:border-stone-700"
                 } ${
@@ -749,17 +832,17 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
               </svg>
               <div className="flex flex-col items-center gap-0.5">
                 <span className="text-[15px] font-medium text-stone-700 dark:text-stone-300">
-                  Drop your image here
+                  Drop your recipe file here
                 </span>
                 <span className="text-[13px] text-stone-400 dark:text-stone-500">
-                  JPEG, PNG, or WebP
+                  Image, PDF, Word, spreadsheet, or HTML
                 </span>
               </div>
             </div>
           )}
 
           {/* ── Pill mode (idle / focused / url / loading / error) ── */}
-          {!isExpanded && displayMode !== "image" && !isDragging && (
+          {!isExpanded && displayMode !== "image" && displayMode !== "document" && !isDragging && (
             <div className="relative flex items-center h-[60px] pr-1.5 pl-2 gap-2">
               {/* URL chip when a URL is present */}
               {showUrlInline && !isLoading ? (
@@ -781,13 +864,14 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                 <input
                   ref={inputRef}
                   type="text"
-                  placeholder="Paste a URL, text, or image…"
+                  placeholder="Paste a URL, text, image, or document…"
                   name="recipe-url"
                   autoComplete="off"
                   value={url}
                   onChange={(e) => {
                     setUrl(e.target.value);
                     setPastedText(null);
+                    setDocumentFile(null);
                     if (inlineError) setInlineError(null);
                   }}
                   onPaste={onPaste}
@@ -826,7 +910,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                   </button>
                 )}
 
-                {/* Image + paperclip icons when idle/focused */}
+                {/* File upload controls when idle/focused */}
                 {!showUrlInline && !url.trim() && (
                   <>
                     <button
@@ -834,7 +918,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isLoading}
                       className="flex items-center justify-center rounded-[10px] shrink-0 size-9 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors disabled:opacity-50"
-                      aria-label="Upload image"
+                      aria-label="Upload file"
                     >
                       <ImageIcon />
                     </button>
@@ -893,6 +977,41 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
                   type="submit"
                   disabled={isLoading}
                   className="press-scale flex items-center justify-center rounded-xl bg-[var(--color-blue)] text-white shrink-0 size-10 transition-[opacity,transform] disabled:opacity-60"
+                >
+                  {isLoading ? <SpinnerIcon /> : <UpArrowIcon />}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {displayMode === "document" && !isDragging && documentFile && (
+            <div className="flex items-center h-full px-4 py-2 gap-3">
+              <DocumentIcon />
+              <span className="min-w-0 truncate text-[14px] font-medium text-stone-700 dark:text-stone-200">
+                {documentFile.name}
+              </span>
+              <div className="flex items-center shrink-0 gap-1 ml-auto">
+                {!isLoading && (
+                  <button
+                    type="button"
+                    onClick={clearContent}
+                    className="flex items-center justify-center rounded-[10px] bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 size-10 transition-colors"
+                    aria-label="Clear"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path
+                        d="M4 4l8 8M12 4l-8 8"
+                        stroke="#78716C"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </button>
+                )}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="press-scale flex items-center justify-center rounded-xl bg-[var(--color-blue)] text-white size-10 transition-[opacity,transform] disabled:opacity-60"
                 >
                   {isLoading ? <SpinnerIcon /> : <UpArrowIcon />}
                 </button>
@@ -968,7 +1087,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept="image/jpeg,image/png,image/webp,.pdf,.doc,.docx,.odt,.rtf,.xls,.xlsx,.html,.htm"
           className="sr-only"
           onChange={(e) => {
             const file = e.target.files?.[0];
