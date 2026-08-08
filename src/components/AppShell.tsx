@@ -40,6 +40,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isDesignSystemPage =
     pathname === "/design-system" || pathname.startsWith("/design-system/");
   const isPublicStandalonePage =
+    pathname === "/changelog" ||
     pathname === "/get-started" ||
     pathname === "/homepage" ||
     pathname === "/links" ||
@@ -49,7 +50,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   // overflow — but when a dialog opens, react-remove-scroll sets body{overflow:hidden}, which
   // clips that overflow, collapses the html scroll area, and snaps the page to the top. Letting
   // the wrapper grow with its content keeps body tall so the lock can't collapse the scroll.
-  const isScrollingLanding = pathname === "/get-started" || isDesignSystemPage;
+  const isScrollingLanding =
+    pathname === "/changelog" || pathname === "/get-started" || isDesignSystemPage;
   // Treat loading state as landing on homepage so sidebar don't flash
   // before auth resolves
   const isLanding = isPublicStandalonePage || (isHomePage && (loading || !user));

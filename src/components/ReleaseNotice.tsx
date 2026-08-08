@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import ChatRoundDots from "@solar-icons/react/csr/messages/ChatRoundDots";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { Badge } from "@/components/ui/badge";
@@ -167,7 +168,13 @@ export function ReleaseNotice({
               </DialogDescription>
             </div>
 
-            <div className="flex w-full items-center justify-end">
+            <div className="flex w-full flex-wrap items-center justify-between gap-3">
+              <Link
+                href="/changelog"
+                className="font-sans text-sm font-medium text-stone-500 underline-offset-4 hover:text-stone-900 hover:underline dark:text-stone-400 dark:hover:text-stone-100"
+              >
+                View changelog
+              </Link>
               <Button asChild variant="primary-blue" size="sm">
                 <a href={contactHref} aria-label={`Send Mizen feedback to ${contactEmail}`}>
                   <ChatRoundDots size={18} weight="Bold" className="shrink-0" />
