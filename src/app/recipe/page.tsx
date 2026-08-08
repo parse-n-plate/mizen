@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useRecipe } from "@/context/RecipeContext";
 import type { ParsedRecipe, SavedRecipe } from "@/lib/types";
@@ -71,6 +79,14 @@ import {
 } from "lucide-react";
 
 export default function RecipePage() {
+  return (
+    <Suspense fallback={<RecipePageLoading />}>
+      <RecipePageContent />
+    </Suspense>
+  );
+}
+
+function RecipePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { recipe, setRecipe, savedMeta, setSavedMeta, removeFromHistory, updateRecipe } =
@@ -870,6 +886,14 @@ export default function RecipePage() {
           unitSystem={unitSystem}
         />
       )}
+    </div>
+  );
+}
+
+function RecipePageLoading() {
+  return (
+    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6">
+      <p className="font-sans text-stone-500 dark:text-stone-400">Loading recipe…</p>
     </div>
   );
 }
