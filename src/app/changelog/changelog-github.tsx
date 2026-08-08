@@ -28,6 +28,12 @@ type HistorySection = {
   entries: ChangelogEntry[];
 };
 
+type DateGroup = {
+  date: string;
+  dateTime: string;
+  entries: ChangelogEntry[];
+};
+
 type ChangelogGitHubProps = {
   appVersion: string;
 };
@@ -130,11 +136,27 @@ function groupByMonth(entries: ChangelogEntry[]): HistorySection[] {
   return sections;
 }
 
+function groupByDate(entries: ChangelogEntry[]): DateGroup[] {
+  const groups: DateGroup[] = [];
+
+  for (const entry of entries) {
+    const group = groups.find((item) => item.date === entry.date);
+
+    if (group) {
+      group.entries.push(entry);
+    } else {
+      groups.push({ date: entry.date, dateTime: entry.dateTime, entries: [entry] });
+    }
+  }
+
+  return groups;
+}
+
 function PrPill({ entry }: { entry: ChangelogEntry }) {
   return (
     <a
       href={entry.prUrl}
-      className="justify-self-start rounded-full border border-stone-200 bg-white px-3 py-1.5 font-sans text-xs font-semibold leading-none text-stone-600 transition-colors hover:border-stone-300 hover:text-stone-950 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-400 dark:hover:border-stone-700 dark:hover:text-stone-100 sm:justify-self-end"
+      className="justify-self-start rounded-full border border-stone-200 bg-white px-3 py-1.5 font-sans text-xs font-semibold leading-none text-stone-600 transition-none hover:border-stone-300 hover:text-stone-950 dark:border-stone-800 dark:bg-stone-900 dark:text-stone-400 dark:hover:border-stone-700 dark:hover:text-stone-100 sm:justify-self-end"
     >
       #{entry.pr}
     </a>
@@ -255,23 +277,34 @@ export function ChangelogGitHub({ appVersion }: ChangelogGitHubProps) {
                 <h3 className="font-sans text-sm font-semibold text-stone-500 dark:text-stone-400">
                   {section.label}
                 </h3>
-                <ol className="mt-4 space-y-3">
-                  {section.entries.map((entry) => (
-                    <li
-                      key={`${section.label}-${entry.pr}`}
-                      className="grid gap-2 font-sans text-sm leading-6 sm:grid-cols-[72px_minmax(0,1fr)_auto] sm:items-start sm:gap-4"
+                <div className="mt-4 space-y-5">
+                  {groupByDate(section.entries).map((group) => (
+                    <div
+                      key={`${section.label}-${group.date}`}
+                      className="grid gap-2 sm:grid-cols-[72px_minmax(0,1fr)] sm:gap-4"
                     >
                       <time
-                        dateTime={entry.dateTime}
-                        className="text-stone-400 dark:text-stone-500"
+                        dateTime={group.dateTime}
+                        className="font-sans text-sm leading-6 text-stone-400 dark:text-stone-500"
                       >
-                        {entry.date}
+                        {group.date}
                       </time>
-                      <span className="text-stone-700 dark:text-stone-300">{entry.title}</span>
-                      <PrPill entry={entry} />
-                    </li>
+                      <ol className="space-y-1">
+                        {group.entries.map((entry) => (
+                          <li
+                            key={`${section.label}-${entry.pr}`}
+                            className="-mx-3 grid rounded-lg px-3 py-2 font-sans text-sm leading-6 transition-none hover:bg-stone-50 dark:hover:bg-stone-900 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-4"
+                          >
+                            <span className="text-stone-700 transition-none dark:text-stone-300">
+                              {entry.title}
+                            </span>
+                            <PrPill entry={entry} />
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
                   ))}
-                </ol>
+                </div>
               </section>
             ))}
           </div>
