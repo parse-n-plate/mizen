@@ -113,7 +113,6 @@ function RecipePageContent() {
     }
     if (loadedLinkedRecipeSlug.current === linkedRecipeSlug) return;
 
-    loadedLinkedRecipeSlug.current = linkedRecipeSlug;
     setLinkedRecipeLoadFinished(false);
     let cancelled = false;
 
@@ -125,6 +124,7 @@ function RecipePageContent() {
         const savedRecipe = (await response.json()) as SavedRecipe | null;
         if (!response.ok || !savedRecipe || cancelled) return;
 
+        loadedLinkedRecipeSlug.current = linkedRecipeSlug;
         setRecipe(savedRecipe.recipe);
         setSavedMeta({ id: savedRecipe.id, slug: savedRecipe.slug });
         router.replace("/recipe");
