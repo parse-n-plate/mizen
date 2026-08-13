@@ -1,9 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { useRouter } from "next/navigation";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useRecipe } from "@/context/RecipeContext";
-import type { ParsedRecipe } from "@/lib/types";
+import type { ParsedRecipe, SavedRecipe } from "@/lib/types";
 import { useUser } from "@/hooks/useUser";
 import { usePreference } from "@/hooks/usePreference";
 import { useIngredientDiff } from "@/hooks/useIngredientDiff";
@@ -73,9 +81,22 @@ import {
 } from "lucide-react";
 
 export default function RecipePage() {
+  return (
+    <Suspense fallback={<RecipePageLoading />}>
+      <RecipePageContent />
+    </Suspense>
+  );
+}
+
+function RecipePageContent() {
   const router = useRouter();
-  const { recipe, savedMeta, setSavedMeta, removeFromHistory, updateRecipe } = useRecipe();
+  const searchParams = useSearchParams();
+  const { recipe, setRecipe, savedMeta, setSavedMeta, removeFromHistory, updateRecipe } =
+    useRecipe();
   const { user } = useUser();
+  const linkedRecipeSlug = searchParams.get("slug");
+  const loadedLinkedRecipeSlug = useRef<string | null>(null);
+  const [linkedRecipeLoadFinished, setLinkedRecipeLoadFinished] = useState(!linkedRecipeSlug);
   const [saving, setSaving] = useState(false);
   const [unsaving, setUnsaving] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -88,6 +109,41 @@ export default function RecipePage() {
   const [editOpen, setEditOpen] = useState(false);
   const [mobileServingsOpen, setMobileServingsOpen] = useState(false);
   const [mobileUnitsOpen, setMobileUnitsOpen] = useState(false);
+
+  useEffect(() => {
+    if (!linkedRecipeSlug) {
+      setLinkedRecipeLoadFinished(true);
+      return;
+    }
+    if (loadedLinkedRecipeSlug.current === linkedRecipeSlug) return;
+
+    setLinkedRecipeLoadFinished(false);
+    let cancelled = false;
+
+    const loadRecipe = async () => {
+      try {
+        const response = await fetch(`/api/recipes?slug=${encodeURIComponent(linkedRecipeSlug)}`, {
+          cache: "no-store",
+        });
+        const savedRecipe = (await response.json()) as SavedRecipe | null;
+        if (!response.ok || !savedRecipe || cancelled) return;
+
+        loadedLinkedRecipeSlug.current = linkedRecipeSlug;
+        setRecipe(savedRecipe.recipe);
+        setSavedMeta({ id: savedRecipe.id, slug: savedRecipe.slug });
+        router.replace("/recipe");
+      } catch {
+        // The existing empty-recipe state provides a recovery path.
+      } finally {
+        if (!cancelled) setLinkedRecipeLoadFinished(true);
+      }
+    };
+
+    void loadRecipe();
+    return () => {
+      cancelled = true;
+    };
+  }, [linkedRecipeSlug, router, setRecipe, setSavedMeta]);
   const numberFormat = useSyncExternalStore(
     (cb) => {
       window.addEventListener("storage", cb);
@@ -372,7 +428,9 @@ export default function RecipePage() {
   if (!recipe) {
     return (
       <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center gap-4 px-6">
-        <p className="font-sans text-stone-500 dark:text-stone-400">No recipe loaded.</p>
+        <p className="font-sans text-stone-500 dark:text-stone-400">
+          {linkedRecipeSlug && !linkedRecipeLoadFinished ? "Loading recipe…" : "No recipe loaded."}
+        </p>
         <Link href="/" className="font-sans text-sm text-[var(--color-blue)] hover:underline">
           Go back and paste a URL
         </Link>
@@ -850,6 +908,14 @@ export default function RecipePage() {
           unitSystem={unitSystem}
         />
       )}
+    </div>
+  );
+}
+
+function RecipePageLoading() {
+  return (
+    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6">
+      <p className="font-sans text-stone-500 dark:text-stone-400">Loading recipe…</p>
     </div>
   );
 }

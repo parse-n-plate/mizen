@@ -69,7 +69,10 @@ export async function POST(request: Request) {
       id: saved.id,
       slug: saved.slug,
       title: saved.recipe.title || payload.title,
-      savedPageUrl: new URL(`/r/${saved.slug}`, request.url).toString(),
+      savedPageUrl: new URL(
+        `/recipe?slug=${encodeURIComponent(saved.slug)}`,
+        request.url
+      ).toString(),
     });
   } catch (error) {
     log.error({ err: error, sourceUrl: payload.url }, "Extension recipe save failed");

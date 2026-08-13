@@ -50,7 +50,7 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   if (!isSupabaseConfigured) {
     return NextResponse.json({ error: "Recipe list is not available right now" }, { status: 503 });
   }
@@ -67,11 +67,14 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data, error } = await supabase
+    const slug = new URL(request.url).searchParams.get("slug");
+    const query = supabase
       .from("recipes")
       .select("id, slug, recipe, source_url, created_at, updated_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
+
+    const { data, error } = slug ? await query.eq("slug", slug).maybeSingle() : await query;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

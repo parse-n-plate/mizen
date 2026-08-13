@@ -13,6 +13,6 @@ This Manifest V3 extension saves the active recipe page directly to the signed-i
 
 ## Flow
 
-The popup reads the active tab through the temporary `activeTab` permission and sends `{ url, title }` to `POST /api/extension/save`. The endpoint verifies the Mizen session, parses the URL, upserts the recipe by source URL, and returns the canonical saved recipe URL at `/r/{slug}`.
+The popup reads the active tab through the temporary `activeTab` permission and sends `{ url, title }` to `POST /api/extension/save`. The endpoint verifies the Mizen session, parses the URL, upserts the recipe by source URL, and returns the main recipe screen at `/recipe?slug={slug}`. The screen loads the saved recipe, then restores the canonical `/recipe` URL.
 
 The extension intentionally requests no access to page contents, history, cookies, notifications, side panels, or screenshots. Host access is limited to `https://mizen.recipes/*` so authenticated requests can reuse the user's existing Mizen session.
