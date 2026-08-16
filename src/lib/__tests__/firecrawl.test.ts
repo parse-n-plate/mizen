@@ -11,13 +11,11 @@ afterEach(() => {
 describe("scrapeDocumentUrl", () => {
   it("sends public documents to Firecrawl and returns markdown", async () => {
     process.env.FIRECRAWL_API_KEY = "fc-test";
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(
-        new Response(JSON.stringify({ success: true, data: { markdown: "# Recipe" } }), {
-          status: 200,
-        })
-      );
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ success: true, data: { markdown: "# Recipe" } }), {
+        status: 200,
+      })
+    );
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(scrapeDocumentUrl("https://example.com/recipe.pdf")).resolves.toBe("# Recipe");
