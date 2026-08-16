@@ -1,14 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { useRouter } from "next/navigation";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useRecipe } from "@/context/RecipeContext";
-import type { ParsedRecipe } from "@/lib/types";
+import type { ParsedRecipe, SavedRecipe } from "@/lib/types";
 import { useUser } from "@/hooks/useUser";
 import { usePreference } from "@/hooks/usePreference";
 import { useIngredientDiff } from "@/hooks/useIngredientDiff";
 import { useTabScrollMemory } from "@/hooks/useTabScrollMemory";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useHorizontalTabSwipe } from "@/hooks/useHorizontalTabSwipe";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import {
   annotateIngredientGroups,
   convertIngredientGroups,
@@ -71,19 +81,69 @@ import {
 } from "lucide-react";
 
 export default function RecipePage() {
+  return (
+    <Suspense fallback={<RecipePageLoading />}>
+      <RecipePageContent />
+    </Suspense>
+  );
+}
+
+function RecipePageContent() {
   const router = useRouter();
-  const { recipe, savedMeta, setSavedMeta, removeFromHistory, updateRecipe } = useRecipe();
+  const searchParams = useSearchParams();
+  const { recipe, setRecipe, savedMeta, setSavedMeta, removeFromHistory, updateRecipe } =
+    useRecipe();
   const { user } = useUser();
+  const linkedRecipeSlug = searchParams.get("slug");
+  const loadedLinkedRecipeSlug = useRef<string | null>(null);
+  const [linkedRecipeLoadFinished, setLinkedRecipeLoadFinished] = useState(!linkedRecipeSlug);
   const [saving, setSaving] = useState(false);
   const [unsaving, setUnsaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"prep" | "cook">("prep");
+  const [tabTransition, setTabTransition] = useState<"forward" | "backward">("forward");
   useTabScrollMemory(activeTab);
   const isPhoneViewport = useIsMobile();
+  const isMobileRecipeLayout = useMediaQuery("(max-width: 767px)");
   const [reportOpen, setReportOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [mobileServingsOpen, setMobileServingsOpen] = useState(false);
   const [mobileUnitsOpen, setMobileUnitsOpen] = useState(false);
+
+  useEffect(() => {
+    if (!linkedRecipeSlug) {
+      setLinkedRecipeLoadFinished(true);
+      return;
+    }
+    if (loadedLinkedRecipeSlug.current === linkedRecipeSlug) return;
+
+    setLinkedRecipeLoadFinished(false);
+    let cancelled = false;
+
+    const loadRecipe = async () => {
+      try {
+        const response = await fetch(`/api/recipes?slug=${encodeURIComponent(linkedRecipeSlug)}`, {
+          cache: "no-store",
+        });
+        const savedRecipe = (await response.json()) as SavedRecipe | null;
+        if (!response.ok || !savedRecipe || cancelled) return;
+
+        loadedLinkedRecipeSlug.current = linkedRecipeSlug;
+        setRecipe(savedRecipe.recipe);
+        setSavedMeta({ id: savedRecipe.id, slug: savedRecipe.slug });
+        router.replace("/recipe");
+      } catch {
+        // The existing empty-recipe state provides a recovery path.
+      } finally {
+        if (!cancelled) setLinkedRecipeLoadFinished(true);
+      }
+    };
+
+    void loadRecipe();
+    return () => {
+      cancelled = true;
+    };
+  }, [linkedRecipeSlug, router, setRecipe, setSavedMeta]);
   const numberFormat = useSyncExternalStore(
     (cb) => {
       window.addEventListener("storage", cb);
@@ -124,14 +184,31 @@ export default function RecipePage() {
   const dietaryProfile = usePreference(getDietaryProfile);
   const substitutions = usePreference(getSubstitutions);
 
-  const handleStepClick = useCallback((stepNumber: number) => {
-    setActiveTab("cook");
-    requestAnimationFrame(() => {
-      document
-        .getElementById(`step-${stepNumber}`)
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
-  }, []);
+  const selectTab = useCallback(
+    (tab: "prep" | "cook") => {
+      if (tab === activeTab) return;
+      setTabTransition(tab === "cook" ? "forward" : "backward");
+      setActiveTab(tab);
+    },
+    [activeTab]
+  );
+
+  const swipeHandlers = useHorizontalTabSwipe(activeTab, selectTab, isMobileRecipeLayout);
+  const tabContentClass = `tab-content-animate${
+    isMobileRecipeLayout ? ` tab-content-slide-${tabTransition}` : ""
+  }`;
+
+  const handleStepClick = useCallback(
+    (stepNumber: number) => {
+      selectTab("cook");
+      requestAnimationFrame(() => {
+        document
+          .getElementById(`step-${stepNumber}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    },
+    [selectTab]
+  );
 
   useEffect(() => {
     setServings(getPreferredServings(recipe?.servings, defaultServings));
@@ -351,7 +428,9 @@ export default function RecipePage() {
   if (!recipe) {
     return (
       <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center gap-4 px-6">
-        <p className="font-sans text-stone-500 dark:text-stone-400">No recipe loaded.</p>
+        <p className="font-sans text-stone-500 dark:text-stone-400">
+          {linkedRecipeSlug && !linkedRecipeLoadFinished ? "Loading recipe…" : "No recipe loaded."}
+        </p>
         <Link href="/" className="font-sans text-sm text-[var(--color-blue)] hover:underline">
           Go back and paste a URL
         </Link>
@@ -376,7 +455,7 @@ export default function RecipePage() {
       label: "Prep",
       active: activeTab === "prep",
       pressed: activeTab === "prep",
-      onClick: () => setActiveTab("prep"),
+      onClick: () => selectTab("prep"),
       icon: (
         // eslint-disable-next-line @next/next/no-img-element
         <img src="/assets/icon-prep.png" alt="" className="h-6 w-6" aria-hidden="true" />
@@ -388,7 +467,7 @@ export default function RecipePage() {
       label: "Cook",
       active: activeTab === "cook",
       pressed: activeTab === "cook",
-      onClick: () => setActiveTab("cook"),
+      onClick: () => selectTab("cook"),
       icon: (
         // eslint-disable-next-line @next/next/no-img-element
         <img src="/assets/icon-cook.svg" alt="" className="h-6 w-6" aria-hidden="true" />
@@ -575,7 +654,7 @@ export default function RecipePage() {
           <RecipeDesktopTabsBar
             recipe={recipe}
             activeTab={activeTab}
-            onTabChange={setActiveTab}
+            onTabChange={selectTab}
             isConverted={isConverted}
             recipeUnitSystem={recipeUnitSystem}
             unitSystem={unitSystem}
@@ -595,6 +674,7 @@ export default function RecipePage() {
           {/* Content card */}
           <div
             className={`md:bg-white md:dark:bg-stone-900 md:rounded-b-lg ${activeTab === "prep" ? "md:rounded-tr-lg" : "md:rounded-t-lg"} md:border md:border-stone-200 md:dark:border-stone-700 flex-1`}
+            {...swipeHandlers}
           >
             <div className="md:px-6 md:pt-5 pb-[calc(7.25rem+env(safe-area-inset-bottom)+1rem)] md:pb-6">
               {/* Unit conversion banner */}
@@ -664,7 +744,7 @@ export default function RecipePage() {
               )}
 
               {activeTab === "prep" ? (
-                <div key="prep" className="tab-content-animate">
+                <div key="prep" className={tabContentClass}>
                   <PrepSection
                     ingredients={scaledIngredients}
                     steps={displayedInstructions}
@@ -675,7 +755,7 @@ export default function RecipePage() {
                   />
                 </div>
               ) : (
-                <div key="cook" className="tab-content-animate">
+                <div key="cook" className={tabContentClass}>
                   <StepList steps={displayedInstructions} />
                 </div>
               )}
@@ -828,6 +908,14 @@ export default function RecipePage() {
           unitSystem={unitSystem}
         />
       )}
+    </div>
+  );
+}
+
+function RecipePageLoading() {
+  return (
+    <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center px-6">
+      <p className="font-sans text-stone-500 dark:text-stone-400">Loading recipe…</p>
     </div>
   );
 }

@@ -18,6 +18,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTabScrollMemory } from "@/hooks/useTabScrollMemory";
+import { useHorizontalTabSwipe } from "@/hooks/useHorizontalTabSwipe";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { convertIngredientGroups } from "@/lib/recipe-preferences";
 import { getNumberFormat } from "@/lib/numberFormat";
 import { recipeToCopyMarkdown } from "@/lib/recipe-copy";
@@ -36,9 +38,11 @@ function subscribeToStorage(callback: () => void) {
 
 export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
   const [activeTab, setActiveTab] = useState<RecipeTabValue>("prep");
+  const [tabTransition, setTabTransition] = useState<"forward" | "backward">("forward");
   const [unitSystem, setUnitSystemState] = useState<RecipeUnitSystem>("original");
   const [copied, setCopied] = useState(false);
   useTabScrollMemory(activeTab);
+  const isMobileRecipeLayout = useMediaQuery("(max-width: 767px)");
 
   const numberFormat = useSyncExternalStore(
     subscribeToStorage,
@@ -56,14 +60,31 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
     [recipe.ingredients, unitSystem]
   );
 
-  const handleStepClick = useCallback((stepNumber: number) => {
-    setActiveTab("cook");
-    requestAnimationFrame(() => {
-      document
-        .getElementById(`step-${stepNumber}`)
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
-  }, []);
+  const selectTab = useCallback(
+    (tab: RecipeTabValue) => {
+      if (tab === activeTab) return;
+      setTabTransition(tab === "cook" ? "forward" : "backward");
+      setActiveTab(tab);
+    },
+    [activeTab]
+  );
+
+  const swipeHandlers = useHorizontalTabSwipe(activeTab, selectTab);
+  const tabContentClass = `tab-content-animate${
+    isMobileRecipeLayout ? ` tab-content-slide-${tabTransition}` : ""
+  }`;
+
+  const handleStepClick = useCallback(
+    (stepNumber: number) => {
+      selectTab("cook");
+      requestAnimationFrame(() => {
+        document
+          .getElementById(`step-${stepNumber}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    },
+    [selectTab]
+  );
 
   const handleCopyRecipe = async () => {
     const copyText = recipeToCopyMarkdown({
@@ -119,7 +140,7 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
       label: "Prep",
       active: activeTab === "prep",
       pressed: activeTab === "prep",
-      onClick: () => setActiveTab("prep"),
+      onClick: () => selectTab("prep"),
       icon: (
         // eslint-disable-next-line @next/next/no-img-element
         <img src="/assets/icon-prep.png" alt="" className="h-6 w-6" aria-hidden="true" />
@@ -131,7 +152,7 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
       label: "Cook",
       active: activeTab === "cook",
       pressed: activeTab === "cook",
-      onClick: () => setActiveTab("cook"),
+      onClick: () => selectTab("cook"),
       icon: (
         // eslint-disable-next-line @next/next/no-img-element
         <img src="/assets/icon-cook.svg" alt="" className="h-6 w-6" aria-hidden="true" />
@@ -142,10 +163,10 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
   return (
     <>
       <div className="flex flex-1 flex-col md:hidden">
-        <div className="flex-1">
+        <div className="flex-1" {...swipeHandlers}>
           <div className="pb-[calc(8.75rem+env(safe-area-inset-bottom)+1rem)]">
             {activeTab === "prep" ? (
-              <div key="mobile-prep" className="tab-content-animate">
+              <div key="mobile-prep" className={tabContentClass}>
                 <PrepSection
                   ingredients={displayedIngredients}
                   steps={recipe.instructions}
@@ -154,7 +175,7 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
                 />
               </div>
             ) : (
-              <div key="mobile-cook" className="tab-content-animate">
+              <div key="mobile-cook" className={tabContentClass}>
                 <StepList steps={recipe.instructions} />
               </div>
             )}
@@ -214,7 +235,7 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
         <RecipeDesktopTabsBar
           recipe={recipe}
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={selectTab}
           isConverted={isConverted}
           recipeUnitSystem={recipeUnitSystem}
           unitSystem={unitSystem}
@@ -231,7 +252,7 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
         >
           <div className="px-6 pb-16 pt-5">
             {activeTab === "prep" ? (
-              <div key="prep" className="tab-content-animate">
+              <div key="prep" className={tabContentClass}>
                 <PrepSection
                   ingredients={displayedIngredients}
                   steps={recipe.instructions}
@@ -240,7 +261,7 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
                 />
               </div>
             ) : (
-              <div key="cook" className="tab-content-animate">
+              <div key="cook" className={tabContentClass}>
                 <StepList steps={recipe.instructions} />
               </div>
             )}
