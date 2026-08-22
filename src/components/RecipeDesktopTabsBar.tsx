@@ -191,9 +191,7 @@ export function RecipeDesktopTabsBar({
               </svg>
             </button>
           </TooltipTrigger>
-          <TooltipContent>
-            {copied ? "Copied!" : "Copy recipe for ChatGPT, Claude, or another AI chat"}
-          </TooltipContent>
+          <TooltipContent>{copied ? "Copied!" : "Copy Recipe"}</TooltipContent>
         </Tooltip>
 
         {showReport && onReport && (
