@@ -914,7 +914,7 @@ export async function parseRecipeFromText(text: string): Promise<ParserResult> {
     const groq = getGroqClient();
 
     const response = await groq.chat.completions.create({
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      model: GROQ_TEXT_MODEL,
       messages: [
         { role: "system", content: EXTRACTION_PROMPT },
         {
