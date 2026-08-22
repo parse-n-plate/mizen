@@ -1,6 +1,11 @@
 import * as cheerio from "cheerio";
 import { z } from "zod";
-import { getGroqClient, extractJsonFromAiResponse, GROQ_TEXT_MODEL } from "@/lib/groq";
+import {
+  getGroqClient,
+  extractJsonFromAiResponse,
+  GROQ_TEXT_MODEL,
+  GROQ_VISION_MODEL,
+} from "@/lib/groq";
 import { logger } from "@/lib/logger";
 import { CoreRecipeSchema, IngredientGroupSchema, EquipmentItemSchema } from "@/lib/schemas/recipe";
 import { EXTRACTION_PROMPT, ENRICHMENT_PROMPT } from "@/lib/prompts/extraction";
@@ -803,7 +808,7 @@ export async function parseRecipeFromImage(dataUrl: string): Promise<ParserResul
     const groq = getGroqClient();
 
     const response = await groq.chat.completions.create({
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      model: GROQ_VISION_MODEL,
       messages: [
         { role: "system", content: EXTRACTION_PROMPT },
         {
@@ -914,7 +919,7 @@ export async function parseRecipeFromText(text: string): Promise<ParserResult> {
     const groq = getGroqClient();
 
     const response = await groq.chat.completions.create({
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      model: GROQ_TEXT_MODEL,
       messages: [
         { role: "system", content: EXTRACTION_PROMPT },
         {
