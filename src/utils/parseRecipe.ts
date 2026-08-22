@@ -23,6 +23,8 @@ import type {
 } from "@/lib/types";
 
 const log = logger.child({ module: "parseRecipe" });
+const RECIPE_IMPORT_UNAVAILABLE_MESSAGE =
+  "We couldn't process this recipe right now. Please try again in a moment.";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -50,6 +52,15 @@ function decodeHtmlEntities(text: string): string {
     .replace(/&gt;/g, ">")
     .replace(/&nbsp;/g, " ")
     .trim();
+}
+
+function recipeImportError(error: unknown, source: "image" | "text" | "url"): ParserResult {
+  log.error({ err: error, source }, "Recipe import failed");
+  return {
+    success: false,
+    error: RECIPE_IMPORT_UNAVAILABLE_MESSAGE,
+    method: "none",
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -905,8 +916,7 @@ export async function parseRecipeFromImage(dataUrl: string): Promise<ParserResul
 
     return { success: true, data: recipe, method: "image" };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return { success: false, error: message, method: "none" };
+    return recipeImportError(error, "image");
   }
 }
 
@@ -1007,8 +1017,7 @@ export async function parseRecipeFromText(text: string): Promise<ParserResult> {
 
     return { success: true, data: recipe, method: "text" };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return { success: false, error: message, method: "none" };
+    return recipeImportError(error, "text");
   }
 }
 
@@ -1188,7 +1197,7 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
       };
     }
 
-    return { success: false, error: message, method: "none" };
+    return recipeImportError(error, "url");
   }
 }
 
@@ -1196,4 +1205,5 @@ export const __test__ = {
   extractFromJsonLd,
   extractStepImagesFromHtml,
   mergeStepImages,
+  recipeImportError,
 };

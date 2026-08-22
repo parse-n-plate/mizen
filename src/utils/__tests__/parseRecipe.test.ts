@@ -4,6 +4,21 @@ import { __test__ } from "@/utils/parseRecipe";
 import type { InstructionStep } from "@/lib/types";
 
 describe("parseRecipe image handling", () => {
+  it("does not expose provider error details to recipe import users", () => {
+    const result = __test__.recipeImportError(
+      new Error(
+        '404 {"error":{"message":"The model does not exist or you do not have access to it."}}'
+      ),
+      "image"
+    );
+
+    expect(result).toEqual({
+      success: false,
+      error: "We couldn't process this recipe right now. Please try again in a moment.",
+      method: "none",
+    });
+  });
+
   it("extracts multiple image URLs from JSON-LD instruction arrays", () => {
     const $ = cheerio.load(`
       <script type="application/ld+json">
