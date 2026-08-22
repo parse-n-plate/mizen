@@ -1,6 +1,6 @@
 import * as cheerio from "cheerio";
 import { z } from "zod";
-import { getGroqClient, extractJsonFromAiResponse } from "@/lib/groq";
+import { getGroqClient, extractJsonFromAiResponse, GROQ_TEXT_MODEL } from "@/lib/groq";
 import { logger } from "@/lib/logger";
 import { CoreRecipeSchema, IngredientGroupSchema, EquipmentItemSchema } from "@/lib/schemas/recipe";
 import { EXTRACTION_PROMPT, ENRICHMENT_PROMPT } from "@/lib/prompts/extraction";
@@ -635,7 +635,7 @@ async function extractWithAI(cleanedHtml: string): Promise<ParsedRecipe | null> 
   const limitedHtml = cleanedHtml.slice(0, 15000);
 
   const response = await groq.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
+    model: GROQ_TEXT_MODEL,
     messages: [
       { role: "system", content: EXTRACTION_PROMPT },
       { role: "user", content: limitedHtml },
@@ -716,7 +716,7 @@ async function enrichWithAI(jsonLdData: ParsedRecipe): Promise<Partial<ParsedRec
   });
 
   const response = await groq.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
+    model: GROQ_TEXT_MODEL,
     messages: [
       { role: "system", content: ENRICHMENT_PROMPT },
       { role: "user", content: inputPayload },

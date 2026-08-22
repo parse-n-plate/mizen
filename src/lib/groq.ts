@@ -1,5 +1,9 @@
 import Groq from "groq-sdk";
 
+// Groq retired llama-3.3-70b-versatile on August 16, 2026.
+// Keep text model selection in one place so all extraction paths stay aligned.
+export const GROQ_TEXT_MODEL = "openai/gpt-oss-120b";
+
 let _client: Groq | null = null;
 
 export function getGroqClient(): Groq {
