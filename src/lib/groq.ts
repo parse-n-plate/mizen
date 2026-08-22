@@ -4,6 +4,9 @@ import Groq from "groq-sdk";
 // Keep text model selection in one place so all extraction paths stay aligned.
 export const GROQ_TEXT_MODEL = "openai/gpt-oss-120b";
 
+// Groq retired Llama 4 Scout on July 17, 2026. Qwen 3.6 remains vision-capable.
+export const GROQ_VISION_MODEL = "qwen/qwen3.6-27b";
+
 let _client: Groq | null = null;
 
 export function getGroqClient(): Groq {

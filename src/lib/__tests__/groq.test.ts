@@ -1,9 +1,15 @@
 import { describe, it, expect } from "vitest";
-import { extractJsonFromAiResponse, GROQ_TEXT_MODEL } from "../groq";
+import { extractJsonFromAiResponse, GROQ_TEXT_MODEL, GROQ_VISION_MODEL } from "../groq";
 
 describe("GROQ_TEXT_MODEL", () => {
   it("uses Groq's supported production replacement for the retired Llama model", () => {
     expect(GROQ_TEXT_MODEL).toBe("openai/gpt-oss-120b");
+  });
+});
+
+describe("GROQ_VISION_MODEL", () => {
+  it("uses Groq's supported vision replacement for retired Llama 4 Scout", () => {
+    expect(GROQ_VISION_MODEL).toBe("qwen/qwen3.6-27b");
   });
 });
 
