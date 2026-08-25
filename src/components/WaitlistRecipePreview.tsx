@@ -269,6 +269,7 @@ export function WaitlistRecipePreview({
   const originalServings = recipe.servings ?? 1;
   const [servings, setServings] = useState(originalServings);
   const [activeTab, setActiveTab] = useState<"prep" | "cook">("prep");
+  const [checkedIngredients, setCheckedIngredients] = useState<Set<string>>(new Set());
   const [lightbox, setLightbox] = useState<{ rect: DOMRect; el: HTMLElement } | null>(null);
   const [textOpen, setTextOpen] = useState(false);
   const [urlOpen, setUrlOpen] = useState(false);
@@ -391,7 +392,11 @@ export function WaitlistRecipePreview({
         <div className="px-5 sm:px-8 pt-5 pb-6">
           {activeTab === "prep" ? (
             <div key="prep" className="tab-content-animate">
-              <IngredientList groups={scaledIngredients} />
+              <IngredientList
+                groups={scaledIngredients}
+                checkedItems={checkedIngredients}
+                onCheckedItemsChange={setCheckedIngredients}
+              />
             </div>
           ) : (
             <div key="cook" className="tab-content-animate">

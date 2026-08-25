@@ -27,37 +27,43 @@ interface IngredientListProps {
   groups: IngredientGroup[];
   diffMap?: DiffMap;
   diffGeneration?: number;
+  checkedItems?: Set<string>;
+  onCheckedItemsChange?: (checkedItems: Set<string>) => void;
 }
 
-export function IngredientList({ groups, diffMap, diffGeneration }: IngredientListProps) {
-  const [checked, setChecked] = useState<Set<string>>(new Set());
+export function IngredientList({
+  groups,
+  diffMap,
+  diffGeneration,
+  checkedItems,
+  onCheckedItemsChange,
+}: IngredientListProps) {
+  const [internalChecked, setInternalChecked] = useState<Set<string>>(new Set());
+  const checked = checkedItems ?? internalChecked;
+  const setChecked = onCheckedItemsChange ?? setInternalChecked;
   const numberFormat = useNumberFormat();
 
   const toggleCheck = (key: string) => {
-    setChecked((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) {
+    const next = new Set(checked);
+    if (next.has(key)) {
+      next.delete(key);
+    } else {
+      next.add(key);
+    }
+    setChecked(next);
+  };
+
+  const toggleAll = (keys: string[]) => {
+    const next = new Set(checked);
+    const allChecked = keys.every((key) => checked.has(key));
+    for (const key of keys) {
+      if (allChecked) {
         next.delete(key);
       } else {
         next.add(key);
       }
-      return next;
-    });
-  };
-
-  const toggleAll = (keys: string[]) => {
-    setChecked((prev) => {
-      const next = new Set(prev);
-      const allChecked = keys.every((key) => prev.has(key));
-      for (const key of keys) {
-        if (allChecked) {
-          next.delete(key);
-        } else {
-          next.add(key);
-        }
-      }
-      return next;
-    });
+    }
+    setChecked(next);
   };
 
   return (

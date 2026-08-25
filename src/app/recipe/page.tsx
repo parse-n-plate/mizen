@@ -102,6 +102,8 @@ function RecipePageContent() {
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"prep" | "cook">("prep");
   const [tabTransition, setTabTransition] = useState<"forward" | "backward">("forward");
+  const [checkedIngredients, setCheckedIngredients] = useState<Set<string>>(new Set());
+  const [checkedEquipment, setCheckedEquipment] = useState<Set<string>>(new Set());
   useTabScrollMemory(activeTab);
   const isPhoneViewport = useIsMobile();
   const isMobileRecipeLayout = useMediaQuery("(max-width: 767px)");
@@ -752,6 +754,10 @@ function RecipePageContent() {
                     diffMap={showDiff ? diffMap : undefined}
                     diffGeneration={diffGeneration}
                     onStepClick={handleStepClick}
+                    checkedIngredients={checkedIngredients}
+                    onCheckedIngredientsChange={setCheckedIngredients}
+                    checkedEquipment={checkedEquipment}
+                    onCheckedEquipmentChange={setCheckedEquipment}
                   />
                 </div>
               ) : (

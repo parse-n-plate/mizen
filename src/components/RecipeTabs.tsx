@@ -14,6 +14,8 @@ interface RecipeTabsProps {
 
 export function RecipeTabs({ recipe }: RecipeTabsProps) {
   const [tab, setTab] = useState("prep");
+  const [checkedIngredients, setCheckedIngredients] = useState<Set<string>>(new Set());
+  const [checkedEquipment, setCheckedEquipment] = useState<Set<string>>(new Set());
   useTabScrollMemory(tab);
 
   const handleStepClick = useCallback((stepNumber: number) => {
@@ -71,6 +73,10 @@ export function RecipeTabs({ recipe }: RecipeTabsProps) {
               steps={recipe.instructions}
               equipment={recipe.equipment}
               onStepClick={handleStepClick}
+              checkedIngredients={checkedIngredients}
+              onCheckedIngredientsChange={setCheckedIngredients}
+              checkedEquipment={checkedEquipment}
+              onCheckedEquipmentChange={setCheckedEquipment}
             />
           </TabsContent>
           <TabsContent value="cook" className="space-y-0">

@@ -8,21 +8,29 @@ interface EquipmentListProps {
   equipment: EquipmentItem[];
   steps?: InstructionStep[];
   onStepClick?: (stepNumber: number) => void;
+  checkedItems?: Set<string>;
+  onCheckedItemsChange?: (checkedItems: Set<string>) => void;
 }
 
-export function EquipmentList({ equipment, steps, onStepClick }: EquipmentListProps) {
-  const [checked, setChecked] = useState<Set<string>>(new Set());
+export function EquipmentList({
+  equipment,
+  steps,
+  onStepClick,
+  checkedItems,
+  onCheckedItemsChange,
+}: EquipmentListProps) {
+  const [internalChecked, setInternalChecked] = useState<Set<string>>(new Set());
+  const checked = checkedItems ?? internalChecked;
+  const setChecked = onCheckedItemsChange ?? setInternalChecked;
 
   const toggleCheck = (name: string) => {
-    setChecked((prev) => {
-      const next = new Set(prev);
-      if (next.has(name)) {
-        next.delete(name);
-      } else {
-        next.add(name);
-      }
-      return next;
-    });
+    const next = new Set(checked);
+    if (next.has(name)) {
+      next.delete(name);
+    } else {
+      next.add(name);
+    }
+    setChecked(next);
   };
 
   return (
