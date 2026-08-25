@@ -41,6 +41,8 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
   const [tabTransition, setTabTransition] = useState<"forward" | "backward">("forward");
   const [unitSystem, setUnitSystemState] = useState<RecipeUnitSystem>("original");
   const [copied, setCopied] = useState(false);
+  const [checkedIngredients, setCheckedIngredients] = useState<Set<string>>(new Set());
+  const [checkedEquipment, setCheckedEquipment] = useState<Set<string>>(new Set());
   useTabScrollMemory(activeTab);
   const isMobileRecipeLayout = useMediaQuery("(max-width: 767px)");
 
@@ -172,6 +174,10 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
                   steps={recipe.instructions}
                   equipment={recipe.equipment}
                   onStepClick={handleStepClick}
+                  checkedIngredients={checkedIngredients}
+                  onCheckedIngredientsChange={setCheckedIngredients}
+                  checkedEquipment={checkedEquipment}
+                  onCheckedEquipmentChange={setCheckedEquipment}
                 />
               </div>
             ) : (
@@ -258,6 +264,10 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
                   steps={recipe.instructions}
                   equipment={recipe.equipment}
                   onStepClick={handleStepClick}
+                  checkedIngredients={checkedIngredients}
+                  onCheckedIngredientsChange={setCheckedIngredients}
+                  checkedEquipment={checkedEquipment}
+                  onCheckedEquipmentChange={setCheckedEquipment}
                 />
               </div>
             ) : (

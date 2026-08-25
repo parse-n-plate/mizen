@@ -13,6 +13,10 @@ interface PrepSectionProps {
   diffMap?: DiffMap;
   diffGeneration?: number;
   onStepClick?: (stepNumber: number) => void;
+  checkedIngredients?: Set<string>;
+  onCheckedIngredientsChange?: (checkedItems: Set<string>) => void;
+  checkedEquipment?: Set<string>;
+  onCheckedEquipmentChange?: (checkedItems: Set<string>) => void;
 }
 
 export function PrepSection({
@@ -22,6 +26,10 @@ export function PrepSection({
   diffMap,
   diffGeneration,
   onStepClick,
+  checkedIngredients,
+  onCheckedIngredientsChange,
+  checkedEquipment,
+  onCheckedEquipmentChange,
 }: PrepSectionProps) {
   const tips = steps
     .filter((s) => s.tips)
@@ -40,12 +48,24 @@ export function PrepSection({
       {uniqueTips.length > 0 && <TipsCallout tips={uniqueTips} />}
 
       <div>
-        <IngredientList groups={ingredients} diffMap={diffMap} diffGeneration={diffGeneration} />
+        <IngredientList
+          groups={ingredients}
+          diffMap={diffMap}
+          diffGeneration={diffGeneration}
+          checkedItems={checkedIngredients}
+          onCheckedItemsChange={onCheckedIngredientsChange}
+        />
       </div>
 
       {equipment && equipment.length > 0 && (
         <div>
-          <EquipmentList equipment={equipment} steps={steps} onStepClick={onStepClick} />
+          <EquipmentList
+            equipment={equipment}
+            steps={steps}
+            onStepClick={onStepClick}
+            checkedItems={checkedEquipment}
+            onCheckedItemsChange={onCheckedEquipmentChange}
+          />
         </div>
       )}
     </div>
