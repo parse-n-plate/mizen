@@ -20,7 +20,7 @@ import {
 import { useTabScrollMemory } from "@/hooks/useTabScrollMemory";
 import { useHorizontalTabSwipe } from "@/hooks/useHorizontalTabSwipe";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
-import { convertIngredientGroups } from "@/lib/recipe-preferences";
+import { convertIngredientGroups, convertInstructionUnits } from "@/lib/recipe-preferences";
 import { getNumberFormat } from "@/lib/numberFormat";
 import { recipeToCopyMarkdown } from "@/lib/recipe-copy";
 import { displayAmount, displayText } from "@/utils/ingredientScaler";
@@ -61,6 +61,10 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
     () => convertIngredientGroups(recipe.ingredients, unitSystem),
     [recipe.ingredients, unitSystem]
   );
+  const displayedInstructions = useMemo(
+    () => convertInstructionUnits(recipe.instructions, unitSystem),
+    [recipe.instructions, unitSystem]
+  );
 
   const selectTab = useCallback(
     (tab: RecipeTabValue) => {
@@ -98,7 +102,7 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
           amount: ingredient.amount ? displayAmount(ingredient.amount, numberFormat) : "",
         })),
       })),
-      instructions: recipe.instructions.map((step) => ({
+      instructions: displayedInstructions.map((step) => ({
         ...step,
         detail: displayText(step.detail, numberFormat),
       })),
@@ -171,7 +175,7 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
               <div key="mobile-prep" className={tabContentClass}>
                 <PrepSection
                   ingredients={displayedIngredients}
-                  steps={recipe.instructions}
+                  steps={displayedInstructions}
                   equipment={recipe.equipment}
                   onStepClick={handleStepClick}
                   checkedIngredients={checkedIngredients}
@@ -182,7 +186,7 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
               </div>
             ) : (
               <div key="mobile-cook" className={tabContentClass}>
-                <StepList steps={recipe.instructions} />
+                <StepList steps={displayedInstructions} />
               </div>
             )}
           </div>
@@ -261,7 +265,7 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
               <div key="prep" className={tabContentClass}>
                 <PrepSection
                   ingredients={displayedIngredients}
-                  steps={recipe.instructions}
+                  steps={displayedInstructions}
                   equipment={recipe.equipment}
                   onStepClick={handleStepClick}
                   checkedIngredients={checkedIngredients}
@@ -272,7 +276,7 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
               </div>
             ) : (
               <div key="cook" className={tabContentClass}>
-                <StepList steps={recipe.instructions} />
+                <StepList steps={displayedInstructions} />
               </div>
             )}
           </div>

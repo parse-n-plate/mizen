@@ -4,6 +4,7 @@ import {
   applySubstitutionsToGroups,
   convertIngredientGroups,
   convertInstructionTemperatures,
+  convertInstructionUnits,
   countApplicableSubstitutions,
   getPreferredServings,
 } from "@/lib/recipe-preferences";
@@ -95,6 +96,67 @@ describe("convertInstructionTemperatures", () => {
         tips: "Hold at 190°C if needed.",
       },
     ]);
+  });
+});
+
+describe("convertInstructionUnits", () => {
+  it("converts imperial quantities in step details and tips using ingredient conversion logic", () => {
+    const steps: InstructionStep[] = [
+      {
+        title: "Mix",
+        detail: "Stir in 2 cups flour and 1 tbsp oil.",
+        tips: "Reserve 1/2 cup water.",
+      },
+    ];
+
+    expect(convertInstructionUnits(steps, "metric")).toEqual([
+      {
+        title: "Mix",
+        detail: "Stir in 480 mL flour and 15 mL oil.",
+        tips: "Reserve 120 mL water.",
+      },
+    ]);
+  });
+
+  it("converts metric quantities across multiple cooking steps", () => {
+    const steps: InstructionStep[] = [
+      { title: "Shape", detail: "Divide the 500 g dough." },
+      { title: "Finish", detail: "Brush with 30 mL oil." },
+    ];
+
+    expect(convertInstructionUnits(steps, "imperial")).toEqual([
+      { title: "Shape", detail: "Divide the 1 lb dough." },
+      { title: "Finish", detail: "Brush with 2 tbsp oil." },
+    ]);
+  });
+
+  it("uses one converted unit for quantity ranges", () => {
+    const steps: InstructionStep[] = [
+      { title: "Adjust", detail: "Add 1-2 cups stock and simmer." },
+    ];
+
+    expect(convertInstructionUnits(steps, "metric")[0].detail).toBe(
+      "Add 240-480 mL stock and simmer."
+    );
+  });
+
+  it("leaves package sizes and already-targeted units unchanged", () => {
+    const steps: InstructionStep[] = [
+      {
+        title: "Add",
+        detail: "Add one 14 oz can of tomatoes and 250 mL stock.",
+      },
+    ];
+
+    expect(convertInstructionUnits(steps, "metric")[0].detail).toBe(
+      "Add one 14 oz can of tomatoes and 250 mL stock."
+    );
+  });
+
+  it("returns the original steps when original units are selected", () => {
+    const steps: InstructionStep[] = [{ title: "Mix", detail: "Add 1 cup water." }];
+
+    expect(convertInstructionUnits(steps, "original")).toBe(steps);
   });
 });
 

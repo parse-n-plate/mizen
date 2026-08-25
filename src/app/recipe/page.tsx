@@ -23,6 +23,7 @@ import {
   annotateIngredientGroups,
   convertIngredientGroups,
   convertInstructionTemperatures,
+  convertInstructionUnits,
   getPreferredServings,
 } from "@/lib/recipe-preferences";
 import { toast } from "sonner";
@@ -277,8 +278,12 @@ function RecipePageContent() {
 
   const displayedInstructions = useMemo(() => {
     if (!recipe) return [];
-    return convertInstructionTemperatures(recipe.instructions, temperatureUnit);
-  }, [recipe, temperatureUnit]);
+    const temperatureConverted = convertInstructionTemperatures(
+      recipe.instructions,
+      temperatureUnit
+    );
+    return convertInstructionUnits(temperatureConverted, unitSystem);
+  }, [recipe, temperatureUnit, unitSystem]);
   const hasStepImages = useMemo(
     () =>
       displayedInstructions.some((step) => (step.imageUrls?.length ?? 0) > 0 || !!step.imageUrl),
