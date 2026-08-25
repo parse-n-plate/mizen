@@ -1,6 +1,6 @@
 import type { DietaryOption, Substitution, TemperatureUnit, UnitSystem } from "@/lib/preferences";
 import type { Ingredient, IngredientGroup, InstructionStep } from "@/lib/types";
-import { formatAmount, parseAmount } from "@/utils/ingredientScaler";
+import { formatAmount, FRACTION_MAP, parseAmount } from "@/utils/ingredientScaler";
 
 const DIETARY_CONFLICT_PATTERNS: Record<DietaryOption, RegExp[]> = {
   "Dairy-free": [
@@ -351,6 +351,91 @@ export function convertIngredientGroups(groups: IngredientGroup[], unitSystem: U
     ingredients: group.ingredients.map((ingredient) =>
       convertIngredientUnits(ingredient, unitSystem)
     ),
+  }));
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+const PACKAGE_NOUNS = new Set([
+  "bag",
+  "bags",
+  "bottle",
+  "bottles",
+  "box",
+  "boxes",
+  "can",
+  "cans",
+  "carton",
+  "cartons",
+  "container",
+  "containers",
+  "jar",
+  "jars",
+  "package",
+  "packages",
+  "packet",
+  "packets",
+  "pouch",
+  "pouches",
+  "stick",
+  "sticks",
+  "tin",
+  "tins",
+  "tube",
+  "tubes",
+]);
+
+function isPackageSizeReference(text: string, matchEnd: number) {
+  const trailingText = text.slice(matchEnd).replace(/^[\s)\].,;-]+/, "");
+  const nextWord = trailingText.match(/^([a-zA-Z]+)/)?.[1]?.toLowerCase();
+  return nextWord ? PACKAGE_NOUNS.has(nextWord) : false;
+}
+
+const INLINE_UNIT_PATTERN = UNIT_DEFINITIONS.flatMap((definition) => definition.aliases)
+  .sort((a, b) => b.length - a.length)
+  .map(escapeRegExp)
+  .join("|");
+const INLINE_FRACTION_PATTERN = Object.keys(FRACTION_MAP).join("");
+const INLINE_NUMBER_PATTERN = String.raw`(?:\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:\.\d+)?(?:\s*[${INLINE_FRACTION_PATTERN}])?|[${INLINE_FRACTION_PATTERN}])`;
+const INLINE_AMOUNT_PATTERN = String.raw`${INLINE_NUMBER_PATTERN}(?:\s*(?:-|–|—|to)\s*${INLINE_NUMBER_PATTERN})?`;
+const INLINE_MEASUREMENT_REGEX = new RegExp(
+  String.raw`(^|[^\w.])(${INLINE_AMOUNT_PATTERN})\s*(${INLINE_UNIT_PATTERN})(?=\s|[.,;:!?)]|$)`,
+  "gi"
+);
+
+function replaceInstructionMeasurements(text: string, unitSystem: UnitSystem) {
+  if (unitSystem === "original") return text;
+
+  return text.replace(
+    INLINE_MEASUREMENT_REGEX,
+    (match, prefix: string, rawAmount: string, rawUnit: string, offset: number) => {
+      if (isPackageSizeReference(text, offset + match.length)) return match;
+
+      const definition = getUnitDefinition(rawUnit);
+      if (!definition || definition.system === unitSystem) return match;
+
+      const parsedAmount = parseAmountParts(rawAmount);
+      if (!parsedAmount) return match;
+
+      const baseValues = parsedAmount.values.map((value) => value * definition.toBase);
+      const target = getConvertedTarget(Math.max(...baseValues), definition.family, unitSystem);
+      if (!target) return match;
+
+      const amount = baseValues.map((value) => target.fromBase(value)).join(parsedAmount.joiner);
+      return `${prefix}${amount} ${target.unit}`;
+    }
+  );
+}
+
+export function convertInstructionUnits(steps: InstructionStep[], unitSystem: UnitSystem) {
+  if (unitSystem === "original") return steps;
+
+  return steps.map((step) => ({
+    ...step,
+    detail: replaceInstructionMeasurements(step.detail, unitSystem),
+    tips: step.tips ? replaceInstructionMeasurements(step.tips, unitSystem) : step.tips,
   }));
 }
 
