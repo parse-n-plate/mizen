@@ -133,7 +133,11 @@ function RecipePageContent() {
 
         loadedLinkedRecipeSlug.current = linkedRecipeSlug;
         setRecipe(savedRecipe.recipe);
-        setSavedMeta({ id: savedRecipe.id, slug: savedRecipe.slug });
+        setSavedMeta({
+          id: savedRecipe.id,
+          slug: savedRecipe.slug,
+          isFavorite: savedRecipe.is_favorite,
+        });
         router.replace("/recipe");
       } catch {
         // The existing empty-recipe state provides a recovery path.
@@ -298,18 +302,20 @@ function RecipePageContent() {
     if (!recipe || !user || saving) return;
     setSaving(true);
     try {
-      const res = await fetch("/api/recipes", {
-        method: "POST",
+      const currentMeta = savedMeta;
+      if (!currentMeta) return;
+      const res = await fetch(`/api/recipes/${currentMeta.id}`, {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipe }),
+        body: JSON.stringify({ isFavorite: true }),
       });
       const saved = await res.json();
       if (saved?.id && saved?.slug) {
-        setSavedMeta({ id: saved.id, slug: saved.slug });
-        toast.success("Recipe saved");
+        setSavedMeta({ id: saved.id, slug: saved.slug, isFavorite: true });
+        toast.success("Added to favorites");
       }
     } catch {
-      toast.error("Saving recipes is temporarily unavailable. Please try again later.");
+      toast.error("Favoriting recipes is temporarily unavailable. Please try again later.");
     } finally {
       setSaving(false);
     }
@@ -320,14 +326,16 @@ function RecipePageContent() {
     setUnsaving(true);
     try {
       const res = await fetch(`/api/recipes/${savedMeta.id}`, {
-        method: "DELETE",
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isFavorite: false }),
       });
       if (res.ok) {
-        setSavedMeta(null);
-        toast.success("Recipe removed");
+        setSavedMeta({ ...savedMeta, isFavorite: false });
+        toast.success("Removed from favorites");
       }
     } catch {
-      toast.error("Removing recipes is temporarily unavailable. Please try again later.");
+      toast.error("Updating favorites is temporarily unavailable. Please try again later.");
     } finally {
       setUnsaving(false);
     }
@@ -578,7 +586,7 @@ function RecipePageContent() {
               )}
               {user && (
                 <HeartButton
-                  isSaved={!!savedMeta}
+                  isFavorite={!!savedMeta?.isFavorite}
                   saving={saving}
                   unsaving={unsaving}
                   onSave={handleSave}
@@ -605,7 +613,7 @@ function RecipePageContent() {
             {user && (
               <div className="hidden md:block">
                 <HeartButton
-                  isSaved={!!savedMeta}
+                  isFavorite={!!savedMeta?.isFavorite}
                   saving={saving}
                   unsaving={unsaving}
                   onSave={handleSave}

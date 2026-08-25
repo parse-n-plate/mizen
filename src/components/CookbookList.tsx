@@ -17,6 +17,7 @@ import LinkSquare from "@solar-icons/react/csr/text-formatting/LinkSquare";
 import TrashBinMinimalistic from "@solar-icons/react/csr/ui/TrashBinMinimalistic";
 import MenuDots from "@solar-icons/react/csr/ui/MenuDots";
 import Book from "@solar-icons/react/csr/school/Book";
+import { HeartButton } from "@/components/HeartButton";
 
 import type { SavedRecipe } from "@/lib/types";
 
@@ -111,18 +112,20 @@ function RecipeSourceIcon({ domain, kind }: { domain: string | null; kind: Sourc
 
 interface CookbookListProps {
   initialRecipes: SavedRecipe[];
+  onlyFavorites?: boolean;
 }
 
-export function CookbookList({ initialRecipes }: CookbookListProps) {
+export function CookbookList({ initialRecipes, onlyFavorites = false }: CookbookListProps) {
   const [recipes, setRecipes] = useState(initialRecipes);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [updatingFavoriteId, setUpdatingFavoriteId] = useState<string | null>(null);
   const { setRecipe, setSavedMeta } = useRecipe();
   const router = useRouter();
   const groups = groupRecipes(recipes);
 
   const handleOpen = (item: SavedRecipe) => {
     setRecipe(item.recipe);
-    setSavedMeta({ id: item.id, slug: item.slug });
+    setSavedMeta({ id: item.id, slug: item.slug, isFavorite: item.is_favorite });
     router.push("/recipe");
   };
 
@@ -137,15 +140,42 @@ export function CookbookList({ initialRecipes }: CookbookListProps) {
     }
   };
 
+  const handleFavorite = async (item: SavedRecipe) => {
+    if (updatingFavoriteId) return;
+    setUpdatingFavoriteId(item.id);
+    try {
+      const res = await fetch(`/api/recipes/${item.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isFavorite: !item.is_favorite }),
+      });
+      if (!res.ok) return;
+      const updated = (await res.json()) as SavedRecipe;
+      setRecipes((previous) =>
+        onlyFavorites && !updated.is_favorite
+          ? previous.filter((recipe) => recipe.id !== updated.id)
+          : previous.map((recipe) =>
+              recipe.id === updated.id ? { ...recipe, is_favorite: updated.is_favorite } : recipe
+            )
+      );
+    } finally {
+      setUpdatingFavoriteId(null);
+    }
+  };
+
   if (recipes.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-wheat)]">
           <Book size={28} className="text-[var(--color-orange)]" aria-hidden="true" />
         </div>
-        <p className="mt-4 font-sans text-sm text-stone-500">No recipes saved yet</p>
+        <p className="mt-4 font-sans text-sm text-stone-500">
+          {onlyFavorites ? "No favorite recipes yet" : "No recipes saved yet"}
+        </p>
         <p className="mt-1 font-sans text-xs text-stone-400 dark:text-stone-600">
-          Parse a recipe and save it to build your cookbook
+          {onlyFavorites
+            ? "Favorite recipes from your cookbook to find them here"
+            : "Parse a recipe to build your cookbook"}
         </p>
       </div>
     );
@@ -199,6 +229,22 @@ export function CookbookList({ initialRecipes }: CookbookListProps) {
                 </div>
 
                 <div className="flex shrink-0 items-center ml-4">
+                  <div
+                    className={`mr-1 transition-opacity ${
+                      item.is_favorite
+                        ? "opacity-100"
+                        : "opacity-0 group-hover:opacity-100 focus-within:opacity-100"
+                    }`}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <HeartButton
+                      isFavorite={item.is_favorite}
+                      saving={updatingFavoriteId === item.id && !item.is_favorite}
+                      unsaving={updatingFavoriteId === item.id && item.is_favorite}
+                      onSave={() => void handleFavorite(item)}
+                      onUnsave={() => void handleFavorite(item)}
+                    />
+                  </div>
                   <DropdownMenu onOpenChange={(open) => setMenuOpenId(open ? item.id : null)}>
                     <DropdownMenuTrigger asChild>
                       <button

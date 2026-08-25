@@ -5,50 +5,39 @@ import Link from "next/link";
 import { CookbookList } from "@/components/CookbookList";
 import type { SavedRecipe } from "@/lib/types";
 
-export default async function CookbookPage() {
-  if (!isSupabaseConfigured) {
-    redirect("/");
-  }
+export default async function FavoritesPage() {
+  if (!isSupabaseConfigured) redirect("/");
 
   let recipes: SavedRecipe[] = [];
   try {
     const supabase = await createClient();
-    if (!supabase) {
-      throw new Error("Supabase unavailable");
-    }
+    if (!supabase) throw new Error("Supabase unavailable");
     const {
       data: { user },
     } = await supabase.auth.getUser();
-
-    if (!user) {
-      redirect("/");
-    }
+    if (!user) redirect("/");
 
     const { data, error } = await supabase
       .from("recipes")
       .select("id, slug, recipe, source_url, created_at, updated_at, is_favorite")
       .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-    if (error) {
-      throw error;
-    }
+      .eq("is_favorite", true)
+      .order("updated_at", { ascending: false });
+    if (error) throw error;
     recipes = (data as SavedRecipe[]) || [];
   } catch {
     redirect("/");
   }
 
-  const count = recipes.length;
-
   return (
     <div className="min-h-[calc(100vh-3.5rem)] flex flex-col">
-      {/* Header section */}
       <div className="px-6 pt-8 pb-0">
         <div className="max-w-3xl mx-auto w-full pb-6">
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="font-serif text-3xl font-bold sm:text-4xl">Cookbook</h1>
+              <h1 className="font-serif text-3xl font-bold sm:text-4xl">Favorites</h1>
               <p className="mt-2 font-sans text-sm text-stone-500">
-                {count} {count === 1 ? "recipe" : "recipes"} saved
+                {recipes.length} {recipes.length === 1 ? "recipe" : "recipes"} favorited
               </p>
             </div>
             <Link
@@ -61,13 +50,11 @@ export default async function CookbookPage() {
           </div>
         </div>
       </div>
-
-      {/* Content card */}
       <div className="flex-1 flex flex-col px-6">
         <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col">
           <div className="sm:bg-white sm:dark:bg-stone-900 sm:rounded-lg sm:border sm:border-stone-200 sm:dark:border-stone-700 flex-1">
             <div className="sm:px-6 sm:py-5 pb-24 sm:pb-6">
-              <CookbookList initialRecipes={recipes} />
+              <CookbookList initialRecipes={recipes} onlyFavorites />
             </div>
           </div>
         </div>

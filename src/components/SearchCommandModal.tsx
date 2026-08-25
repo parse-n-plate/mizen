@@ -43,7 +43,7 @@ interface SearchCommandViewProps {
 type RecipeResult = {
   key: string;
   recipe: ParsedRecipe;
-  savedMeta?: { id: string; slug: string } | null;
+  savedMeta?: { id: string; slug: string; isFavorite: boolean } | null;
   sourceUrl?: string | null;
   date?: string;
 };
@@ -120,7 +120,7 @@ function toSavedResult(item: SavedRecipe): RecipeResult {
   return {
     key: `saved:${item.id}`,
     recipe: item.recipe,
-    savedMeta: { id: item.id, slug: item.slug },
+    savedMeta: { id: item.id, slug: item.slug, isFavorite: item.is_favorite },
     sourceUrl: item.source_url,
     date: new Date(item.updated_at || item.created_at).toLocaleDateString("en-US", {
       month: "short",

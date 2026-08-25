@@ -16,28 +16,24 @@ export async function upsertRecipeForUser(
 ): Promise<SavedRecipe> {
   const sourceUrl = recipe.sourceUrl || null;
 
-  if (sourceUrl) {
-    const { data: existing, error: lookupError } = await supabase
+  const existingQuery = supabase.from("recipes").select("id, slug").eq("user_id", userId);
+  const { data: existing, error: lookupError } = sourceUrl
+    ? await existingQuery.eq("source_url", sourceUrl).maybeSingle()
+    : await existingQuery.contains("recipe", { title: recipe.title }).maybeSingle();
+
+  if (lookupError) throw lookupError;
+
+  if (existing) {
+    const { data, error } = await supabase
       .from("recipes")
-      .select("id, slug")
+      .update({ recipe, source_url: sourceUrl, updated_at: new Date().toISOString() })
+      .eq("id", existing.id)
       .eq("user_id", userId)
-      .eq("source_url", sourceUrl)
-      .maybeSingle();
+      .select("id, slug, recipe, source_url, created_at, updated_at, is_favorite")
+      .single();
 
-    if (lookupError) throw lookupError;
-
-    if (existing) {
-      const { data, error } = await supabase
-        .from("recipes")
-        .update({ recipe, updated_at: new Date().toISOString() })
-        .eq("id", existing.id)
-        .eq("user_id", userId)
-        .select("id, slug, recipe, source_url, created_at, updated_at")
-        .single();
-
-      if (error) throw error;
-      return data as SavedRecipe;
-    }
+    if (error) throw error;
+    return data as SavedRecipe;
   }
 
   const titleSlug = slugifyRecipeTitle(recipe.title) || "recipe";
@@ -45,7 +41,7 @@ export async function upsertRecipeForUser(
   const { data, error } = await supabase
     .from("recipes")
     .insert({ user_id: userId, slug, recipe, source_url: sourceUrl })
-    .select("id, slug, recipe, source_url, created_at, updated_at")
+    .select("id, slug, recipe, source_url, created_at, updated_at, is_favorite")
     .single();
 
   if (error) throw error;

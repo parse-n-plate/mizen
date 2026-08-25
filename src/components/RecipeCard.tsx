@@ -17,7 +17,7 @@ export function RecipeCard({ item, onDelete }: RecipeCardProps) {
 
   const handleClick = () => {
     setRecipe(item.recipe);
-    setSavedMeta({ id: item.id, slug: item.slug });
+    setSavedMeta({ id: item.id, slug: item.slug, isFavorite: item.is_favorite });
     router.push("/recipe");
   };
 

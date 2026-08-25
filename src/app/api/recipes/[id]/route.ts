@@ -19,20 +19,24 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Invalid recipe id" }, { status: 400 });
   }
 
-  let recipe: ParsedRecipe;
+  let recipe: ParsedRecipe | undefined;
+  let isFavorite: boolean | undefined;
   try {
-    const body = (await request.json()) as { recipe?: ParsedRecipe };
-    recipe = body.recipe as ParsedRecipe;
+    const body = (await request.json()) as { recipe?: ParsedRecipe; isFavorite?: boolean };
+    recipe = body.recipe;
+    isFavorite = body.isFavorite;
   } catch {
-    return NextResponse.json({ error: "Invalid recipe" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid update" }, { status: 400 });
   }
 
-  if (
-    !recipe?.title?.trim() ||
-    !recipe.ingredients?.some((group) => group.ingredients.length > 0) ||
-    !recipe.instructions?.length
-  ) {
-    return NextResponse.json({ error: "Invalid recipe" }, { status: 400 });
+  if (typeof isFavorite !== "boolean") {
+    if (
+      !recipe?.title?.trim() ||
+      !recipe.ingredients?.some((group) => group.ingredients.length > 0) ||
+      !recipe.instructions?.length
+    ) {
+      return NextResponse.json({ error: "Invalid recipe" }, { status: 400 });
+    }
   }
 
   try {
@@ -49,10 +53,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     const { data, error } = await supabase
       .from("recipes")
-      .update({ recipe, updated_at: new Date().toISOString() })
+      .update(
+        typeof isFavorite === "boolean"
+          ? { is_favorite: isFavorite, updated_at: new Date().toISOString() }
+          : { recipe, updated_at: new Date().toISOString() }
+      )
       .eq("id", id)
       .eq("user_id", user.id)
-      .select("id, slug, recipe, source_url, created_at, updated_at")
+      .select("id, slug, recipe, source_url, created_at, updated_at, is_favorite")
       .single();
 
     if (error) {

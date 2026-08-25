@@ -26,6 +26,7 @@ import { createClient } from "@/lib/supabase/client";
 import { favoriteRecipes } from "@/lib/favorite-recipes";
 import HomeSmile from "@solar-icons/react/csr/ui/HomeSmile";
 import BookMinimalistic from "@solar-icons/react/csr/school/BookMinimalistic";
+import Heart from "@solar-icons/react/csr/like/Heart";
 import Settings from "@solar-icons/react/csr/settings/Settings";
 import ChatRoundDots from "@solar-icons/react/csr/messages/ChatRoundDots";
 import Magnifer from "@solar-icons/react/csr/search/Magnifer";
@@ -208,6 +209,14 @@ export function Sidebar({ collapsed, onToggle, onOpenSearch }: SidebarProps) {
       label: "Cookbook",
       icon: BookMinimalistic,
       active: pathname === "/cookbook",
+      show: user ? isSupabaseConfigured : true,
+      onClick: user ? undefined : () => setAuthOpen(true),
+    },
+    {
+      href: "/favorites",
+      label: "Favorites",
+      icon: Heart,
+      active: pathname === "/favorites",
       show: user ? isSupabaseConfigured : true,
       onClick: user ? undefined : () => setAuthOpen(true),
     },

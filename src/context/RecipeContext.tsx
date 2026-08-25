@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 interface SavedMeta {
   id: string;
   slug: string;
+  isFavorite: boolean;
 }
 
 export interface HistoryEntry {
@@ -75,9 +76,8 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
   /* eslint-enable react-hooks/set-state-in-effect */
   const [hasHydrated] = useState(true);
 
-  // Reconcile local history with server-side saved status. Runs on mount and
-  // whenever auth state changes (sign-in/out), so the dropdown reflects
-  // recipes saved on other devices too.
+  // Reconcile local history with server-side recipe metadata. Runs on mount
+  // and whenever auth state changes, so favorites stay in sync across devices.
   useEffect(() => {
     let cancelled = false;
 
@@ -122,15 +122,17 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
         }
         const matchFor = (r: ParsedRecipe): SavedMeta | null => {
           const hit = byKey.get(recipeIdentityKey(r));
-          return hit ? { id: hit.id, slug: hit.slug } : null;
+          return hit ? { id: hit.id, slug: hit.slug, isFavorite: hit.is_favorite } : null;
         };
 
         setHistory((prev) => {
           let changed = false;
           const next = prev.map((h) => {
             const meta = matchFor(h.recipe);
-            const sameId = (meta?.id ?? null) === (h.savedMeta?.id ?? null);
-            if (sameId) return h;
+            const same =
+              (meta?.id ?? null) === (h.savedMeta?.id ?? null) &&
+              (meta?.isFavorite ?? false) === (h.savedMeta?.isFavorite ?? false);
+            if (same) return h;
             changed = true;
             return { ...h, savedMeta: meta };
           });
@@ -147,8 +149,10 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
           if (!current) return current;
           const meta = matchFor(current);
           setSavedMetaState((prev) => {
-            const sameId = (meta?.id ?? null) === (prev?.id ?? null);
-            if (sameId) return prev;
+            const same =
+              (meta?.id ?? null) === (prev?.id ?? null) &&
+              (meta?.isFavorite ?? false) === (prev?.isFavorite ?? false);
+            if (same) return prev;
             try {
               if (meta) {
                 localStorage.setItem(META_STORAGE_KEY, JSON.stringify(meta));
@@ -193,8 +197,7 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
     setRecipeState(newRecipe);
     try {
       if (newRecipe) {
-        // If this recipe already has a saved-meta record in history, restore it
-        // so navigating back to it shows the saved (filled heart) state.
+        // Restore persisted metadata when this recipe is already in history.
         const newRecipeKey = recipeIdentityKey(newRecipe);
         const existing = history.find((h) => recipeIdentityKey(h.recipe) === newRecipeKey);
         const restoredMeta = existing?.savedMeta ?? null;
@@ -219,6 +222,38 @@ export function RecipeProvider({ children }: { children: ReactNode }) {
         ].slice(0, MAX_HISTORY);
         setHistory(updated);
         localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+
+        // Parsed recipes belong in a user's cookbook immediately. The heart only
+        // controls whether this already-persisted recipe is a favorite.
+        if (!restoredMeta) {
+          void fetch("/api/recipes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ recipe: newRecipe }),
+          })
+            .then(async (response) => {
+              if (!response.ok) return;
+              const saved = (await response.json()) as SavedRecipe;
+              if (!saved?.id || !saved?.slug) return;
+              const meta = {
+                id: saved.id,
+                slug: saved.slug,
+                isFavorite: saved.is_favorite,
+              };
+              setSavedMetaState(meta);
+              const synchronized = updated.map((entry) =>
+                recipeIdentityKey(entry.recipe) === newRecipeKey
+                  ? { ...entry, savedMeta: meta }
+                  : entry
+              );
+              setHistory(synchronized);
+              localStorage.setItem(HISTORY_KEY, JSON.stringify(synchronized));
+              localStorage.setItem(META_STORAGE_KEY, JSON.stringify(meta));
+            })
+            .catch(() => {
+              // Guests and transient failures keep the local recipe available.
+            });
+        }
       } else {
         setSavedMetaState(null);
         localStorage.removeItem(STORAGE_KEY);
