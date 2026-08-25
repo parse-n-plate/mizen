@@ -208,7 +208,7 @@ export function CookbookList({ initialRecipes }: CookbookListProps) {
                         aria-label="More actions"
                         suppressHydrationWarning
                       >
-                        <MenuDots className="h-4 w-4" />
+                        <MenuDots className="h-4 w-4" weight="Bold" />
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
