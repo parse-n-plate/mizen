@@ -9,6 +9,7 @@ import Home from "@solar-icons/react/csr/ui/Home";
 import BookBookmark from "@solar-icons/react/csr/school/BookBookmark";
 import Magnifer from "@solar-icons/react/csr/search/Magnifer";
 import User from "@solar-icons/react/csr/users/User";
+import Heart from "@solar-icons/react/csr/like/Heart";
 
 type BaseMobileNavItem = {
   id: string;
@@ -207,6 +208,14 @@ export function MobileBottomNav({ searchHref }: { searchHref?: string }) {
       label: "Cookbook",
       active: pathname === "/cookbook",
       icon: <BookBookmark size={22} aria-hidden="true" />,
+    },
+    {
+      id: "favorites",
+      type: "link",
+      href: "/favorites",
+      label: "Favorites",
+      active: pathname === "/favorites",
+      icon: <Heart size={22} aria-hidden="true" />,
     },
     {
       id: "profile",

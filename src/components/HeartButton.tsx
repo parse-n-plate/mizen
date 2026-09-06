@@ -26,7 +26,7 @@ function useCanHover() {
 }
 
 interface HeartButtonProps {
-  isSaved: boolean;
+  isFavorite: boolean;
   saving: boolean;
   unsaving: boolean;
   onSave: () => void;
@@ -62,10 +62,10 @@ function generateParticles(): Particle[] {
   });
 }
 
-export function HeartButton({ isSaved, saving, unsaving, onSave, onUnsave }: HeartButtonProps) {
+export function HeartButton({ isFavorite, saving, unsaving, onSave, onUnsave }: HeartButtonProps) {
   const shouldReduceMotion = useReducedMotion();
   const canHover = useCanHover();
-  const prevSavedRef = useRef(isSaved);
+  const prevSavedRef = useRef(isFavorite);
   const hasMountedRef = useRef(false);
   const [particles, setParticles] = useState<Particle[]>([]);
   const [breaking, setBreaking] = useState(false);
@@ -74,17 +74,17 @@ export function HeartButton({ isSaved, saving, unsaving, onSave, onUnsave }: Hea
   useEffect(() => {
     if (!hasMountedRef.current) {
       hasMountedRef.current = true;
-      prevSavedRef.current = isSaved;
+      prevSavedRef.current = isFavorite;
       return;
     }
 
     const wasSaved = prevSavedRef.current;
-    prevSavedRef.current = isSaved;
+    prevSavedRef.current = isFavorite;
 
     if (shouldReduceMotion) return;
 
     // Save: false → true → particle burst
-    if (!wasSaved && isSaved) {
+    if (!wasSaved && isFavorite) {
       setJustSaved(true); // eslint-disable-line react-hooks/set-state-in-effect -- animation reaction to prop change
       setParticles(generateParticles());
       const t = setTimeout(() => {
@@ -95,12 +95,12 @@ export function HeartButton({ isSaved, saving, unsaving, onSave, onUnsave }: Hea
     }
 
     // Unsave: true → false → heart break
-    if (wasSaved && !isSaved) {
+    if (wasSaved && !isFavorite) {
       setBreaking(true);
       const t = setTimeout(() => setBreaking(false), 500);
       return () => clearTimeout(t);
     }
-  }, [isSaved, shouldReduceMotion]);
+  }, [isFavorite, shouldReduceMotion]);
 
   const heartSvgProps = {
     xmlns: "http://www.w3.org/2000/svg" as const,
@@ -155,7 +155,7 @@ export function HeartButton({ isSaved, saving, unsaving, onSave, onUnsave }: Hea
     }
 
     // Saved state: filled heart with pop animation
-    if (isSaved) {
+    if (isFavorite) {
       return (
         <motion.svg
           {...heartSvgProps}
@@ -184,11 +184,11 @@ export function HeartButton({ isSaved, saving, unsaving, onSave, onUnsave }: Hea
       <TooltipTrigger asChild>
         <button
           type="button"
-          onClick={isSaved ? onUnsave : onSave}
+          onClick={isFavorite ? onUnsave : onSave}
           disabled={saving || unsaving}
-          aria-label={isSaved ? "Remove from saved" : "Save recipe"}
+          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
           className={`press-scale flex-shrink-0 inline-flex items-center justify-center h-9 w-9 rounded-full transition disabled:opacity-50 relative ${
-            isSaved
+            isFavorite
               ? "text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300"
               : "text-[var(--color-text-muted)] hover:text-[var(--color-text-heading)]"
           }`}
@@ -230,7 +230,9 @@ export function HeartButton({ isSaved, saving, unsaving, onSave, onUnsave }: Hea
           </AnimatePresence>
         </button>
       </TooltipTrigger>
-      <TooltipContent side="bottom">{isSaved ? "Remove from saved" : "Save recipe"}</TooltipContent>
+      <TooltipContent side="bottom">
+        {isFavorite ? "Remove from favorites" : "Add to favorites"}
+      </TooltipContent>
     </Tooltip>
   );
 }

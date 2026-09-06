@@ -16,7 +16,7 @@ export function CookbookGrid({ initialRecipes }: CookbookGridProps) {
 
   const handleClick = (item: SavedRecipe) => {
     setRecipe(item.recipe);
-    setSavedMeta({ id: item.id, slug: item.slug });
+    setSavedMeta({ id: item.id, slug: item.slug, isFavorite: item.is_favorite });
     router.push("/recipe");
   };
 

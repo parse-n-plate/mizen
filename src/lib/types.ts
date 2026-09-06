@@ -65,4 +65,5 @@ export interface SavedRecipe {
   source_url: string | null;
   created_at: string;
   updated_at: string;
+  is_favorite: boolean;
 }

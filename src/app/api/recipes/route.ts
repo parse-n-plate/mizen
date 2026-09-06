@@ -70,7 +70,7 @@ export async function GET(request: Request) {
     const slug = new URL(request.url).searchParams.get("slug");
     const query = supabase
       .from("recipes")
-      .select("id, slug, recipe, source_url, created_at, updated_at")
+      .select("id, slug, recipe, source_url, created_at, updated_at, is_favorite")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
