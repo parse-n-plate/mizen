@@ -6,6 +6,7 @@ import {
   GROQ_TEXT_MODEL,
   GROQ_VISION_MODEL,
 } from "@/lib/groq";
+import { parseDocumentFile, scrapeDocumentUrl } from "@/lib/firecrawl";
 import { logger } from "@/lib/logger";
 import { CoreRecipeSchema, IngredientGroupSchema, EquipmentItemSchema } from "@/lib/schemas/recipe";
 import { EXTRACTION_PROMPT, ENRICHMENT_PROMPT } from "@/lib/prompts/extraction";
@@ -25,6 +26,24 @@ import type {
 const log = logger.child({ module: "parseRecipe" });
 const RECIPE_IMPORT_UNAVAILABLE_MESSAGE =
   "We couldn't process this recipe right now. Please try again in a moment.";
+
+const DOCUMENT_URL_PATTERN = /\.(?:pdf|docx?|odt|rtf|xlsx?)(?:[?#]|$)/i;
+const DOCUMENT_CONTENT_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.oasis.opendocument.text",
+  "application/rtf",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+];
+
+function isDocumentResponse(url: string, contentType?: string | null): boolean {
+  return (
+    DOCUMENT_URL_PATTERN.test(url) ||
+    DOCUMENT_CONTENT_TYPES.some((type) => contentType?.includes(type))
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -1021,12 +1040,39 @@ export async function parseRecipeFromText(text: string): Promise<ParserResult> {
   }
 }
 
+export async function parseRecipeFromDocument(file: File): Promise<ParserResult> {
+  try {
+    const markdown = await parseDocumentFile(file);
+    const result = await parseRecipeFromText(markdown);
+    return result.success ? { ...result, method: "document" } : result;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Could not parse document";
+    return { success: false, error: message, method: "none" };
+  }
+}
+
+async function parseRecipeFromDocumentUrl(url: string): Promise<ParserResult> {
+  try {
+    const markdown = await scrapeDocumentUrl(url);
+    const result = await parseRecipeFromText(markdown);
+    if (!result.success || !result.data) return result;
+    return { success: true, data: { ...result.data, sourceUrl: url }, method: "document" };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Could not parse document";
+    return { success: false, error: message, method: "none" };
+  }
+}
+
 // ---------------------------------------------------------------------------
 // URL Orchestrator
 // ---------------------------------------------------------------------------
 
 export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
   try {
+    if (DOCUMENT_URL_PATTERN.test(url)) {
+      return parseRecipeFromDocumentUrl(url);
+    }
+
     // Fetch HTML
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -1061,6 +1107,10 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
           ? "This website blocked the request. Try copying the recipe text and pasting it instead."
           : `Failed to fetch URL: ${response.status}`;
       return { success: false, error, method: "none" };
+    }
+
+    if (isDocumentResponse(url, response.headers.get("content-type"))) {
+      return parseRecipeFromDocumentUrl(url);
     }
 
     const rawHtml = await response.text();
@@ -1205,5 +1255,6 @@ export const __test__ = {
   extractFromJsonLd,
   extractStepImagesFromHtml,
   mergeStepImages,
+  isDocumentResponse,
   recipeImportError,
 };
