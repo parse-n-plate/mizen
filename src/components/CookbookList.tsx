@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,6 +18,7 @@ import LinkSquare from "@solar-icons/react/csr/text-formatting/LinkSquare";
 import TrashBinMinimalistic from "@solar-icons/react/csr/ui/TrashBinMinimalistic";
 import MenuDots from "@solar-icons/react/csr/ui/MenuDots";
 import Book from "@solar-icons/react/csr/school/Book";
+import { FavoritesEmptyState } from "@/components/FavoritesEmptyState";
 import { HeartButton } from "@/components/HeartButton";
 
 import type { SavedRecipe } from "@/lib/types";
@@ -149,7 +151,7 @@ export function CookbookList({ initialRecipes, onlyFavorites = false }: Cookbook
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isFavorite: !item.is_favorite }),
       });
-      if (!res.ok) return;
+      if (!res.ok) throw new Error("Failed to update favorite");
       const updated = (await res.json()) as SavedRecipe;
       setRecipes((previous) =>
         onlyFavorites && !updated.is_favorite
@@ -158,10 +160,14 @@ export function CookbookList({ initialRecipes, onlyFavorites = false }: Cookbook
               recipe.id === updated.id ? { ...recipe, is_favorite: updated.is_favorite } : recipe
             )
       );
+    } catch {
+      toast.error("Updating favorites is temporarily unavailable. Please try again later.");
     } finally {
       setUpdatingFavoriteId(null);
     }
   };
+
+  if (recipes.length === 0 && onlyFavorites) return <FavoritesEmptyState />;
 
   if (recipes.length === 0) {
     return (
