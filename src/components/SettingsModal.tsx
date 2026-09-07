@@ -1,5 +1,7 @@
 "use client";
 
+import { EmptyState } from "@/components/EmptyState";
+
 import { type ChangeEvent, type ComponentType, type ReactNode, useMemo, useState } from "react";
 import { useUser } from "@/hooks/useUser";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -1113,21 +1115,19 @@ function CookingSection() {
             ))}
           </div>
         ) : (
-          <div className="mt-3 rounded-2xl border border-dashed border-stone-200 bg-stone-50 p-4 dark:border-stone-800 dark:bg-stone-900">
-            <p className="font-sans text-sm text-stone-500 dark:text-stone-400 text-pretty">
-              No personal substitutions yet.
-            </p>
-          </div>
+          <EmptyState variant="substitutions" compact onAction={addSubstitution} />
         )}
 
-        <button
-          type="button"
-          onClick={addSubstitution}
-          className="mt-3 inline-flex items-center gap-1.5 font-sans text-[13px] text-stone-500 transition-colors hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100"
-        >
-          <AddCircle className="size-4" />
-          Add substitution
-        </button>
+        {substitutions.length > 0 && (
+          <button
+            type="button"
+            onClick={addSubstitution}
+            className="mt-3 inline-flex items-center gap-1.5 font-sans text-[13px] text-stone-500 transition-colors hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100"
+          >
+            <AddCircle className="size-4" />
+            Add substitution
+          </button>
+        )}
 
         {recipe && substitutions.length > 0 && (
           <div className="mt-4">

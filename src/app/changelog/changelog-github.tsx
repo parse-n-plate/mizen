@@ -1,5 +1,7 @@
 "use client";
 
+import { EmptyState } from "@/components/EmptyState";
+
 import { useEffect, useState } from "react";
 
 type GitHubCommit = {
@@ -198,11 +200,7 @@ export function ChangelogGitHub({ appVersion }: ChangelogGitHubProps) {
 
   if (state.status === "error" || state.entries.length === 0) {
     return (
-      <section className="border-t border-stone-200 py-10 dark:border-stone-800">
-        <p className="font-sans text-sm leading-6 text-stone-500 dark:text-stone-400">
-          GitHub changelog entries could not be loaded right now.
-        </p>
-      </section>
+      <EmptyState variant="changelog" compact alert onAction={() => window.location.reload()} />
     );
   }
 

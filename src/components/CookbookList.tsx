@@ -1,5 +1,7 @@
 "use client";
 
+import { EmptyState } from "@/components/EmptyState";
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -168,23 +170,7 @@ export function CookbookList({ initialRecipes, onlyFavorites = false }: Cookbook
 
   if (visibleRecipes.length === 0 && onlyFavorites) return <FavoritesEmptyState />;
 
-  if (recipes.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-wheat)]">
-          <Book size={28} className="text-[var(--color-orange)]" aria-hidden="true" />
-        </div>
-        <p className="mt-4 font-sans text-sm text-stone-500">
-          {onlyFavorites ? "No favorite recipes yet" : "No recipes saved yet"}
-        </p>
-        <p className="mt-1 font-sans text-xs text-stone-400 dark:text-stone-600">
-          {onlyFavorites
-            ? "Favorite recipes from your cookbook to find them here"
-            : "Add a recipe above to start your collection"}
-        </p>
-      </div>
-    );
-  }
+  if (recipes.length === 0) return <EmptyState variant="recipes" />;
 
   return (
     <div className="flex flex-col">

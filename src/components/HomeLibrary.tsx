@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { EmptyState } from "@/components/EmptyState";
 import { Search } from "@/components/Search";
 import { CookbookList } from "@/components/CookbookList";
 import { useRecipe } from "@/context/RecipeContext";
@@ -79,22 +80,14 @@ function HomeCollection() {
           ))}
         </nav>
         {loadError ? (
-          <div
-            role="alert"
-            className="rounded-xl border border-stone-200 p-6 dark:border-stone-700"
-          >
-            <p className="text-sm">We couldn’t load your recipes. Please try again.</p>
-            <button
-              type="button"
-              className="mt-3 text-sm font-medium underline"
-              onClick={() => {
-                setLoadError(false);
-                setAttempt((value) => value + 1);
-              }}
-            >
-              Try again
-            </button>
-          </div>
+          <EmptyState
+            variant="loadError"
+            alert
+            onAction={() => {
+              setLoadError(false);
+              setAttempt((value) => value + 1);
+            }}
+          />
         ) : recipes === null ? (
           <p role="status" className="py-8 text-sm text-stone-500">
             Loading your recipes...
