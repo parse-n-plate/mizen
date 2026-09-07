@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import type { ParsedRecipe } from "@/lib/types";
+import { prepRecipeIdentity } from "@/lib/prep-notes";
 import { PrepSection } from "@/components/PrepSection";
 import {
   RecipeDesktopTabsBar,
@@ -153,6 +154,8 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
             {activeTab === "prep" ? (
               <div key="mobile-prep" className="tab-content-animate">
                 <PrepSection
+                  prepNotes={recipe?.prepNotes}
+                  recipeIdentity={recipe ? prepRecipeIdentity(recipe) : undefined}
                   ingredients={displayedIngredients}
                   steps={recipe.instructions}
                   equipment={recipe.equipment}
@@ -238,6 +241,8 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
             {activeTab === "prep" ? (
               <div key="prep" className="tab-content-animate">
                 <PrepSection
+                  prepNotes={recipe?.prepNotes}
+                  recipeIdentity={recipe ? prepRecipeIdentity(recipe) : undefined}
                   ingredients={displayedIngredients}
                   steps={recipe.instructions}
                   equipment={recipe.equipment}

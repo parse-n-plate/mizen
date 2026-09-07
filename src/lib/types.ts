@@ -33,7 +33,16 @@ export interface EquipmentItem {
   stepNumbers: number[]; // 1-indexed steps where used
 }
 
+export interface PrepNote {
+  action: string;
+  requirement: "required" | "recommended";
+  phase: "advance" | "same-day";
+  timing?: string;
+  leadTimeMinutes?: number;
+}
+
 export interface ParsedRecipe {
+  prepNotes?: PrepNote[];
   title: string;
   summary?: string;
   author?: string;

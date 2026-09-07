@@ -30,6 +30,17 @@ export const EquipmentItemSchema = z.object({
   stepNumbers: z.array(z.number().int().positive()),
 });
 
+export const PrepNoteSchema = z.object({
+  action: z.string().trim().min(1).max(500),
+  requirement: z.enum(["required", "recommended"]),
+  phase: z.enum(["advance", "same-day"]),
+  timing: z.string().trim().min(1).max(120).optional(),
+  leadTimeMinutes: z.number().finite().nonnegative().optional(),
+});
+
+// Optional enrichment must never prevent an otherwise valid recipe from importing.
+export const PrepNotesSchema = z.array(PrepNoteSchema).optional().catch(undefined);
+
 export const CoreRecipeSchema = z.object({
   title: z.string().min(1),
   summary: z.string().optional(),
@@ -41,4 +52,5 @@ export const CoreRecipeSchema = z.object({
   ingredients: z.array(IngredientGroupSchema).min(1),
   instructions: z.array(z.union([InstructionStepSchema, z.string()])),
   equipment: z.array(EquipmentItemSchema).optional(),
+  prepNotes: PrepNotesSchema,
 });

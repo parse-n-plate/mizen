@@ -4,7 +4,7 @@ import * as React from "react";
 import { useState, useRef, useEffect, useTransition, useCallback } from "react";
 import User from "@solar-icons/react/csr/users/User";
 import { X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 interface ServingsAdjusterProps {
   servings: number;
@@ -28,6 +28,7 @@ export function ServingsAdjuster({
   const [, startTransition] = useTransition();
   const [inputValue, setInputValue] = useState<string>(String(servings));
   const [isEditingInput, setIsEditingInput] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   const sliderMin = Math.max(1, Math.min(originalServings - 5, servings));
   const sliderMax = Math.max(originalServings + 5, servings);
@@ -137,15 +138,12 @@ export function ServingsAdjuster({
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          initial={{ opacity: 0, y: -10, height: 0 }}
-          animate={{ opacity: 1, y: 0, height: "auto" }}
-          exit={{ opacity: 0, y: -10, height: 0 }}
-          transition={{
-            type: "spring",
-            damping: 25,
-            stiffness: 350,
-            opacity: { duration: 0.2 },
-          }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={
+            shouldReduceMotion ? { duration: 0 } : { duration: 0.18, ease: [0.23, 1, 0.32, 1] }
+          }
           className="print:hidden overflow-visible"
         >
           <div
@@ -186,10 +184,12 @@ export function ServingsAdjuster({
                   {hasChanged && (
                     <motion.button
                       key="reset"
-                      initial={{ opacity: 0, scale: 0.5 }}
+                      initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.5 }}
-                      transition={{ duration: 0.15, ease: "easeOut" }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={
+                        shouldReduceMotion ? { duration: 0 } : { duration: 0.15, ease: "easeOut" }
+                      }
                       onClick={handleReset}
                       className="absolute top-0 bottom-0 right-1.5 my-auto flex items-center justify-center w-5 h-5 rounded-full text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 cursor-pointer"
                       aria-label="Reset to original servings"

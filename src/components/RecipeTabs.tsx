@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { prepRecipeIdentity } from "@/lib/prep-notes";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
 import { useTabScrollMemory } from "@/hooks/useTabScrollMemory";
@@ -19,9 +20,10 @@ export function RecipeTabs({ recipe }: RecipeTabsProps) {
   const handleStepClick = useCallback((stepNumber: number) => {
     setTab("cook");
     requestAnimationFrame(() => {
+      const shouldReduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       document
         .getElementById(`step-${stepNumber}`)
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        ?.scrollIntoView({ behavior: shouldReduceMotion ? "auto" : "smooth", block: "center" });
     });
   }, []);
 
@@ -67,6 +69,8 @@ export function RecipeTabs({ recipe }: RecipeTabsProps) {
         <div className="max-w-3xl mx-auto px-5 pt-5 pb-12">
           <TabsContent value="prep" className="space-y-0">
             <PrepSection
+              prepNotes={recipe?.prepNotes}
+              recipeIdentity={recipe ? prepRecipeIdentity(recipe) : undefined}
               ingredients={recipe.ingredients}
               steps={recipe.instructions}
               equipment={recipe.equipment}
