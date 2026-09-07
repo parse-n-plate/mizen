@@ -31,14 +31,14 @@ export function WhoMadeIt({ borderColor }: WhoMadeItProps) {
             href={person.href}
             target="_blank"
             rel="noopener noreferrer"
-            className={`relative h-7 w-7 flex-shrink-0 overflow-hidden rounded-full border transition-transform hover:scale-110 ${borderClass}`}
+            className={`relative h-7 w-7 flex-shrink-0 overflow-hidden rounded-full border-[3px] transition-transform hover:scale-110 ${borderClass}`}
             aria-label={`Visit ${person.name}'s profile`}
           >
             <Image
               src={person.src}
               alt={person.name}
-              width={28}
-              height={28}
+              width={84}
+              height={84}
               className="h-full w-full rounded-full object-cover"
               draggable={false}
             />
