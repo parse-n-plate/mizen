@@ -1,4 +1,4 @@
-/* Shared by the app and the standalone empty-state review gallery. */
+/* Shared empty-state styling across the app. */
 .empty-state {
   display: flex;
   min-height: 320px;
