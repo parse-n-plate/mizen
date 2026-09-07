@@ -1,5 +1,7 @@
 "use client";
 
+import { EmptyState } from "@/components/EmptyState";
+
 import {
   Suspense,
   useCallback,
@@ -452,13 +454,14 @@ function RecipePageContent() {
 
   if (!recipe) {
     return (
-      <div className="flex min-h-[calc(100vh-3.5rem)] flex-col items-center justify-center gap-4 px-6">
-        <p className="font-sans text-stone-500 dark:text-stone-400">
-          {linkedRecipeSlug && !linkedRecipeLoadFinished ? "Loading recipe…" : "No recipe loaded."}
-        </p>
-        <Link href="/" className="font-sans text-sm text-[var(--color-blue)] hover:underline">
-          Go back and paste a URL
-        </Link>
+      <div className="flex min-h-[calc(100vh-3.5rem)] items-center justify-center px-6">
+        {linkedRecipeSlug && !linkedRecipeLoadFinished ? (
+          <p role="status" className="text-sm text-stone-500">
+            Loading recipe…
+          </p>
+        ) : (
+          <EmptyState variant="recipe" />
+        )}
       </div>
     );
   }
@@ -508,8 +511,8 @@ function RecipePageContent() {
           {/* Mobile back button */}
           <div className="md:hidden flex items-center gap-2 mb-3.5 -ml-1 min-w-0">
             <Link
-              href="/cookbook"
-              aria-label="Back to Cookbook"
+              href="/"
+              aria-label="Back to Home"
               className="shrink-0 inline-flex items-center text-[var(--color-text-muted)] active:text-[var(--color-text-body)]"
             >
               <AltArrowLeft className="size-4" />

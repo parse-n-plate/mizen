@@ -37,8 +37,7 @@ export function TopBar() {
   const name = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Guest";
 
   const isRecipePage = pathname === "/recipe";
-  const isCookbookPage = pathname === "/cookbook";
-  const showBackArrow = isRecipePage || isCookbookPage;
+  const showBackArrow = isRecipePage;
 
   const closeQuickAdd = () => {
     setQuickAddOpen(false);
@@ -241,9 +240,9 @@ export function TopBar() {
                 <>
                   {isSupabaseConfigured && (
                     <Link
-                      href="/cookbook"
+                      href="/"
                       className="hidden sm:flex h-8 w-8 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-200/60 dark:hover:bg-stone-800 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
-                      aria-label="Cookbook"
+                      aria-label="Home"
                     >
                       <svg
                         className="h-[18px] w-[18px]"
@@ -476,11 +475,11 @@ export function TopBar() {
                           </p>
                         </div>
                         <Link
-                          href="/cookbook"
+                          href="/"
                           onClick={() => setMenuOpen(false)}
                           className="flex items-center gap-2.5 px-3 py-2 font-sans text-sm text-stone-600 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors"
                         >
-                          <span className="min-w-0 flex-1 truncate">Cookbook</span>
+                          <span className="min-w-0 flex-1 truncate">Home</span>
                           <Book className="h-4 w-4 flex-shrink-0 text-stone-400 dark:text-stone-500" />
                         </Link>
                         <button

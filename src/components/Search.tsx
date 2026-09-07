@@ -357,7 +357,10 @@ function TypePill({ mode, text }: { mode: BarMode; text?: string | null }) {
 
 // ── Main component ───────────────────────────────────────────────────────
 
-export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
+export function Search({
+  onSuccess,
+  fullWidth = false,
+}: { onSuccess?: () => void; fullWidth?: boolean } = {}) {
   const [url, setUrl] = useState("");
   const [imageFile, setImageFile] = useState<ImageFile | null>(null);
   const [pastedText, setPastedText] = useState<string | null>(null);
@@ -696,7 +699,7 @@ export function Search({ onSuccess }: { onSuccess?: () => void } = {}) {
   const submitIsBlue = mode === "focused" || mode === "loading" || mode === "url" || !!inlineError;
 
   return (
-    <div className="w-full max-w-xl flex flex-col items-center">
+    <div className={`w-full flex flex-col items-center ${fullWidth ? "" : "max-w-xl"}`}>
       <form ref={formRef} onSubmit={handleSubmit} className="w-full">
         <div
           className={`smart-bar w-full antialiased ${

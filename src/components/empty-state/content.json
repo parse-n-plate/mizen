@@ -1,0 +1,68 @@
+{
+  "recipes": {
+    "title": "Your recipes start here",
+    "description": "Add a link, recipe text, or photo to start your collection.",
+    "illustration": "/assets/hero-book.svg",
+    "action": "Add a recipe",
+    "href": "/#search"
+  },
+  "favorites": {
+    "title": "Keep your favorites close",
+    "description": "Tap the heart on a recipe to find it here whenever you need it.",
+    "illustration": "/assets/hero-book.svg",
+    "action": "Browse all recipes",
+    "href": "/"
+  },
+  "search": {
+    "title": "No recipes found",
+    "description": "Try another recipe name, ingredient, or source.",
+    "illustration": "/assets/hero-pot.svg",
+    "action": "Clear search"
+  },
+  "recent": {
+    "title": "Something good starts here",
+    "description": "Add your first recipe to see it in your recent recipes.",
+    "illustration": "/assets/hero-book.svg",
+    "action": "Add a recipe",
+    "href": "/#search"
+  },
+  "recipe": {
+    "title": "Ready when you are",
+    "description": "Open a saved recipe or add something new to start cooking.",
+    "illustration": "/assets/hero-pot.svg",
+    "action": "Browse recipes",
+    "href": "/"
+  },
+  "substitutions": {
+    "title": "Make it your own",
+    "description": "Add an ingredient swap to use in your recipes.",
+    "illustration": "/assets/icon-cook.svg",
+    "action": "Add substitution"
+  },
+  "loadError": {
+    "title": "Recipes couldn’t load",
+    "description": "We couldn’t load your collection. Please try again.",
+    "illustration": "/assets/hero-book.svg",
+    "action": "Try again"
+  },
+  "favoritesError": {
+    "title": "Favorites couldn’t load",
+    "description": "Try loading your favorite recipes again.",
+    "illustration": "/assets/hero-book.svg",
+    "action": "Try again",
+    "href": "/?view=favorites"
+  },
+  "changelog": {
+    "title": "Updates aren’t available",
+    "description": "We couldn’t load the changelog. Please try again.",
+    "illustration": "/assets/hero-book.svg",
+    "action": "Try again"
+  },
+  "notFound": {
+    "title": "This page isn’t here",
+    "description": "The link may have changed. Head home to find your recipes.",
+    "illustration": "/assets/hero-pot.svg",
+    "action": "Go home",
+    "href": "/"
+  }
+}

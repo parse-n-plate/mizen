@@ -1,5 +1,7 @@
 "use client";
 
+import { EmptyState } from "@/components/EmptyState";
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -123,7 +125,8 @@ export function CookbookList({ initialRecipes, onlyFavorites = false }: Cookbook
   const [updatingFavoriteId, setUpdatingFavoriteId] = useState<string | null>(null);
   const { setRecipe, setSavedMeta } = useRecipe();
   const router = useRouter();
-  const groups = groupRecipes(recipes);
+  const visibleRecipes = onlyFavorites ? recipes.filter((recipe) => recipe.is_favorite) : recipes;
+  const groups = groupRecipes(visibleRecipes);
 
   const handleOpen = (item: SavedRecipe) => {
     setRecipe(item.recipe);
@@ -154,11 +157,9 @@ export function CookbookList({ initialRecipes, onlyFavorites = false }: Cookbook
       if (!res.ok) throw new Error("Failed to update favorite");
       const updated = (await res.json()) as SavedRecipe;
       setRecipes((previous) =>
-        onlyFavorites && !updated.is_favorite
-          ? previous.filter((recipe) => recipe.id !== updated.id)
-          : previous.map((recipe) =>
-              recipe.id === updated.id ? { ...recipe, is_favorite: updated.is_favorite } : recipe
-            )
+        previous.map((recipe) =>
+          recipe.id === updated.id ? { ...recipe, is_favorite: updated.is_favorite } : recipe
+        )
       );
     } catch {
       toast.error("Updating favorites is temporarily unavailable. Please try again later.");
@@ -167,25 +168,9 @@ export function CookbookList({ initialRecipes, onlyFavorites = false }: Cookbook
     }
   };
 
-  if (recipes.length === 0 && onlyFavorites) return <FavoritesEmptyState />;
+  if (visibleRecipes.length === 0 && onlyFavorites) return <FavoritesEmptyState />;
 
-  if (recipes.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-wheat)]">
-          <Book size={28} className="text-[var(--color-orange)]" aria-hidden="true" />
-        </div>
-        <p className="mt-4 font-sans text-sm text-stone-500">
-          {onlyFavorites ? "No favorite recipes yet" : "No recipes saved yet"}
-        </p>
-        <p className="mt-1 font-sans text-xs text-stone-400 dark:text-stone-600">
-          {onlyFavorites
-            ? "Favorite recipes from your cookbook to find them here"
-            : "Parse a recipe to build your cookbook"}
-        </p>
-      </div>
-    );
-  }
+  if (recipes.length === 0) return <EmptyState variant="recipes" />;
 
   return (
     <div className="flex flex-col">
@@ -222,12 +207,12 @@ export function CookbookList({ initialRecipes, onlyFavorites = false }: Cookbook
               >
                 <div className="min-w-0 flex-1 flex items-center gap-3">
                   <RecipeSourceIcon domain={domain} kind={getSourceKind(item)} />
-                  <div className="min-w-0 flex items-baseline">
-                    <span className="truncate font-serif text-base font-semibold leading-snug text-stone-900 dark:text-stone-50">
+                  <div className="min-w-0 flex flex-col items-start sm:flex-row sm:items-baseline">
+                    <span className="max-w-full truncate font-serif text-base font-semibold leading-snug text-stone-900 dark:text-stone-50">
                       {item.recipe.title}
                     </span>
                     {domain && (
-                      <span className="ml-2 shrink-0 font-sans text-[13px] text-stone-400 dark:text-stone-500">
+                      <span className="max-w-full truncate font-sans text-xs text-stone-400 dark:text-stone-500 sm:ml-2 sm:shrink-0 sm:text-[13px]">
                         {domain}
                       </span>
                     )}
@@ -239,7 +224,7 @@ export function CookbookList({ initialRecipes, onlyFavorites = false }: Cookbook
                     className={`mr-1 transition-opacity ${
                       item.is_favorite
                         ? "opacity-100"
-                        : "opacity-0 group-hover:opacity-100 focus-within:opacity-100"
+                        : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100"
                     }`}
                     onClick={(event) => event.stopPropagation()}
                   >
@@ -301,7 +286,7 @@ export function CookbookList({ initialRecipes, onlyFavorites = false }: Cookbook
       ))}
 
       <Link
-        href="/"
+        href="/#search"
         className="-mx-3 flex items-center gap-3 rounded-xl px-3 py-3.5 text-stone-400 dark:text-stone-500 hover:bg-stone-200/60 dark:hover:bg-stone-700/35 hover:text-stone-600 dark:hover:text-stone-300 transition-colors"
       >
         <svg

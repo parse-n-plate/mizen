@@ -1,5 +1,7 @@
 "use client";
 
+import { EmptyState } from "@/components/EmptyState";
+
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, Link as LinkIcon, Upload, X } from "lucide-react";
@@ -301,7 +303,9 @@ export function SearchCommandView({
         }
       />
       <CommandList className="max-md:max-h-none max-md:flex-1">
-        <CommandEmpty>No results found.</CommandEmpty>
+        <CommandEmpty className="p-0">
+          <EmptyState variant="search" compact onAction={() => setSearch("")} />
+        </CommandEmpty>
 
         {isUrlInput ? (
           <CommandGroup heading="Add Recipe">
@@ -342,12 +346,12 @@ export function SearchCommandView({
         {!search && (
           <CommandGroup heading="Navigation">
             <CommandItem
-              value="cookbook saved recipes bookmarks"
-              onSelect={() => closeAndGo("/cookbook")}
+              value="home cookbook saved recipes bookmarks"
+              onSelect={() => closeAndGo("/")}
             >
               <BookMinimalistic size={20} className="text-muted-foreground" aria-hidden="true" />
               <div className="min-w-0 flex-1">
-                <p className="font-medium">Cookbook</p>
+                <p className="font-medium">Home</p>
                 <p className="text-xs text-muted-foreground">Saved recipes</p>
               </div>
             </CommandItem>
@@ -393,9 +397,7 @@ export function SearchCommandView({
         )}
 
         {!search && recipes.length === 0 && (
-          <div className="px-4 py-8 text-center font-sans text-sm text-muted-foreground">
-            No recent recipes yet.
-          </div>
+          <EmptyState variant="recent" compact onAction={() => closeAndGo("/#search")} />
         )}
       </CommandList>
       {showDesktopFooter && (

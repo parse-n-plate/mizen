@@ -1,5 +1,7 @@
 "use client";
 
+import { EmptyState } from "@/components/EmptyState";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useRecipe } from "@/context/RecipeContext";
@@ -32,33 +34,7 @@ export function CookbookGrid({ initialRecipes }: CookbookGridProps) {
     }
   };
 
-  if (recipes.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-wheat)]">
-          <svg
-            className="h-7 w-7 text-[var(--color-orange)]"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20" />
-          </svg>
-        </div>
-        <p className="mt-4 font-sans text-sm text-stone-400 dark:text-stone-500">
-          No recipes saved yet
-        </p>
-        <p className="mt-1 font-sans text-xs text-stone-300 dark:text-stone-600">
-          Parse a recipe and save it to build your cookbook
-        </p>
-      </div>
-    );
-  }
+  if (recipes.length === 0) return <EmptyState variant="recipes" />;
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

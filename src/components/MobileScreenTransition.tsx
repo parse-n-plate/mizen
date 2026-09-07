@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 
 type TransitionDirection = "back" | "forward" | "up" | "down";
 
-const tabOrder = ["/", "/cookbook", "/profile"];
+const tabOrder = ["/", "/profile"];
 
 function transitionDirection(from: string, to: string): TransitionDirection {
   if (to === "/search") return "up";
