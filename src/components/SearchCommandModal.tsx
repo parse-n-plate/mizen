@@ -440,7 +440,7 @@ export function SearchCommandModal({ open, onOpenChange }: SearchCommandModalPro
 
 export function SearchCommandFullScreen({ onClose }: { onClose: () => void }) {
   return (
-    <Command className="min-h-dvh rounded-none bg-popover text-popover-foreground">
+    <Command className="min-h-dvh rounded-none bg-background text-foreground dark:[&_[data-slot=command-input-wrapper]]:bg-[var(--color-surface)]">
       <SearchCommandView
         onClose={onClose}
         closeOnNavigate={false}
