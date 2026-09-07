@@ -20,7 +20,7 @@ export function Footer() {
       <div className="mx-auto flex max-w-3xl items-center justify-between">
         <div className="flex items-center gap-1.5">
           <p className="font-sans text-sm text-stone-400">Cooked with love by</p>
-          <div className="flex -space-x-1">
+          <div className="flex -space-x-1.5">
             {team.map((person) => (
               <Link
                 key={person.name}

@@ -24,7 +24,7 @@ export function WhoMadeIt({ borderColor }: WhoMadeItProps) {
   return (
     <div className="flex items-center gap-1.5">
       <p className="font-sans text-xs text-stone-400 dark:text-stone-500">Cooked with love by</p>
-      <div className="flex -space-x-1">
+      <div className="flex -space-x-1.5">
         {team.map((person) => (
           <Link
             key={person.name}
