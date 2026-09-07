@@ -25,8 +25,6 @@ import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { createClient } from "@/lib/supabase/client";
 import { favoriteRecipes } from "@/lib/favorite-recipes";
 import HomeSmile from "@solar-icons/react/csr/ui/HomeSmile";
-import BookMinimalistic from "@solar-icons/react/csr/school/BookMinimalistic";
-import Heart from "@solar-icons/react/csr/like/Heart";
 import Settings from "@solar-icons/react/csr/settings/Settings";
 import ChatRoundDots from "@solar-icons/react/csr/messages/ChatRoundDots";
 import Magnifer from "@solar-icons/react/csr/search/Magnifer";
@@ -204,22 +202,6 @@ export function Sidebar({ collapsed, onToggle, onOpenSearch }: SidebarProps) {
       icon: HomeSmile,
       active: pathname === "/",
     },
-    {
-      href: "/cookbook",
-      label: "Cookbook",
-      icon: BookMinimalistic,
-      active: pathname === "/cookbook",
-      show: user ? isSupabaseConfigured : true,
-      onClick: user ? undefined : () => setAuthOpen(true),
-    },
-    {
-      href: "/favorites",
-      label: "Favorites",
-      icon: Heart,
-      active: pathname === "/favorites",
-      show: user ? isSupabaseConfigured : true,
-      onClick: user ? undefined : () => setAuthOpen(true),
-    },
   ];
 
   return (
@@ -302,7 +284,7 @@ export function Sidebar({ collapsed, onToggle, onOpenSearch }: SidebarProps) {
                       />
                     ) : null}
                     <span className="flex-1">{item.label}</span>
-                    {item.label === "Cookbook" && user && recipeCount != null && (
+                    {item.label === "Home" && user && recipeCount != null && (
                       <span className="font-sans text-xs text-stone-400 dark:text-stone-500">
                         {recipeCount}
                       </span>

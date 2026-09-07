@@ -8,13 +8,11 @@ import Plain from "@solar-icons/react/csr/messages/Plain";
 import { motion, AnimatePresence } from "motion/react";
 import { useDialKit } from "dialkit";
 import { getTheme, setTheme } from "@/lib/theme";
-import { Search } from "@/components/Search";
-import { RecentRecipes } from "@/components/RecentRecipes";
+import { HomeLibrary } from "@/components/HomeLibrary";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { LandingAuthCta } from "@/components/LandingAuthCta";
 import { WhoMadeIt } from "@/components/WhoMadeIt";
-import { useRecipe } from "@/context/RecipeContext";
 import { useUser } from "@/hooks/useUser";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import type { ParsedRecipe } from "@/lib/types";
@@ -410,62 +408,6 @@ function SourceIcon({ type }: { type: "link" | "camera" | "chat" | "ai" }) {
   );
 }
 
-function AuthenticatedHome() {
-  const { error, isLoading } = useRecipe();
-
-  useEffect(() => {
-    if (window.location.hash !== "#search") return;
-
-    const searchSection = document.getElementById("search");
-    searchSection?.scrollIntoView({ block: "center" });
-
-    const input = searchSection?.querySelector("input");
-    if (input instanceof HTMLInputElement) {
-      input.focus();
-    }
-  }, []);
-
-  return (
-    <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
-      <div className="flex w-full max-w-3xl flex-col gap-12">
-        {/* Hero */}
-        <div className="text-center">
-          <h1 className="mb-8 font-serif text-[clamp(40px,8vw,72px)] font-bold leading-[1.1] text-stone-900 dark:text-stone-100">
-            Clean recipes,
-            <br />
-            calm cooking.
-          </h1>
-          <p className="mx-auto max-w-md font-sans text-lg text-balance text-stone-500 dark:text-stone-400">
-            Paste a recipe URL. Get a focused cooking experience.
-          </p>
-        </div>
-
-        {/* Search */}
-        <div id="search" className="w-full scroll-mt-24 flex flex-col items-center">
-          <Search />
-
-          {isLoading && (
-            <p className="mt-6 font-sans text-sm text-center text-stone-400 dark:text-stone-500 animate-pulse">
-              Parsing recipe...
-            </p>
-          )}
-
-          {error && (
-            <p className="mt-6 max-w-md mx-auto text-center font-sans text-sm text-red-500">
-              {error}
-            </p>
-          )}
-        </div>
-
-        {/* Recent recipes */}
-        <div className="w-full">
-          <RecentRecipes />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function HomePage() {
   const { user, loading } = useUser();
 
@@ -495,7 +437,7 @@ export default function HomePage() {
   }, []);
 
   if (loading) return null;
-  if (user) return <AuthenticatedHome />;
+  if (user) return <HomeLibrary />;
   return <WaitlistLanding />;
 }
 

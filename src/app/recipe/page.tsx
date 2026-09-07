@@ -508,8 +508,8 @@ function RecipePageContent() {
           {/* Mobile back button */}
           <div className="md:hidden flex items-center gap-2 mb-3.5 -ml-1 min-w-0">
             <Link
-              href="/cookbook"
-              aria-label="Back to Cookbook"
+              href="/"
+              aria-label="Back to Home"
               className="shrink-0 inline-flex items-center text-[var(--color-text-muted)] active:text-[var(--color-text-body)]"
             >
               <AltArrowLeft className="size-4" />

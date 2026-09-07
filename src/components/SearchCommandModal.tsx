@@ -342,12 +342,12 @@ export function SearchCommandView({
         {!search && (
           <CommandGroup heading="Navigation">
             <CommandItem
-              value="cookbook saved recipes bookmarks"
-              onSelect={() => closeAndGo("/cookbook")}
+              value="home cookbook saved recipes bookmarks"
+              onSelect={() => closeAndGo("/")}
             >
               <BookMinimalistic size={20} className="text-muted-foreground" aria-hidden="true" />
               <div className="min-w-0 flex-1">
-                <p className="font-medium">Cookbook</p>
+                <p className="font-medium">Home</p>
                 <p className="text-xs text-muted-foreground">Saved recipes</p>
               </div>
             </CommandItem>

@@ -25,15 +25,15 @@ export function FavoritesEmptyState({ unavailable = false }: { unavailable?: boo
         <p className="text-sm leading-6 text-stone-600 dark:text-stone-400">
           {unavailable
             ? "We couldn’t load your favorites. Please try again."
-            : "Tap the heart on any recipe to keep it here. It stays in your Cookbook, too."}
+            : "Tap the heart on any recipe to keep it here. Find all your saved recipes in All recipes."}
         </p>
       </div>
       <Link
-        href={unavailable ? "/favorites" : "/cookbook"}
+        href={unavailable ? "/?view=favorites" : "/"}
         prefetch={unavailable ? false : undefined}
         className="inline-flex items-center justify-center rounded-3xl bg-stone-800 p-6 text-sm leading-6 font-medium text-white transition-colors hover:bg-stone-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-stone-600 dark:bg-stone-200 dark:text-stone-900 dark:hover:bg-stone-300"
       >
-        {unavailable ? "Try again" : "Browse Cookbook"}
+        {unavailable ? "Try again" : "Browse all recipes"}
       </Link>
     </section>
   );
