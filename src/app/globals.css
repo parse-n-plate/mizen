@@ -362,24 +362,24 @@ html[data-early-splash="true"] #mizen-early-splash {
 .dark {
   color-scheme: dark;
 
-  /* shadcn/ui semantic tokens */
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.922 0 0);
-  --card: oklch(0.178 0 0);
-  --card-foreground: oklch(0.922 0 0);
-  --popover: oklch(0.178 0 0);
-  --popover-foreground: oklch(0.922 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.264 0 0);
-  --secondary-foreground: oklch(0.922 0 0);
-  --muted: oklch(0.264 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.264 0 0);
-  --accent-foreground: oklch(0.922 0 0);
+  /* Shared UI tokens use the same warm neutrals as Mizen surfaces. */
+  --background: var(--color-dark-surface);
+  --foreground: var(--color-text-heading);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-text-heading);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-text-heading);
+  --primary: var(--color-text-heading);
+  --primary-foreground: var(--color-cream);
+  --secondary: var(--color-cream);
+  --secondary-foreground: var(--color-text-heading);
+  --muted: var(--color-cream);
+  --muted-foreground: var(--color-text-muted);
+  --accent: var(--color-cream);
+  --accent-foreground: var(--color-text-heading);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.32 0 0);
-  --input: oklch(0.32 0 0);
+  --border: var(--color-border-light);
+  --input: var(--color-border-light);
   --ring: var(--color-primary-blue);
 
   /* Mizen palette — Neutrals (inverted) */

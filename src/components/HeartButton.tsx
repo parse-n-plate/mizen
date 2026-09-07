@@ -105,7 +105,7 @@ export function HeartButton({ isFavorite, saving, unsaving, onSave, onUnsave }: 
   const heartSvgProps = {
     xmlns: "http://www.w3.org/2000/svg" as const,
     viewBox: "0 0 24 24",
-    strokeWidth: 2,
+    strokeWidth: 1.5,
     strokeLinecap: "round" as const,
     strokeLinejoin: "round" as const,
     className: "h-5 w-5",
