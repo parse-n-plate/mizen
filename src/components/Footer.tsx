@@ -12,11 +12,6 @@ const team = [
     src: "/assets/avatars/Michelle_Avatar_2026.jpg",
     href: "https://www.linkedin.com/in/michelle-tran-a48a14203/",
   },
-  {
-    name: "Will",
-    src: "/assets/avatars/Will_Avatar.jpg",
-    href: "https://www.linkedin.com/in/william-liang808/",
-  },
 ];
 
 export function Footer() {
@@ -25,7 +20,7 @@ export function Footer() {
       <div className="mx-auto flex max-w-3xl items-center justify-between">
         <div className="flex items-center gap-1.5">
           <p className="font-sans text-sm text-stone-400">Cooked with love by</p>
-          <div className="flex -space-x-2">
+          <div className="flex -space-x-1">
             {team.map((person) => (
               <Link
                 key={person.name}
@@ -40,7 +35,7 @@ export function Footer() {
                   alt={person.name}
                   width={28}
                   height={28}
-                  className="rounded-full object-cover"
+                  className="h-full w-full rounded-full object-cover"
                   draggable={false}
                 />
               </Link>
