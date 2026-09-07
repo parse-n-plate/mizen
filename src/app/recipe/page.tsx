@@ -302,18 +302,29 @@ function RecipePageContent() {
     if (!recipe || !user || saving) return;
     setSaving(true);
     try {
-      const currentMeta = savedMeta;
-      if (!currentMeta) return;
+      let currentMeta = savedMeta;
+      if (!currentMeta) {
+        const response = await fetch("/api/recipes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recipe }),
+        });
+        if (!response.ok) throw new Error("Failed to save recipe");
+        const saved = await response.json();
+        if (!saved?.id || !saved?.slug) throw new Error("Invalid saved recipe");
+        currentMeta = { id: saved.id, slug: saved.slug, isFavorite: !!saved.is_favorite };
+        setSavedMeta(currentMeta);
+      }
       const res = await fetch(`/api/recipes/${currentMeta.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isFavorite: true }),
       });
+      if (!res.ok) throw new Error("Failed to favorite recipe");
       const saved = await res.json();
-      if (saved?.id && saved?.slug) {
-        setSavedMeta({ id: saved.id, slug: saved.slug, isFavorite: true });
-        toast.success("Added to favorites");
-      }
+      if (!saved?.id || !saved?.slug) throw new Error("Invalid favorite response");
+      setSavedMeta({ id: saved.id, slug: saved.slug, isFavorite: true });
+      toast.success("Added to favorites");
     } catch {
       toast.error("Favoriting recipes is temporarily unavailable. Please try again later.");
     } finally {
@@ -330,10 +341,9 @@ function RecipePageContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isFavorite: false }),
       });
-      if (res.ok) {
-        setSavedMeta({ ...savedMeta, isFavorite: false });
-        toast.success("Removed from favorites");
-      }
+      if (!res.ok) throw new Error("Failed to remove favorite");
+      setSavedMeta({ ...savedMeta, isFavorite: false });
+      toast.success("Removed from favorites");
     } catch {
       toast.error("Updating favorites is temporarily unavailable. Please try again later.");
     } finally {
