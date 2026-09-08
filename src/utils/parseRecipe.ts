@@ -7,7 +7,12 @@ import {
   GROQ_VISION_MODEL,
 } from "@/lib/groq";
 import { logger } from "@/lib/logger";
-import { CoreRecipeSchema, IngredientGroupSchema, EquipmentItemSchema } from "@/lib/schemas/recipe";
+import {
+  CoreRecipeSchema,
+  IngredientGroupSchema,
+  EquipmentItemSchema,
+  PrepNotesSchema,
+} from "@/lib/schemas/recipe";
 import { EXTRACTION_PROMPT, ENRICHMENT_PROMPT } from "@/lib/prompts/extraction";
 import { cleanRecipeHTML, type CleanedHTML } from "./htmlCleaner";
 import { COLLECTION_MESSAGE } from "./urlPatterns";
@@ -699,6 +704,7 @@ async function extractWithAI(cleanedHtml: string): Promise<ParsedRecipe | null> 
   const equipment = data.equipment;
 
   return {
+    prepNotes: data.prepNotes,
     title: data.title,
     ingredients: normalizeIngredientAmounts(deduplicateUnits(data.ingredients)),
     instructions: normalizeInstructionText(normalizedInstructions),
@@ -785,6 +791,7 @@ async function enrichWithAI(jsonLdData: ParsedRecipe): Promise<Partial<ParsedRec
   return {
     ...(enrichedIngredients && { ingredients: enrichedIngredients }),
     ...(enrichedInstructions && { instructions: enrichedInstructions }),
+    prepNotes: PrepNotesSchema.parse(data.prepNotes),
     ...(enrichedEquipment && { equipment: enrichedEquipment }),
     ...(summary && { summary }),
     ...(enrichedServings && { servings: enrichedServings }),
@@ -902,6 +909,7 @@ export async function parseRecipeFromImage(dataUrl: string): Promise<ParserResul
 
     const imageEquipment = data.equipment;
     const recipe: ParsedRecipe = {
+      prepNotes: data.prepNotes,
       title: data.title,
       ingredients: normalizeIngredientAmounts(deduplicateUnits(data.ingredients)),
       instructions: normalizeInstructionText(normalizedInstructions),
@@ -1003,6 +1011,7 @@ export async function parseRecipeFromText(text: string): Promise<ParserResult> {
 
     const textEquipment = data.equipment;
     const recipe: ParsedRecipe = {
+      prepNotes: data.prepNotes,
       title: data.title,
       ingredients: normalizeIngredientAmounts(deduplicateUnits(data.ingredients)),
       instructions: normalizeInstructionText(normalizedInstructions),
@@ -1119,6 +1128,7 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
 
       const mergedRecipe: ParsedRecipe = {
         ...jsonLdResult,
+        prepNotes: enrichment?.prepNotes,
         ...(useBetterAiGroupings && { ingredients: enrichment!.ingredients! }),
         ...(useEnrichedInstructions && {
           // Pin detail text from JSON-LD as source of truth — only take titles/tips/ingredients from AI
@@ -1159,6 +1169,7 @@ export async function parseRecipeFromUrl(url: string): Promise<ParserResult> {
       const enrichmentApplied =
         useBetterAiGroupings ||
         useEnrichedInstructions ||
+        Boolean(enrichment?.prepNotes?.length) ||
         Boolean(enrichment?.summary) ||
         Boolean(enrichment?.equipment && enrichment.equipment.length > 0) ||
         Boolean(!jsonLdResult.servings && enrichment?.servings) ||

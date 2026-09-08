@@ -17,6 +17,20 @@ export const demoRecipes: Record<DemoRecipeSlug, ParsedRecipe> = {
       "Flouring Kitchen shares baking recipes with detailed process notes and practical troubleshooting tips.",
     commentConsensus:
       "Readers describe these cookies as rich, chewy, and memorable, with several calling them one of the best cookies they have tried.",
+    prepNotes: [
+      {
+        action: "Make and chill the cookie dough",
+        requirement: "required",
+        phase: "advance",
+        timing: "Chill for 1 hour before baking",
+        leadTimeMinutes: 60,
+      },
+      {
+        action: "Preheat the oven to 355°F and line a baking sheet with parchment",
+        requirement: "required",
+        phase: "same-day",
+      },
+    ],
     equipment: [{ name: "Cookie sheet", stepNumbers: [8] }],
     ingredients: [
       {

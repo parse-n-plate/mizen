@@ -1,5 +1,7 @@
 "use client";
 
+import { IngredientCheckbox } from "@/components/ui/ingredient-checkbox";
+
 import { useState } from "react";
 import type { EquipmentItem, InstructionStep } from "@/lib/types";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
@@ -55,9 +57,7 @@ export function EquipmentList({
               onClick={() => toggleCheck(item.name)}
             >
               <div className="flex-shrink-0 flex items-center">
-                <input
-                  type="checkbox"
-                  className="ingredient-checkbox-input cursor-pointer"
+                <IngredientCheckbox
                   aria-label={item.name}
                   checked={isChecked}
                   onChange={(e) => {

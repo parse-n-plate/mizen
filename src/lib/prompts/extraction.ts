@@ -1,3 +1,16 @@
+const PREP_NOTES_RULES = `
+PREP NOTES:
+- Return "prepNotes": [] when there are no relevant preparation prerequisites. Never fill a quota.
+- Otherwise include EVERY actionable advance task and same-day setup task under this schema:
+  {"action": "Defrost the chicken", "requirement": "required", "phase": "advance", "timing": "24 hours before", "leadTimeMinutes": 1440}.
+- action: concise imperative checklist task. Include preheating (with the recipe's temperature), soaking, thawing, marinating, chilling, and preparing equipment when relevant BEFORE cooking. Do not duplicate ordinary cooking steps or include passive cautions, ingredient descriptions, substitutions, or generic advice.
+- requirement: "required" for a prerequisite the recipe depends on; "recommended" for optional improvements. Never turn optional advice into a requirement.
+- phase: "advance" for tasks to plan ahead; "same-day" for setup immediately before cooking. Flag advance tasks even if their timing is unknown.
+- timing and leadTimeMinutes: include only when supported by the recipe. Use explicit labels such as "24 hours before" or "Overnight". Omit BOTH when unknown; never invent precise timing.
+- You may infer prerequisites clearly supported by the ingredients or method (for example, soften butter when softened butter is called for). Do not assume fresh ingredients are frozen or invent dependencies.
+- These inferred prep notes are the only exception to the rule against adding steps. Preserve the original instructions unchanged. Deduplicate prep tasks and order by longest lead time first.
+`;
+
 /**
  * Focused extraction-only prompt for the Mizen parse pipeline.
  */
@@ -32,6 +45,7 @@ Required JSON structure:
       "tips": "Optional — only if genuinely useful and specific to this step. Omit for obvious advice (e.g. 'use a sharp knife', 'stir well'). Never repeat a tip already used in another step."
     }
   ],
+  "prepNotes": [],
   "equipment": [
     { "name": "large skillet", "stepNumbers": [2, 5] }
   ]
@@ -43,6 +57,7 @@ Each instruction MUST be an object with "title" and "detail" — NEVER a string.
 ========================================
 EXTRACTION RULES
 ========================================
+${PREP_NOTES_RULES}
 You are an AI recipe extractor. Read the HTML and extract recipe data EXACTLY as it appears.
 
 1. Extract amounts, units, and ingredient names EXACTLY as written
@@ -133,12 +148,14 @@ Required JSON structure:
       "tips": "Optional — only if genuinely useful and specific to this step. Omit for obvious advice (e.g. 'use a sharp knife', 'stir well'). Never repeat a tip already used in another step."
     }
   ],
+  "prepNotes": [],
   "equipment": [
     { "name": "large skillet", "stepNumbers": [2, 5] }
   ],
   "summary": "One sentence, max 200 chars, neutral dish description"
 }
 
+${PREP_NOTES_RULES}
 RULES:
 1. INGREDIENT GROUPING: Create 2-4 logical groups (e.g. "Sauce", "Main", "Garnish"). Use the recipe's own group names if present.
 2. INGREDIENT DETAILS: Add "description" (3-8 words on role in dish) and "substitutions" (1-2 alternatives) where applicable. Skip for basics like salt/water. If a description already exists, keep it unless you can improve it.

@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { RecipeHeader } from "@/components/RecipeHeader";
 import { RecipeDesktopTabsBar } from "@/components/RecipeDesktopTabsBar";
 import { ServingsAdjuster } from "@/components/ServingsAdjuster";
+import { prepRecipeIdentity } from "@/lib/prep-notes";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
 import { MobileNavShell, type MobileNavItem } from "@/components/MobileBottomNav";
@@ -774,6 +775,8 @@ function RecipePageContent() {
               {activeTab === "prep" ? (
                 <div key="prep" className={tabContentClass}>
                   <PrepSection
+                    prepNotes={recipe?.prepNotes}
+                    recipeIdentity={recipe ? prepRecipeIdentity(recipe) : undefined}
                     ingredients={scaledIngredients}
                     steps={displayedInstructions}
                     equipment={recipe?.equipment}
