@@ -12,11 +12,6 @@ const team = [
     src: "/assets/avatars/Michelle_Avatar_2026.jpg",
     href: "https://www.linkedin.com/in/michelle-tran-a48a14203/",
   },
-  {
-    name: "Will",
-    src: "/assets/avatars/Will_Avatar.jpg",
-    href: "https://www.linkedin.com/in/william-liang808/",
-  },
 ];
 
 interface WhoMadeItProps {
@@ -29,22 +24,22 @@ export function WhoMadeIt({ borderColor }: WhoMadeItProps) {
   return (
     <div className="flex items-center gap-1.5">
       <p className="font-sans text-xs text-stone-400 dark:text-stone-500">Cooked with love by</p>
-      <div className="flex -space-x-2">
+      <div className="flex -space-x-1.5">
         {team.map((person) => (
           <Link
             key={person.name}
             href={person.href}
             target="_blank"
             rel="noopener noreferrer"
-            className={`relative h-6 w-6 flex-shrink-0 overflow-hidden rounded-full border transition-transform hover:scale-110 ${borderClass}`}
+            className={`relative h-7 w-7 flex-shrink-0 overflow-hidden rounded-full border-[3px] transition-transform hover:scale-110 ${borderClass}`}
             aria-label={`Visit ${person.name}'s profile`}
           >
             <Image
               src={person.src}
               alt={person.name}
-              width={24}
-              height={24}
-              className="rounded-full object-cover"
+              width={84}
+              height={84}
+              className="h-full w-full rounded-full object-cover"
               draggable={false}
             />
           </Link>

@@ -12,11 +12,6 @@ const team = [
     src: "/assets/avatars/Michelle_Avatar_2026.jpg",
     href: "https://www.linkedin.com/in/michelle-tran-a48a14203/",
   },
-  {
-    name: "Will",
-    src: "/assets/avatars/Will_Avatar.jpg",
-    href: "https://www.linkedin.com/in/william-liang808/",
-  },
 ];
 
 export function Footer() {
@@ -25,22 +20,22 @@ export function Footer() {
       <div className="mx-auto flex max-w-3xl items-center justify-between">
         <div className="flex items-center gap-1.5">
           <p className="font-sans text-sm text-stone-400">Cooked with love by</p>
-          <div className="flex -space-x-2">
+          <div className="flex -space-x-1.5">
             {team.map((person) => (
               <Link
                 key={person.name}
                 href={person.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="relative h-7 w-7 flex-shrink-0 overflow-hidden rounded-full border-2 border-white transition-transform hover:scale-110 dark:border-stone-950"
+                className="relative h-7 w-7 flex-shrink-0 overflow-hidden rounded-full border-[3px] border-white transition-transform hover:scale-110 dark:border-stone-950"
                 aria-label={`Visit ${person.name}'s profile`}
               >
                 <Image
                   src={person.src}
                   alt={person.name}
-                  width={28}
-                  height={28}
-                  className="rounded-full object-cover"
+                  width={84}
+                  height={84}
+                  className="h-full w-full rounded-full object-cover"
                   draggable={false}
                 />
               </Link>
