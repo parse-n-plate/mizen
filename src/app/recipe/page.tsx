@@ -18,6 +18,7 @@ import { useUser } from "@/hooks/useUser";
 import { usePreference } from "@/hooks/usePreference";
 import { useIngredientDiff } from "@/hooks/useIngredientDiff";
 import { useTabScrollMemory } from "@/hooks/useTabScrollMemory";
+import { useHorizontalSwipe } from "@/hooks/useHorizontalSwipe";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useHorizontalTabSwipe } from "@/hooks/useHorizontalTabSwipe";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -218,6 +219,10 @@ function RecipePageContent() {
     },
     [selectTab]
   );
+
+  const swipeToCook = useCallback(() => setActiveTab("cook"), []);
+  const swipeToPrep = useCallback(() => setActiveTab("prep"), []);
+  const swipeHandlers = useHorizontalSwipe(swipeToCook, swipeToPrep);
 
   useEffect(() => {
     setServings(getPreferredServings(recipe?.servings, defaultServings));
