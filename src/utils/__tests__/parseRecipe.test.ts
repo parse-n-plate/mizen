@@ -4,6 +4,12 @@ import { __test__ } from "@/utils/parseRecipe";
 import type { InstructionStep } from "@/lib/types";
 
 describe("parseRecipe image handling", () => {
+  it("recognizes public document URLs without routing normal HTML recipes to Firecrawl", () => {
+    expect(__test__.isDocumentResponse("https://example.com/recipe.pdf")).toBe(true);
+    expect(__test__.isDocumentResponse("https://example.com/recipe.html")).toBe(false);
+    expect(__test__.isDocumentResponse("https://example.com/recipe", "application/pdf")).toBe(true);
+  });
+
   it("does not expose provider error details to recipe import users", () => {
     const result = __test__.recipeImportError(
       new Error(
