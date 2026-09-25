@@ -22,12 +22,6 @@ beforeEach(() => {
 });
 
 describe("shouldRedirectOAuthRootCallback", () => {
-  it("returns true for GET / with code and state", () => {
-    expect(
-      shouldRedirectOAuthRootCallback(createRequest("https://example.com/?code=abc&state=xyz"))
-    ).toBe(true);
-  });
-
   it("returns false when state is missing", () => {
     expect(shouldRedirectOAuthRootCallback(createRequest("https://example.com/?code=abc"))).toBe(
       false

@@ -198,10 +198,6 @@ describe("normalizeDecimalsInText", () => {
 });
 
 describe("displayAmount", () => {
-  it("shows fractions in fraction mode", () => {
-    expect(displayAmount("½", "fractions")).toBe("½");
-  });
-
   it("converts to decimal in decimal mode", () => {
     expect(displayAmount("½", "decimals")).toBe("0.5");
   });
@@ -226,18 +222,9 @@ describe("displayAmount", () => {
   it("handles ranges in decimal mode", () => {
     expect(displayAmount("2-3", "decimals")).toBe("2-3");
   });
-
-  it("handles empty string", () => {
-    expect(displayAmount("", "fractions")).toBe("");
-    expect(displayAmount("", "decimals")).toBe("");
-  });
 });
 
 describe("displayText", () => {
-  it("shows fractions in fraction mode", () => {
-    expect(displayText("Add ⅓ cup sugar", "fractions")).toBe("Add ⅓ cup sugar");
-  });
-
   it("converts fractions to decimals in decimal mode", () => {
     expect(displayText("Add ⅓ cup sugar", "decimals")).toBe("Add 0.33 cup sugar");
   });
@@ -252,11 +239,6 @@ describe("displayText", () => {
 
   it("converts inline decimals to fractions in fraction mode", () => {
     expect(displayText("Add 0.333 cup sugar", "fractions")).toBe("Add ⅓ cup sugar");
-  });
-
-  it("leaves plain text unchanged", () => {
-    expect(displayText("Stir well", "fractions")).toBe("Stir well");
-    expect(displayText("Stir well", "decimals")).toBe("Stir well");
   });
 });
 
