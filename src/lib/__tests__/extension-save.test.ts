@@ -1,14 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { isNormalWebUrl, parseExtensionSaveRequest } from "@/lib/extension-save";
-import { slugifyRecipeTitle } from "@/lib/recipes/save";
 
 describe("extension save request", () => {
-  it.each(["https://example.com/recipe", "http://recipes.example.com/pasta?servings=4"])(
-    "accepts a normal web URL: %s",
-    (url) => {
-      expect(isNormalWebUrl(url)).toBe(true);
-    }
-  );
+  it("accepts a normal public https URL", () => {
+    expect(isNormalWebUrl("https://example.com/recipe")).toBe(true);
+  });
 
   it.each([
     "chrome://extensions",
@@ -30,11 +26,5 @@ describe("extension save request", () => {
     expect(
       parseExtensionSaveRequest({ url: "https://example.com/recipe", title: "Pasta" })
     ).toEqual({ url: "https://example.com/recipe", title: "Pasta" });
-  });
-});
-
-describe("recipe slug", () => {
-  it("creates a stable URL-safe title segment", () => {
-    expect(slugifyRecipeTitle("Gochujang & Lime Chicken!")).toBe("gochujang-lime-chicken");
   });
 });

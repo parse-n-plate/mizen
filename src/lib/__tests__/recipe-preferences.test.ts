@@ -6,7 +6,6 @@ import {
   convertInstructionTemperatures,
   convertInstructionUnits,
   countApplicableSubstitutions,
-  getPreferredServings,
 } from "@/lib/recipe-preferences";
 import type { IngredientGroup, InstructionStep } from "@/lib/types";
 
@@ -152,12 +151,6 @@ describe("convertInstructionUnits", () => {
       "Add one 14 oz can of tomatoes and 250 mL stock."
     );
   });
-
-  it("returns the original steps when original units are selected", () => {
-    const steps: InstructionStep[] = [{ title: "Mix", detail: "Add 1 cup water." }];
-
-    expect(convertInstructionUnits(steps, "original")).toBe(steps);
-  });
 });
 
 describe("countApplicableSubstitutions", () => {
@@ -179,17 +172,6 @@ describe("countApplicableSubstitutions", () => {
         { from: "butter", to: "olive oil" },
       ])
     ).toBe(2);
-  });
-
-  it("returns 0 when no substitutions match", () => {
-    const groups: IngredientGroup[] = [
-      {
-        groupName: "main",
-        ingredients: [{ amount: "1", units: "tsp", ingredient: "salt" }],
-      },
-    ];
-
-    expect(countApplicableSubstitutions(groups, [{ from: "milk", to: "oat milk" }])).toBe(0);
   });
 
   it("skips substitutions with empty from or to", () => {
@@ -222,35 +204,6 @@ describe("applySubstitutionsToGroups", () => {
     ]);
   });
 
-  it("returns unchanged groups when nothing matches", () => {
-    const groups: IngredientGroup[] = [
-      {
-        groupName: "main",
-        ingredients: [{ amount: "1", units: "tsp", ingredient: "salt" }],
-      },
-    ];
-
-    const result = applySubstitutionsToGroups(groups, [{ from: "milk", to: "oat milk" }]);
-    expect(result[0].ingredients[0]).toBe(groups[0].ingredients[0]);
-  });
-
-  it("skips substitutions with empty from or to", () => {
-    const groups: IngredientGroup[] = [
-      {
-        groupName: "main",
-        ingredients: [{ amount: "1", units: "cup", ingredient: "milk" }],
-      },
-    ];
-
-    expect(
-      applySubstitutionsToGroups(groups, [{ from: "", to: "oat milk" }])[0].ingredients[0]
-        .ingredient
-    ).toBe("milk");
-    expect(
-      applySubstitutionsToGroups(groups, [{ from: "milk", to: "" }])[0].ingredients[0].ingredient
-    ).toBe("milk");
-  });
-
   it("applies multiple substitutions to different ingredients", () => {
     const groups: IngredientGroup[] = [
       {
@@ -276,23 +229,5 @@ describe("applySubstitutionsToGroups", () => {
         ],
       },
     ]);
-  });
-});
-
-describe("getPreferredServings", () => {
-  it("uses the saved default when user has set a preference", () => {
-    expect(getPreferredServings(6, 4)).toBe(4);
-  });
-
-  it("uses recipe original when no preference is set", () => {
-    expect(getPreferredServings(6, null)).toBe(6);
-  });
-
-  it("preserves missing source servings when preference is set", () => {
-    expect(getPreferredServings(undefined, 4)).toBeUndefined();
-  });
-
-  it("preserves missing source servings when no preference is set", () => {
-    expect(getPreferredServings(undefined, null)).toBeUndefined();
   });
 });

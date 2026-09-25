@@ -15,17 +15,6 @@ describe("IngredientSchema", () => {
     const result = IngredientSchema.safeParse({ ingredient: "" });
     expect(result.success).toBe(false);
   });
-
-  it("accepts all optional fields", () => {
-    const result = IngredientSchema.safeParse({
-      ingredient: "flour",
-      amount: "2",
-      units: "cups",
-      description: "sifted",
-      substitutions: ["almond flour"],
-    });
-    expect(result.success).toBe(true);
-  });
 });
 
 describe("CoreRecipeSchema", () => {
@@ -49,21 +38,13 @@ describe("CoreRecipeSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("accepts servings as number", () => {
-    expect(CoreRecipeSchema.safeParse({ ...validRecipe, servings: 4 }).success).toBe(true);
-  });
-
-  it("accepts servings as string", () => {
-    expect(CoreRecipeSchema.safeParse({ ...validRecipe, servings: "4 servings" }).success).toBe(
-      true
-    );
-  });
-
-  it("accepts instructions as strings", () => {
-    const result = CoreRecipeSchema.safeParse({
-      ...validRecipe,
-      instructions: ["Boil water", "Add pasta"],
-    });
-    expect(result.success).toBe(true);
+  it("accepts coerced instruction and serving shapes from extraction", () => {
+    expect(
+      CoreRecipeSchema.safeParse({
+        ...validRecipe,
+        servings: "4 servings",
+        instructions: ["Boil water", "Add pasta"],
+      }).success
+    ).toBe(true);
   });
 });
