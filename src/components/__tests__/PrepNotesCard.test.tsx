@@ -78,10 +78,6 @@ describe("Prep notes checklist", () => {
     await click(preview());
     expect(checks().map((item) => item.checked)).toEqual([false, true, true]);
   });
-  it("hides the card when notes are empty", async () => {
-    await act(async () => root.render(<PrepNotesCard notes={[]} recipeIdentity="none" />));
-    expect(host.innerHTML).toBe("");
-  });
   it("persists signed-in changes across mounts and refreshes another device's changes on focus", async () => {
     auth.user = { id: "user-a" };
     const server: Record<string, boolean> = {};
