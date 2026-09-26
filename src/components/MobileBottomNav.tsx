@@ -146,6 +146,27 @@ function MobileNavPrimaryAction({ action }: { action: MobileNavAction }) {
   );
 }
 
+const mobileContentFadeClassName =
+  "md:hidden print:hidden pointer-events-none fixed inset-x-0 bottom-0 z-[19] h-28 bg-gradient-to-t from-white/90 via-white/45 to-transparent dark:from-stone-950/80 dark:via-stone-950/35 dark:to-transparent";
+
+/**
+ * Soft gradient above the floating mobile nav so scrolling content eases out.
+ * Portaled to document.body for the same reason as MobileNavShell: the app-shell
+ * scroll container (and mobile route transitions) otherwise become the fixed
+ * containing block, which pins the fade mid-content instead of the viewport.
+ */
+export function MobileContentFade({ className }: { className?: string }) {
+  const isHydrated = useSyncExternalStore(
+    subscribeToHydration,
+    () => true,
+    () => false
+  );
+
+  const fade = <div aria-hidden="true" className={cn(mobileContentFadeClassName, className)} />;
+
+  return isHydrated ? createPortal(fade, document.body) : fade;
+}
+
 export function MobileNavShell({
   items,
   action,

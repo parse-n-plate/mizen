@@ -10,7 +10,11 @@ import {
   type RecipeTabValue,
   type RecipeUnitSystem,
 } from "@/components/RecipeDesktopTabsBar";
-import { MobileNavShell, type MobileNavItem } from "@/components/MobileBottomNav";
+import {
+  MobileContentFade,
+  MobileNavShell,
+  type MobileNavItem,
+} from "@/components/MobileBottomNav";
 import { StepList } from "@/components/StepList";
 import {
   DropdownMenu,
@@ -195,7 +199,7 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
           </div>
         </div>
 
-        <div className="pointer-events-none fixed bottom-0 left-0 right-0 z-[19] h-28 bg-gradient-to-t from-white/90 via-white/45 to-transparent dark:from-stone-950/80 dark:via-stone-950/35 dark:to-transparent" />
+        <MobileContentFade />
 
         <MobileNavShell
           items={recipeMobileNavItems}

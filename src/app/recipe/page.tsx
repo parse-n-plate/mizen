@@ -35,7 +35,11 @@ import { ServingsAdjuster } from "@/components/ServingsAdjuster";
 import { prepRecipeIdentity } from "@/lib/prep-notes";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
-import { MobileNavShell, type MobileNavItem } from "@/components/MobileBottomNav";
+import {
+  MobileContentFade,
+  MobileNavShell,
+  type MobileNavItem,
+} from "@/components/MobileBottomNav";
 import { scaleIngredients, displayAmount, displayText } from "@/utils/ingredientScaler";
 import { detectUnitSystem } from "@/utils/unitConverter";
 import { getNumberFormat } from "@/lib/numberFormat";
@@ -843,8 +847,7 @@ function RecipePageContent() {
         </DrawerContent>
       </Drawer>
 
-      {/* Mobile: soft content fade above the floating nav */}
-      <div className="md:hidden print:hidden fixed bottom-0 left-0 right-0 z-[19] h-28 pointer-events-none bg-gradient-to-t from-white/90 via-white/45 to-transparent dark:from-stone-950/80 dark:via-stone-950/35 dark:to-transparent" />
+      <MobileContentFade />
 
       <MobileNavShell
         items={recipeMobileNavItems}
