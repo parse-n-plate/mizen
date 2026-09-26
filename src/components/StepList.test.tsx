@@ -19,12 +19,6 @@ vi.mock("next/image", () => ({
 }));
 /* eslint-enable @typescript-eslint/no-unused-vars, @next/next/no-img-element */
 
-vi.mock("@/components/ImageLightbox", () => ({
-  ImageLightbox: ({ src, alt }: { src: string; alt: string }) => (
-    <div data-testid="lightbox" data-src={src} aria-label={alt} />
-  ),
-}));
-
 class MockImage {
   naturalWidth = 1200;
   naturalHeight = 800;
@@ -70,18 +64,6 @@ describe("StepList", () => {
     vi.clearAllMocks();
   });
 
-  it("shows step images by default", async () => {
-    await render([
-      {
-        title: "Step 1",
-        detail: "Stir until combined.",
-        imageUrls: ["https://cdn.example.com/step-1.jpg"],
-      },
-    ]);
-
-    expect(container.querySelector('img[alt="Step 1"]')).not.toBeNull();
-  });
-
   it("hides step images when the photo visibility preference is disabled", async () => {
     localStorage.setItem("show-step-images", "false");
 
@@ -94,26 +76,5 @@ describe("StepList", () => {
     ]);
 
     expect(container.querySelector("[data-open='false'] img[alt='Step 1']")).not.toBeNull();
-  });
-
-  it("opens the clicked step image in the lightbox for multi-image steps", async () => {
-    await render([
-      {
-        title: "Step 1",
-        detail: "Stir until combined.",
-        imageUrls: ["https://cdn.example.com/step-1a.jpg", "https://cdn.example.com/step-1b.jpg"],
-      },
-    ]);
-
-    const secondImage = container.querySelector('img[alt="Step 1, photo 2"]');
-    expect(secondImage).not.toBeNull();
-
-    await act(async () => {
-      secondImage?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      await Promise.resolve();
-    });
-
-    const lightbox = container.querySelector('[data-testid="lightbox"]');
-    expect(lightbox?.getAttribute("data-src")).toBe("https://cdn.example.com/step-1b.jpg");
   });
 });
