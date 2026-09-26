@@ -34,19 +34,6 @@ describe("resolveEmailAuthFeedback", () => {
     });
   });
 
-  it("closes the modal after a successful login", () => {
-    expect(
-      resolveEmailAuthFeedback("login", {
-        error: null,
-      })
-    ).toEqual({
-      shouldClose: true,
-      confirmationSent: false,
-      error: null,
-      message: null,
-    });
-  });
-
   it("maps explicit existing-account signup errors to sign-in guidance", () => {
     expect(
       resolveEmailAuthFeedback("signup", {

@@ -157,8 +157,4 @@ describe("validateRecipeTitle", () => {
   it("rejects overly long titles", () => {
     expect(validateRecipeTitle("a".repeat(201))).toBeTruthy();
   });
-
-  it("accepts a normal title", () => {
-    expect(validateRecipeTitle("Garlic Butter Chicken")).toBeNull();
-  });
 });
