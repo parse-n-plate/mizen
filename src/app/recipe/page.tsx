@@ -36,6 +36,7 @@ import { prepRecipeIdentity } from "@/lib/prep-notes";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
 import {
+  MOBILE_NAV_CONTENT_BOTTOM_PAD,
   MobileContentFade,
   MobileNavShell,
   type MobileNavItem,
@@ -709,7 +710,7 @@ function RecipePageContent() {
             className={`md:bg-white md:dark:bg-stone-900 md:rounded-b-lg ${activeTab === "prep" ? "md:rounded-tr-lg" : "md:rounded-t-lg"} md:border md:border-stone-200 md:dark:border-stone-700 flex-1`}
             {...swipeHandlers}
           >
-            <div className="md:px-6 md:pt-5 pb-[calc(7.25rem+env(safe-area-inset-bottom)+1rem)] md:pb-6">
+            <div className={`md:px-6 md:pt-5 ${MOBILE_NAV_CONTENT_BOTTOM_PAD} md:pb-6`}>
               {/* Unit conversion banner */}
               {bannerMounted && activeTab === "prep" && (
                 <div

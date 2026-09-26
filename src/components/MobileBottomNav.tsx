@@ -149,6 +149,9 @@ function MobileNavPrimaryAction({ action }: { action: MobileNavAction }) {
 const mobileContentFadeClassName =
   "md:hidden print:hidden pointer-events-none fixed inset-x-0 bottom-0 z-[19] h-28 bg-gradient-to-t from-white/90 via-white/45 to-transparent dark:from-stone-950/80 dark:via-stone-950/35 dark:to-transparent";
 
+/** Bottom padding so recipe content clears the floating mobile nav + fade. */
+export const MOBILE_NAV_CONTENT_BOTTOM_PAD = "pb-[calc(7.25rem+env(safe-area-inset-bottom)+1rem)]";
+
 /**
  * Soft gradient above the floating mobile nav so scrolling content eases out.
  * Portaled to document.body for the same reason as MobileNavShell: the app-shell
