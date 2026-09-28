@@ -35,7 +35,12 @@ import { ServingsAdjuster } from "@/components/ServingsAdjuster";
 import { prepRecipeIdentity } from "@/lib/prep-notes";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
-import { MobileNavShell, type MobileNavItem } from "@/components/MobileBottomNav";
+import {
+  MOBILE_NAV_CONTENT_BOTTOM_PAD,
+  MobileContentFade,
+  MobileNavShell,
+  type MobileNavItem,
+} from "@/components/MobileBottomNav";
 import { scaleIngredients, displayAmount, displayText } from "@/utils/ingredientScaler";
 import { detectUnitSystem } from "@/utils/unitConverter";
 import { getNumberFormat } from "@/lib/numberFormat";
@@ -705,7 +710,7 @@ function RecipePageContent() {
             className={`md:bg-white md:dark:bg-stone-900 md:rounded-b-lg ${activeTab === "prep" ? "md:rounded-tr-lg" : "md:rounded-t-lg"} md:border md:border-stone-200 md:dark:border-stone-700 flex-1`}
             {...swipeHandlers}
           >
-            <div className="md:px-6 md:pt-5 pb-[calc(7.25rem+env(safe-area-inset-bottom)+1rem)] md:pb-6">
+            <div className={`md:px-6 md:pt-5 ${MOBILE_NAV_CONTENT_BOTTOM_PAD} md:pb-6`}>
               {/* Unit conversion banner */}
               {bannerMounted && activeTab === "prep" && (
                 <div
@@ -843,8 +848,7 @@ function RecipePageContent() {
         </DrawerContent>
       </Drawer>
 
-      {/* Mobile: soft content fade above the floating nav */}
-      <div className="md:hidden print:hidden fixed bottom-0 left-0 right-0 z-[19] h-28 pointer-events-none bg-gradient-to-t from-white/90 via-white/45 to-transparent dark:from-stone-950/80 dark:via-stone-950/35 dark:to-transparent" />
+      <MobileContentFade />
 
       <MobileNavShell
         items={recipeMobileNavItems}

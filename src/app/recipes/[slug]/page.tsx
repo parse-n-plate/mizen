@@ -39,7 +39,7 @@ export default async function DemoRecipePage({ params }: DemoRecipePageProps) {
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-3.5rem)] min-w-0 flex-col overflow-x-hidden bg-[#FAFAF9] pb-[calc(7.25rem+env(safe-area-inset-bottom)+1rem)] dark:bg-stone-950 md:pb-0">
+    <div className="flex min-h-[calc(100vh-3.5rem)] min-w-0 flex-col overflow-x-hidden bg-[#FAFAF9] dark:bg-stone-950">
       <div className="min-w-0 px-4 pb-0 pt-6 sm:px-6">
         <div className="mx-auto w-full max-w-3xl min-w-0 pb-8">
           <div className="-ml-1 mb-3.5 flex min-w-0 items-center gap-2 md:hidden">
@@ -81,7 +81,7 @@ export default async function DemoRecipePage({ params }: DemoRecipePageProps) {
         </div>
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col px-4 pb-16 sm:px-6">
+      <div className="flex min-w-0 flex-1 flex-col px-4 sm:px-6 md:pb-6">
         <div className="mx-auto flex w-full max-w-3xl min-w-0 flex-1 flex-col">
           <DemoRecipeView recipe={recipe} />
         </div>

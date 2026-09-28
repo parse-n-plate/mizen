@@ -10,7 +10,12 @@ import {
   type RecipeTabValue,
   type RecipeUnitSystem,
 } from "@/components/RecipeDesktopTabsBar";
-import { MobileNavShell, type MobileNavItem } from "@/components/MobileBottomNav";
+import {
+  MOBILE_NAV_CONTENT_BOTTOM_PAD,
+  MobileContentFade,
+  MobileNavShell,
+  type MobileNavItem,
+} from "@/components/MobileBottomNav";
 import { StepList } from "@/components/StepList";
 import {
   DropdownMenu,
@@ -171,7 +176,7 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
     <>
       <div className="flex flex-1 flex-col md:hidden">
         <div className="flex-1" {...swipeHandlers}>
-          <div className="pb-[calc(8.75rem+env(safe-area-inset-bottom)+1rem)]">
+          <div className={MOBILE_NAV_CONTENT_BOTTOM_PAD}>
             {activeTab === "prep" ? (
               <div key="mobile-prep" className={tabContentClass}>
                 <PrepSection
@@ -195,7 +200,7 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
           </div>
         </div>
 
-        <div className="pointer-events-none fixed bottom-0 left-0 right-0 z-[19] h-28 bg-gradient-to-t from-white/90 via-white/45 to-transparent dark:from-stone-950/80 dark:via-stone-950/35 dark:to-transparent" />
+        <MobileContentFade />
 
         <MobileNavShell
           items={recipeMobileNavItems}
