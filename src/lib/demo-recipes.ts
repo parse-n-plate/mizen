@@ -1,6 +1,6 @@
 import type { ParsedRecipe } from "@/lib/types";
 
-export type DemoRecipeSlug = "banana-bread-cookies" | "kimchi-ragu";
+export type DemoRecipeSlug = "banana-bread-cookies" | "kimchi-ragu" | "guided-steps-fixture";
 
 export const demoRecipes: Record<DemoRecipeSlug, ParsedRecipe> = {
   "banana-bread-cookies": {
@@ -237,6 +237,44 @@ export const demoRecipes: Record<DemoRecipeSlug, ParsedRecipe> = {
           "Taste the ragu and adjust with salt and pepper. Serve the pasta in bowls topped with kimchi ragu, chopped parsley, and Parmesan cheese.",
         ingredients: ["salt and pepper", "chopped parsley", "Parmesan cheese"],
         tips: "Sugar helps balance the sourness of kimchi. Add a little more if the sauce tastes too sharp.",
+      },
+    ],
+  },
+  "guided-steps-fixture": {
+    title: "Guided Steps Fixture",
+    summary:
+      "Internal demo recipe for GAG-103 walkthroughs: full amounts, partial use, hint-only pills, and low-confidence omit.",
+    author: "Mizen",
+    servings: 4,
+    ingredients: [
+      {
+        groupName: "Main",
+        ingredients: [
+          { amount: "2", units: "cups", ingredient: "all-purpose flour" },
+          { amount: "1", units: "cup", ingredient: "bread flour" },
+          { amount: "1", units: "cup", ingredient: "unsalted butter" },
+          { amount: "1", units: "cup", ingredient: "brown sugar" },
+          { amount: "1", units: "tsp", ingredient: "fine sea salt" },
+        ],
+      },
+    ],
+    instructions: [
+      {
+        title: "Dry mix",
+        detail: "Whisk the all-purpose flour, brown sugar, and fine sea salt together in a bowl.",
+      },
+      {
+        title: "Partial butter",
+        detail: "Reserve half the unsalted butter for finishing the dish.",
+      },
+      {
+        title: "Ambiguous flour",
+        detail: "Add the flour and stir until no dry streaks remain.",
+      },
+      {
+        title: "Hint-only wet mix",
+        detail: "Mix the wet ingredients until smooth.",
+        ingredients: ["unsalted butter"],
       },
     ],
   },
