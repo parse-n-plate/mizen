@@ -78,6 +78,16 @@ html {
   touch-action: manipulation;
 }
 
+@media (pointer: fine) {
+  html {
+    overscroll-behavior: none;
+  }
+
+  .app-shell-scroll {
+    overscroll-behavior: none;
+  }
+}
+
 /* Landing page needs its own scroll since html has overflow: hidden */
 html:has(.landing-scroll) {
   overflow: auto;
