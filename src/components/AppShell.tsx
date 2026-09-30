@@ -143,7 +143,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </div>
               </div>
               <main
-                className="group/shell relative flex-1 min-w-0 overflow-x-hidden overflow-y-auto flex flex-col"
+                className="app-shell-scroll group/shell relative flex-1 min-w-0 overflow-x-hidden overflow-y-auto flex flex-col"
                 data-sidebar-collapsed={sidebarCollapsed}
               >
                 <MobileScreenTransition>{children}</MobileScreenTransition>
