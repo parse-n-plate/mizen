@@ -6,7 +6,10 @@ import { useSearchParams } from "next/navigation";
 import { EmptyState } from "@/components/EmptyState";
 import { Search } from "@/components/Search";
 import { CookbookList } from "@/components/CookbookList";
+import { MOBILE_NAV_CONTENT_BOTTOM_PAD } from "@/components/MobileBottomNav";
 import { useRecipe } from "@/context/RecipeContext";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { cn } from "@/lib/utils";
 import type { SavedRecipe } from "@/lib/types";
 
 function HomeCollection() {
@@ -16,6 +19,10 @@ function HomeCollection() {
   const [recipes, setRecipes] = useState<SavedRecipe[] | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  const [mobileLayoutBox, setMobileLayoutBox] = useState<{ height: number; top: number } | null>(
+    null
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -33,11 +40,30 @@ function HomeCollection() {
   }, [attempt]);
 
   useEffect(() => {
+    if (!isMobile) return;
+
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    const syncLayoutBox = () => {
+      setMobileLayoutBox({ height: viewport.height, top: viewport.offsetTop });
+    };
+
+    syncLayoutBox();
+    viewport.addEventListener("resize", syncLayoutBox);
+    viewport.addEventListener("scroll", syncLayoutBox);
+    return () => {
+      viewport.removeEventListener("resize", syncLayoutBox);
+      viewport.removeEventListener("scroll", syncLayoutBox);
+    };
+  }, [isMobile]);
+
+  useEffect(() => {
     const focusSearch = () => {
       if (window.location.hash !== "#search") return;
       const section = document.getElementById("search");
-      section?.scrollIntoView({ block: "center" });
-      section?.querySelector("input")?.focus();
+      const input = section?.querySelector("input");
+      input?.focus({ preventScroll: true });
     };
     focusSearch();
     window.addEventListener("hashchange", focusSearch);
@@ -45,8 +71,23 @@ function HomeCollection() {
   }, []);
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 pt-8 pb-36 sm:pb-12">
-      <section id="search" aria-label="Add a recipe" className="scroll-mt-6">
+    <div
+      className="mx-auto flex h-full min-h-0 w-full max-w-3xl flex-col px-6"
+      style={
+        isMobile && mobileLayoutBox
+          ? {
+              height: mobileLayoutBox.height,
+              maxHeight: mobileLayoutBox.height,
+              marginTop: mobileLayoutBox.top,
+            }
+          : undefined
+      }
+    >
+      <section
+        id="search"
+        aria-label="Add a recipe"
+        className="shrink-0 scroll-mt-6 bg-[#FAFAF9] pt-8 dark:bg-stone-950"
+      >
         <Search fullWidth />
         {isLoading && (
           <p role="status" className="mt-3 text-sm text-stone-500">
@@ -59,7 +100,14 @@ function HomeCollection() {
           </p>
         )}
       </section>
-      <section aria-label="Saved recipes" className="flex flex-col gap-5">
+      <section
+        aria-label="Saved recipes"
+        className={cn(
+          "flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-y-contain pt-8",
+          MOBILE_NAV_CONTENT_BOTTOM_PAD,
+          "sm:pb-12"
+        )}
+      >
         <nav
           aria-label="Recipe filters"
           className="flex w-full gap-6 border-b border-stone-200 dark:border-stone-800"

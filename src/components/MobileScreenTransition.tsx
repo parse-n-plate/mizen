@@ -4,7 +4,10 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
+
+const homeRecipeScrollShellClassName = "flex h-full min-h-0 flex-col";
 
 type TransitionDirection = "back" | "forward" | "up" | "down";
 
@@ -59,13 +62,24 @@ export function MobileScreenTransition({ children }: { children: ReactNode }) {
     setPreviousPathname(pathname);
   }, [pathname]);
 
-  if (!isMobile || prefersReducedMotion) return <>{children}</>;
+  const isHomeRecipeView = pathname === "/";
+
+  if (!isMobile || prefersReducedMotion) {
+    return isHomeRecipeView ? (
+      <div className={homeRecipeScrollShellClassName}>{children}</div>
+    ) : (
+      <>{children}</>
+    );
+  }
 
   return (
     <AnimatePresence initial={false} mode="popLayout" custom={direction}>
       <motion.div
         key={pathname}
-        className="mobile-screen-transition min-h-full"
+        className={cn(
+          "mobile-screen-transition",
+          isHomeRecipeView ? homeRecipeScrollShellClassName : "min-h-full"
+        )}
         custom={direction}
         variants={variants}
         initial="initial"

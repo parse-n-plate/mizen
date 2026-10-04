@@ -60,6 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   // Pages that render their own inline expand button — suppress the shell-level gutter
   const hasInlineExpand = pathname.startsWith("/recipe");
   const showSplash = !!user && !isLanding;
+  const isHomeRecipeView = pathname === "/" && !!user;
 
   useEffect(() => {
     try {
@@ -143,7 +144,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </div>
               </div>
               <main
-                className="group/shell relative flex-1 min-w-0 overflow-x-hidden overflow-y-auto flex flex-col"
+                className={cn(
+                  "group/shell relative flex min-h-0 flex-1 flex-col min-w-0",
+                  isHomeRecipeView ? "overflow-hidden" : "overflow-x-hidden overflow-y-auto"
+                )}
                 data-sidebar-collapsed={sidebarCollapsed}
               >
                 <MobileScreenTransition>{children}</MobileScreenTransition>
