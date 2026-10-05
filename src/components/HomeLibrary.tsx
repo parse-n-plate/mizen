@@ -86,7 +86,7 @@ function HomeCollection() {
       <section
         id="search"
         aria-label="Add a recipe"
-        className="shrink-0 scroll-mt-6 bg-[#FAFAF9] pt-8 dark:bg-stone-950"
+        className="shrink-0 scroll-mt-6 bg-[#FAFAF9] pb-8 pt-8 dark:bg-stone-950"
       >
         <Search fullWidth />
         {isLoading && (
@@ -103,7 +103,7 @@ function HomeCollection() {
       <section
         aria-label="Saved recipes"
         className={cn(
-          "flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-y-contain pt-8",
+          "flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-y-contain",
           MOBILE_NAV_CONTENT_BOTTOM_PAD,
           "sm:pb-12"
         )}
