@@ -103,7 +103,7 @@ function HomeCollection() {
       <section
         aria-label="Saved recipes"
         className={cn(
-          "flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-y-contain",
+          "-mx-3 flex min-h-0 min-w-0 flex-1 flex-col gap-5 overflow-x-hidden overflow-y-auto overscroll-y-contain px-3",
           MOBILE_NAV_CONTENT_BOTTOM_PAD,
           "sm:pb-12"
         )}
