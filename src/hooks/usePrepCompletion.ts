@@ -41,7 +41,9 @@ export function usePrepCompletion(identity: string, userId?: string, legacyIdent
     try {
       const key = await hashRecipeIdentity(identity);
       const legacyKey =
-        legacyIdentity && legacyIdentity !== identity ? await hashRecipeIdentity(legacyIdentity) : key;
+        legacyIdentity && legacyIdentity !== identity
+          ? await hashRecipeIdentity(legacyIdentity)
+          : key;
       recipeKey.current = key;
       const readCompletion = async (readKey: string): Promise<Completion> => {
         if (!userId) return readGuestCompletion(readKey);
