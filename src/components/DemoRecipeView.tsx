@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import type { ParsedRecipe } from "@/lib/types";
-import { prepRecipeIdentity } from "@/lib/prep-notes";
+import { legacyPrepRecipeIdentity, prepRecipeIdentity } from "@/lib/prep-notes";
 import { PrepSection } from "@/components/PrepSection";
 import {
   RecipeDesktopTabsBar,
@@ -182,6 +182,7 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
                 <PrepSection
                   prepNotes={recipe?.prepNotes}
                   recipeIdentity={recipe ? prepRecipeIdentity(recipe) : undefined}
+                  legacyRecipeIdentity={recipe ? legacyPrepRecipeIdentity(recipe) : undefined}
                   ingredients={displayedIngredients}
                   steps={displayedInstructions}
                   equipment={recipe.equipment}
@@ -274,6 +275,7 @@ export function DemoRecipeView({ recipe }: DemoRecipeViewProps) {
                 <PrepSection
                   prepNotes={recipe?.prepNotes}
                   recipeIdentity={recipe ? prepRecipeIdentity(recipe) : undefined}
+                  legacyRecipeIdentity={recipe ? legacyPrepRecipeIdentity(recipe) : undefined}
                   ingredients={displayedIngredients}
                   steps={displayedInstructions}
                   equipment={recipe.equipment}

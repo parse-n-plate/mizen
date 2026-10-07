@@ -55,6 +55,18 @@ export function prepRecipeIdentity(recipe: ParsedRecipe): string {
   return JSON.stringify(prepRecipeContentSnapshot(recipe));
 }
 
+/** Identity used before stable snapshots, for reading existing completion. */
+export function legacyPrepRecipeIdentity(recipe: ParsedRecipe): string {
+  return (
+    recipe.sourceUrl?.trim() ||
+    JSON.stringify({
+      title: recipe.title,
+      ingredients: recipe.ingredients,
+      instructions: recipe.instructions.map((step) => step.detail),
+    })
+  );
+}
+
 export async function hashRecipeIdentity(identity: string): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(identity));
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");

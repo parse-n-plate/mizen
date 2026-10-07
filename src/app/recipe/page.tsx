@@ -32,7 +32,7 @@ import { toast } from "sonner";
 import { RecipeHeader } from "@/components/RecipeHeader";
 import { RecipeDesktopTabsBar } from "@/components/RecipeDesktopTabsBar";
 import { ServingsAdjuster } from "@/components/ServingsAdjuster";
-import { prepRecipeIdentity } from "@/lib/prep-notes";
+import { legacyPrepRecipeIdentity, prepRecipeIdentity } from "@/lib/prep-notes";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
 import {
@@ -783,6 +783,7 @@ function RecipePageContent() {
                   <PrepSection
                     prepNotes={recipe?.prepNotes}
                     recipeIdentity={recipe ? prepRecipeIdentity(recipe) : undefined}
+                    legacyRecipeIdentity={recipe ? legacyPrepRecipeIdentity(recipe) : undefined}
                     ingredients={scaledIngredients}
                     steps={displayedInstructions}
                     equipment={recipe?.equipment}
