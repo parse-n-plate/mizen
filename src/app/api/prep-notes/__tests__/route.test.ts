@@ -58,4 +58,13 @@ describe("prep completion API", () => {
     upsert.mockResolvedValue({ error: { message: "offline" } });
     expect((await put({ recipeKey: key, noteKey: "task", completed: true })).status).toBe(503);
   });
+  it("returns empty completion when prep storage is missing", async () => {
+    eq.mockReturnValueOnce({ eq }).mockResolvedValueOnce({
+      data: null,
+      error: { code: "PGRST205", message: "Could not find the table 'recipe_prep_completion'" },
+    });
+    const response = await GET(new Request(`http://localhost/api/prep-notes?recipeKey=${key}`));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({});
+  });
 });

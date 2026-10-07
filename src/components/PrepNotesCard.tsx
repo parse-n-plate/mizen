@@ -18,11 +18,13 @@ interface Props {
 export function PrepNotesCard(props: Props) {
   const { user, loading } = useUser();
   if (!props.notes.length) return null;
+  const userId = loading ? undefined : user?.id;
+
   return (
     <PrepChecklist
-      key={`${user?.id ?? "guest"}:${props.recipeIdentity}`}
+      key={`${userId ?? "guest"}:${props.recipeIdentity}`}
       {...props}
-      userId={user?.id}
+      userId={userId}
       authLoading={loading}
     />
   );

@@ -11,30 +11,45 @@ export function usePrepCompletion(identity: string, userId?: string) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const recipeKey = useRef("");
-  const busy = useRef(false);
+  const savingRef = useRef(false);
   const revision = useRef(0);
   const mounted = useRef(true);
 
+  const readGuestCompletion = (key: string): Completion => {
+    const stored = localStorage.getItem(`mizen-prep-v1:guest:${key}`);
+    if (!stored) return {};
+    try {
+      const parsed: unknown = JSON.parse(stored);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+      return Object.fromEntries(
+        Object.entries(parsed).filter(([, value]) => typeof value === "boolean")
+      ) as Completion;
+    } catch {
+      return {};
+    }
+  };
+
   const refresh = useCallback(async () => {
-    if (busy.current) return;
     const current = ++revision.current;
+    setError(null);
     try {
       const key = await hashRecipeIdentity(identity);
       recipeKey.current = key;
       let next: Completion = {};
       if (userId) {
-        const response = await fetch(`/api/prep-notes?recipeKey=${key}`, { cache: "no-store" });
-        if (!response.ok) throw new Error("Could not load prep progress. Retry to continue.");
-        next = await response.json();
-      } else {
-        const stored = localStorage.getItem(`mizen-prep-v1:guest:${key}`);
-        if (stored) {
-          try {
-            next = JSON.parse(stored);
-          } catch {
-            /* discard invalid local state */
-          }
+        const response = await fetch(`/api/prep-notes?recipeKey=${encodeURIComponent(key)}`, {
+          cache: "no-store",
+        });
+        if (response.ok) {
+          next = await response.json();
+        } else if (response.status === 401) {
+          // Session can lag behind client auth; keep progress usable via guest storage.
+          next = readGuestCompletion(key);
+        } else {
+          throw new Error("Could not load prep progress. Retry to continue.");
         }
+      } else {
+        next = readGuestCompletion(key);
       }
       if (!mounted.current || current !== revision.current) return;
       if (!next || typeof next !== "object" || Array.isArray(next)) next = {};
@@ -73,8 +88,8 @@ export function usePrepCompletion(identity: string, userId?: string) {
   }, [refresh]);
 
   async function toggle(noteKey: string, completed: boolean) {
-    if (!ready || busy.current) return;
-    busy.current = true;
+    if (!ready || savingRef.current) return;
+    savingRef.current = true;
     revision.current++;
     setSaving(true);
     setError(null);
@@ -98,7 +113,7 @@ export function usePrepCompletion(identity: string, userId?: string) {
         setError("Could not save progress. Please try again.");
       }
     } finally {
-      busy.current = false;
+      savingRef.current = false;
       if (mounted.current) setSaving(false);
     }
   }
