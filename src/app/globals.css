@@ -354,6 +354,12 @@ html[data-early-splash="true"] #mizen-early-splash {
   --ease-in-out-cubic: cubic-bezier(0.645, 0.045, 0.355, 1);
   --ease-in-out-quart: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-in-out-quint: cubic-bezier(0.86, 0, 0.07, 1);
+
+  /* Command palette (⌘K) — high-frequency overlay motion */
+  --command-palette-enter-duration: 180ms;
+  --command-palette-exit-duration: 120ms;
+  --command-palette-overlay-enter-duration: 120ms;
+  --command-palette-overlay-exit-duration: 100ms;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1150,6 +1156,72 @@ body {
   .popover-animate {
     animation: popover-in 150ms var(--ease-out-quart) forwards;
     transform-origin: top right;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+     COMMAND PALETTE — ⌘K search dialog enter/exit
+  ═══════════════════════════════════════════════════════════════════════════ */
+
+  @keyframes command-palette-content-in {
+    from {
+      opacity: 0;
+      scale: 0.95;
+    }
+    to {
+      opacity: 1;
+      scale: 1;
+    }
+  }
+
+  @keyframes command-palette-content-out {
+    from {
+      opacity: 1;
+      scale: 1;
+    }
+    to {
+      opacity: 0;
+      scale: 0.95;
+    }
+  }
+
+  @keyframes command-palette-overlay-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes command-palette-overlay-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  .command-palette-content[data-state="open"] {
+    animation: command-palette-content-in var(--command-palette-enter-duration)
+      var(--ease-out-quart) forwards;
+    will-change: opacity, scale;
+  }
+
+  .command-palette-content[data-state="closed"] {
+    animation: command-palette-content-out var(--command-palette-exit-duration) var(--ease-out-quad)
+      forwards;
+    will-change: opacity, scale;
+  }
+
+  .command-palette-overlay[data-state="open"] {
+    animation: command-palette-overlay-in var(--command-palette-overlay-enter-duration)
+      var(--ease-out-quart) forwards;
+  }
+
+  .command-palette-overlay[data-state="closed"] {
+    animation: command-palette-overlay-out var(--command-palette-overlay-exit-duration)
+      var(--ease-out-quad) forwards;
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════

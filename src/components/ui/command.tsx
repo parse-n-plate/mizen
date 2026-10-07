@@ -38,8 +38,9 @@ function CommandDialog({
   return (
     <Dialog {...props}>
       <DialogContent
-        className={cn("overflow-hidden p-0", className)}
-        overlayClassName={overlayClassName}
+        animated={false}
+        className={cn("command-palette-content overflow-hidden p-0", className)}
+        overlayClassName={cn("command-palette-overlay", overlayClassName)}
         showCloseButton={showCloseButton}
       >
         <DialogTitle className="sr-only">{title}</DialogTitle>
