@@ -22,6 +22,7 @@ Writing guidelines:
 - Use a short, direct title that says what changed.
 - Keep the description short and proportional to the change; small fixes may need only two or three sentences.
 - Start with the specific problem or user need; explain what changed and the result in plain language.
+- **Plain language (required):** Write for a human reviewer who cares about the problem and outcome, not an implementation dump. Use everyday words; avoid engineering jargon when a simpler phrase works. Do not fill the PR body with CSS class names, prop names, file paths, internal APIs, scroll metrics, or other code-level detail unless a reviewer needs that detail to judge the change. Keep deep technical notes out of the main story; if needed, put them in a short “Implementation notes” subsection at the end.
 - Customize context to this PR; do not paste the full issue or reuse a generic blurb.
 - Reference relevant Linear issues in the flow of the explanation; use closing language only when the PR actually completes the issue.
 - Put useful links beside the statement they support.
