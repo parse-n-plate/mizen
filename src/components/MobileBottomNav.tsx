@@ -153,6 +153,12 @@ const mobileContentFadeClassName =
 export const MOBILE_NAV_CONTENT_BOTTOM_PAD = "pb-[calc(7.25rem+env(safe-area-inset-bottom)+1rem)]";
 
 /**
+ * Distance from the viewport bottom to the top of the floating nav controls.
+ * Bottom inset (2rem) plus the tab pill, including its border.
+ */
+export const MOBILE_NAV_CONTROLS_TOP = "calc(6.375rem + env(safe-area-inset-bottom))";
+
+/**
  * Soft gradient above the floating mobile nav so scrolling content eases out.
  * Portaled to document.body for the same reason as MobileNavShell: the app-shell
  * scroll container (and mobile route transitions) otherwise become the fixed

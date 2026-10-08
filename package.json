@@ -16,6 +16,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@base-ui/react": "^1.8.0",
     "@notionhq/client": "^5.12.0",
     "@solar-icons/react": "^1.1.0",
     "@supabase/ssr": "^0.8.0",
