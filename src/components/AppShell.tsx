@@ -81,15 +81,19 @@ export function AppShell({ children }: { children: ReactNode }) {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        if (isEditableTarget(event.target)) return;
+        // The palette focuses its search field while open, so the same shortcut must still close it.
+        // Leave the shortcut alone in other fields so it does not interrupt typing.
+        if (!searchOpen && isEditableTarget(event.target)) return;
         event.preventDefault();
+        if (event.repeat) return;
         setSearchOpen((open) => !open);
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isLanding, user]);
+    // Capture runs before the palette's Ctrl+K binding, which otherwise moves the selection.
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
+  }, [isLanding, searchOpen, user]);
 
   return (
     <SidebarContext.Provider
