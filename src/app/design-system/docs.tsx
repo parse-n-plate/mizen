@@ -14,9 +14,9 @@ import {
   Settings,
   Search,
   TextCursorInput,
-  User,
 } from "lucide-react";
 import Link from "next/link";
+import { ServingsIcon } from "@/components/ServingsIcon";
 import { Avatar, AvatarFallback, AvatarGroup, AvatarGroupCount } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -1444,7 +1444,7 @@ toast.error("Failed to parse recipe");`}</CodeBlock>
         body: (
           <Example>
             <button className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-sm text-[var(--color-blue)] hover:bg-[var(--color-blue)]/8">
-              <User className="h-4 w-4" />
+              <ServingsIcon className="h-4 w-4" />
               Serves <span className="font-medium">6</span>
             </button>
           </Example>
@@ -1844,7 +1844,7 @@ toast.error("Failed to parse recipe");`}</CodeBlock>
                     <Clock3 className="h-4 w-4" /> Total 45 min
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <User className="h-4 w-4" /> Serves 4
+                    <ServingsIcon className="h-4 w-4" /> Serves 4
                   </span>
                 </div>
               </div>

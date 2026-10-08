@@ -1,9 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState, useRef, useEffect, useTransition, useCallback } from "react";
-import User from "@solar-icons/react/csr/users/User";
-import { X } from "lucide-react";
+import { useState, useRef, useEffect, useTransition, useCallback, useId } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 interface ServingsAdjusterProps {
@@ -29,9 +27,8 @@ export function ServingsAdjuster({
   const [dragValue, setDragValue] = useState<number | null>(null);
   const lastDragValueRef = useRef<number | null>(null);
   const [, startTransition] = useTransition();
-  const [inputValue, setInputValue] = useState<string>(String(servings));
-  const [isEditingInput, setIsEditingInput] = useState(false);
   const shouldReduceMotion = useReducedMotion();
+  const headingId = useId();
 
   const sliderMin = Math.max(1, Math.min(originalServings - 5, servings));
   const sliderMax = Math.max(originalServings + 5, servings);
@@ -44,37 +41,11 @@ export function ServingsAdjuster({
       : 50;
 
   const hasChanged = Math.round(displayedValue) !== originalServings;
-
-  const inputDisplayValue = isEditingInput || isDragging ? inputValue : String(servings);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value === "" || /^\d+$/.test(value)) {
-      const numValue = parseInt(value, 10);
-      if (value === "" || (numValue >= 1 && numValue <= 99)) {
-        setInputValue(value);
-        if (!isNaN(numValue) && numValue >= 1) {
-          onServingsChange(numValue);
-        }
-      }
-    }
-  };
-
-  const handleInputBlur = () => {
-    setIsEditingInput(false);
-    const numValue = parseInt(inputValue, 10);
-    if (isNaN(numValue) || numValue < 1) {
-      setInputValue(String(servings));
-    } else {
-      onServingsChange(numValue);
-    }
-  };
+  const roundedDisplay = Math.round(displayedValue);
 
   const handleReset = () => {
-    setIsEditingInput(false);
     setDragValue(null);
     onServingsChange(originalServings);
-    setInputValue(String(originalServings));
   };
 
   const updateFromPosition = useCallback(
@@ -89,12 +60,44 @@ export function ServingsAdjuster({
       if (lastDragValueRef.current === clamped) return;
       lastDragValueRef.current = clamped;
       setDragValue(clamped);
-      setIsEditingInput(false);
-      setInputValue(String(clamped));
       startTransition(() => onServingsChange(clamped));
     },
     [onServingsChange, sliderMin, sliderMax, sliderRange, startTransition]
   );
+
+  const nudgeServings = useCallback(
+    (delta: number) => {
+      const next = Math.max(sliderMin, Math.min(sliderMax, roundedDisplay + delta));
+      setDragValue(null);
+      onServingsChange(next);
+    },
+    [onServingsChange, roundedDisplay, sliderMax, sliderMin]
+  );
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    switch (e.key) {
+      case "ArrowLeft":
+      case "ArrowDown":
+        e.preventDefault();
+        nudgeServings(-1);
+        break;
+      case "ArrowRight":
+      case "ArrowUp":
+        e.preventDefault();
+        nudgeServings(1);
+        break;
+      case "Home":
+        e.preventDefault();
+        onServingsChange(sliderMin);
+        break;
+      case "End":
+        e.preventDefault();
+        onServingsChange(sliderMax);
+        break;
+      default:
+        break;
+    }
+  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -120,6 +123,7 @@ export function ServingsAdjuster({
     const handleEnd = () => {
       setIsDragging(false);
       lastDragValueRef.current = null;
+      setDragValue(null);
     };
 
     window.addEventListener("mousemove", handleMouseMove);
@@ -141,105 +145,75 @@ export function ServingsAdjuster({
     <div
       className={`${embedded ? "w-full" : "mt-2 max-w-md"} rounded-2xl border border-stone-100 bg-white px-4 py-3 shadow-[var(--shadow-soft)] dark:border-stone-800 dark:bg-stone-900 ${panelClassName ?? ""}`}
     >
-      <p className="text-[13px] font-semibold text-stone-500 dark:text-stone-400 capitalize mb-2">
+      <p
+        id={headingId}
+        className="text-[13px] font-semibold text-stone-500 dark:text-stone-400 capitalize mb-2"
+      >
         Servings
       </p>
 
-      <div className="flex items-center gap-3">
-        {/* Indicator pill */}
-        <div
-          className={`relative flex items-center gap-1.5 rounded-lg pl-3 py-1.5 border focus-within:outline focus-within:outline-1 transition-[padding] duration-150 ${hasChanged ? "pr-8 bg-[var(--color-blue)]/5 border-[var(--color-blue)]/25 focus-within:border-[var(--color-blue)] focus-within:outline-[var(--color-blue)]" : "pr-3 bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 focus-within:border-primary focus-within:outline-primary"}`}
-        >
-          <span
-            className={`flex items-center justify-center w-4 h-4 ${hasChanged ? "text-[var(--color-blue)]" : "text-stone-500 dark:text-stone-400"}`}
-          >
-            <User weight="Bold" className="w-4 h-4" />
-          </span>
-          <span
-            className={`text-[13px] whitespace-nowrap flex items-center gap-0.5 ${hasChanged ? "text-[var(--color-blue)]" : "text-stone-500 dark:text-stone-400"}`}
-          >
-            Serves
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={inputDisplayValue}
-              onChange={handleInputChange}
-              onFocus={() => setIsEditingInput(true)}
-              onBlur={handleInputBlur}
-              className={`w-[3ch] text-[13px] font-semibold bg-transparent border-none outline-none text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${hasChanged ? "text-[var(--color-blue)]" : "text-stone-800 dark:text-stone-200 focus:text-primary"}`}
-              aria-label="Number of servings"
-            />
-          </span>
-
-          <AnimatePresence>
-            {hasChanged && (
-              <motion.button
-                key="reset"
-                initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={
-                  shouldReduceMotion ? { duration: 0 } : { duration: 0.15, ease: "easeOut" }
-                }
-                onClick={handleReset}
-                className="absolute top-0 bottom-0 right-1.5 my-auto flex items-center justify-center w-5 h-5 rounded-full text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 cursor-pointer"
-                aria-label="Reset to original servings"
-                type="button"
-              >
-                <X className="w-3.5 h-3.5" />
-              </motion.button>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Slider */}
-        <div
-          ref={sliderRef}
-          className="flex-1 relative h-7 flex items-center cursor-pointer select-none"
-          onMouseDown={handleMouseDown}
-          onTouchStart={handleTouchStart}
-        >
-          <div className="w-full h-[5px] bg-stone-200 dark:bg-stone-700 rounded-full relative overflow-hidden">
-            <div
-              className={`h-full rounded-full ${hasChanged ? "bg-[var(--color-blue)]" : "bg-primary"}`}
-              style={{
-                width: `${percentage}%`,
-                transition: isDragging ? "none" : "width 50ms ease-out",
-              }}
-            />
-          </div>
+      <div
+        ref={sliderRef}
+        role="slider"
+        tabIndex={0}
+        aria-labelledby={headingId}
+        aria-valuemin={sliderMin}
+        aria-valuemax={sliderMax}
+        aria-valuenow={roundedDisplay}
+        aria-valuetext={`${roundedDisplay} servings`}
+        className="relative h-7 flex items-center cursor-pointer select-none"
+        onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
+        onKeyDown={handleKeyDown}
+      >
+        <div className="w-full h-[5px] bg-stone-200 dark:bg-stone-700 rounded-full relative overflow-hidden">
           <div
-            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-7 h-7 cursor-grab active:cursor-grabbing z-[1]"
+            className={`h-full rounded-full ${hasChanged ? "bg-[var(--color-blue)]" : "bg-primary"}`}
             style={{
-              left: `${percentage}%`,
-              transition: isDragging ? "none" : "left 50ms ease-out",
+              width: `${percentage}%`,
+              transition: isDragging ? "none" : "width 50ms ease-out",
             }}
-          >
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-              <circle
-                cx="14"
-                cy="14"
-                r="11"
-                fill={hasChanged ? "var(--color-blue)" : "var(--primary)"}
-              />
-              <circle
-                cx="14"
-                cy="14"
-                r="9.5"
-                fill={hasChanged ? "var(--color-blue)" : "var(--primary)"}
-                stroke="white"
-                strokeWidth="1.5"
-              />
-            </svg>
-          </div>
+          />
+        </div>
+        <div
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-7 h-7 cursor-grab active:cursor-grabbing z-[1]"
+          style={{
+            left: `${percentage}%`,
+            transition: isDragging ? "none" : "left 50ms ease-out",
+          }}
+        >
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+            <circle
+              cx="14"
+              cy="14"
+              r="11"
+              fill={hasChanged ? "var(--color-blue)" : "var(--primary)"}
+            />
+            <circle
+              cx="14"
+              cy="14"
+              r="9.5"
+              fill={hasChanged ? "var(--color-blue)" : "var(--primary)"}
+              stroke="white"
+              strokeWidth="1.5"
+            />
+          </svg>
         </div>
       </div>
 
       {hasChanged && (
-        <p className="text-[12px] text-[var(--color-blue)] mt-1">
-          Recipe originally serves {originalServings}
-        </p>
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <p className="text-[12px] text-[var(--color-blue)]">
+            Recipe originally serves {originalServings}
+          </p>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="shrink-0 text-[12px] font-medium text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200"
+          >
+            Reset
+          </button>
+        </div>
       )}
     </div>
   );

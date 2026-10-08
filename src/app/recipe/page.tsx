@@ -87,8 +87,8 @@ import {
   Printer,
   Share2,
   Trash2,
-  UsersRound,
 } from "lucide-react";
+import { ServingsIcon } from "@/components/ServingsIcon";
 
 export default function RecipePage() {
   return (
@@ -600,7 +600,7 @@ function RecipePageContent() {
                       : "text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:text-stone-500 dark:hover:bg-stone-800 dark:hover:text-stone-300"
                   }`}
                 >
-                  <UsersRound className="h-[18px] w-[18px]" aria-hidden="true" />
+                  <ServingsIcon className="h-[18px] w-[18px]" />
                 </button>
               )}
               {user && (
