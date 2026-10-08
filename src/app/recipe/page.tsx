@@ -37,6 +37,7 @@ import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
 import {
   MOBILE_NAV_CONTENT_BOTTOM_PAD,
+  MOBILE_NAV_CONTROLS_TOP,
   MobileContentFade,
   MobileNavShell,
   type MobileNavItem,
@@ -172,9 +173,8 @@ function RecipePageContent() {
   const originalServings = useMemo(() => recipe?.servings, [recipe?.servings]);
   const [servings, setServings] = useState<number | undefined>(recipe?.servings);
   const canAdjustServings = !!(originalServings && originalServings > 0);
-  const mobileFooterStackHeight = "4.75rem";
   const mobileServingsGap = "0.75rem";
-  const mobileServingsOffset = `calc(${mobileFooterStackHeight} + ${mobileServingsGap} + env(safe-area-inset-bottom))`;
+  const mobileServingsOffset = `calc(${MOBILE_NAV_CONTROLS_TOP} + ${mobileServingsGap})`;
   const roundAmounts = usePreference(getRoundAmounts);
   const defaultServings = usePreference(getDefaultServings);
   const unitSystem = usePreference(getUnitSystem);

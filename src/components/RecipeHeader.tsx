@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ParsedRecipe } from "@/lib/types";
 import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
 import User from "@solar-icons/react/csr/users/User";
@@ -8,6 +8,8 @@ import SidebarMinimalistic from "@solar-icons/react/csr/it/SidebarMinimalistic";
 import { ServingsAdjuster } from "@/components/ServingsAdjuster";
 import { useSidebar } from "@/components/AppShell";
 import { RecipeSwitcher } from "@/components/RecipeSwitcher";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { formatTime } from "@/lib/utils";
 
 interface RecipeHeaderProps {
@@ -32,9 +34,12 @@ export function RecipeHeader({
   showSwitcher = false,
 }: RecipeHeaderProps) {
   const [isSliderOpenLocal, setIsSliderOpenLocal] = useState(false);
+  const metadataRef = useRef<HTMLDivElement>(null);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
   const { collapsed: sidebarCollapsed, setCollapsed: setSidebarCollapsed } = useSidebar();
   const showPrepAndCook = !!recipe.prepTimeMinutes || !!recipe.cookTimeMinutes;
   const isSliderOpen = isServingsOpen ?? isSliderOpenLocal;
+  const desktopServingsOpen = isSliderOpen && isDesktop;
 
   const setIsSliderOpen = (open: boolean) => {
     if (onServingsOpenChange) {
@@ -97,7 +102,10 @@ export function RecipeHeader({
       )}
 
       {/* Inline metadata row */}
-      <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 font-sans text-sm text-stone-500 dark:text-stone-400 md:gap-3">
+      <div
+        ref={metadataRef}
+        className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 font-sans text-sm text-stone-500 dark:text-stone-400 md:gap-3"
+      >
         {recipe.author && <span className="text-base">{recipe.author}</span>}
 
         {recipe.sourceUrl && (
@@ -124,33 +132,49 @@ export function RecipeHeader({
         {hasServings &&
           (canAdjustServings ? (
             <>
-              <button
-                onClick={() => setIsSliderOpen(!isSliderOpen)}
-                className={`hidden md:inline-flex items-center gap-1 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-md transition-colors cursor-pointer ${isAdjusted ? "hover:bg-[var(--color-blue)]/8" : "hover:bg-stone-100 dark:hover:bg-stone-800"}`}
-                aria-expanded={isSliderOpen}
-                aria-label="Adjust servings"
-              >
-                <span
-                  className={`flex items-center justify-center w-3.5 h-3.5 ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"}`}
+              <Popover open={desktopServingsOpen} onOpenChange={setIsSliderOpen} modal={false}>
+                <PopoverTrigger
+                  type="button"
+                  className={`hidden md:inline-flex items-center gap-1 px-1.5 py-0.5 -mx-1.5 -my-0.5 rounded-md transition-colors cursor-pointer ${isAdjusted ? "hover:bg-[var(--color-blue)]/8" : "hover:bg-stone-100 dark:hover:bg-stone-800"}`}
+                  aria-label="Adjust servings"
                 >
-                  <User weight="Bold" className="w-3.5 h-3.5" />
-                </span>
-                <span
-                  className={
-                    isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"
-                  }
+                  <span
+                    className={`flex items-center justify-center w-3.5 h-3.5 ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"}`}
+                  >
+                    <User weight="Bold" className="w-3.5 h-3.5" />
+                  </span>
+                  <span
+                    className={
+                      isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"
+                    }
+                  >
+                    Serves
+                  </span>{" "}
+                  <span
+                    className={`font-medium ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-600 dark:text-stone-300"}`}
+                  >
+                    {displayServings}
+                  </span>
+                  <AltArrowDown
+                    className={`w-3 h-3 transition-transform duration-200 ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"} ${desktopServingsOpen ? "rotate-180" : ""}`}
+                  />
+                </PopoverTrigger>
+                <PopoverContent
+                  anchor={metadataRef}
+                  align="start"
+                  side="bottom"
+                  sideOffset={8}
+                  className="w-[min(28rem,var(--anchor-width))] border-0 bg-transparent p-0 shadow-none"
                 >
-                  Serves
-                </span>{" "}
-                <span
-                  className={`font-medium ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-600 dark:text-stone-300"}`}
-                >
-                  {displayServings}
-                </span>
-                <AltArrowDown
-                  className={`w-3 h-3 transition-transform duration-200 ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"} ${isSliderOpen ? "rotate-180" : ""}`}
-                />
-              </button>
+                  <ServingsAdjuster
+                    servings={servings!}
+                    originalServings={originalServings!}
+                    onServingsChange={onServingsChange!}
+                    isOpen
+                    embedded
+                  />
+                </PopoverContent>
+              </Popover>
 
               <span className="flex items-center gap-1 md:hidden">
                 <span
@@ -185,18 +209,6 @@ export function RecipeHeader({
             </span>
           ))}
       </div>
-
-      {/* Servings slider card */}
-      {canAdjustServings && (
-        <div className="hidden md:block">
-          <ServingsAdjuster
-            servings={servings!}
-            originalServings={originalServings!}
-            onServingsChange={onServingsChange!}
-            isOpen={isSliderOpen}
-          />
-        </div>
-      )}
     </div>
   );
 }

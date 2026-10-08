@@ -12,6 +12,8 @@ interface ServingsAdjusterProps {
   onServingsChange: (servings: number) => void;
   isOpen: boolean;
   panelClassName?: string;
+  /** Render the card in place. Floating parents own open state and motion. */
+  embedded?: boolean;
 }
 
 export function ServingsAdjuster({
@@ -20,6 +22,7 @@ export function ServingsAdjuster({
   onServingsChange,
   isOpen,
   panelClassName,
+  embedded = false,
 }: ServingsAdjusterProps) {
   const sliderRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -134,6 +137,117 @@ export function ServingsAdjuster({
     };
   }, [isDragging, updateFromPosition]);
 
+  const panel = (
+    <div
+      className={`${embedded ? "w-full" : "mt-2 max-w-md"} rounded-2xl border border-stone-100 bg-white px-4 py-3 shadow-[var(--shadow-soft)] dark:border-stone-800 dark:bg-stone-900 ${panelClassName ?? ""}`}
+    >
+      <p className="text-[13px] font-semibold text-stone-500 dark:text-stone-400 capitalize mb-2">
+        Servings
+      </p>
+
+      <div className="flex items-center gap-3">
+        {/* Indicator pill */}
+        <div
+          className={`relative flex items-center gap-1.5 rounded-lg pl-3 py-1.5 border focus-within:outline focus-within:outline-1 transition-[padding] duration-150 ${hasChanged ? "pr-8 bg-[var(--color-blue)]/5 border-[var(--color-blue)]/25 focus-within:border-[var(--color-blue)] focus-within:outline-[var(--color-blue)]" : "pr-3 bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 focus-within:border-primary focus-within:outline-primary"}`}
+        >
+          <span
+            className={`flex items-center justify-center w-4 h-4 ${hasChanged ? "text-[var(--color-blue)]" : "text-stone-500 dark:text-stone-400"}`}
+          >
+            <User weight="Bold" className="w-4 h-4" />
+          </span>
+          <span
+            className={`text-[13px] whitespace-nowrap flex items-center gap-0.5 ${hasChanged ? "text-[var(--color-blue)]" : "text-stone-500 dark:text-stone-400"}`}
+          >
+            Serves
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={inputDisplayValue}
+              onChange={handleInputChange}
+              onFocus={() => setIsEditingInput(true)}
+              onBlur={handleInputBlur}
+              className={`w-[3ch] text-[13px] font-semibold bg-transparent border-none outline-none text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${hasChanged ? "text-[var(--color-blue)]" : "text-stone-800 dark:text-stone-200 focus:text-primary"}`}
+              aria-label="Number of servings"
+            />
+          </span>
+
+          <AnimatePresence>
+            {hasChanged && (
+              <motion.button
+                key="reset"
+                initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={
+                  shouldReduceMotion ? { duration: 0 } : { duration: 0.15, ease: "easeOut" }
+                }
+                onClick={handleReset}
+                className="absolute top-0 bottom-0 right-1.5 my-auto flex items-center justify-center w-5 h-5 rounded-full text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 cursor-pointer"
+                aria-label="Reset to original servings"
+                type="button"
+              >
+                <X className="w-3.5 h-3.5" />
+              </motion.button>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Slider */}
+        <div
+          ref={sliderRef}
+          className="flex-1 relative h-7 flex items-center cursor-pointer select-none"
+          onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
+        >
+          <div className="w-full h-[5px] bg-stone-200 dark:bg-stone-700 rounded-full relative overflow-hidden">
+            <div
+              className={`h-full rounded-full ${hasChanged ? "bg-[var(--color-blue)]" : "bg-primary"}`}
+              style={{
+                width: `${percentage}%`,
+                transition: isDragging ? "none" : "width 50ms ease-out",
+              }}
+            />
+          </div>
+          <div
+            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-7 h-7 cursor-grab active:cursor-grabbing z-[1]"
+            style={{
+              left: `${percentage}%`,
+              transition: isDragging ? "none" : "left 50ms ease-out",
+            }}
+          >
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+              <circle
+                cx="14"
+                cy="14"
+                r="11"
+                fill={hasChanged ? "var(--color-blue)" : "var(--primary)"}
+              />
+              <circle
+                cx="14"
+                cy="14"
+                r="9.5"
+                fill={hasChanged ? "var(--color-blue)" : "var(--primary)"}
+                stroke="white"
+                strokeWidth="1.5"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      {hasChanged && (
+        <p className="text-[12px] text-[var(--color-blue)] mt-1">
+          Recipe originally serves {originalServings}
+        </p>
+      )}
+    </div>
+  );
+
+  if (embedded) {
+    return isOpen ? panel : null;
+  }
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -146,110 +260,7 @@ export function ServingsAdjuster({
           }
           className="print:hidden overflow-visible"
         >
-          <div
-            className={`mt-2 max-w-md rounded-2xl border border-stone-100 bg-white px-4 py-3 shadow-[var(--shadow-soft)] dark:border-stone-800 dark:bg-stone-900 ${panelClassName ?? ""}`}
-          >
-            <p className="text-[13px] font-semibold text-stone-500 dark:text-stone-400 capitalize mb-2">
-              Servings
-            </p>
-
-            <div className="flex items-center gap-3">
-              {/* Indicator pill */}
-              <div
-                className={`relative flex items-center gap-1.5 rounded-lg pl-3 py-1.5 border focus-within:outline focus-within:outline-1 transition-[padding] duration-150 ${hasChanged ? "pr-8 bg-[var(--color-blue)]/5 border-[var(--color-blue)]/25 focus-within:border-[var(--color-blue)] focus-within:outline-[var(--color-blue)]" : "pr-3 bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 focus-within:border-primary focus-within:outline-primary"}`}
-              >
-                <span
-                  className={`flex items-center justify-center w-4 h-4 ${hasChanged ? "text-[var(--color-blue)]" : "text-stone-500 dark:text-stone-400"}`}
-                >
-                  <User weight="Bold" className="w-4 h-4" />
-                </span>
-                <span
-                  className={`text-[13px] whitespace-nowrap flex items-center gap-0.5 ${hasChanged ? "text-[var(--color-blue)]" : "text-stone-500 dark:text-stone-400"}`}
-                >
-                  Serves
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={inputDisplayValue}
-                    onChange={handleInputChange}
-                    onFocus={() => setIsEditingInput(true)}
-                    onBlur={handleInputBlur}
-                    className={`w-[3ch] text-[13px] font-semibold bg-transparent border-none outline-none text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${hasChanged ? "text-[var(--color-blue)]" : "text-stone-800 dark:text-stone-200 focus:text-primary"}`}
-                    aria-label="Number of servings"
-                  />
-                </span>
-
-                <AnimatePresence>
-                  {hasChanged && (
-                    <motion.button
-                      key="reset"
-                      initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={
-                        shouldReduceMotion ? { duration: 0 } : { duration: 0.15, ease: "easeOut" }
-                      }
-                      onClick={handleReset}
-                      className="absolute top-0 bottom-0 right-1.5 my-auto flex items-center justify-center w-5 h-5 rounded-full text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 cursor-pointer"
-                      aria-label="Reset to original servings"
-                      type="button"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </motion.button>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Slider */}
-              <div
-                ref={sliderRef}
-                className="flex-1 relative h-7 flex items-center cursor-pointer select-none"
-                onMouseDown={handleMouseDown}
-                onTouchStart={handleTouchStart}
-              >
-                <div className="w-full h-[5px] bg-stone-200 dark:bg-stone-700 rounded-full relative overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${hasChanged ? "bg-[var(--color-blue)]" : "bg-primary"}`}
-                    style={{
-                      width: `${percentage}%`,
-                      transition: isDragging ? "none" : "width 50ms ease-out",
-                    }}
-                  />
-                </div>
-                <div
-                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-7 h-7 cursor-grab active:cursor-grabbing z-[1]"
-                  style={{
-                    left: `${percentage}%`,
-                    transition: isDragging ? "none" : "left 50ms ease-out",
-                  }}
-                >
-                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                    <circle
-                      cx="14"
-                      cy="14"
-                      r="11"
-                      fill={hasChanged ? "var(--color-blue)" : "var(--primary)"}
-                    />
-                    <circle
-                      cx="14"
-                      cy="14"
-                      r="9.5"
-                      fill={hasChanged ? "var(--color-blue)" : "var(--primary)"}
-                      stroke="white"
-                      strokeWidth="1.5"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {hasChanged && (
-              <p className="text-[12px] text-[var(--color-blue)] mt-1">
-                Recipe originally serves {originalServings}
-              </p>
-            )}
-          </div>
+          {panel}
         </motion.div>
       )}
     </AnimatePresence>
