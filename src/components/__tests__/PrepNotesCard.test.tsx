@@ -71,6 +71,52 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 describe("Prep notes checklist", () => {
+  it.each([false, true])(
+    "requires a successful retry after a 401 (previously loaded: %s)",
+    async (previouslyLoaded) => {
+      auth.user = { id: "user-a" };
+      let authorized = previouslyLoaded;
+      const server: Record<string, boolean> = { [prepNoteKey(notes[1])]: true };
+      const fetchMock = vi.fn(async (_url, options) => {
+        if (!authorized) return new Response("", { status: 401 });
+        if (options?.method === "PUT") {
+          const body = JSON.parse(options.body);
+          server[body.noteKey] = body.completed;
+        }
+        return new Response(JSON.stringify(server));
+      });
+      vi.stubGlobal("fetch", fetchMock);
+      const key = await hashRecipeIdentity("test-recipe");
+      const guest = JSON.stringify({ [prepNoteKey(notes[2])]: true });
+      localStorage.setItem(`mizen-prep-v1:guest:${key}`, guest);
+      await mount();
+      await click(preview());
+      if (previouslyLoaded) {
+        authorized = false;
+        await act(async () => window.dispatchEvent(new Event("focus")));
+        await settle();
+      }
+      expect(checks().every((item) => item.disabled)).toBe(true);
+      expect(checks()[0].checked).toBe(previouslyLoaded);
+      expect(checks()[1].checked).toBe(false);
+      expect(host.textContent).toContain("Could not load prep progress");
+      const calls = fetchMock.mock.calls.length;
+      await click(checks()[0]);
+      expect(fetchMock).toHaveBeenCalledTimes(calls);
+      authorized = true;
+      const retry = [...host.querySelectorAll("button")].find(
+        (button) => button.textContent === "Retry"
+      )!;
+      await click(retry);
+      expect(checks().every((item) => !item.disabled)).toBe(true);
+      expect(checks()[0].checked).toBe(true);
+      expect(host.querySelector('[role="alert"]')).toBeNull();
+      await click(checks()[0]);
+      expect(checks()[0].checked).toBe(false);
+      expect(server[prepNoteKey(notes[1])]).toBe(false);
+      expect(localStorage.getItem(`mizen-prep-v1:guest:${key}`)).toBe(guest);
+    }
+  );
   it.each([true, false])("queues refreshes during a slow save (success: %s)", async (success) => {
     auth.user = { id: "user-a" };
     const server: Record<string, boolean> = {};

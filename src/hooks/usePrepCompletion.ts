@@ -56,9 +56,6 @@ export function usePrepCompletion(identity: string, userId?: string, legacyIdent
           return Object.fromEntries(
             Object.entries(parsed).filter(([, value]) => typeof value === "boolean")
           );
-        } else if (response.status === 401) {
-          // Session can lag behind client auth; keep progress usable via guest storage.
-          return readGuestCompletion(readKey);
         } else {
           throw new Error("Could not load prep progress. Retry to continue.");
         }
@@ -75,6 +72,7 @@ export function usePrepCompletion(identity: string, userId?: string, legacyIdent
       setError(null);
     } catch (err) {
       if (mounted.current && current === revision.current) {
+        setReady(false);
         setError(err instanceof Error ? err.message : "Could not load prep progress.");
       }
     }

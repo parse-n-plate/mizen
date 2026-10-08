@@ -27,8 +27,7 @@ export async function GET(request: Request) {
       .eq("recipe_key", key.data);
     if (error) {
       const code = (error as { code?: string }).code;
-      const message = error.message ?? "";
-      if (code === "42P01" || code === "PGRST205" || /recipe_prep_completion/i.test(message)) {
+      if (code === "42P01" || code === "PGRST205") {
         logger.error({ err: error }, "Prep completion storage unavailable");
         return NextResponse.json({}, { headers: { "Cache-Control": "private, no-store" } });
       }
