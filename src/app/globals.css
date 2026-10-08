@@ -886,7 +886,7 @@ body {
     width: 100%;
     cursor: pointer;
     border-radius: var(--radius-md);
-    transition: background-color 150ms ease;
+    transition: none;
   }
 
   @media (hover: hover) and (pointer: fine) {

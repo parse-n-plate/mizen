@@ -637,6 +637,7 @@ function RecipePageContent() {
                   unsaving={unsaving}
                   onSave={handleSave}
                   onUnsave={handleUnsave}
+                  iconAlign="end"
                 />
               </div>
             )}
