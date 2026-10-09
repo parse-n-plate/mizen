@@ -19,13 +19,20 @@ export async function GET(request: Request) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const { data, error } = await supabase
       .from("recipe_prep_completion")
       .select("note_key, completed")
       .eq("user_id", user.id)
       .eq("recipe_key", key.data);
-    if (error) throw error;
+    if (error) {
+      const code = (error as { code?: string }).code;
+      if (code === "42P01" || code === "PGRST205") {
+        logger.error({ err: error }, "Prep completion storage unavailable");
+        return NextResponse.json({}, { headers: { "Cache-Control": "private, no-store" } });
+      }
+      throw error;
+    }
     return NextResponse.json(
       Object.fromEntries((data ?? []).map((row) => [row.note_key, row.completed])),
       {

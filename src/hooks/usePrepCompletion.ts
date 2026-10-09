@@ -5,53 +5,82 @@ import { hashRecipeIdentity } from "@/lib/prep-notes";
 
 type Completion = Record<string, boolean>;
 
-export function usePrepCompletion(identity: string, userId?: string) {
+export function usePrepCompletion(identity: string, userId?: string, legacyIdentity?: string) {
   const [completion, setCompletion] = useState<Completion>({});
   const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const recipeKey = useRef("");
-  const busy = useRef(false);
+  const savingRef = useRef(false);
+  const refreshPending = useRef(false);
+  const latestRefresh = useRef<() => Promise<void>>(async () => {});
   const revision = useRef(0);
   const mounted = useRef(true);
 
+  const readGuestCompletion = (key: string): Completion => {
+    const stored = localStorage.getItem(`mizen-prep-v1:guest:${key}`);
+    if (!stored) return {};
+    try {
+      const parsed: unknown = JSON.parse(stored);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+      return Object.fromEntries(
+        Object.entries(parsed).filter(([, value]) => typeof value === "boolean")
+      ) as Completion;
+    } catch {
+      return {};
+    }
+  };
+
   const refresh = useCallback(async () => {
-    if (busy.current) return;
+    if (savingRef.current) {
+      refreshPending.current = true;
+      return;
+    }
     const current = ++revision.current;
+    setError(null);
     try {
       const key = await hashRecipeIdentity(identity);
+      const legacyKey =
+        legacyIdentity && legacyIdentity !== identity
+          ? await hashRecipeIdentity(legacyIdentity)
+          : key;
       recipeKey.current = key;
-      let next: Completion = {};
-      if (userId) {
-        const response = await fetch(`/api/prep-notes?recipeKey=${key}`, { cache: "no-store" });
-        if (!response.ok) throw new Error("Could not load prep progress. Retry to continue.");
-        next = await response.json();
-      } else {
-        const stored = localStorage.getItem(`mizen-prep-v1:guest:${key}`);
-        if (stored) {
-          try {
-            next = JSON.parse(stored);
-          } catch {
-            /* discard invalid local state */
-          }
+      const readCompletion = async (readKey: string): Promise<Completion> => {
+        if (!userId) return readGuestCompletion(readKey);
+        const response = await fetch(`/api/prep-notes?recipeKey=${encodeURIComponent(readKey)}`, {
+          cache: "no-store",
+        });
+        if (response.ok) {
+          const parsed: unknown = await response.json();
+          if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
+          return Object.fromEntries(
+            Object.entries(parsed).filter(([, value]) => typeof value === "boolean")
+          );
+        } else {
+          throw new Error("Could not load prep progress. Retry to continue.");
         }
-      }
+      };
+      const [previous, currentCompletion] = await Promise.all([
+        legacyKey !== key ? readCompletion(legacyKey) : Promise.resolve({}),
+        readCompletion(key),
+      ]);
+      // Explicit false values under the stable key override previously completed tasks.
+      const next = { ...previous, ...currentCompletion };
       if (!mounted.current || current !== revision.current) return;
-      if (!next || typeof next !== "object" || Array.isArray(next)) next = {};
-      setCompletion(
-        Object.fromEntries(Object.entries(next).filter(([, value]) => typeof value === "boolean"))
-      );
+      setCompletion(next);
       setReady(true);
       setError(null);
     } catch (err) {
       if (mounted.current && current === revision.current) {
+        setReady(false);
         setError(err instanceof Error ? err.message : "Could not load prep progress.");
       }
     }
-  }, [identity, userId]);
+  }, [identity, legacyIdentity, userId]);
 
   useEffect(() => {
     mounted.current = true;
+    latestRefresh.current = refresh;
     void refresh();
     const onVisible = () => {
       if (document.visibilityState === "visible") void refresh();
@@ -73,14 +102,15 @@ export function usePrepCompletion(identity: string, userId?: string) {
   }, [refresh]);
 
   async function toggle(noteKey: string, completed: boolean) {
-    if (!ready || busy.current) return;
-    busy.current = true;
+    if (!ready || savingRef.current) return;
+    savingRef.current = true;
     revision.current++;
     setSaving(true);
     setError(null);
     const previous = completion;
     const next = { ...completion, [noteKey]: completed };
     setCompletion(next);
+    let saved = false;
     try {
       if (userId) {
         const response = await fetch("/api/prep-notes", {
@@ -92,14 +122,22 @@ export function usePrepCompletion(identity: string, userId?: string) {
       } else {
         localStorage.setItem(`mizen-prep-v1:guest:${recipeKey.current}`, JSON.stringify(next));
       }
+      saved = true;
     } catch {
       if (mounted.current) {
         setCompletion(previous);
         setError("Could not save progress. Please try again.");
       }
     } finally {
-      busy.current = false;
-      if (mounted.current) setSaving(false);
+      savingRef.current = false;
+      if (mounted.current) {
+        setSaving(false);
+        if (refreshPending.current) {
+          refreshPending.current = false;
+          // Keep the save error visible if the write failed.
+          if (saved) void latestRefresh.current();
+        }
+      }
     }
   }
 
