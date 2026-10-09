@@ -2,9 +2,9 @@
 
 import * as React from "react";
 import { useState, useRef, useEffect, useTransition, useCallback } from "react";
-import User from "@solar-icons/react/csr/users/User";
 import { X } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { ServingsIcon } from "@/components/ServingsIcon";
 
 interface ServingsAdjusterProps {
   servings: number;
@@ -44,6 +44,7 @@ export function ServingsAdjuster({
       : 50;
 
   const hasChanged = Math.round(displayedValue) !== originalServings;
+  const roundedDisplay = Math.round(displayedValue);
 
   const inputDisplayValue = isEditingInput || isDragging ? inputValue : String(servings);
 
@@ -96,6 +97,43 @@ export function ServingsAdjuster({
     [onServingsChange, sliderMin, sliderMax, sliderRange, startTransition]
   );
 
+  const nudgeServings = useCallback(
+    (delta: number) => {
+      const next = Math.max(sliderMin, Math.min(sliderMax, roundedDisplay + delta));
+      setDragValue(null);
+      setInputValue(String(next));
+      onServingsChange(next);
+    },
+    [onServingsChange, roundedDisplay, sliderMax, sliderMin]
+  );
+
+  const handleSliderKeyDown = (e: React.KeyboardEvent) => {
+    switch (e.key) {
+      case "ArrowLeft":
+      case "ArrowDown":
+        e.preventDefault();
+        nudgeServings(-1);
+        break;
+      case "ArrowRight":
+      case "ArrowUp":
+        e.preventDefault();
+        nudgeServings(1);
+        break;
+      case "Home":
+        e.preventDefault();
+        onServingsChange(sliderMin);
+        setInputValue(String(sliderMin));
+        break;
+      case "End":
+        e.preventDefault();
+        onServingsChange(sliderMax);
+        setInputValue(String(sliderMax));
+        break;
+      default:
+        break;
+    }
+  };
+
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -141,19 +179,14 @@ export function ServingsAdjuster({
     <div
       className={`${embedded ? "w-full" : "mt-2 max-w-md"} rounded-2xl border border-stone-100 bg-white px-4 py-3 shadow-[var(--shadow-soft)] dark:border-stone-800 dark:bg-stone-900 ${panelClassName ?? ""}`}
     >
-      <p className="text-[13px] font-semibold text-stone-500 dark:text-stone-400 capitalize mb-2">
-        Servings
-      </p>
-
       <div className="flex items-center gap-3">
-        {/* Indicator pill */}
         <div
           className={`relative flex items-center gap-1.5 rounded-lg pl-3 py-1.5 border focus-within:outline focus-within:outline-1 transition-[padding] duration-150 ${hasChanged ? "pr-8 bg-[var(--color-blue)]/5 border-[var(--color-blue)]/25 focus-within:border-[var(--color-blue)] focus-within:outline-[var(--color-blue)]" : "pr-3 bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 focus-within:border-primary focus-within:outline-primary"}`}
         >
           <span
             className={`flex items-center justify-center w-4 h-4 ${hasChanged ? "text-[var(--color-blue)]" : "text-stone-500 dark:text-stone-400"}`}
           >
-            <User weight="Bold" className="w-4 h-4" />
+            <ServingsIcon className="w-4 h-4" />
           </span>
           <span
             className={`text-[13px] whitespace-nowrap flex items-center gap-0.5 ${hasChanged ? "text-[var(--color-blue)]" : "text-stone-500 dark:text-stone-400"}`}
@@ -193,12 +226,19 @@ export function ServingsAdjuster({
           </AnimatePresence>
         </div>
 
-        {/* Slider */}
         <div
           ref={sliderRef}
+          role="slider"
+          tabIndex={0}
+          aria-label="Adjust servings"
+          aria-valuemin={sliderMin}
+          aria-valuemax={sliderMax}
+          aria-valuenow={roundedDisplay}
+          aria-valuetext={`${roundedDisplay} servings`}
           className="flex-1 relative h-7 flex items-center cursor-pointer select-none"
           onMouseDown={handleMouseDown}
           onTouchStart={handleTouchStart}
+          onKeyDown={handleSliderKeyDown}
         >
           <div className="w-full h-[5px] bg-stone-200 dark:bg-stone-700 rounded-full relative overflow-hidden">
             <div
@@ -216,7 +256,7 @@ export function ServingsAdjuster({
               transition: isDragging ? "none" : "left 50ms ease-out",
             }}
           >
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
               <circle
                 cx="14"
                 cy="14"

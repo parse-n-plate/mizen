@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import type { ParsedRecipe } from "@/lib/types";
 import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
-import User from "@solar-icons/react/csr/users/User";
+import { ServingsIcon } from "@/components/ServingsIcon";
 import SidebarMinimalistic from "@solar-icons/react/csr/it/SidebarMinimalistic";
 import { ServingsAdjuster } from "@/components/ServingsAdjuster";
 import { useSidebar } from "@/components/AppShell";
@@ -141,7 +141,7 @@ export function RecipeHeader({
                   <span
                     className={`flex items-center justify-center w-3.5 h-3.5 ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"}`}
                   >
-                    <User weight="Bold" className="w-3.5 h-3.5" />
+                    <ServingsIcon className="w-3.5 h-3.5" />
                   </span>
                   <span
                     className={
@@ -180,7 +180,7 @@ export function RecipeHeader({
                 <span
                   className={`flex items-center justify-center w-3.5 h-3.5 ${isAdjusted ? "text-[var(--color-blue)]" : "text-stone-400 dark:text-stone-500"}`}
                 >
-                  <User weight="Bold" className="w-3.5 h-3.5" />
+                  <ServingsIcon className="w-3.5 h-3.5" />
                 </span>
                 <span>
                   <span
