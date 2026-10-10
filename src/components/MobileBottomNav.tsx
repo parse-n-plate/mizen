@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
+import Calendar from "@solar-icons/react/csr/time/Calendar";
 import Home from "@solar-icons/react/csr/ui/Home";
 import Magnifer from "@solar-icons/react/csr/search/Magnifer";
 import User from "@solar-icons/react/csr/users/User";
@@ -228,6 +229,14 @@ export function MobileBottomNav({ searchHref }: { searchHref?: string }) {
       label: "Home",
       active: pathname === "/",
       icon: <Home size={22} aria-hidden="true" />,
+    },
+    {
+      type: "link",
+      id: "meal-plan",
+      href: "/meal-plan",
+      label: "Meal plan",
+      active: pathname === "/meal-plan",
+      icon: <Calendar size={22} />,
     },
     {
       id: "profile",
