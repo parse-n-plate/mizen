@@ -54,7 +54,7 @@ export default function RootLayout({
         />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{if(localStorage.getItem('mizen:core-app-seen')==='true'&&sessionStorage.getItem('mizen:splash-seen')!=='true'){document.documentElement.dataset.earlySplash='true'}}catch(e){}})()`,
+            __html: `(function(){try{if(location.pathname==='/privacy'||location.pathname==='/terms')return;if(localStorage.getItem('mizen:core-app-seen')==='true'&&sessionStorage.getItem('mizen:splash-seen')!=='true'){document.documentElement.dataset.earlySplash='true'}}catch(e){}})()`,
           }}
         />
       </head>
