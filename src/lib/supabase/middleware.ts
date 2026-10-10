@@ -1,8 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
+import { isAuthRetryableFetchError } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { isSupabaseConfigured } from "./is-configured";
 
-const PROTECTED_PATHS = ["/cookbook", "/recipe", "/profile"];
+const PROTECTED_PATHS = ["/meal-plan", "/cookbook", "/recipe", "/profile"];
 
 function isProtectedRoute(pathname: string) {
   return PROTECTED_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -39,7 +40,11 @@ export async function updateSession(request: NextRequest) {
   try {
     const {
       data: { user },
+      error,
     } = await supabase.auth.getUser();
+
+    // A connection failure does not establish that the user is signed out.
+    if (isAuthRetryableFetchError(error)) return supabaseResponse;
 
     if (!user && isProtectedRoute(request.nextUrl.pathname)) {
       const url = request.nextUrl.clone();

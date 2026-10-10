@@ -56,11 +56,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   // before auth resolves
   const isLanding = isPublicStandalonePage || (isHomePage && (loading || !user));
   const showMobileNav =
-    !!user && ["/", "/cookbook", "/favorites", "/profile", "/search"].includes(pathname);
+    !!user &&
+    ["/", "/meal-plan", "/cookbook", "/favorites", "/profile", "/search"].includes(pathname);
   // Pages that render their own inline expand button — suppress the shell-level gutter
   const hasInlineExpand = pathname.startsWith("/recipe");
   const showSplash = !!user && !isLanding;
-  const isHomeRecipeView = pathname === "/" && !!user;
+  const isHomeRecipeView = ["/", "/meal-plan"].includes(pathname) && !!user;
 
   useEffect(() => {
     try {

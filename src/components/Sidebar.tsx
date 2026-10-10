@@ -24,6 +24,7 @@ import {
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { createClient } from "@/lib/supabase/client";
 import { favoriteRecipes } from "@/lib/favorite-recipes";
+import Calendar from "@solar-icons/react/csr/time/Calendar";
 import HomeSmile from "@solar-icons/react/csr/ui/HomeSmile";
 import Settings from "@solar-icons/react/csr/settings/Settings";
 import ChatRoundDots from "@solar-icons/react/csr/messages/ChatRoundDots";
@@ -202,6 +203,7 @@ export function Sidebar({ collapsed, onToggle, onOpenSearch }: SidebarProps) {
       icon: HomeSmile,
       active: pathname === "/",
     },
+    { href: "/meal-plan", label: "Meal plan", icon: Calendar, active: pathname === "/meal-plan" },
   ];
 
   return (
