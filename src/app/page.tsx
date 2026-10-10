@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Image from "next/image";
-import Link from "next/link";
 import { toast } from "sonner";
 import Plain from "@solar-icons/react/csr/messages/Plain";
 import { motion, AnimatePresence } from "motion/react";
@@ -12,7 +10,7 @@ import { HomeLibrary } from "@/components/HomeLibrary";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { LandingAuthCta } from "@/components/LandingAuthCta";
-import { WhoMadeIt } from "@/components/WhoMadeIt";
+import { PublicBrand, PublicFooter } from "@/components/PublicPage";
 import { useUser } from "@/hooks/useUser";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import type { ParsedRecipe } from "@/lib/types";
@@ -549,20 +547,7 @@ export function WaitlistLanding() {
         <div className="relative flex flex-col justify-between lg:w-[38%] px-8 lg:px-12 xl:px-16 pt-12 lg:pt-5 pb-8 lg:pb-10 bg-white dark:bg-stone-950">
           {/* Top: Logo */}
           <div className="flex items-center justify-between">
-            <Link
-              href="/"
-              className="group flex items-center gap-2 font-serif text-lg font-semibold text-stone-900 dark:text-stone-100"
-            >
-              <Image
-                src="/apple-touch-icon.png"
-                alt=""
-                aria-hidden
-                width={28}
-                height={28}
-                className="w-7 h-7 transition-transform duration-200 ease-out group-hover:rotate-[-8deg] group-hover:scale-110 motion-reduce:transition-none"
-              />
-              Mizen
-            </Link>
+            <PublicBrand />
             <LandingAuthCta onSignIn={() => setAuthOpen(true)} className="lg:hidden" />
           </div>
 
@@ -677,13 +662,11 @@ export function WaitlistLanding() {
             </div>
           </div>
 
-          {/* Bottom: Free + Who made it (desktop only — on mobile this is a page footer) */}
-          <div className="hidden lg:flex items-center justify-between">
+          <PublicFooter compact className="hidden lg:block pb-0">
             <span className="font-sans text-xs text-stone-400 dark:text-stone-500">
               Closed Beta v0.1.0
             </span>
-            <WhoMadeIt />
-          </div>
+          </PublicFooter>
         </div>
 
         {/* Right panel */}
@@ -773,13 +756,11 @@ export function WaitlistLanding() {
           </div>
         </div>
 
-        {/* Mobile footer */}
-        <div className="flex lg:hidden items-center justify-between px-8 py-6 bg-[#FAFAF9] dark:bg-stone-900">
+        <PublicFooter compact className="px-8 lg:hidden">
           <span className="font-sans text-xs text-stone-400 dark:text-stone-500">
             Closed Beta v0.1.0
           </span>
-          <WhoMadeIt borderColor="border-[#FAFAF9] dark:border-stone-900" />
-        </div>
+        </PublicFooter>
       </div>
 
       {isSupabaseConfigured && <BetaAuthModal open={authOpen} onOpenChange={setAuthOpen} />}
