@@ -37,9 +37,14 @@ export function PublicBrand() {
   );
 }
 
-export function PublicPage({ children }: { children: ReactNode }) {
+export function PublicPage({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className="landing-scroll flex min-h-screen min-w-0 flex-col bg-white text-stone-900 dark:bg-[var(--color-dark-surface)] dark:text-stone-100">
+    <div
+      className={cn(
+        "landing-scroll flex min-h-screen min-w-0 flex-col bg-white text-stone-900 dark:bg-[var(--color-dark-surface)] dark:text-stone-100",
+        className
+      )}
+    >
       {children}
     </div>
   );
@@ -53,7 +58,7 @@ export function PublicHeader({
   action?: ReactNode;
 }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/95 backdrop-blur dark:border-stone-800 dark:bg-[var(--color-dark-surface)]">
+    <header className="sticky top-0 z-40 shrink-0 border-b border-stone-200 bg-white/95 backdrop-blur dark:border-stone-800 dark:bg-[var(--color-dark-surface)]">
       <div
         className={cn(
           publicPageContainer,

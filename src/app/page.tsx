@@ -10,7 +10,7 @@ import { HomeLibrary } from "@/components/HomeLibrary";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { LandingAuthCta } from "@/components/LandingAuthCta";
-import { PublicBrand, PublicFooter } from "@/components/PublicPage";
+import { PublicPage, PublicHeader, PublicFooter } from "@/components/PublicPage";
 import { useUser } from "@/hooks/useUser";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import type { ParsedRecipe } from "@/lib/types";
@@ -542,226 +542,217 @@ export function WaitlistLanding() {
 
   return (
     <>
-      <div className="flex flex-col lg:flex-row min-h-screen lg:min-h-0 lg:h-screen lg:overflow-hidden flex-1">
-        {/* Left panel */}
-        <div className="relative flex flex-col justify-between lg:w-[38%] px-8 lg:px-12 xl:px-16 pt-12 lg:pt-5 pb-8 lg:pb-10 bg-white dark:bg-stone-950">
-          {/* Top: Logo */}
-          <div className="flex items-center justify-between">
-            <PublicBrand />
-            <LandingAuthCta onSignIn={() => setAuthOpen(true)} className="lg:hidden" />
+      <PublicPage className="lg:h-screen lg:overflow-hidden">
+        <PublicHeader
+          currentPath="/"
+          action={<LandingAuthCta onSignIn={() => setAuthOpen(true)} />}
+        />
+        <main className="flex min-h-0 flex-1 flex-col lg:flex-row">
+          {/* Left panel */}
+          <div className="relative flex flex-col justify-between lg:w-[38%] px-8 lg:px-12 xl:px-16 pt-12 lg:pt-5 pb-8 lg:pb-10 bg-white dark:bg-stone-950">
+            {/* Center: Hero content */}
+            <div className="flex-1 flex flex-col justify-center py-12 lg:py-0 lg:pb-16 lg:items-start items-center">
+              <div className="w-full text-center lg:text-left">
+                <h1 className="flex flex-col items-center gap-1 lg:items-start font-serif text-[clamp(32px,9vw,56px)] lg:text-[clamp(24px,2.6vw,44px)] xl:text-[clamp(32px,2.8vw,52px)] font-bold leading-[1.3] tracking-[-0.02em] text-stone-900 dark:text-stone-100 mb-5">
+                  <HeroHeadline />
+                </h1>
+
+                <p className="font-sans text-base lg:text-[17px] text-stone-500 dark:text-stone-400 leading-relaxed mb-8 max-w-[26rem] mx-auto lg:mx-0 text-balance">
+                  {LANDING_COPY.sub}
+                </p>
+
+                {/* Email form */}
+                <form onSubmit={handleSubmit} className="max-w-md mx-auto lg:mx-0">
+                  <div className="flex items-center h-[52px] rounded-xl border border-[#E7E5E4] bg-[#F5F5F4] dark:border-stone-700 dark:bg-stone-900 overflow-clip shrink-0 focus-within:border-[#18a1f7] focus-within:ring-[3px] focus-within:ring-[#18a1f7]/30 transition-[border-color,box-shadow]">
+                    {/* Input — collapses on success */}
+                    <motion.div
+                      initial={false}
+                      animate={{
+                        flex: submitted || alreadyOnList ? "0 0 0px" : "1 1 0%",
+                        opacity: submitted || alreadyOnList ? 0 : 1,
+                      }}
+                      transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+                      className="overflow-hidden min-w-0"
+                    >
+                      <input
+                        type="email"
+                        autoComplete="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required={!(submitted || alreadyOnList)}
+                        disabled={submitted || alreadyOnList}
+                        className="w-full bg-transparent font-sans text-[15px] text-stone-700 dark:text-stone-200 placeholder:text-[#A8A29E] dark:placeholder:text-stone-500 outline-none pl-5 leading-[18px] whitespace-nowrap"
+                      />
+                    </motion.div>
+
+                    {/* Button — expands to fill, then shows success */}
+                    <motion.button
+                      type="submit"
+                      disabled={submitting || submitted || alreadyOnList}
+                      initial={false}
+                      animate={{
+                        flex: submitted || alreadyOnList ? "1 1 0%" : "0 0 auto",
+                      }}
+                      whileTap={
+                        submitted || alreadyOnList || submitting ? undefined : { scale: 0.96 }
+                      }
+                      transition={{ duration: 0.25, ease: [0.77, 0, 0.175, 1] }}
+                      className={`px-5 h-10 rounded-lg bg-[#18A1F7] font-sans text-[14px] text-[#ffffff] font-semibold leading-[18px] m-1.5 flex items-center justify-center gap-1.5 transition-[opacity] overflow-hidden ${
+                        submitted || alreadyOnList
+                          ? "!opacity-100 pointer-events-none"
+                          : "hover:bg-[#1590de] disabled:opacity-60"
+                      }`}
+                    >
+                      <AnimatePresence mode="wait" initial={false}>
+                        {submitted || alreadyOnList ? (
+                          <motion.span
+                            key="success"
+                            initial={{ opacity: 0, scale: 0.96, y: 4 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            transition={{
+                              delay: 0.1,
+                              duration: 0.2,
+                              ease: [0.23, 1, 0.32, 1],
+                            }}
+                            className="flex items-center gap-2 whitespace-nowrap"
+                          >
+                            <svg
+                              className="w-4 h-4 flex-shrink-0"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M20 6 9 17l-5-5" />
+                            </svg>
+                            <span className="font-medium">
+                              {alreadyOnList
+                                ? "You\u2019re already on the list!"
+                                : "You\u2019re on the list!"}
+                            </span>
+                          </motion.span>
+                        ) : submitting ? (
+                          <motion.span
+                            key="sending"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
+                            transition={{ duration: 0.1, ease: [0.23, 1, 0.32, 1] }}
+                          >
+                            Sending...
+                          </motion.span>
+                        ) : (
+                          <motion.span
+                            key="cta"
+                            exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
+                            transition={{ duration: 0.1, ease: [0.23, 1, 0.32, 1] }}
+                            className="flex items-center gap-1.5"
+                          >
+                            <Plain size={16} weight="Bold" className="shrink-0" /> Notify Me
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </motion.button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <PublicFooter compact className="hidden lg:block pb-0">
+              <span className="font-sans text-xs text-stone-400 dark:text-stone-500">
+                Closed Beta v0.1.0
+              </span>
+            </PublicFooter>
           </div>
 
-          {/* Center: Hero content */}
-          <div className="flex-1 flex flex-col justify-center py-12 lg:py-0 lg:pb-16 lg:items-start items-center">
-            <div className="w-full text-center lg:text-left">
-              <h1 className="flex flex-col items-center gap-1 lg:items-start font-serif text-[clamp(32px,9vw,56px)] lg:text-[clamp(24px,2.6vw,44px)] xl:text-[clamp(32px,2.8vw,52px)] font-bold leading-[1.3] tracking-[-0.02em] text-stone-900 dark:text-stone-100 mb-5">
-                <HeroHeadline />
-              </h1>
-
-              <p className="font-sans text-base lg:text-[17px] text-stone-500 dark:text-stone-400 leading-relaxed mb-8 max-w-[26rem] mx-auto lg:mx-0 text-balance">
-                {LANDING_COPY.sub}
-              </p>
-
-              {/* Email form */}
-              <form onSubmit={handleSubmit} className="max-w-md mx-auto lg:mx-0">
-                <div className="flex items-center h-[52px] rounded-xl border border-[#E7E5E4] bg-[#F5F5F4] dark:border-stone-700 dark:bg-stone-900 overflow-clip shrink-0 focus-within:border-[#18a1f7] focus-within:ring-[3px] focus-within:ring-[#18a1f7]/30 transition-[border-color,box-shadow]">
-                  {/* Input — collapses on success */}
-                  <motion.div
-                    initial={false}
-                    animate={{
-                      flex: submitted || alreadyOnList ? "0 0 0px" : "1 1 0%",
-                      opacity: submitted || alreadyOnList ? 0 : 1,
-                    }}
-                    transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-                    className="overflow-hidden min-w-0"
-                  >
-                    <input
-                      type="email"
-                      autoComplete="email"
-                      placeholder="you@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required={!(submitted || alreadyOnList)}
-                      disabled={submitted || alreadyOnList}
-                      className="w-full bg-transparent font-sans text-[15px] text-stone-700 dark:text-stone-200 placeholder:text-[#A8A29E] dark:placeholder:text-stone-500 outline-none pl-5 leading-[18px] whitespace-nowrap"
-                    />
-                  </motion.div>
-
-                  {/* Button — expands to fill, then shows success */}
-                  <motion.button
-                    type="submit"
-                    disabled={submitting || submitted || alreadyOnList}
-                    initial={false}
-                    animate={{
-                      flex: submitted || alreadyOnList ? "1 1 0%" : "0 0 auto",
-                    }}
-                    whileTap={
-                      submitted || alreadyOnList || submitting ? undefined : { scale: 0.96 }
-                    }
-                    transition={{ duration: 0.25, ease: [0.77, 0, 0.175, 1] }}
-                    className={`px-5 h-10 rounded-lg bg-[#18A1F7] font-sans text-[14px] text-[#ffffff] font-semibold leading-[18px] m-1.5 flex items-center justify-center gap-1.5 transition-[opacity] overflow-hidden ${
-                      submitted || alreadyOnList
-                        ? "!opacity-100 pointer-events-none"
-                        : "hover:bg-[#1590de] disabled:opacity-60"
+          {/* Right panel */}
+          <div className="relative flex-1 flex flex-col pt-6 bg-[#FAFAF9] dark:bg-stone-900 overflow-hidden">
+            {/* Source tabs */}
+            <div className="flex flex-col items-center gap-3 px-8 lg:px-10 pt-2 lg:pt-0 pb-5">
+              <span className="font-sans text-sm text-stone-400 dark:text-stone-500">
+                {LANDING_COPY.sourceLabel}
+              </span>
+              <div className="flex items-center gap-2">
+                {SOURCES.map((source, i) => (
+                  <button
+                    key={source.label}
+                    onClick={() => handleSourceChange(i)}
+                    className={`press-scale flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-sans text-sm font-medium transition-[color,background-color,border-color,box-shadow,transform] ${
+                      activeSource === i
+                        ? "bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 border border-transparent"
+                        : "bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600"
                     }`}
                   >
-                    <AnimatePresence mode="wait" initial={false}>
-                      {submitted || alreadyOnList ? (
-                        <motion.span
-                          key="success"
-                          initial={{ opacity: 0, scale: 0.96, y: 4 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          transition={{
-                            delay: 0.1,
-                            duration: 0.2,
-                            ease: [0.23, 1, 0.32, 1],
-                          }}
-                          className="flex items-center gap-2 whitespace-nowrap"
-                        >
-                          <svg
-                            className="w-4 h-4 flex-shrink-0"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M20 6 9 17l-5-5" />
-                          </svg>
-                          <span className="font-medium">
-                            {alreadyOnList
-                              ? "You\u2019re already on the list!"
-                              : "You\u2019re on the list!"}
-                          </span>
-                        </motion.span>
-                      ) : submitting ? (
-                        <motion.span
-                          key="sending"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
-                          transition={{ duration: 0.1, ease: [0.23, 1, 0.32, 1] }}
-                        >
-                          Sending...
-                        </motion.span>
-                      ) : (
-                        <motion.span
-                          key="cta"
-                          exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
-                          transition={{ duration: 0.1, ease: [0.23, 1, 0.32, 1] }}
-                          className="flex items-center gap-1.5"
-                        >
-                          <Plain size={16} weight="Bold" className="shrink-0" /> Notify Me
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </motion.button>
+                    <SourceIcon type={source.icon} />
+                    <span className="sm:hidden whitespace-nowrap">{source.shortLabel}</span>
+                    <span className="hidden sm:inline whitespace-nowrap">{source.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Recipe card + source overlay */}
+            <div className="relative flex-1 flex justify-center px-6 lg:px-10 pb-6 lg:pb-0">
+              {/* Source input preview — overlaid on the recipe card */}
+              {(phase === "preview" || phase === "absorb" || phase === "exit") && (
+                <div className="absolute inset-x-6 lg:inset-x-10 top-0 bottom-6 lg:bottom-0 z-10 flex justify-center items-start pt-20 pointer-events-none">
+                  <div
+                    key={`preview-${displayedPreview}`}
+                    className={`flex justify-center items-center ${
+                      phase === "absorb"
+                        ? "source-absorb"
+                        : isInitialLoad
+                          ? "source-preview-enter-initial"
+                          : "source-preview-enter"
+                    }`}
+                  >
+                    {(() => {
+                      const Preview = SOURCE_PREVIEWS[displayedPreview];
+                      return <Preview />;
+                    })()}
+                  </div>
                 </div>
-              </form>
-            </div>
-          </div>
-
-          <PublicFooter compact className="hidden lg:block pb-0">
-            <span className="font-sans text-xs text-stone-400 dark:text-stone-500">
-              Closed Beta v0.1.0
-            </span>
-          </PublicFooter>
-        </div>
-
-        {/* Right panel */}
-        <div className="relative flex-1 flex flex-col pt-6 lg:pt-0 bg-[#FAFAF9] dark:bg-stone-900 overflow-hidden">
-          {/* Top nav */}
-          <div className="hidden lg:flex items-center justify-end px-8 lg:px-10 pt-5 pb-2 relative z-20">
-            <LandingAuthCta
-              onSignIn={() => setAuthOpen(true)}
-              className="hidden bg-white hover:bg-stone-50 lg:block"
-            />
-          </div>
-
-          {/* Source tabs */}
-          <div className="flex flex-col items-center gap-3 px-8 lg:px-10 pt-2 lg:pt-0 pb-5">
-            <span className="font-sans text-sm text-stone-400 dark:text-stone-500">
-              {LANDING_COPY.sourceLabel}
-            </span>
-            <div className="flex items-center gap-2">
-              {SOURCES.map((source, i) => (
-                <button
-                  key={source.label}
-                  onClick={() => handleSourceChange(i)}
-                  className={`press-scale flex items-center gap-1.5 px-3.5 py-1.5 rounded-full font-sans text-sm font-medium transition-[color,background-color,border-color,box-shadow,transform] ${
-                    activeSource === i
-                      ? "bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 border border-transparent"
-                      : "bg-white dark:bg-stone-800 text-stone-600 dark:text-stone-300 border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600"
-                  }`}
-                >
-                  <SourceIcon type={source.icon} />
-                  <span className="sm:hidden whitespace-nowrap">{source.shortLabel}</span>
-                  <span className="hidden sm:inline whitespace-nowrap">{source.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Recipe card + source overlay */}
-          <div className="relative flex-1 flex justify-center px-6 lg:px-10 pb-6 lg:pb-0">
-            {/* Source input preview — overlaid on the recipe card */}
-            {(phase === "preview" || phase === "absorb" || phase === "exit") && (
-              <div className="absolute inset-x-6 lg:inset-x-10 top-0 bottom-6 lg:bottom-0 z-10 flex justify-center items-start pt-20 pointer-events-none">
+              )}
+              <div className="w-full max-w-2xl lg:max-w-3xl flex flex-col bg-white dark:bg-stone-950 rounded-xl lg:rounded-b-none shadow-lg border border-stone-200/60 dark:border-stone-700 lg:border-b-0 overflow-hidden">
+                {/* Browser chrome — always visible */}
+                <div className="flex overflow-clip w-full h-[41px] rounded-tl-[10px] rounded-tr-[10px] items-center gap-2 py-2.5 px-5 bg-white dark:bg-stone-900 shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <div className="rounded-full bg-[#DDDDDD] dark:bg-stone-700 shrink-0 size-3" />
+                    <div className="rounded-full bg-[#DDDDDD] dark:bg-stone-700 shrink-0 size-3" />
+                    <div className="rounded-full bg-[#DDDDDD] dark:bg-stone-700 shrink-0 size-3" />
+                  </div>
+                </div>
                 <div
-                  key={`preview-${displayedPreview}`}
-                  className={`flex justify-center items-center ${
-                    phase === "absorb"
-                      ? "source-absorb"
-                      : isInitialLoad
-                        ? "source-preview-enter-initial"
-                        : "source-preview-enter"
+                  className={`flex-1 ${
+                    phase === "exit"
+                      ? "waitlist-recipe-exit"
+                      : phase === "populate"
+                        ? "waitlist-recipe-enter"
+                        : phase === "idle"
+                          ? ""
+                          : "opacity-0"
                   }`}
                 >
-                  {(() => {
-                    const Preview = SOURCE_PREVIEWS[displayedPreview];
-                    return <Preview />;
-                  })()}
+                  <WaitlistRecipePreview
+                    key={displayedSource}
+                    recipe={EXAMPLE_RECIPES[displayedSource]}
+                    sourceType={(["url", "text", "photo"] as const)[displayedSource]}
+                    pastedText={displayedSource === 1 ? CHATGPT_PASTED_TEXT : undefined}
+                  />
                 </div>
-              </div>
-            )}
-            <div className="w-full max-w-2xl lg:max-w-3xl flex flex-col bg-white dark:bg-stone-950 rounded-xl lg:rounded-b-none shadow-lg border border-stone-200/60 dark:border-stone-700 lg:border-b-0 overflow-hidden">
-              {/* Browser chrome — always visible */}
-              <div className="flex overflow-clip w-full h-[41px] rounded-tl-[10px] rounded-tr-[10px] items-center gap-2 py-2.5 px-5 bg-white dark:bg-stone-900 shrink-0">
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <div className="rounded-full bg-[#DDDDDD] dark:bg-stone-700 shrink-0 size-3" />
-                  <div className="rounded-full bg-[#DDDDDD] dark:bg-stone-700 shrink-0 size-3" />
-                  <div className="rounded-full bg-[#DDDDDD] dark:bg-stone-700 shrink-0 size-3" />
-                </div>
-              </div>
-              <div
-                className={`flex-1 ${
-                  phase === "exit"
-                    ? "waitlist-recipe-exit"
-                    : phase === "populate"
-                      ? "waitlist-recipe-enter"
-                      : phase === "idle"
-                        ? ""
-                        : "opacity-0"
-                }`}
-              >
-                <WaitlistRecipePreview
-                  key={displayedSource}
-                  recipe={EXAMPLE_RECIPES[displayedSource]}
-                  sourceType={(["url", "text", "photo"] as const)[displayedSource]}
-                  pastedText={displayedSource === 1 ? CHATGPT_PASTED_TEXT : undefined}
-                />
               </div>
             </div>
           </div>
-        </div>
-
+        </main>
         <PublicFooter compact className="px-8 lg:hidden">
           <span className="font-sans text-xs text-stone-400 dark:text-stone-500">
             Closed Beta v0.1.0
           </span>
         </PublicFooter>
-      </div>
+      </PublicPage>
 
       {isSupabaseConfigured && <BetaAuthModal open={authOpen} onOpenChange={setAuthOpen} />}
     </>
