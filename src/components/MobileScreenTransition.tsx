@@ -11,7 +11,7 @@ const homeRecipeScrollShellClassName = "flex h-full min-h-0 flex-col";
 
 type TransitionDirection = "back" | "forward" | "up" | "down";
 
-const tabOrder = ["/", "/profile"];
+const tabOrder = ["/", "/meal-plan", "/profile"];
 
 function transitionDirection(from: string, to: string): TransitionDirection {
   if (to === "/search") return "up";
@@ -62,7 +62,7 @@ export function MobileScreenTransition({ children }: { children: ReactNode }) {
     setPreviousPathname(pathname);
   }, [pathname]);
 
-  const isHomeRecipeView = pathname === "/";
+  const isHomeRecipeView = pathname === "/" || pathname === "/meal-plan";
 
   if (!isMobile || prefersReducedMotion) {
     return isHomeRecipeView ? (
