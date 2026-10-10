@@ -46,6 +46,26 @@ describe("shouldRedirectOAuthRootCallback", () => {
 });
 
 describe("proxy", () => {
+  it.each(["/privacy", "/terms", "/privacy?source=settings", "/terms?source=footer"])(
+    "serves %s without looking up a session",
+    async (path) => {
+      const response = await proxy(createRequest(`https://example.com${path}`) as never);
+
+      expect(response.status).toBe(200);
+      expect(response.headers.get("location")).toBeNull();
+      expect(updateSession).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each(["/privacy/private", "/terms-of-service", "/cookbook"])(
+    "keeps the session flow for %s",
+    async (path) => {
+      vi.mocked(updateSession).mockResolvedValue(NextResponse.next());
+      await proxy(createRequest(`https://example.com${path}`) as never);
+      expect(updateSession).toHaveBeenCalledOnce();
+    }
+  );
+
   it("redirects root OAuth callback traffic to /auth/callback preserving query params", async () => {
     const request = createRequest("https://example.com/?code=abc&state=xyz");
 
