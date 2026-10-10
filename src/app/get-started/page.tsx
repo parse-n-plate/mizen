@@ -1,13 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { LandingAuthCta } from "@/components/LandingAuthCta";
 import { ReleaseNotice } from "@/components/ReleaseNotice";
-import { WhoMadeIt } from "@/components/WhoMadeIt";
+import {
+  PublicPage,
+  PublicHeader,
+  PublicPageTitle,
+  PublicFooter,
+  publicPageContainer,
+  publicPageWidths,
+} from "@/components/PublicPage";
+import { cn } from "@/lib/utils";
 import { appVersion } from "@/lib/app-version";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 
@@ -80,8 +87,6 @@ const steps = [
 function GetStartedPageContent() {
   const [authOpen, setAuthOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [showNav, setShowNav] = useState(false);
-  const heroRef = useRef<HTMLDivElement | null>(null);
   const [lightbox, setLightbox] = useState<{
     src: string;
     alt: string;
@@ -89,61 +94,19 @@ function GetStartedPageContent() {
     el: HTMLElement;
   } | null>(null);
 
-  useEffect(() => {
-    const updateNavVisibility = () => {
-      const hero = heroRef.current;
-      if (!hero) return;
-
-      const rect = hero.getBoundingClientRect();
-      const threshold = window.scrollY + rect.top + rect.height / 2;
-      setShowNav(window.scrollY >= threshold);
-    };
-
-    updateNavVisibility();
-    window.addEventListener("scroll", updateNavVisibility, { passive: true });
-    window.addEventListener("resize", updateNavVisibility);
-
-    return () => {
-      window.removeEventListener("scroll", updateNavVisibility);
-      window.removeEventListener("resize", updateNavVisibility);
-    };
-  }, []);
-
   return (
     <>
-      <div className="landing-scroll min-h-screen bg-white text-stone-900 dark:bg-[var(--color-dark-surface)] dark:text-stone-100">
-        <header
-          className={`fixed inset-x-0 top-0 z-40 border-b border-stone-200 bg-white/95 backdrop-blur transition-[opacity,transform] duration-200 ease-out supports-[backdrop-filter]:bg-white/85 dark:border-stone-800 dark:bg-stone-950/95 dark:supports-[backdrop-filter]:bg-stone-950/85 ${
-            showNav ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"
-          }`}
-        >
-          <nav className="mx-auto flex h-16 w-full max-w-[1120px] items-center justify-between px-5 sm:h-20 sm:px-8">
-            <Link href="/" className="flex min-w-0 items-center gap-2">
-              <Image
-                src="/assets/icons/Fish Logo.svg"
-                alt=""
-                aria-hidden
-                width={28}
-                height={28}
-                className="h-6 w-6 shrink-0 sm:h-7 sm:w-7"
-              />
-              <span className="font-serif text-base font-semibold text-stone-900 dark:text-stone-50 sm:text-lg">
-                Mizen
-              </span>
-            </Link>
-            <LandingAuthCta onSignIn={() => setAuthOpen(true)} signedInLabel="Go to app" />
-          </nav>
-        </header>
-
-        <main className="mx-auto w-full max-w-[1120px] px-5 py-10 sm:px-8 sm:py-14">
+      <PublicPage>
+        <PublicHeader
+          currentPath="/get-started"
+          action={<LandingAuthCta onSignIn={() => setAuthOpen(true)} />}
+        />
+        <main className={cn(publicPageContainer, publicPageWidths.wide, "flex-1 py-10 sm:py-14")}>
           <section className="max-w-[720px]">
-            <h1 className="font-serif text-[36px] font-bold leading-[42px] tracking-[-0.02em] text-stone-950 dark:text-stone-50 sm:text-[48px] sm:leading-[58px]">
-              Get started with Mizen
-            </h1>
+            <PublicPageTitle>Get started with Mizen</PublicPageTitle>
           </section>
 
           <div
-            ref={heroRef}
             role="img"
             aria-label="Mizen icons on a blue background."
             className="group relative mt-8 aspect-[4/3] overflow-hidden rounded-lg border border-stone-200 bg-[#99d5f5] sm:aspect-video dark:border-stone-800"
@@ -253,7 +216,7 @@ function GetStartedPageContent() {
           </section>
         </main>
 
-        <footer className="mx-auto flex w-full max-w-[1120px] items-center justify-between px-5 pb-8 pt-2 sm:px-8">
+        <PublicFooter>
           <ReleaseNotice
             compact
             triggerLabel={appVersion}
@@ -261,9 +224,8 @@ function GetStartedPageContent() {
             triggerBadgeLabel="Beta"
             className="shrink-0"
           />
-          <WhoMadeIt />
-        </footer>
-      </div>
+        </PublicFooter>
+      </PublicPage>
 
       {isSupabaseConfigured && <BetaAuthModal open={authOpen} onOpenChange={setAuthOpen} />}
       {lightbox && (

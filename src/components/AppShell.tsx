@@ -59,7 +59,10 @@ function SessionAppShell({ children }: { children: ReactNode }) {
   // clips that overflow, collapses the html scroll area, and snaps the page to the top. Letting
   // the wrapper grow with its content keeps body tall so the lock can't collapse the scroll.
   const isScrollingLanding =
-    pathname === "/changelog" || pathname === "/get-started" || isDesignSystemPage;
+    pathname === "/changelog" ||
+    pathname === "/get-started" ||
+    pathname === "/links" ||
+    isDesignSystemPage;
   // Treat loading state as landing on homepage so sidebar don't flash
   // before auth resolves
   const isLanding = isPublicStandalonePage || (isHomePage && (loading || !user));
