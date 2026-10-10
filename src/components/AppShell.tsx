@@ -10,6 +10,7 @@ import { MobileScreenTransition } from "@/components/MobileScreenTransition";
 import { SearchCommandModal } from "@/components/SearchCommandModal";
 import { SplashScreen } from "@/components/SplashScreen";
 import { cn } from "@/lib/utils";
+import { isPublicLegalPage } from "@/lib/public-legal-pages";
 import SidebarMinimalistic from "@solar-icons/react/csr/it/SidebarMinimalistic";
 import type { ReactNode } from "react";
 
@@ -31,6 +32,13 @@ export function useSidebar(): SidebarContextValue {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  if (isPublicLegalPage(pathname)) return children;
+
+  return <SessionAppShell>{children}</SessionAppShell>;
+}
+
+function SessionAppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { user, loading } = useUser();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
