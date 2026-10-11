@@ -11,12 +11,11 @@ export function PublicSiteHeader() {
   const pathname = usePathname();
   const [authOpen, setAuthOpen] = useState(false);
 
+  if (pathname === "/homepage") return null;
+
   return (
     <>
-      <PublicHeader
-        fullWidth={pathname === "/homepage"}
-        action={<LandingAuthCta onSignIn={() => setAuthOpen(true)} />}
-      />
+      <PublicHeader action={<LandingAuthCta onSignIn={() => setAuthOpen(true)} />} />
       {isSupabaseConfigured && <BetaAuthModal open={authOpen} onOpenChange={setAuthOpen} />}
     </>
   );
