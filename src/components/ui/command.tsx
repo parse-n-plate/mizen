@@ -20,6 +20,12 @@ function Command({ className, ...props }: React.ComponentProps<typeof CommandPri
   );
 }
 
+function focusCommandPaletteInput(content: HTMLElement) {
+  content
+    .querySelector<HTMLInputElement>('[data-slot="command-input"]')
+    ?.focus({ preventScroll: true });
+}
+
 function CommandDialog({
   title = "Command Palette",
   description = "Search for a command to run",
@@ -42,6 +48,12 @@ function CommandDialog({
         className={cn("command-palette-content overflow-hidden p-0", className)}
         overlayClassName={cn("command-palette-overlay", overlayClassName)}
         showCloseButton={showCloseButton}
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          if (event.currentTarget instanceof HTMLElement) {
+            focusCommandPaletteInput(event.currentTarget);
+          }
+        }}
       >
         <DialogTitle className="sr-only">{title}</DialogTitle>
         <DialogDescription className="sr-only">{description}</DialogDescription>
@@ -54,9 +66,11 @@ function CommandDialog({
 function CommandInput({
   className,
   suffix,
+  ref,
   ...props
 }: React.ComponentProps<typeof CommandPrimitive.Input> & {
   suffix?: React.ReactNode;
+  ref?: React.Ref<React.ElementRef<typeof CommandPrimitive.Input>>;
 }) {
   return (
     <div
@@ -65,6 +79,7 @@ function CommandInput({
     >
       <SearchIcon className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
       <CommandPrimitive.Input
+        ref={ref}
         data-slot="command-input"
         className={cn(
           "flex h-12 w-full bg-transparent font-sans text-base outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
