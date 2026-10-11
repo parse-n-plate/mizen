@@ -3,6 +3,7 @@ import { Domine, Albert_Sans } from "next/font/google";
 import { Agentation } from "agentation";
 import { DialRoot } from "dialkit";
 import { AppShell } from "@/components/AppShell";
+import { PUBLIC_PAGE_PATHS } from "@/lib/public-pages";
 import { developerFeedbackToolsEnabled } from "@/lib/features";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeSync } from "@/components/ThemeSync";
@@ -54,7 +55,7 @@ export default function RootLayout({
         />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{if(location.pathname==='/privacy'||location.pathname==='/terms')return;if(localStorage.getItem('mizen:core-app-seen')==='true'&&sessionStorage.getItem('mizen:splash-seen')!=='true'){document.documentElement.dataset.earlySplash='true'}}catch(e){}})()`,
+            __html: `(function(){try{if(${JSON.stringify(PUBLIC_PAGE_PATHS)}.includes(location.pathname))return;if(localStorage.getItem('mizen:core-app-seen')==='true'&&sessionStorage.getItem('mizen:splash-seen')!=='true'){document.documentElement.dataset.earlySplash='true'}}catch(e){}})()`,
           }}
         />
       </head>

@@ -1,7 +1,7 @@
 import { type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 import { NextResponse } from "next/server";
-import { isPublicLegalPage } from "@/lib/public-legal-pages";
+import { isPublicPage } from "@/lib/public-pages";
 
 export function shouldRedirectOAuthRootCallback(request: Pick<NextRequest, "method" | "nextUrl">) {
   return (
@@ -21,8 +21,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Legal documents are public and do not need a session refresh.
-  if (isPublicLegalPage(request.nextUrl.pathname)) return NextResponse.next();
+  // Standalone public pages do not read protected data or need a session refresh.
+  if (isPublicPage(request.nextUrl.pathname)) return NextResponse.next();
 
   return await updateSession(request);
 }

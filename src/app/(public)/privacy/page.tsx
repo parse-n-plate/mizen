@@ -2,17 +2,17 @@ import type { Metadata } from "next";
 import { LegalPage } from "@/components/LegalPage";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Mizen",
+  title: "Privacy policy | Mizen",
   description: "How Mizen collects, uses, and retains your information.",
 };
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy Policy">
+    <LegalPage title="Privacy policy">
       <div className="mt-8 space-y-6">
         <section className="space-y-2">
           <h2 className="font-serif text-lg font-semibold text-stone-900 dark:text-stone-100">
-            Information We Collect
+            Information we collect
           </h2>
           <p className="font-sans text-base leading-relaxed text-stone-600 dark:text-stone-400">
             We collect only the information necessary to provide our service. When you sign in with
@@ -23,7 +23,7 @@ export default function PrivacyPage() {
 
         <section className="space-y-2">
           <h2 className="font-serif text-lg font-semibold text-stone-900 dark:text-stone-100">
-            How We Use Information
+            How we use information
           </h2>
           <p className="font-sans text-base leading-relaxed text-stone-600 dark:text-stone-400">
             Your data is used solely to operate and improve Mizen. We use recipe URLs to extract and
@@ -45,7 +45,7 @@ export default function PrivacyPage() {
 
         <section className="space-y-2">
           <h2 className="font-serif text-lg font-semibold text-stone-900 dark:text-stone-100">
-            Data Retention
+            Data retention
           </h2>
           <p className="font-sans text-base leading-relaxed text-stone-600 dark:text-stone-400">
             We retain your information only as long as needed to provide our service. You can delete

@@ -6,10 +6,15 @@ import Link from "next/link";
 import { toast } from "sonner";
 import AltArrowRight from "@solar-icons/react/csr/arrows/AltArrowRight";
 import Plain from "@solar-icons/react/csr/messages/Plain";
-import { BetaAuthModal } from "@/components/BetaAuthModal";
-import { LandingAuthCta } from "@/components/LandingAuthCta";
+import {
+  PublicPage,
+  PublicPageTitle,
+  PublicFooter,
+  publicPageContainer,
+  publicPageWidths,
+} from "@/components/PublicPage";
+import { cn } from "@/lib/utils";
 import { favoriteRecipes } from "@/lib/favorite-recipes";
-import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 
 const connectCards = [
   {
@@ -33,7 +38,6 @@ const connectCards = [
 ];
 
 export function LinksPageContent() {
-  const [authOpen, setAuthOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -71,33 +75,11 @@ export function LinksPageContent() {
 
   return (
     <>
-      <div className="landing-scroll flex min-h-screen min-w-0 flex-col overflow-x-hidden bg-[#FAFAF9] text-stone-900 dark:bg-[var(--color-dark-surface)] dark:text-stone-100">
-        <header className="fixed inset-x-0 top-0 z-40 border-b border-stone-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85 dark:border-stone-800 dark:bg-stone-950/95 dark:supports-[backdrop-filter]:bg-stone-950/85">
-          <nav className="mx-auto flex h-16 w-full max-w-[800px] min-w-0 items-center justify-between gap-3 px-4 sm:h-20 sm:px-8">
-            <Link href="/" className="group flex min-w-0 items-center gap-2">
-              <Image
-                src="/apple-touch-icon.png"
-                alt=""
-                aria-hidden
-                width={28}
-                height={28}
-                className="h-6 w-6 shrink-0 transition-transform duration-200 ease-out group-hover:rotate-[-8deg] group-hover:scale-110 motion-reduce:transition-none sm:h-7 sm:w-7"
-                priority
-              />
-              <span className="font-serif text-base font-semibold text-stone-900 dark:text-stone-50 sm:text-lg">
-                Mizen
-              </span>
-            </Link>
-            <LandingAuthCta onSignIn={() => setAuthOpen(true)} signedInLabel="Go to app" />
-          </nav>
-        </header>
-
-        <main className="mx-auto w-full max-w-[800px] min-w-0 flex-1 px-4 pb-10 pt-24 sm:px-8 sm:pb-14 sm:pt-28">
-          <section className="grid gap-5 sm:h-[100px] sm:grid-cols-[minmax(360px,1fr)_minmax(300px,420px)] sm:items-center">
+      <PublicPage>
+        <main className={cn(publicPageContainer, publicPageWidths.wide, "flex-1 py-10 sm:py-14")}>
+          <section className="grid gap-5 lg:grid-cols-2 lg:items-center">
             <div>
-              <h1 className="font-serif text-[30px] font-semibold leading-tight text-stone-950 dark:text-stone-50 sm:text-[32px]">
-                Try Mizen early.
-              </h1>
+              <PublicPageTitle>Try Mizen early.</PublicPageTitle>
               <p className="mt-2 max-w-[420px] text-pretty font-sans text-[16px] leading-7 text-stone-600 dark:text-stone-300">
                 Join the waitlist for access to clean recipe imports and a calmer cooking view.
               </p>
@@ -239,9 +221,8 @@ export function LinksPageContent() {
             </div>
           </div>
         </main>
-      </div>
-
-      {isSupabaseConfigured && <BetaAuthModal open={authOpen} onOpenChange={setAuthOpen} />}
+        <PublicFooter />
+      </PublicPage>
     </>
   );
 }

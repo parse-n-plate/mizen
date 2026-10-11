@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import Plain from "@solar-icons/react/csr/messages/Plain";
 import { motion, AnimatePresence } from "motion/react";
@@ -544,13 +545,13 @@ export function WaitlistLanding() {
 
   return (
     <>
-      <div className="flex flex-col lg:flex-row min-h-screen lg:min-h-0 lg:h-screen lg:overflow-hidden flex-1">
+      <div className="landing-scroll flex flex-col lg:flex-row min-h-screen lg:min-h-0 lg:h-screen lg:overflow-hidden flex-1">
         {/* Left panel */}
         <div className="relative flex flex-col justify-between lg:w-[38%] px-8 lg:px-12 xl:px-16 pt-12 lg:pt-5 pb-8 lg:pb-10 bg-white dark:bg-stone-950">
           {/* Top: Logo */}
           <div className="flex items-center justify-between">
             <Link
-              href="/"
+              href="/homepage"
               className="group flex items-center gap-2 font-serif text-lg font-semibold text-stone-900 dark:text-stone-100"
             >
               <Image
