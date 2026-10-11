@@ -44,9 +44,9 @@ const questions = [
     answer: (
       <>
         The beta is an early version of Mizen with recipe imports and the mobile cooking view. Bugs
-        are to be expected, and your feedback helps us improve the app. See the{" "}
+        are to be expected, and your feedback helps us improve the app. See{" "}
         <Link href="/changelog" className={answerLink}>
-          updates
+          What’s New
         </Link>{" "}
         for recent changes, and send feedback to{" "}
         <a href="mailto:hello@mizen.recipes" className={answerLink}>

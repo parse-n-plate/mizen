@@ -12,7 +12,7 @@ import { ChangelogGitHub } from "./changelog-github";
 import { appVersion } from "@/lib/app-version";
 
 export const metadata: Metadata = {
-  title: "Changelog | Mizen",
+  title: "What’s New | Mizen",
   description: "Recent Mizen product updates and fixes.",
 };
 
@@ -22,7 +22,7 @@ export default function ChangelogPage() {
       <main className={cn(publicPageContainer, publicPageWidths.wide, "flex-1 py-10 sm:py-14")}>
         <section className="grid gap-8 pb-12 md:grid-cols-[minmax(0,0.82fr)_minmax(280px,0.55fr)] md:items-end lg:pb-16">
           <div className="max-w-2xl">
-            <PublicPageTitle>What changed in Mizen</PublicPageTitle>
+            <PublicPageTitle>What’s New</PublicPageTitle>
             <p className="mt-6 max-w-xl font-sans text-lg leading-8 text-stone-600 dark:text-stone-400">
               Product updates, fixes, and early access notes pulled from merged GitHub history on
               the main branch.
