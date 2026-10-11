@@ -2,6 +2,7 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { AppShell } from "./AppShell";
+import { PUBLIC_PAGE_PATHS } from "@/lib/public-pages";
 
 const { route, useUser } = vi.hoisted(() => ({
   route: { pathname: "/privacy" },
@@ -24,7 +25,7 @@ vi.mock("@/components/SearchCommandModal", () => ({ SearchCommandModal: () => nu
 vi.mock("@/components/SplashScreen", () => ({ SplashScreen: () => null }));
 
 describe("public legal pages", () => {
-  it.each(["/privacy", "/terms"])("renders %s outside the session and recipe flow", (pathname) => {
+  it.each(PUBLIC_PAGE_PATHS)("renders %s outside the session and recipe flow", (pathname) => {
     route.pathname = pathname;
     const html = renderToStaticMarkup(
       <AppShell>

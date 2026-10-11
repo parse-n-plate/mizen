@@ -22,7 +22,7 @@ const publicNavigation = [
 export function PublicBrand() {
   return (
     <Link
-      href="/"
+      href="/homepage"
       className="flex shrink-0 items-center gap-2 rounded-md font-serif text-lg font-semibold text-stone-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mizen-blue dark:text-stone-50 transition-none"
     >
       <Image
@@ -41,7 +41,7 @@ export function PublicPage({ children, className }: { children: ReactNode; class
   return (
     <div
       className={cn(
-        "landing-scroll flex min-h-screen min-w-0 flex-col bg-white text-stone-900 dark:bg-[var(--color-dark-surface)] dark:text-stone-100",
+        "landing-scroll flex min-h-0 min-w-0 flex-1 flex-col bg-white text-stone-900 dark:bg-[var(--color-dark-surface)] dark:text-stone-100",
         className
       )}
     >
@@ -63,13 +63,13 @@ export function PublicHeader({
         className={cn(
           publicPageContainer,
           publicPageWidths.wide,
-          "grid grid-cols-2 items-center gap-x-6 gap-y-4 py-4 sm:grid-cols-[auto_1fr_auto] sm:py-5"
+          "grid grid-cols-2 items-center gap-x-6 gap-y-4 py-4 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:py-5"
         )}
       >
         <PublicBrand />
         <nav
           aria-label="Public pages"
-          className="order-3 col-span-2 flex flex-wrap items-center gap-6 sm:order-none sm:col-span-1 sm:justify-center"
+          className="order-3 col-span-2 flex flex-wrap items-center gap-6 sm:order-none sm:col-span-1 font-medium sm:justify-center"
         >
           {publicNavigation.map(({ href, label }) => (
             <Link
@@ -78,17 +78,18 @@ export function PublicHeader({
               aria-current={currentPath === href ? "page" : undefined}
               className={cn(
                 publicLink,
-                currentPath === href && "font-medium text-stone-900 dark:text-stone-100"
+                currentPath === href && "text-stone-900 dark:text-stone-100"
               )}
             >
               {label}
             </Link>
           ))}
         </nav>
-        <div className="justify-self-end">
+        <div className="min-h-7 min-w-[88px] justify-self-end">
           {action ?? (
             <Link
               href="/"
+              prefetch={false}
               className="inline-flex rounded-lg bg-stone-100 px-3 py-1.5 font-sans text-sm font-medium text-stone-600 hover:bg-stone-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mizen-blue dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700 transition-none"
             >
               Open app

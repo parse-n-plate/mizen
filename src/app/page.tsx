@@ -439,7 +439,7 @@ export default function HomePage() {
   return <WaitlistLanding />;
 }
 
-export function WaitlistLanding() {
+export function WaitlistLanding({ showHeader = true }: { showHeader?: boolean }) {
   const [activeSource, setActiveSource] = useState(0);
   const [displayedSource, setDisplayedSource] = useState(0);
   const [displayedPreview, setDisplayedPreview] = useState(0);
@@ -542,11 +542,19 @@ export function WaitlistLanding() {
 
   return (
     <>
-      <PublicPage className="lg:h-screen lg:overflow-hidden">
-        <PublicHeader
-          currentPath="/"
-          action={<LandingAuthCta onSignIn={() => setAuthOpen(true)} />}
-        />
+      <PublicPage
+        className={
+          showHeader
+            ? "lg:h-screen lg:overflow-hidden"
+            : "lg:h-[calc(100dvh-69px)] lg:flex-none lg:overflow-hidden"
+        }
+      >
+        {showHeader && (
+          <PublicHeader
+            currentPath="/"
+            action={<LandingAuthCta onSignIn={() => setAuthOpen(true)} />}
+          />
+        )}
         <main className="flex min-h-0 flex-1 flex-col lg:flex-row">
           {/* Left panel */}
           <div className="relative flex flex-col justify-between lg:w-[38%] px-8 lg:px-12 xl:px-16 pt-12 lg:pt-5 pb-8 lg:pb-10 bg-white dark:bg-stone-950">

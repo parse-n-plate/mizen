@@ -6,11 +6,8 @@ import Link from "next/link";
 import { toast } from "sonner";
 import AltArrowRight from "@solar-icons/react/csr/arrows/AltArrowRight";
 import Plain from "@solar-icons/react/csr/messages/Plain";
-import { BetaAuthModal } from "@/components/BetaAuthModal";
-import { LandingAuthCta } from "@/components/LandingAuthCta";
 import {
   PublicPage,
-  PublicHeader,
   PublicPageTitle,
   PublicFooter,
   publicPageContainer,
@@ -18,7 +15,6 @@ import {
 } from "@/components/PublicPage";
 import { cn } from "@/lib/utils";
 import { favoriteRecipes } from "@/lib/favorite-recipes";
-import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 
 const connectCards = [
   {
@@ -42,7 +38,6 @@ const connectCards = [
 ];
 
 export function LinksPageContent() {
-  const [authOpen, setAuthOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -81,10 +76,6 @@ export function LinksPageContent() {
   return (
     <>
       <PublicPage>
-        <PublicHeader
-          currentPath="/links"
-          action={<LandingAuthCta onSignIn={() => setAuthOpen(true)} />}
-        />
         <main
           className={cn(publicPageContainer, publicPageWidths.compact, "flex-1 py-10 sm:py-14")}
         >
@@ -234,8 +225,6 @@ export function LinksPageContent() {
         </main>
         <PublicFooter />
       </PublicPage>
-
-      {isSupabaseConfigured && <BetaAuthModal open={authOpen} onOpenChange={setAuthOpen} />}
     </>
   );
 }

@@ -2,13 +2,10 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { ImageLightbox } from "@/components/ImageLightbox";
-import { LandingAuthCta } from "@/components/LandingAuthCta";
 import { ReleaseNotice } from "@/components/ReleaseNotice";
 import {
   PublicPage,
-  PublicHeader,
   PublicPageTitle,
   PublicFooter,
   publicPageContainer,
@@ -16,7 +13,6 @@ import {
 } from "@/components/PublicPage";
 import { cn } from "@/lib/utils";
 import { appVersion } from "@/lib/app-version";
-import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 
 const DISCORD_URL = "https://discord.gg/Pt4t8K8h9";
 const BEEF_UDON_URL = "https://www.justonecookbook.com/beef-udon/";
@@ -85,7 +81,6 @@ const steps = [
 ];
 
 function GetStartedPageContent() {
-  const [authOpen, setAuthOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [lightbox, setLightbox] = useState<{
     src: string;
@@ -97,10 +92,6 @@ function GetStartedPageContent() {
   return (
     <>
       <PublicPage>
-        <PublicHeader
-          currentPath="/get-started"
-          action={<LandingAuthCta onSignIn={() => setAuthOpen(true)} />}
-        />
         <main className={cn(publicPageContainer, publicPageWidths.wide, "flex-1 py-10 sm:py-14")}>
           <section className="max-w-[720px]">
             <PublicPageTitle>Get started with Mizen</PublicPageTitle>
@@ -227,7 +218,6 @@ function GetStartedPageContent() {
         </PublicFooter>
       </PublicPage>
 
-      {isSupabaseConfigured && <BetaAuthModal open={authOpen} onOpenChange={setAuthOpen} />}
       {lightbox && (
         <ImageLightbox
           src={lightbox.src}

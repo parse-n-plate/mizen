@@ -1,7 +1,6 @@
 import Image from "next/image";
 import {
   PublicPage,
-  PublicHeader,
   PublicPageTitle,
   PublicFooter,
   publicPageContainer,
@@ -20,7 +19,6 @@ export const metadata: Metadata = {
 export default function ChangelogPage() {
   return (
     <PublicPage>
-      <PublicHeader currentPath="/changelog" />
       <main className={cn(publicPageContainer, publicPageWidths.wide, "flex-1 py-10 sm:py-14")}>
         <section className="grid gap-8 pb-12 md:grid-cols-[minmax(0,0.82fr)_minmax(280px,0.55fr)] md:items-end lg:pb-16">
           <div className="max-w-2xl">
