@@ -14,7 +14,7 @@ export function PublicSiteHeader() {
   return (
     <>
       <PublicHeader
-        currentPath={pathname}
+        fullWidth={pathname === "/homepage"}
         action={<LandingAuthCta onSignIn={() => setAuthOpen(true)} />}
       />
       {isSupabaseConfigured && <BetaAuthModal open={authOpen} onOpenChange={setAuthOpen} />}

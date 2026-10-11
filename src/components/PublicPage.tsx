@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { WhoMadeIt } from "@/components/WhoMadeIt";
@@ -13,29 +12,7 @@ export const publicPageWidths = {
 export const publicPageContainer = "mx-auto w-full min-w-0 px-5 sm:px-8";
 const publicLink =
   "rounded-md font-sans text-sm text-stone-500 hover:text-stone-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mizen-blue dark:text-stone-400 dark:hover:text-stone-100 transition-none";
-const publicNavigation = [
-  { href: "/get-started", label: "Get started" },
-  { href: "/changelog", label: "Updates" },
-  { href: "/links", label: "Links" },
-];
-
-export function PublicBrand() {
-  return (
-    <Link
-      href="/homepage"
-      className="flex shrink-0 items-center gap-2 rounded-md font-serif text-lg font-semibold text-stone-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mizen-blue dark:text-stone-50 transition-none"
-    >
-      <Image
-        src="/apple-touch-icon.png"
-        alt=""
-        width={28}
-        height={28}
-        className="h-7 w-7 shrink-0"
-      />
-      Mizen
-    </Link>
-  );
-}
+export { PublicHeader, PublicBrand } from "@/components/PublicHeader";
 
 export function PublicPage({ children, className }: { children: ReactNode; className?: string }) {
   return (
@@ -47,57 +24,6 @@ export function PublicPage({ children, className }: { children: ReactNode; class
     >
       {children}
     </div>
-  );
-}
-
-export function PublicHeader({
-  currentPath,
-  action,
-}: {
-  currentPath?: string;
-  action?: ReactNode;
-}) {
-  return (
-    <header className="sticky top-0 z-40 shrink-0 border-b border-stone-200 bg-white/95 backdrop-blur dark:border-stone-800 dark:bg-[var(--color-dark-surface)]">
-      <div
-        className={cn(
-          publicPageContainer,
-          publicPageWidths.wide,
-          "grid grid-cols-2 items-center gap-x-6 gap-y-4 py-4 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:py-5"
-        )}
-      >
-        <PublicBrand />
-        <nav
-          aria-label="Public pages"
-          className="order-3 col-span-2 flex flex-wrap items-center gap-6 sm:order-none sm:col-span-1 font-medium sm:justify-center"
-        >
-          {publicNavigation.map(({ href, label }) => (
-            <Link
-              key={href}
-              href={href}
-              aria-current={currentPath === href ? "page" : undefined}
-              className={cn(
-                publicLink,
-                currentPath === href && "text-stone-900 dark:text-stone-100"
-              )}
-            >
-              {label}
-            </Link>
-          ))}
-        </nav>
-        <div className="min-h-7 min-w-[88px] justify-self-end">
-          {action ?? (
-            <Link
-              href="/"
-              prefetch={false}
-              className="inline-flex rounded-lg bg-stone-100 px-3 py-1.5 font-sans text-sm font-medium text-stone-600 hover:bg-stone-200 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mizen-blue dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700 transition-none"
-            >
-              Open app
-            </Link>
-          )}
-        </div>
-      </div>
-    </header>
   );
 }
 
@@ -131,6 +57,9 @@ export function PublicFooter({
           <WhoMadeIt />
         </div>
         <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-4 gap-y-3">
+          <Link href="/get-started" className={publicLink}>
+            Get started
+          </Link>
           <Link href="/changelog" className={publicLink}>
             Updates
           </Link>

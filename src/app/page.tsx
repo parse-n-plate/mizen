@@ -550,10 +550,7 @@ export function WaitlistLanding({ showHeader = true }: { showHeader?: boolean })
         }
       >
         {showHeader && (
-          <PublicHeader
-            currentPath="/"
-            action={<LandingAuthCta onSignIn={() => setAuthOpen(true)} />}
-          />
+          <PublicHeader fullWidth action={<LandingAuthCta onSignIn={() => setAuthOpen(true)} />} />
         )}
         <main className="flex min-h-0 flex-1 flex-col lg:flex-row">
           {/* Left panel */}
