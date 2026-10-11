@@ -79,10 +79,25 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
   const [emailStatus, setEmailStatus] = useState<EmailStatus>("idle");
   const [view, setView] = useState<View>("form");
   const [loading, setLoading] = useState(false);
+  const [devSignInEnabled, setDevSignInEnabled] = useState(false);
   const allowSubmit = useSubmitGuard();
   const openRef = useRef(open);
   const closeResetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const checkTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const controller = new AbortController();
+    fetch("/api/auth/dev-signin", { cache: "no-store", signal: controller.signal })
+      .then(async (response) => {
+        const data = response.ok ? await response.json() : null;
+        if (!controller.signal.aborted) setDevSignInEnabled(data?.enabled === true);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setDevSignInEnabled(false);
+      });
+    return () => controller.abort();
+  }, [open]);
 
   useEffect(() => {
     openRef.current = open;
@@ -499,7 +514,7 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
             onSubmit={handleSubmit}
             className="space-y-4"
           >
-            {process.env.NODE_ENV === "development" && (
+            {devSignInEnabled && (
               <Button
                 type="button"
                 variant="outline"
@@ -508,7 +523,7 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
                 disabled={loading}
               >
                 <Login className="h-4 w-4" />
-                Dev sign in (development only)
+                Dev sign in
               </Button>
             )}
 
