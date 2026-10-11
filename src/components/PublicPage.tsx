@@ -63,9 +63,6 @@ export function PublicFooter({
           <Link href="/changelog" className={publicLink}>
             What’s New
           </Link>
-          <Link href="/links" className={publicLink}>
-            Links
-          </Link>
           <Link href="/faq" className={publicLink}>
             FAQ
           </Link>
