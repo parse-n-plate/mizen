@@ -28,7 +28,31 @@ const questions = [
         <Link href="/links" className={answerLink}>
           waitlist
         </Link>{" "}
-        for access, or sign in if you already have an account.
+        to request an invite. If you have been invited, sign in with the email address on your
+        invite.
+      </>
+    ),
+  },
+  {
+    id: "pricing",
+    question: "How much does Mizen cost?",
+    answer: <>Mizen is free during the beta. Pricing after the beta has not been decided yet.</>,
+  },
+  {
+    id: "beta",
+    question: "What should I expect during the beta?",
+    answer: (
+      <>
+        The beta is an early version of Mizen with recipe imports and the mobile cooking view. Bugs
+        are to be expected, and your feedback helps us improve the app. See the{" "}
+        <Link href="/changelog" className={answerLink}>
+          updates
+        </Link>{" "}
+        for recent changes, and send feedback to{" "}
+        <a href="mailto:hello@mizen.recipes" className={answerLink}>
+          hello@mizen.recipes
+        </a>
+        .
       </>
     ),
   },
