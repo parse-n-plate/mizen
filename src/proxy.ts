@@ -1,6 +1,7 @@
 import { type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 import { NextResponse } from "next/server";
+import { isPublicLegalPage } from "@/lib/public-legal-pages";
 
 export function shouldRedirectOAuthRootCallback(request: Pick<NextRequest, "method" | "nextUrl">) {
   return (
@@ -19,6 +20,9 @@ export async function proxy(request: NextRequest) {
     url.pathname = "/auth/callback";
     return NextResponse.redirect(url);
   }
+
+  // Legal documents are public and do not need a session refresh.
+  if (isPublicLegalPage(request.nextUrl.pathname)) return NextResponse.next();
 
   return await updateSession(request);
 }
