@@ -5,6 +5,7 @@ export const PUBLIC_PAGE_PATHS = [
   "/privacy",
   "/terms",
   "/homepage",
+  "/faq",
 ] as const;
 
 export function isPublicPage(pathname: string): boolean {
