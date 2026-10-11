@@ -69,7 +69,7 @@ export function EquipmentList({
               </div>
               <div className="flex-1 min-w-0">
                 <div
-                  className={`flex items-center justify-between transition-opacity duration-[180ms] ${
+                  className={`flex items-center justify-between transition-none ${
                     isChecked ? "opacity-50" : "opacity-100"
                   }`}
                 >
@@ -142,7 +142,7 @@ export function EquipmentList({
             </div>
 
             {!isLast && (
-              <div className="ingredient-list-divider absolute bottom-0 h-px bg-stone-100 dark:bg-stone-800 transition-opacity duration-150 group-hover:opacity-0" />
+              <div className="ingredient-list-divider absolute bottom-0 h-px bg-stone-100 dark:bg-stone-800 transition-none group-hover:opacity-0" />
             )}
           </div>
         );

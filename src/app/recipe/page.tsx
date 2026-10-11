@@ -32,11 +32,12 @@ import { toast } from "sonner";
 import { RecipeHeader } from "@/components/RecipeHeader";
 import { RecipeDesktopTabsBar } from "@/components/RecipeDesktopTabsBar";
 import { ServingsAdjuster } from "@/components/ServingsAdjuster";
-import { prepRecipeIdentity } from "@/lib/prep-notes";
+import { legacyPrepRecipeIdentity, prepRecipeIdentity } from "@/lib/prep-notes";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
 import {
   MOBILE_NAV_CONTENT_BOTTOM_PAD,
+  MOBILE_NAV_CONTROLS_TOP,
   MobileContentFade,
   MobileNavShell,
   type MobileNavItem,
@@ -86,8 +87,8 @@ import {
   Printer,
   Share2,
   Trash2,
-  UsersRound,
 } from "lucide-react";
+import { ServingsIcon } from "@/components/ServingsIcon";
 
 export default function RecipePage() {
   return (
@@ -172,9 +173,8 @@ function RecipePageContent() {
   const originalServings = useMemo(() => recipe?.servings, [recipe?.servings]);
   const [servings, setServings] = useState<number | undefined>(recipe?.servings);
   const canAdjustServings = !!(originalServings && originalServings > 0);
-  const mobileFooterStackHeight = "4.75rem";
   const mobileServingsGap = "0.75rem";
-  const mobileServingsOffset = `calc(${mobileFooterStackHeight} + ${mobileServingsGap} + env(safe-area-inset-bottom))`;
+  const mobileServingsOffset = `calc(${MOBILE_NAV_CONTROLS_TOP} + ${mobileServingsGap})`;
   const roundAmounts = usePreference(getRoundAmounts);
   const defaultServings = usePreference(getDefaultServings);
   const unitSystem = usePreference(getUnitSystem);
@@ -600,7 +600,7 @@ function RecipePageContent() {
                       : "text-stone-400 hover:bg-stone-100 hover:text-stone-600 dark:text-stone-500 dark:hover:bg-stone-800 dark:hover:text-stone-300"
                   }`}
                 >
-                  <UsersRound className="h-[18px] w-[18px]" aria-hidden="true" />
+                  <ServingsIcon className="h-[18px] w-[18px]" />
                 </button>
               )}
               {user && (
@@ -637,6 +637,7 @@ function RecipePageContent() {
                   unsaving={unsaving}
                   onSave={handleSave}
                   onUnsave={handleUnsave}
+                  iconAlign="end"
                 />
               </div>
             )}
@@ -782,6 +783,7 @@ function RecipePageContent() {
                   <PrepSection
                     prepNotes={recipe?.prepNotes}
                     recipeIdentity={recipe ? prepRecipeIdentity(recipe) : undefined}
+                    legacyRecipeIdentity={recipe ? legacyPrepRecipeIdentity(recipe) : undefined}
                     ingredients={scaledIngredients}
                     steps={displayedInstructions}
                     equipment={recipe?.equipment}

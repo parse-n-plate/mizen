@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { prepRecipeIdentity } from "@/lib/prep-notes";
+import { legacyPrepRecipeIdentity, prepRecipeIdentity } from "@/lib/prep-notes";
 import { PrepSection } from "@/components/PrepSection";
 import { StepList } from "@/components/StepList";
 import { useTabScrollMemory } from "@/hooks/useTabScrollMemory";
@@ -73,6 +73,7 @@ export function RecipeTabs({ recipe }: RecipeTabsProps) {
             <PrepSection
               prepNotes={recipe?.prepNotes}
               recipeIdentity={recipe ? prepRecipeIdentity(recipe) : undefined}
+              legacyRecipeIdentity={recipe ? legacyPrepRecipeIdentity(recipe) : undefined}
               ingredients={recipe.ingredients}
               steps={recipe.instructions}
               equipment={recipe.equipment}

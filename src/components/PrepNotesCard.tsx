@@ -13,16 +13,19 @@ import type { PrepNote } from "@/lib/types";
 interface Props {
   notes: PrepNote[];
   recipeIdentity: string;
+  legacyRecipeIdentity?: string;
 }
 
 export function PrepNotesCard(props: Props) {
   const { user, loading } = useUser();
   if (!props.notes.length) return null;
+  const userId = loading ? undefined : user?.id;
+
   return (
     <PrepChecklist
-      key={`${user?.id ?? "guest"}:${props.recipeIdentity}`}
+      key={`${userId ?? "guest"}:${props.recipeIdentity}`}
       {...props}
-      userId={user?.id}
+      userId={userId}
       authLoading={loading}
     />
   );
@@ -31,12 +34,14 @@ export function PrepNotesCard(props: Props) {
 function PrepChecklist({
   notes,
   recipeIdentity,
+  legacyRecipeIdentity,
   userId,
   authLoading,
 }: Props & { userId?: string; authLoading: boolean }) {
   const { completion, ready, saving, error, toggle, refresh } = usePrepCompletion(
     recipeIdentity,
-    userId
+    userId,
+    legacyRecipeIdentity
   );
   const [expanded, setExpanded] = useState(false);
   const [showCompleted, setShowCompleted] = useState(false);

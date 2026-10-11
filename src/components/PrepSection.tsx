@@ -9,6 +9,7 @@ import type { DiffMap } from "@/hooks/useIngredientDiff";
 interface PrepSectionProps {
   prepNotes?: PrepNote[];
   recipeIdentity?: string;
+  legacyRecipeIdentity?: string;
   ingredients: IngredientGroup[];
   steps: InstructionStep[];
   equipment?: EquipmentItem[];
@@ -24,6 +25,7 @@ interface PrepSectionProps {
 export function PrepSection({
   prepNotes,
   recipeIdentity,
+  legacyRecipeIdentity,
   ingredients,
   steps,
   equipment,
@@ -38,7 +40,11 @@ export function PrepSection({
   return (
     <div className="space-y-6">
       {prepNotes && prepNotes.length > 0 && recipeIdentity && (
-        <PrepNotesCard notes={prepNotes} recipeIdentity={recipeIdentity} />
+        <PrepNotesCard
+          notes={prepNotes}
+          recipeIdentity={recipeIdentity}
+          legacyRecipeIdentity={legacyRecipeIdentity}
+        />
       )}
 
       <div>
