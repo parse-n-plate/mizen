@@ -66,6 +66,9 @@ export function PublicFooter({
           <Link href="/links" className={publicLink}>
             Links
           </Link>
+          <Link href="/faq" className={publicLink}>
+            FAQ
+          </Link>
           <Link href="/privacy" className={publicLink}>
             Privacy
           </Link>
