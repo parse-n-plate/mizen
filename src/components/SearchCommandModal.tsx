@@ -145,6 +145,15 @@ export function SearchCommandView({
   const [search, setSearch] = useState("");
   const [savedRecipes, setSavedRecipes] = useState<SavedRecipe[]>([]);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!active) return;
+    const frame = window.requestAnimationFrame(() => {
+      searchInputRef.current?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [active]);
 
   useEffect(() => {
     if (!active) return;
@@ -284,6 +293,7 @@ export function SearchCommandView({
         </div>
       )}
       <CommandInput
+        ref={searchInputRef}
         placeholder="Search or paste a URL"
         value={search}
         onValueChange={setSearch}

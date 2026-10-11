@@ -127,12 +127,35 @@ describe("Command+K search palette", () => {
 
     const field = searchField();
     expect(field).not.toBeNull();
-    field?.focus();
+    expect(document.activeElement).toBe(field);
 
     const closeEvent = await press(field ?? window, { key: "k", metaKey: true });
     await settle();
     expect(closeEvent.defaultPrevented).toBe(true);
     expect(palette()).toBeNull();
+  });
+
+  it("focuses the search field every time the palette opens", async () => {
+    await act(async () => {
+      root.render(
+        <AppShell>
+          <p>Library</p>
+        </AppShell>
+      );
+    });
+
+    await press(window, { key: "k", metaKey: true });
+    await settle();
+    const firstOpen = searchField();
+    expect(document.activeElement).toBe(firstOpen);
+
+    await press(firstOpen ?? window, { key: "k", metaKey: true });
+    await settle();
+    expect(palette()).toBeNull();
+
+    await press(window, { key: "k", metaKey: true });
+    await settle();
+    expect(document.activeElement).toBe(searchField());
   });
 
   it("toggles with Ctrl+K, including an uppercase K, and ignores repeats and other shortcuts", async () => {
