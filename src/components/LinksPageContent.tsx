@@ -77,7 +77,7 @@ export function LinksPageContent() {
     <>
       <PublicPage>
         <main
-          className={cn(publicPageContainer, publicPageWidths.compact, "flex-1 py-10 sm:py-14")}
+          className={cn(publicPageContainer, publicPageWidths.wide, "flex-1 py-10 sm:py-14")}
         >
           <section className="grid gap-5 lg:grid-cols-2 lg:items-center">
             <div>
