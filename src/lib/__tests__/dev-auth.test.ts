@@ -10,6 +10,7 @@ const preview: Record<string, string | undefined> = {
   PREVIEW_DEV_AUTH_PROJECT_REF: projectRef,
   NEXT_PUBLIC_SUPABASE_URL: `https://${projectRef}.supabase.co`,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: "staging-public-key",
+  SUPABASE_SERVICE_ROLE_KEY: "staging-server-key",
   PREVIEW_DEV_AUTH_EMAIL: "test@example.com",
   PREVIEW_DEV_AUTH_PASSWORD: "test-only-password",
 };
@@ -45,6 +46,7 @@ describe("dev login environment restrictions", () => {
     "PREVIEW_DEV_AUTH_PASSWORD",
     "NEXT_PUBLIC_SUPABASE_URL",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
   ])("keeps incomplete preview setup disabled when %s is missing", (key) => {
     expect(getDevAuthMode({ ...preview, [key]: undefined })).toBeNull();
   });
