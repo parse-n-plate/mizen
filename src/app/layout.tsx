@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Domine, Albert_Sans } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Agentation } from "agentation";
 import { DialRoot } from "dialkit";
 import { AppShell } from "@/components/AppShell";
@@ -109,6 +111,8 @@ export default function RootLayout({
         </TooltipProvider>
         <ThemeSync />
         <Toaster />
+        <Analytics />
+        <SpeedInsights />
         {process.env.NODE_ENV === "development" && developerFeedbackToolsEnabled && (
           <Agentation endpoint="http://localhost:4747" />
         )}
