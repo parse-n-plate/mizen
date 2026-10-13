@@ -58,7 +58,6 @@ export default function RootLayout({
             __html: `(function(){try{if(${JSON.stringify(PUBLIC_PAGE_PATHS)}.includes(location.pathname))return;if(localStorage.getItem('mizen:core-app-seen')==='true'&&sessionStorage.getItem('mizen:splash-seen')!=='true'){document.documentElement.dataset.earlySplash='true'}}catch(e){}})()`,
           }}
         />
-        <script src="https://inflight.co/widget.js" data-org="yykr0g17" async />
       </head>
       <body className={`${domine.variable} ${albertSans.variable} antialiased`}>
         <div id="mizen-early-splash" aria-hidden="true">
