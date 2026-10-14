@@ -34,6 +34,19 @@ export function weekTitle(start: Date): string {
   return `${month(start)} ${start.getDate()}–${start.getMonth() === end.getMonth() ? "" : `${month(end)} `}${end.getDate()}, ${end.getFullYear()}`;
 }
 
+/** Compact week label for narrow viewports (e.g. Oct 12–18). */
+export function weekTitleShort(start: Date): string {
+  const end = addDays(start, 6);
+  const month = (date: Date) => date.toLocaleDateString("en-US", { month: "short" });
+  if (start.getFullYear() !== end.getFullYear()) {
+    return `${month(start)} ${start.getDate()}, ${start.getFullYear()}–${month(end)} ${end.getDate()}, ${end.getFullYear()}`;
+  }
+  if (start.getMonth() === end.getMonth()) {
+    return `${month(start)} ${start.getDate()}–${end.getDate()}`;
+  }
+  return `${month(start)} ${start.getDate()}–${month(end)} ${end.getDate()}`;
+}
+
 export interface MealPlanEntry {
   id: string;
   recipe_id: string;

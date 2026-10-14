@@ -6,6 +6,7 @@ import {
   parseDate,
   startOfWeek,
   weekTitle,
+  weekTitleShort,
 } from "../meal-plan";
 
 describe("meal plan calendar dates", () => {
@@ -28,6 +29,11 @@ describe("meal plan calendar dates", () => {
     expect(weekTitle(parseDate("2026-10-05"))).toBe("October 5–11, 2026");
     expect(weekTitle(parseDate("2026-09-28"))).toBe("September 28–October 4, 2026");
     expect(weekTitle(parseDate("2026-12-28"))).toBe("December 28, 2026–January 3, 2027");
+  });
+  it("formats short week titles for mobile headers", () => {
+    expect(weekTitleShort(parseDate("2026-10-05"))).toBe("Oct 5–11");
+    expect(weekTitleShort(parseDate("2026-09-28"))).toBe("Sep 28–Oct 4");
+    expect(weekTitleShort(parseDate("2026-12-28"))).toBe("Dec 28, 2026–Jan 3, 2027");
   });
   it("rejects impossible dates instead of rolling them into another month", () => {
     for (const date of [

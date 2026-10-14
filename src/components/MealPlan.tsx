@@ -36,6 +36,7 @@ import {
   parseDate,
   startOfWeek,
   weekTitle,
+  weekTitleShort,
   type MealPlanEntry,
 } from "@/lib/meal-plan";
 import { MEAL_PLAN_SCROLL_TO_TODAY_EVENT } from "@/lib/meal-plan-events";
@@ -44,6 +45,85 @@ import { cn } from "@/lib/utils";
 
 const textLinkClass =
   "font-sans text-sm text-stone-500 transition-none hover:text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-blue)] dark:text-stone-400 dark:hover:text-stone-100";
+
+const addLinkClass =
+  "font-sans text-xs text-stone-400 transition-none hover:text-stone-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-blue)] dark:text-stone-500 dark:hover:text-stone-300";
+
+const dayHeadingClass =
+  "font-sans text-[13px] font-semibold uppercase tracking-wide text-stone-900 dark:text-stone-100";
+
+const addOnDayHeaderClass =
+  "shrink-0 max-md:opacity-100 focus-within:opacity-100 md:opacity-0 md:group-hover/day:opacity-100 md:group-focus-within/day:opacity-100";
+
+const mealPlanInset = "px-5";
+
+type DayBlock =
+  | { type: "filled"; day: Date; meals: MealPlanEntry[] }
+  | { type: "empty"; day: Date }
+  | { type: "empty-run"; days: Date[] };
+
+function mealsForDay(
+  day: Date,
+  entries: MealPlanEntry[],
+  recipesById: Map<string, SavedRecipe>
+): MealPlanEntry[] {
+  const key = dateKey(day);
+  return entries.filter((entry) => entry.planned_date === key && recipesById.has(entry.recipe_id));
+}
+
+function buildDayBlocks(
+  days: Date[],
+  entries: MealPlanEntry[],
+  recipesById: Map<string, SavedRecipe>
+): DayBlock[] {
+  const blocks: DayBlock[] = [];
+  let emptyRun: Date[] = [];
+
+  const flushEmptyRun = () => {
+    if (!emptyRun.length) return;
+    if (emptyRun.length >= 2) {
+      blocks.push({ type: "empty-run", days: [...emptyRun] });
+    } else {
+      blocks.push({ type: "empty", day: emptyRun[0] });
+    }
+    emptyRun = [];
+  };
+
+  for (const day of days) {
+    const meals = mealsForDay(day, entries, recipesById);
+    if (!meals.length) {
+      emptyRun.push(day);
+      continue;
+    }
+    flushEmptyRun();
+    blocks.push({ type: "filled", day, meals });
+  }
+  flushEmptyRun();
+  return blocks;
+}
+
+function formatDayHeading(day: Date): string {
+  return day.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function formatEmptyRunHeading(days: Date[]): string {
+  if (days.length === 1) return formatDayHeading(days[0]);
+  const first = days[0];
+  const last = days[days.length - 1];
+  const startLabel = first.toLocaleDateString("en-US", { weekday: "short" });
+  const endLabel = last.toLocaleDateString("en-US", { weekday: "short" });
+  const sameMonth = first.getMonth() === last.getMonth();
+  const month = first.toLocaleDateString("en-US", { month: "short" });
+  const endMonth = last.toLocaleDateString("en-US", { month: "short" });
+  const dates = sameMonth
+    ? `${month} ${first.getDate()}–${last.getDate()}`
+    : `${month} ${first.getDate()}–${endMonth} ${last.getDate()}`;
+  return `${startLabel}–${endLabel} · ${dates}`;
+}
 
 const navIconClass =
   "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-stone-600 transition-none hover:bg-stone-200/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-blue)] disabled:opacity-50 dark:text-stone-300 dark:hover:bg-stone-700/35";
@@ -171,7 +251,7 @@ export function MealPlan() {
   return hydrated ? (
     <MealPlanContent />
   ) : (
-    <div className="mx-auto w-full max-w-3xl px-6 pt-6">
+    <div className={cn("mx-auto w-full min-w-0 max-w-3xl pt-6", mealPlanInset)}>
       <h1 className="font-serif text-[30px] font-bold">Meal plan</h1>
       <p role="status" className="mt-6 text-sm text-stone-500">
         Loading your meal plan…
@@ -370,10 +450,16 @@ function MealPlanContent() {
 
   const pickerDisabled = loading || !recipesReady || !!error || !!savingDate;
 
-  function dayPicker(key: string, meals: MealPlanEntry[], label: string, className?: string) {
+  function dayPicker(
+    key: string,
+    meals: MealPlanEntry[],
+    label: string,
+    className?: string,
+    pickerKey?: string
+  ) {
     return (
       <RecipePicker
-        key={`${week}-${key}-${label}`}
+        key={pickerKey ?? `${week}-${key}-${label}`}
         date={key}
         recipes={recipes}
         plannedIds={meals.map((meal) => meal.recipe_id)}
@@ -381,10 +467,12 @@ function MealPlanContent() {
         saving={savingDate === key}
         onAdd={addMeal}
         label={label}
-        className={className}
+        className={cn(addLinkClass, className)}
       />
     );
   }
+
+  const dayBlocks = buildDayBlocks(days, entries, recipesById);
 
   const prevWeek = () => {
     setScrollRequested(false);
@@ -399,41 +487,25 @@ function MealPlanContent() {
   const navDisabled = !!savingDate || !!removingId;
 
   return (
-    <div className="relative mx-auto flex h-full min-h-0 w-full max-w-3xl flex-col px-6">
-      <header className="flex shrink-0 flex-col gap-3 pb-6 pt-6">
+    <div
+      className={cn(
+        "relative mx-auto flex h-full min-h-0 w-full min-w-0 max-w-3xl flex-col",
+        mealPlanInset
+      )}
+    >
+      <header className="flex shrink-0 flex-col gap-2 pb-6 pt-6">
         <div className="flex min-w-0 items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-1 items-start gap-1 md:gap-0">
-            <div className="flex shrink-0 items-center md:hidden">
-              <button
-                type="button"
-                className={navIconClass}
-                aria-label="Previous week"
-                disabled={navDisabled}
-                onClick={prevWeek}
-              >
-                <AltArrowLeft size={18} aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                className={navIconClass}
-                aria-label="Next week"
-                disabled={navDisabled}
-                onClick={nextWeek}
-              >
-                <AltArrowRight size={18} aria-hidden="true" />
-              </button>
-            </div>
-            <div className="min-w-0 flex-1">
-              <h1
-                className="font-serif text-[30px] font-bold leading-[1.3] text-stone-900 dark:text-stone-50"
-                aria-live="polite"
-              >
-                {weekTitle(weekStart)}
-              </h1>
-              <p className="mt-2 font-sans text-xs leading-[18px] text-stone-500">Meal plan</p>
-            </div>
+          <div className="min-w-0 flex-1">
+            <h1
+              className="font-serif text-2xl font-bold leading-tight text-stone-900 dark:text-stone-50 md:text-[30px] md:leading-[1.3]"
+              aria-live="polite"
+            >
+              <span className="whitespace-nowrap md:hidden">{weekTitleShort(weekStart)}</span>
+              <span className="hidden md:inline">{weekTitle(weekStart)}</span>
+            </h1>
+            <p className="mt-1 font-sans text-xs leading-[18px] text-stone-500">Meal plan</p>
           </div>
-          <div className="hidden shrink-0 items-center gap-1 pt-1 md:flex">
+          <div className="flex shrink-0 items-center gap-0.5 pt-0.5 md:gap-1">
             <button
               type="button"
               className={navIconClass}
@@ -454,7 +526,7 @@ function MealPlanContent() {
             </button>
             <button
               type="button"
-              className={cn(todayNavClass, "px-2")}
+              className={cn(todayNavClass, "hidden px-2 md:inline")}
               disabled={navDisabled}
               onClick={goToTodayWeek}
             >
@@ -466,9 +538,9 @@ function MealPlanContent() {
       <div
         ref={scrollRef}
         className={cn(
-          "-mx-3 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain px-3",
+          "flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain",
           MOBILE_NAV_CONTENT_BOTTOM_PAD,
-          "md:pb-10"
+          "sm:pb-12"
         )}
         aria-label="Weekly meal plan"
         aria-busy={loading || !recipesReady}
@@ -492,119 +564,194 @@ function MealPlanContent() {
             Loading your meal plan…
           </p>
         ) : (
-          days.map((day) => {
-            const key = dateKey(day);
-            const isToday = key === today;
-            const meals = entries.filter(
-              (entry) => entry.planned_date === key && recipesById.has(entry.recipe_id)
-            );
-            const addLink = dayPicker(key, meals, meals.length ? "+ Add" : "Add recipe");
-            return (
-              <section
-                key={key}
-                ref={isToday ? todayRef : undefined}
-                tabIndex={-1}
-                className="group/day shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-blue)]"
-                aria-labelledby={`day-${key}`}
-              >
-                <div className="mb-1 flex min-h-7 items-center justify-between gap-3">
+          dayBlocks.map((block, blockIndex) => {
+            const sectionKey =
+              block.type === "empty-run"
+                ? `${dateKey(block.days[0])}-${dateKey(block.days[block.days.length - 1])}`
+                : dateKey(block.type === "filled" ? block.day : block.day);
+            const sectionToday =
+              block.type === "filled"
+                ? dateKey(block.day) === today
+                : block.type === "empty"
+                  ? dateKey(block.day) === today
+                  : block.days.some((day) => dateKey(day) === today);
+
+            const sectionDivider =
+              blockIndex > 0 ? "border-t border-stone-200 pt-6 dark:border-stone-800" : "";
+
+            function renderMealRow(entry: MealPlanEntry) {
+              const recipe = recipesById.get(entry.recipe_id)!;
+              const domain = sourceDomain(recipe);
+              const favoriteBusy = favoriteId === recipe.id;
+              return (
+                <li
+                  key={entry.id}
+                  className="group flex min-w-0 items-center justify-between rounded-lg py-3.5 hover:bg-stone-200/60 focus-within:bg-stone-200/60 dark:hover:bg-stone-700/35 dark:focus-within:bg-stone-700/35"
+                >
+                  <button
+                    type="button"
+                    onClick={() => openRecipe(recipe)}
+                    className="flex min-w-0 flex-1 items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-blue)] focus-visible:ring-offset-2"
+                  >
+                    <RecipeSourceIcon domain={domain} kind={getSourceKind(recipe)} />
+                    <span className="flex min-w-0 flex-col items-start sm:flex-row sm:items-baseline">
+                      <span className="max-w-full truncate font-serif text-base font-semibold leading-snug text-stone-900 dark:text-stone-50">
+                        {recipe.recipe.title}
+                      </span>
+                      <span className="max-w-full truncate text-xs text-stone-400 sm:ml-2 sm:shrink-0 sm:text-[13px]">
+                        {domain || "Saved recipe"}
+                      </span>
+                    </span>
+                  </button>
+                  <div className="ml-3 flex shrink-0 items-center sm:ml-4">
+                    <RecipeListingRowHeart isFavorite={recipe.is_favorite}>
+                      <HeartButton
+                        isFavorite={recipe.is_favorite}
+                        saving={favoriteBusy && !recipe.is_favorite}
+                        unsaving={favoriteBusy && recipe.is_favorite}
+                        onSave={() => void toggleFavorite(recipe)}
+                        onUnsave={() => void toggleFavorite(recipe)}
+                      />
+                    </RecipeListingRowHeart>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="flex h-8 w-8 items-center justify-center rounded-md text-stone-400 transition-none hover:bg-stone-300 focus-visible:ring-2 focus-visible:ring-[var(--color-blue)] dark:hover:bg-stone-600"
+                          aria-label={`Actions for ${recipe.recipe.title}`}
+                        >
+                          <MenuDots size={16} weight="Bold" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onSelect={() => openRecipe(recipe)}>
+                          Open recipe
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className={recipeListingRowTouchMenuItemClass}
+                          disabled={!!favoriteId}
+                          onSelect={() => void toggleFavorite(recipe)}
+                        >
+                          {recipe.is_favorite ? "Unfavorite" : "Favorite"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          disabled={!!removingId}
+                          onSelect={() => void removeMeal(entry)}
+                          className="text-red-600"
+                        >
+                          Remove from meal plan
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </li>
+              );
+            }
+
+            if (block.type === "empty-run") {
+              return (
+                <section
+                  key={sectionKey}
+                  ref={sectionToday ? todayRef : undefined}
+                  tabIndex={-1}
+                  className={cn(
+                    "group/day shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-blue)]",
+                    sectionDivider
+                  )}
+                  aria-labelledby={`day-${sectionKey}`}
+                >
                   <h2
-                    id={`day-${key}`}
+                    id={`day-${sectionKey}`}
                     className={cn(
-                      "font-sans text-sm font-medium",
-                      isToday ? "text-[var(--color-blue)]" : "text-stone-700 dark:text-stone-300"
+                      dayHeadingClass,
+                      sectionToday && "text-[var(--color-blue)]",
+                      "mb-2"
                     )}
                   >
-                    {day.toLocaleDateString("en-US", {
-                      weekday: "long",
-                      month: "short",
-                      day: "numeric",
-                    })}
+                    {formatEmptyRunHeading(block.days)}
                   </h2>
-                  {meals.length > 0 && (
-                    <div className="shrink-0 max-md:opacity-100 focus-within:opacity-100 md:opacity-0 md:group-hover/day:opacity-100 md:group-focus-within/day:opacity-100">
-                      {addLink}
-                    </div>
-                  )}
-                </div>
-                {!meals.length ? (
-                  <div className="-mx-3 flex items-center gap-1 border-b border-stone-200 px-3 py-3 font-sans text-sm text-stone-500 dark:border-stone-800">
-                    <span>Nothing planned</span>
-                    <span aria-hidden="true">·</span>
-                    {dayPicker(key, meals, "Add recipe")}
-                  </div>
-                ) : (
-                  <ul className="list-none">
-                    {meals.map((entry) => {
-                      const recipe = recipesById.get(entry.recipe_id)!;
-                      const domain = sourceDomain(recipe);
-                      const favoriteBusy = favoriteId === recipe.id;
+                  <ul className="list-none space-y-0.5">
+                    {block.days.map((day) => {
+                      const key = dateKey(day);
+                      const isToday = key === today;
+                      const meals = mealsForDay(day, entries, recipesById);
                       return (
                         <li
-                          key={entry.id}
-                          className="group -mx-3 flex items-center justify-between gap-6 border-b border-stone-200 px-3 py-3 hover:bg-stone-200/60 focus-within:bg-stone-200/60 dark:border-stone-800 dark:hover:bg-stone-700/35 dark:focus-within:bg-stone-700/35"
+                          key={key}
+                          className="flex min-h-8 items-center justify-between gap-3 py-1"
                         >
-                          <button
-                            type="button"
-                            onClick={() => openRecipe(recipe)}
-                            className="flex min-w-0 flex-1 items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-blue)]"
+                          <span
+                            className={cn(
+                              "font-sans text-sm",
+                              isToday
+                                ? "font-medium text-[var(--color-blue)]"
+                                : "text-stone-500 dark:text-stone-400"
+                            )}
                           >
-                            <RecipeSourceIcon domain={domain} kind={getSourceKind(recipe)} />
-                            <span className="flex min-w-0 flex-col items-start sm:flex-row sm:items-baseline">
-                              <span className="max-w-full truncate font-serif text-base font-semibold leading-snug text-stone-900 dark:text-stone-50">
-                                {recipe.recipe.title}
-                              </span>
-                              <span className="max-w-full truncate text-xs text-stone-400 sm:ml-2 sm:shrink-0 sm:text-[13px]">
-                                {domain || "Saved recipe"}
-                              </span>
-                            </span>
-                          </button>
-                          <div className="flex shrink-0 items-center">
-                            <RecipeListingRowHeart isFavorite={recipe.is_favorite}>
-                              <HeartButton
-                                isFavorite={recipe.is_favorite}
-                                saving={favoriteBusy && !recipe.is_favorite}
-                                unsaving={favoriteBusy && recipe.is_favorite}
-                                onSave={() => void toggleFavorite(recipe)}
-                                onUnsave={() => void toggleFavorite(recipe)}
-                              />
-                            </RecipeListingRowHeart>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <button
-                                  type="button"
-                                  className="flex h-8 w-8 items-center justify-center rounded-md text-stone-400 transition-none hover:bg-stone-300 focus-visible:ring-2 focus-visible:ring-[var(--color-blue)] dark:hover:bg-stone-600"
-                                  aria-label={`Actions for ${recipe.recipe.title}`}
-                                >
-                                  <MenuDots size={16} weight="Bold" />
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onSelect={() => openRecipe(recipe)}>
-                                  Open recipe
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className={recipeListingRowTouchMenuItemClass}
-                                  disabled={!!favoriteId}
-                                  onSelect={() => void toggleFavorite(recipe)}
-                                >
-                                  {recipe.is_favorite ? "Unfavorite" : "Favorite"}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  disabled={!!removingId}
-                                  onSelect={() => void removeMeal(entry)}
-                                  className="text-red-600"
-                                >
-                                  Remove from meal plan
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
+                            {day.toLocaleDateString("en-US", { weekday: "long" })}
+                          </span>
+                          {dayPicker(key, meals, "Add", undefined, `${week}-${key}-empty-run`)}
                         </li>
                       );
                     })}
                   </ul>
+                </section>
+              );
+            }
+
+            const day = block.type === "filled" ? block.day : block.day;
+            const key = dateKey(day);
+            const isToday = key === today;
+            const meals = block.type === "filled" ? block.meals : [];
+
+            if (block.type === "empty") {
+              return (
+                <section
+                  key={sectionKey}
+                  ref={isToday ? todayRef : undefined}
+                  tabIndex={-1}
+                  className={cn(
+                    "group/day shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-blue)]",
+                    sectionDivider
+                  )}
+                  aria-labelledby={`day-${key}`}
+                >
+                  <div className="flex min-h-8 items-center justify-between gap-3 py-1">
+                    <h2
+                      id={`day-${key}`}
+                      className={cn(dayHeadingClass, isToday && "text-[var(--color-blue)]")}
+                    >
+                      {formatDayHeading(day)}
+                    </h2>
+                    {dayPicker(key, meals, "Add", undefined, `${week}-${key}-empty`)}
+                  </div>
+                </section>
+              );
+            }
+
+            return (
+              <section
+                key={sectionKey}
+                ref={isToday ? todayRef : undefined}
+                tabIndex={-1}
+                className={cn(
+                  "group/day shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-blue)]",
+                  sectionDivider
                 )}
+                aria-labelledby={`day-${key}`}
+              >
+                <div className="mb-2 flex min-h-7 items-center justify-between gap-3">
+                  <h2
+                    id={`day-${key}`}
+                    className={cn(dayHeadingClass, isToday && "text-[var(--color-blue)]")}
+                  >
+                    {formatDayHeading(day)}
+                  </h2>
+                  <div className={addOnDayHeaderClass}>
+                    {dayPicker(key, meals, "+ Add", undefined, `${week}-${key}-header`)}
+                  </div>
+                </div>
+                <ul className="list-none">{meals.map((entry) => renderMealRow(entry))}</ul>
               </section>
             );
           })
