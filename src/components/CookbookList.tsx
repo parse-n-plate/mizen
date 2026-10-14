@@ -21,6 +21,7 @@ import MenuDots from "@solar-icons/react/csr/ui/MenuDots";
 import Book from "@solar-icons/react/csr/school/Book";
 import { FavoritesEmptyState } from "@/components/FavoritesEmptyState";
 import { HeartButton } from "@/components/HeartButton";
+import { RecipeListingRowHeart } from "@/components/RecipeListingRowHeart";
 
 import type { SavedRecipe } from "@/lib/types";
 
@@ -169,14 +170,7 @@ export function CookbookList({ initialRecipes, onlyFavorites = false }: Cookbook
                 </div>
 
                 <div className="flex shrink-0 items-center ml-4">
-                  <div
-                    className={`mr-1 transition-opacity ${
-                      item.is_favorite
-                        ? "opacity-100"
-                        : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100"
-                    }`}
-                    onClick={(event) => event.stopPropagation()}
-                  >
+                  <RecipeListingRowHeart isFavorite={item.is_favorite} className="mr-1">
                     <HeartButton
                       isFavorite={item.is_favorite}
                       saving={updatingFavoriteId === item.id && !item.is_favorite}
@@ -184,7 +178,7 @@ export function CookbookList({ initialRecipes, onlyFavorites = false }: Cookbook
                       onSave={() => void handleFavorite(item)}
                       onUnsave={() => void handleFavorite(item)}
                     />
-                  </div>
+                  </RecipeListingRowHeart>
                   <DropdownMenu onOpenChange={(open) => setMenuOpenId(open ? item.id : null)}>
                     <DropdownMenuTrigger asChild>
                       <button

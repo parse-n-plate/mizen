@@ -1615,6 +1615,23 @@ body {
     transform 200ms ease-out;
 }
 
+/* Recipe listing rows — unfavorited heart visible on row hover / keyboard focus (fine pointer only) */
+.recipe-listing-row-heart-slot {
+  opacity: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .recipe-listing-row-heart-slot--hover-only {
+    opacity: 0;
+  }
+
+  .group:hover .recipe-listing-row-heart-slot--hover-only,
+  .group:focus-within .recipe-listing-row-heart-slot--hover-only,
+  .recipe-listing-row-heart-slot--hover-only:has(:focus-visible) {
+    opacity: 1;
+  }
+}
+
 @media (hover: hover) and (pointer: fine) {
   .links-link-card {
     transform-origin: 50% 60%;
