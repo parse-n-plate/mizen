@@ -5,9 +5,8 @@ import { EmptyState } from "@/components/EmptyState";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
-import { FileText, ImageIcon, LinkIcon, type LucideIcon } from "lucide-react";
+import { RecipeSourceIcon, getSourceKind } from "@/components/RecipeSourceIcon";
 import { useRecipe } from "@/context/RecipeContext";
 import {
   DropdownMenu,
@@ -22,22 +21,12 @@ import MenuDots from "@solar-icons/react/csr/ui/MenuDots";
 import Book from "@solar-icons/react/csr/school/Book";
 import { FavoritesEmptyState } from "@/components/FavoritesEmptyState";
 import { HeartButton } from "@/components/HeartButton";
+import {
+  RecipeListingRowHeart,
+  recipeListingRowTouchMenuItemClass,
+} from "@/components/RecipeListingRowHeart";
 
 import type { SavedRecipe } from "@/lib/types";
-
-type SourceKind = "image" | "url" | "text";
-
-const SOURCE_KIND_ICON: Record<SourceKind, LucideIcon> = {
-  image: ImageIcon,
-  url: LinkIcon,
-  text: FileText,
-};
-
-const SOURCE_KIND_LABEL: Record<SourceKind, string> = {
-  image: "Image recipe",
-  url: "Web recipe",
-  text: "Text recipe",
-};
 
 function getTimeGroup(dateStr: string): string {
   const date = new Date(dateStr);
@@ -76,42 +65,6 @@ function groupRecipes(recipes: SavedRecipe[]) {
   }
 
   return groups;
-}
-
-function getSourceKind(item: SavedRecipe): SourceKind {
-  if (item.source_url || item.recipe.sourceUrl) return "url";
-  if (item.recipe.imageTranscription || item.recipe.imageUrl) return "image";
-  return "text";
-}
-
-function RecipeSourceIcon({ domain, kind }: { domain: string | null; kind: SourceKind }) {
-  const [faviconFailed, setFaviconFailed] = useState(false);
-
-  if (domain && !faviconFailed) {
-    return (
-      <Image
-        src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
-        alt=""
-        width={16}
-        height={16}
-        unoptimized
-        onError={() => setFaviconFailed(true)}
-        className="shrink-0 rounded-sm"
-      />
-    );
-  }
-
-  const Icon = SOURCE_KIND_ICON[kind];
-
-  return (
-    <span
-      className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-stone-400 dark:text-stone-500"
-      title={SOURCE_KIND_LABEL[kind]}
-      aria-label={SOURCE_KIND_LABEL[kind]}
-    >
-      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-    </span>
-  );
 }
 
 interface CookbookListProps {
@@ -220,14 +173,7 @@ export function CookbookList({ initialRecipes, onlyFavorites = false }: Cookbook
                 </div>
 
                 <div className="flex shrink-0 items-center ml-4">
-                  <div
-                    className={`mr-1 transition-opacity ${
-                      item.is_favorite
-                        ? "opacity-100"
-                        : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100"
-                    }`}
-                    onClick={(event) => event.stopPropagation()}
-                  >
+                  <RecipeListingRowHeart isFavorite={item.is_favorite} className="mr-1">
                     <HeartButton
                       isFavorite={item.is_favorite}
                       saving={updatingFavoriteId === item.id && !item.is_favorite}
@@ -235,7 +181,7 @@ export function CookbookList({ initialRecipes, onlyFavorites = false }: Cookbook
                       onSave={() => void handleFavorite(item)}
                       onUnsave={() => void handleFavorite(item)}
                     />
-                  </div>
+                  </RecipeListingRowHeart>
                   <DropdownMenu onOpenChange={(open) => setMenuOpenId(open ? item.id : null)}>
                     <DropdownMenuTrigger asChild>
                       <button
@@ -268,6 +214,13 @@ export function CookbookList({ initialRecipes, onlyFavorites = false }: Cookbook
                           <LinkSquare className="ml-auto h-4 w-4" />
                         </DropdownMenuItem>
                       )}
+                      <DropdownMenuItem
+                        className={recipeListingRowTouchMenuItemClass}
+                        disabled={!!updatingFavoriteId}
+                        onSelect={() => void handleFavorite(item)}
+                      >
+                        {item.is_favorite ? "Unfavorite" : "Favorite"}
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />
                       <DropdownMenuItem
                         onSelect={() => handleDelete(item.id)}

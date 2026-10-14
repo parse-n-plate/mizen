@@ -1615,6 +1615,45 @@ body {
     transform 200ms ease-out;
 }
 
+/* Recipe listing rows — hearts on fine pointer; touch uses ⋯ menu + small favorited indicator */
+.recipe-listing-row-heart-slot--hover-only {
+  opacity: 0;
+}
+
+.recipe-listing-row-heart-slot--desktop-interactive {
+  display: none;
+}
+
+.recipe-listing-row-favorite-indicator {
+  display: none;
+}
+
+.recipe-listing-row-touch-only {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .recipe-listing-row-heart-slot--desktop-interactive {
+    display: block;
+  }
+
+  .group:hover .recipe-listing-row-heart-slot--hover-only,
+  .group:focus-within .recipe-listing-row-heart-slot--hover-only,
+  .recipe-listing-row-heart-slot--hover-only:has(:focus-visible) {
+    opacity: 1;
+  }
+}
+
+@media not all and (hover: hover) and (pointer: fine) {
+  .recipe-listing-row-favorite-indicator {
+    display: inline-flex;
+  }
+
+  .recipe-listing-row-touch-only {
+    display: flex;
+  }
+}
+
 @media (hover: hover) and (pointer: fine) {
   .links-link-card {
     transform-origin: 50% 60%;
