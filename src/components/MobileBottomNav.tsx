@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
+import { MEAL_PLAN_SCROLL_TO_TODAY_EVENT } from "@/lib/meal-plan-events";
 import Calendar from "@solar-icons/react/csr/time/Calendar";
 import Home from "@solar-icons/react/csr/ui/Home";
 import Magnifer from "@solar-icons/react/csr/search/Magnifer";
@@ -21,6 +22,8 @@ type BaseMobileNavItem = {
 type MobileNavLinkItem = BaseMobileNavItem & {
   type: "link";
   href: string;
+  /** Fired when the tab is tapped while already active (navigation is prevented). */
+  onRepeatActivate?: () => void;
 };
 
 type MobileNavButtonItem = BaseMobileNavItem & {
@@ -81,6 +84,12 @@ function NavIconButton({
         aria-selected={item.active}
         aria-current={item.active ? "page" : undefined}
         className={sharedClassName}
+        onClick={(event) => {
+          if (item.active && item.onRepeatActivate) {
+            event.preventDefault();
+            item.onRepeatActivate();
+          }
+        }}
       >
         {item.icon}
         {showLabel && <span>{item.label}</span>}
@@ -237,6 +246,9 @@ export function MobileBottomNav({ searchHref }: { searchHref?: string }) {
       label: "Meal plan",
       active: pathname === "/meal-plan",
       icon: <Calendar size={22} />,
+      onRepeatActivate: () => {
+        window.dispatchEvent(new CustomEvent(MEAL_PLAN_SCROLL_TO_TODAY_EVENT));
+      },
     },
     {
       id: "profile",
