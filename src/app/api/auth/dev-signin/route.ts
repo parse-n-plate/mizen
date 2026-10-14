@@ -3,6 +3,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getDevAuthMode } from "@/lib/dev-auth";
+import { consumePreviewDevSignInAttempt, isSameOriginDevSignIn } from "@/lib/dev-auth-security";
 
 export const dynamic = "force-dynamic";
 const headers = { "Cache-Control": "no-store" };
@@ -11,9 +12,12 @@ export async function GET() {
   return NextResponse.json({ enabled: getDevAuthMode() !== null }, { headers });
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   const mode = getDevAuthMode();
   if (!mode) return new NextResponse(null, { status: 404, headers });
+  if (!isSameOriginDevSignIn(request)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403, headers });
+  }
 
   const email =
     mode === "preview" ? process.env.PREVIEW_DEV_AUTH_EMAIL : process.env.DEV_AUTH_EMAIL;
@@ -31,6 +35,15 @@ export async function POST() {
   }
 
   try {
+    if (mode === "preview") {
+      const retryAfter = await consumePreviewDevSignInAttempt();
+      if (retryAfter > 0) {
+        return NextResponse.json(
+          { error: "Too many dev sign-in attempts. Please try again shortly." },
+          { status: 429, headers: { ...headers, "Retry-After": String(retryAfter) } }
+        );
+      }
+    }
     const supabase = await createClient();
     if (!supabase) {
       return NextResponse.json({ error: "Supabase is not configured." }, { status: 503, headers });

@@ -24,6 +24,7 @@ export function getDevAuthMode(
     projectRef === PRODUCTION_SUPABASE_PROJECT_REF ||
     env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") !== `https://${projectRef}.supabase.co` ||
     !env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    !env.SUPABASE_SERVICE_ROLE_KEY ||
     !env.PREVIEW_DEV_AUTH_EMAIL ||
     !env.PREVIEW_DEV_AUTH_PASSWORD
   ) {
