@@ -25,6 +25,10 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { HeartButton } from "@/components/HeartButton";
+import {
+  RecipeListingRowHeart,
+  recipeListingRowTouchMenuItemClass,
+} from "@/components/RecipeListingRowHeart";
 import { RecipeSourceIcon, getSourceKind } from "@/components/RecipeSourceIcon";
 import { MOBILE_NAV_CONTENT_BOTTOM_PAD } from "@/components/MobileBottomNav";
 import { useRecipe } from "@/context/RecipeContext";
@@ -510,19 +514,16 @@ function MealPlanContent() {
                             </span>
                           </span>
                         </button>
-                        <div
-                          className={cn(
-                            "flex shrink-0 items-center focus-within:opacity-100",
-                            !recipe.is_favorite && "sm:opacity-0 sm:group-hover:opacity-100"
-                          )}
-                        >
-                          <HeartButton
-                            isFavorite={recipe.is_favorite}
-                            saving={favoriteId === recipe.id && !recipe.is_favorite}
-                            unsaving={favoriteId === recipe.id && recipe.is_favorite}
-                            onSave={() => void toggleFavorite(recipe)}
-                            onUnsave={() => void toggleFavorite(recipe)}
-                          />
+                        <div className="flex shrink-0 items-center">
+                          <RecipeListingRowHeart isFavorite={recipe.is_favorite}>
+                            <HeartButton
+                              isFavorite={recipe.is_favorite}
+                              saving={favoriteId === recipe.id && !recipe.is_favorite}
+                              unsaving={favoriteId === recipe.id && recipe.is_favorite}
+                              onSave={() => void toggleFavorite(recipe)}
+                              onUnsave={() => void toggleFavorite(recipe)}
+                            />
+                          </RecipeListingRowHeart>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <button
@@ -536,6 +537,13 @@ function MealPlanContent() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onSelect={() => openRecipe(recipe)}>
                                 Open recipe
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className={recipeListingRowTouchMenuItemClass}
+                                disabled={!!favoriteId}
+                                onSelect={() => void toggleFavorite(recipe)}
+                              >
+                                {recipe.is_favorite ? "Unfavorite" : "Favorite"}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 disabled={!!removingId}
