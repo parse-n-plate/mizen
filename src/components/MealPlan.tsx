@@ -25,7 +25,10 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { HeartButton } from "@/components/HeartButton";
-import { RecipeListingRowHeart } from "@/components/RecipeListingRowHeart";
+import {
+  RecipeListingRowHeart,
+  recipeListingRowTouchMenuItemClass,
+} from "@/components/RecipeListingRowHeart";
 import { RecipeSourceIcon, getSourceKind } from "@/components/RecipeSourceIcon";
 import { MOBILE_NAV_CONTENT_BOTTOM_PAD } from "@/components/MobileBottomNav";
 import { useRecipe } from "@/context/RecipeContext";
@@ -534,6 +537,13 @@ function MealPlanContent() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onSelect={() => openRecipe(recipe)}>
                                 Open recipe
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className={recipeListingRowTouchMenuItemClass}
+                                disabled={!!favoriteId}
+                                onSelect={() => void toggleFavorite(recipe)}
+                              >
+                                {recipe.is_favorite ? "Unfavorite" : "Favorite"}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 disabled={!!removingId}

@@ -21,7 +21,10 @@ import MenuDots from "@solar-icons/react/csr/ui/MenuDots";
 import Book from "@solar-icons/react/csr/school/Book";
 import { FavoritesEmptyState } from "@/components/FavoritesEmptyState";
 import { HeartButton } from "@/components/HeartButton";
-import { RecipeListingRowHeart } from "@/components/RecipeListingRowHeart";
+import {
+  RecipeListingRowHeart,
+  recipeListingRowTouchMenuItemClass,
+} from "@/components/RecipeListingRowHeart";
 
 import type { SavedRecipe } from "@/lib/types";
 
@@ -211,6 +214,13 @@ export function CookbookList({ initialRecipes, onlyFavorites = false }: Cookbook
                           <LinkSquare className="ml-auto h-4 w-4" />
                         </DropdownMenuItem>
                       )}
+                      <DropdownMenuItem
+                        className={recipeListingRowTouchMenuItemClass}
+                        disabled={!!updatingFavoriteId}
+                        onSelect={() => void handleFavorite(item)}
+                      >
+                        {item.is_favorite ? "Unfavorite" : "Favorite"}
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator className="bg-stone-200 dark:bg-stone-700" />
                       <DropdownMenuItem
                         onSelect={() => handleDelete(item.id)}
