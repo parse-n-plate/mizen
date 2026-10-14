@@ -171,7 +171,7 @@ export function MealPlan() {
   return hydrated ? (
     <MealPlanContent />
   ) : (
-    <div className="mx-auto w-full max-w-3xl px-6 pt-6">
+    <div className="mx-auto w-full min-w-0 max-w-3xl px-6 pt-6">
       <h1 className="font-serif text-[30px] font-bold">Meal plan</h1>
       <p role="status" className="mt-6 text-sm text-stone-500">
         Loading your meal plan…
@@ -399,7 +399,7 @@ function MealPlanContent() {
   const navDisabled = !!savingDate || !!removingId;
 
   return (
-    <div className="relative mx-auto flex h-full min-h-0 w-full max-w-3xl flex-col px-6">
+    <div className="relative mx-auto flex h-full min-h-0 w-full min-w-0 max-w-3xl flex-col px-6">
       <header className="flex shrink-0 flex-col gap-3 pb-6 pt-6">
         <div className="flex min-w-0 items-start justify-between gap-3">
           <div className="flex min-w-0 flex-1 items-start gap-1 md:gap-0">
@@ -466,9 +466,9 @@ function MealPlanContent() {
       <div
         ref={scrollRef}
         className={cn(
-          "-mx-3 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain px-3",
+          "-mx-3 flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-y-contain px-3",
           MOBILE_NAV_CONTENT_BOTTOM_PAD,
-          "md:pb-10"
+          "sm:pb-12"
         )}
         aria-label="Weekly meal plan"
         aria-busy={loading || !recipesReady}
@@ -528,7 +528,7 @@ function MealPlanContent() {
                   )}
                 </div>
                 {!meals.length ? (
-                  <div className="-mx-3 flex items-center gap-1 border-b border-stone-200 px-3 py-3 font-sans text-sm text-stone-500 dark:border-stone-800">
+                  <div className="-mx-3 flex min-w-0 items-center gap-1 border-b border-stone-200 px-3 py-3.5 font-sans text-sm text-stone-500 dark:border-stone-800">
                     <span>Nothing planned</span>
                     <span aria-hidden="true">·</span>
                     {dayPicker(key, meals, "Add recipe")}
@@ -542,12 +542,12 @@ function MealPlanContent() {
                       return (
                         <li
                           key={entry.id}
-                          className="group -mx-3 flex items-center justify-between gap-6 border-b border-stone-200 px-3 py-3 hover:bg-stone-200/60 focus-within:bg-stone-200/60 dark:border-stone-800 dark:hover:bg-stone-700/35 dark:focus-within:bg-stone-700/35"
+                          className="group -mx-3 flex min-w-0 items-center justify-between border-b border-stone-200 px-3 py-3.5 hover:bg-stone-200/60 focus-within:bg-stone-200/60 dark:border-stone-800 dark:hover:bg-stone-700/35 dark:focus-within:bg-stone-700/35"
                         >
                           <button
                             type="button"
                             onClick={() => openRecipe(recipe)}
-                            className="flex min-w-0 flex-1 items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-blue)]"
+                            className="flex min-w-0 flex-1 items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-blue)] focus-visible:ring-offset-2"
                           >
                             <RecipeSourceIcon domain={domain} kind={getSourceKind(recipe)} />
                             <span className="flex min-w-0 flex-col items-start sm:flex-row sm:items-baseline">
@@ -559,7 +559,7 @@ function MealPlanContent() {
                               </span>
                             </span>
                           </button>
-                          <div className="flex shrink-0 items-center">
+                          <div className="ml-4 flex shrink-0 items-center">
                             <RecipeListingRowHeart isFavorite={recipe.is_favorite}>
                               <HeartButton
                                 isFavorite={recipe.is_favorite}
