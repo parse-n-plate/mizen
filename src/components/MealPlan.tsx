@@ -23,6 +23,10 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { HeartButton } from "@/components/HeartButton";
+import {
+  RecipeListingRowHeart,
+  recipeListingRowTouchMenuItemClass,
+} from "@/components/RecipeListingRowHeart";
 import { RecipeSourceIcon, getSourceKind } from "@/components/RecipeSourceIcon";
 import { MOBILE_NAV_CONTENT_BOTTOM_PAD } from "@/components/MobileBottomNav";
 import { useRecipe } from "@/context/RecipeContext";
@@ -555,16 +559,8 @@ function MealPlanContent() {
                               </span>
                             </span>
                           </button>
-                          <div
-                            className={cn(
-                              "flex shrink-0 items-center max-md:opacity-100 focus-within:opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100",
-                              recipe.is_favorite && "md:opacity-100"
-                            )}
-                          >
-                            <div
-                              className="hidden md:block"
-                              onClick={(event) => event.stopPropagation()}
-                            >
+                          <div className="flex shrink-0 items-center">
+                            <RecipeListingRowHeart isFavorite={recipe.is_favorite}>
                               <HeartButton
                                 isFavorite={recipe.is_favorite}
                                 saving={favoriteBusy && !recipe.is_favorite}
@@ -572,7 +568,7 @@ function MealPlanContent() {
                                 onSave={() => void toggleFavorite(recipe)}
                                 onUnsave={() => void toggleFavorite(recipe)}
                               />
-                            </div>
+                            </RecipeListingRowHeart>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <button
@@ -588,7 +584,7 @@ function MealPlanContent() {
                                   Open recipe
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  className="md:hidden"
+                                  className={recipeListingRowTouchMenuItemClass}
                                   disabled={!!favoriteId}
                                   onSelect={() => void toggleFavorite(recipe)}
                                 >
