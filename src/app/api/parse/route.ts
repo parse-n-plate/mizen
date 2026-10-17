@@ -1,8 +1,26 @@
 import { NextResponse } from "next/server";
-import { parseRecipeFromUrl, parseRecipeFromImage, parseRecipeFromText } from "@/utils/parseRecipe";
+import {
+  parseRecipeFromDocument,
+  parseRecipeFromImage,
+  parseRecipeFromText,
+  parseRecipeFromUrl,
+} from "@/utils/parseRecipe";
 
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024; // 4 MB (Groq base64 limit)
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_DOCUMENT_MIME_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.oasis.opendocument.text",
+  "application/rtf",
+  "text/rtf",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "text/html",
+];
+const DOCUMENT_NAME_PATTERN = /\.(?:pdf|docx?|odt|rtf|xlsx?|html?|htm)$/i;
+const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
 const DATA_URL_MIME_PATTERN = /^data:([^;,]+)(?:;[^,]*)?,/i;
 
 export async function POST(request: Request) {
@@ -77,24 +95,41 @@ export async function POST(request: Request) {
 
     // Image path
     if (file) {
-      if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+      if (ALLOWED_MIME_TYPES.includes(file.type)) {
+        if (file.size > MAX_IMAGE_BYTES) {
+          return NextResponse.json(
+            { success: false, error: "Image too large (max 4 MB)" },
+            { status: 400 }
+          );
+        }
+
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const base64 = `data:${file.type};base64,${buffer.toString("base64")}`;
+
+        const result = await parseRecipeFromImage(base64);
+        return NextResponse.json(result, {
+          status: result.success ? 200 : 422,
+        });
+      }
+
+      if (
+        !ALLOWED_DOCUMENT_MIME_TYPES.includes(file.type) &&
+        !DOCUMENT_NAME_PATTERN.test(file.name)
+      ) {
         return NextResponse.json(
-          { success: false, error: "Unsupported image type" },
+          { success: false, error: "Unsupported file type" },
           { status: 400 }
         );
       }
 
-      if (file.size > MAX_IMAGE_BYTES) {
+      if (file.size > MAX_DOCUMENT_BYTES) {
         return NextResponse.json(
-          { success: false, error: "Image too large (max 10 MB)" },
+          { success: false, error: "Document too large (max 10 MB)" },
           { status: 400 }
         );
       }
 
-      const buffer = Buffer.from(await file.arrayBuffer());
-      const base64 = `data:${file.type};base64,${buffer.toString("base64")}`;
-
-      const result = await parseRecipeFromImage(base64);
+      const result = await parseRecipeFromDocument(file);
       return NextResponse.json(result, {
         status: result.success ? 200 : 422,
       });
@@ -111,7 +146,7 @@ export async function POST(request: Request) {
 
       if (legacyImage.length > MAX_IMAGE_BYTES * 1.37) {
         return NextResponse.json(
-          { success: false, error: "Image too large (max 10 MB)" },
+          { success: false, error: "Image too large (max 4 MB)" },
           { status: 400 }
         );
       }
@@ -164,7 +199,7 @@ export async function POST(request: Request) {
     // URL path
     if (!url || typeof url !== "string") {
       return NextResponse.json(
-        { success: false, error: "URL or image is required" },
+        { success: false, error: "URL, file, or image is required" },
         { status: 400 }
       );
     }
