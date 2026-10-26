@@ -14,6 +14,35 @@ const publicLink =
   "rounded-md font-sans text-sm text-stone-500 hover:text-stone-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mizen-blue dark:text-stone-400 dark:hover:text-stone-100 transition-none";
 export { PublicHeader, PublicBrand } from "@/components/PublicHeader";
 
+const PUBLIC_FOOTER_LINKS = [
+  { href: "/get-started", label: "Get started" },
+  { href: "/changelog", label: "What’s New" },
+  { href: "/faq", label: "FAQ" },
+  { href: "/privacy", label: "Privacy" },
+  { href: "/terms", label: "Terms" },
+] as const;
+
+export function PublicFooterNav({
+  className,
+  linkClassName,
+}: {
+  className?: string;
+  linkClassName?: string;
+}) {
+  return (
+    <nav
+      aria-label="Footer"
+      className={cn("flex flex-wrap items-center gap-x-4 gap-y-3", className)}
+    >
+      {PUBLIC_FOOTER_LINKS.map((link) => (
+        <Link key={link.href} href={link.href} className={cn(publicLink, linkClassName)}>
+          {link.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
 export function PublicPage({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div
@@ -56,23 +85,7 @@ export function PublicFooter({
           {children}
           <WhoMadeIt />
         </div>
-        <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-4 gap-y-3">
-          <Link href="/get-started" className={publicLink}>
-            Get started
-          </Link>
-          <Link href="/changelog" className={publicLink}>
-            What’s New
-          </Link>
-          <Link href="/faq" className={publicLink}>
-            FAQ
-          </Link>
-          <Link href="/privacy" className={publicLink}>
-            Privacy
-          </Link>
-          <Link href="/terms" className={publicLink}>
-            Terms
-          </Link>
-        </nav>
+        <PublicFooterNav />
       </div>
     </footer>
   );

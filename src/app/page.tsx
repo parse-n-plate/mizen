@@ -14,6 +14,7 @@ import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { LandingAuthCta } from "@/components/LandingAuthCta";
 import { WhoMadeIt } from "@/components/WhoMadeIt";
+import { PublicFooterNav } from "@/components/PublicPage";
 import { useUser } from "@/hooks/useUser";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import type { ParsedRecipe } from "@/lib/types";
@@ -33,6 +34,8 @@ const CHATGPT_PASTED_TEXT = `Simple Homemade Chocolate
 pinch of salt
 
 Melt the coconut oil or cocoa butter until fully liquid. Stir in the cocoa powder until smooth and no lumps remain. Add the sweetener, vanilla, and a pinch of salt, then mix until fully combined — taste and adjust sweetness if needed. Pour into a mold or small lined container and refrigerate for 1–2 hours, until solid.`;
+
+const LANDING_FOOTER_LINK = "text-xs text-stone-400 dark:text-stone-500";
 
 const LANDING_COPY = {
   sub: "One place for every recipe you find online. Clean ingredients, clear steps.",
@@ -545,7 +548,8 @@ export function WaitlistLanding() {
 
   return (
     <>
-      <div className="landing-scroll flex flex-col lg:flex-row min-h-screen lg:min-h-0 lg:h-screen lg:overflow-hidden flex-1">
+      {/* lg:flex-none keeps lg:h-screen from being stretched by /homepage's min-h-screen parent. */}
+      <div className="landing-scroll flex flex-col lg:flex-row min-h-screen lg:min-h-0 lg:h-screen lg:overflow-hidden flex-1 lg:flex-none">
         {/* Left panel */}
         <div className="relative flex flex-col justify-between lg:w-[38%] px-8 lg:px-12 xl:px-16 pt-12 lg:pt-5 pb-8 lg:pb-10 bg-white dark:bg-stone-950">
           {/* Top: Logo */}
@@ -678,12 +682,9 @@ export function WaitlistLanding() {
             </div>
           </div>
 
-          {/* Bottom: Free + Who made it (desktop only — on mobile this is a page footer) */}
-          <div className="hidden lg:flex items-center justify-between">
-            <span className="font-sans text-xs text-stone-400 dark:text-stone-500">
-              Closed Beta v0.1.0
-            </span>
+          <div className="hidden lg:flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
             <WhoMadeIt />
+            <PublicFooterNav className="gap-x-3" linkClassName={LANDING_FOOTER_LINK} />
           </div>
         </div>
 
@@ -775,11 +776,9 @@ export function WaitlistLanding() {
         </div>
 
         {/* Mobile footer */}
-        <div className="flex lg:hidden items-center justify-between px-8 py-6 bg-[#FAFAF9] dark:bg-stone-900">
-          <span className="font-sans text-xs text-stone-400 dark:text-stone-500">
-            Closed Beta v0.1.0
-          </span>
+        <div className="flex lg:hidden flex-wrap items-center justify-between gap-x-4 gap-y-3 px-8 py-6 bg-[#FAFAF9] dark:bg-stone-900">
           <WhoMadeIt borderColor="border-[#FAFAF9] dark:border-stone-900" />
+          <PublicFooterNav className="gap-x-3" linkClassName={LANDING_FOOTER_LINK} />
         </div>
       </div>
 
