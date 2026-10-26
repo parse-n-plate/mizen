@@ -59,7 +59,7 @@ export function PublicHeader({
         )}
       >
         <PublicBrand />
-        <div className="min-h-7 min-w-[88px]">
+        <div className="flex min-h-7 min-w-[88px] justify-end">
           {action ?? (
             <Link
               href="/"
