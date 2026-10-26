@@ -683,8 +683,8 @@ export function WaitlistLanding() {
           </div>
 
           <div className="hidden lg:flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-            <PublicFooterNav className="gap-x-3" linkClassName={LANDING_FOOTER_LINK} />
             <WhoMadeIt />
+            <PublicFooterNav className="gap-x-3" linkClassName={LANDING_FOOTER_LINK} />
           </div>
         </div>
 
@@ -777,8 +777,8 @@ export function WaitlistLanding() {
 
         {/* Mobile footer */}
         <div className="flex lg:hidden flex-wrap items-center justify-between gap-x-4 gap-y-3 px-8 py-6 bg-[#FAFAF9] dark:bg-stone-900">
-          <PublicFooterNav className="gap-x-3" linkClassName={LANDING_FOOTER_LINK} />
           <WhoMadeIt borderColor="border-[#FAFAF9] dark:border-stone-900" />
+          <PublicFooterNav className="gap-x-3" linkClassName={LANDING_FOOTER_LINK} />
         </div>
       </div>
 
