@@ -776,14 +776,9 @@ export function WaitlistLanding() {
         </div>
 
         {/* Mobile footer */}
-        <div className="flex lg:hidden flex-col gap-4 px-8 py-6 bg-[#FAFAF9] dark:bg-stone-900">
-          <div className="flex items-center justify-between">
-            <span className="font-sans text-xs text-stone-400 dark:text-stone-500">
-              Closed Beta v0.1.0
-            </span>
-            <WhoMadeIt borderColor="border-[#FAFAF9] dark:border-stone-900" />
-          </div>
+        <div className="flex lg:hidden flex-wrap items-center justify-between gap-x-4 gap-y-3 px-8 py-6 bg-[#FAFAF9] dark:bg-stone-900">
           <PublicFooterNav className="gap-x-3" linkClassName={LANDING_FOOTER_LINK} />
+          <WhoMadeIt borderColor="border-[#FAFAF9] dark:border-stone-900" />
         </div>
       </div>
 
