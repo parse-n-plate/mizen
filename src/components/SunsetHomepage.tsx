@@ -147,7 +147,7 @@ function ScrollCue() {
  * Signed-out homepage while Mizen is sunsetting. The first screen is the hero with a "Read the
  * note" cue at the bottom; the note sits just below the fold.
  */
-export function SunsetHomepage() {
+export function SunsetHomepage({ variant = "gradient" }: { variant?: "gradient" | "peek" }) {
   const [authOpen, setAuthOpen] = useState(false);
 
   return (
@@ -196,52 +196,80 @@ export function SunsetHomepage() {
           </div>
         </div>
 
-        <ScrollCue />
+        {/* Gradient variant: a soft Mizen-blue glow rising from the bottom edge of the first screen. */}
+        {variant === "gradient" && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-[#18a1f7]/45"
+          />
+        )}
       </section>
 
-      <section
-        id={SUNSET_NOTE_ID}
-        aria-labelledby="sunset-note-heading"
+      {/* Below the fold. The gradient variant continues the blue down into dark. */}
+      <div
         className={cn(
-          publicPageContainer,
-          publicPageWidths.document,
-          "pb-16 pt-16 sm:pb-20 sm:pt-20"
+          variant === "gradient" &&
+            "dark bg-[linear-gradient(to_bottom,rgb(24_161_247/0.45),#0c0a09_380px)] text-stone-100"
         )}
       >
-        <h2
-          id="sunset-note-heading"
-          className="font-serif text-3xl font-bold tracking-[-0.02em] text-stone-950 dark:text-stone-50 sm:text-4xl"
-        >
-          {SUNSET_COPY.heading}
-        </h2>
+        {/* Peek variant: the chef fish peeks up over the fold. */}
+        {variant === "peek" && (
+          <div className="relative z-10 -mt-[76px] flex justify-center">
+            <Image
+              src="/assets/icons/Fish Logo.svg"
+              alt=""
+              aria-hidden
+              width={387}
+              height={338}
+              className="h-auto w-[132px] sm:w-[156px]"
+            />
+          </div>
+        )}
 
-        {/* Gage's note: edit SUNSET_COPY.note in src/lib/sunset.ts */}
-        <div className="mt-6 rounded-xl border border-dashed border-stone-300 bg-[#FAFAF9] px-5 py-6 dark:border-stone-700 dark:bg-stone-900">
-          <p className="whitespace-pre-line font-sans text-base font-semibold leading-7 tracking-wide text-stone-500 dark:text-stone-400">
-            {SUNSET_COPY.note}
+        <section
+          id={SUNSET_NOTE_ID}
+          aria-labelledby="sunset-note-heading"
+          className={cn(
+            publicPageContainer,
+            publicPageWidths.document,
+            variant === "peek" ? "pb-16 pt-8 sm:pb-20 sm:pt-10" : "pb-16 pt-24 sm:pb-20 sm:pt-28"
+          )}
+        >
+          <h2
+            id="sunset-note-heading"
+            className="font-serif text-3xl font-bold tracking-[-0.02em] text-stone-950 dark:text-stone-50 sm:text-4xl"
+          >
+            {SUNSET_COPY.heading}
+          </h2>
+
+          {/* Gage's note: edit SUNSET_COPY.note in src/lib/sunset.ts */}
+          <div className="mt-6 rounded-xl border border-dashed border-stone-300 bg-[#FAFAF9] px-5 py-6 dark:border-stone-700 dark:bg-stone-900">
+            <p className="whitespace-pre-line font-sans text-base font-semibold leading-7 tracking-wide text-stone-500 dark:text-stone-400">
+              {SUNSET_COPY.note}
+            </p>
+          </div>
+
+          <h3 className="mt-10 font-serif text-2xl font-semibold text-stone-950 dark:text-stone-50">
+            {SUNSET_COPY.whatHappensNowHeading}
+          </h3>
+          <ul className="mt-3 list-disc space-y-2 pl-5 font-sans text-base leading-7 text-stone-600 dark:text-stone-400">
+            {SUNSET_COPY.whatHappensNow.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+
+          <p className="mt-10 font-sans text-base leading-7 text-stone-600 dark:text-stone-400">
+            {SUNSET_COPY.thanks}
           </p>
+        </section>
+
+        {/* On phones the example sits under the note, as on the original landing page. */}
+        <div className="bg-[#FAFAF9] px-6 py-8 dark:bg-stone-900 lg:hidden">
+          <ExampleRecipeCard className="h-[520px]" />
         </div>
 
-        <h3 className="mt-10 font-serif text-2xl font-semibold text-stone-950 dark:text-stone-50">
-          {SUNSET_COPY.whatHappensNowHeading}
-        </h3>
-        <ul className="mt-3 list-disc space-y-2 pl-5 font-sans text-base leading-7 text-stone-600 dark:text-stone-400">
-          {SUNSET_COPY.whatHappensNow.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-
-        <p className="mt-10 font-sans text-base leading-7 text-stone-600 dark:text-stone-400">
-          {SUNSET_COPY.thanks}
-        </p>
-      </section>
-
-      {/* On phones the example sits under the note, as on the original landing page. */}
-      <div className="bg-[#FAFAF9] px-6 py-8 dark:bg-stone-900 lg:hidden">
-        <ExampleRecipeCard className="h-[520px]" />
+        <PublicFooter className={cn(variant === "gradient" && "bg-[#0c0a09]")} />
       </div>
-
-      <PublicFooter />
 
       {isSupabaseConfigured && <BetaAuthModal open={authOpen} onOpenChange={setAuthOpen} />}
     </div>
