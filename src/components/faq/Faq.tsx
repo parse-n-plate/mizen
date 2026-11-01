@@ -24,12 +24,12 @@ const questions = [
     question: "How can I try Mizen?",
     answer: (
       <>
-        Mizen is currently in closed beta. Join the{" "}
-        <Link href="/links" className={answerLink}>
-          waitlist
+        Mizen is{" "}
+        <Link href="/homepage" className={answerLink}>
+          sunsetting
         </Link>{" "}
-        to request an invite. If you have been invited, sign in with the email address on your
-        invite.
+        and is no longer accepting signups or waitlist requests. If you were already in the beta,
+        you can still sign in with your invite email to view your recipes.
       </>
     ),
   },

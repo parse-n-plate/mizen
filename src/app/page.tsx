@@ -5,8 +5,6 @@ import Link from "next/link";
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import Plain from "@solar-icons/react/csr/messages/Plain";
-import { motion, AnimatePresence } from "motion/react";
 import { useDialKit } from "dialkit";
 import { getTheme, setTheme } from "@/lib/theme";
 import { HomeLibrary } from "@/components/HomeLibrary";
@@ -18,6 +16,7 @@ import { PublicFooterNav } from "@/components/PublicPage";
 import { useUser } from "@/hooks/useUser";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import type { ParsedRecipe } from "@/lib/types";
+import { SUNSET_COPY } from "@/lib/sunset";
 
 const SOURCES = [
   { label: "Recipe Sites", shortLabel: "Sites", icon: "link", hint: "Paste any recipe URL" },
@@ -38,63 +37,8 @@ Melt the coconut oil or cocoa butter until fully liquid. Stir in the cocoa powde
 const LANDING_FOOTER_LINK = "text-xs text-stone-400 dark:text-stone-500";
 
 const LANDING_COPY = {
-  sub: "One place for every recipe you find online. Clean ingredients, clear steps.",
   sourceLabel: "Bring recipes from",
 };
-
-function HeroBook() {
-  return (
-    <motion.img
-      src="/assets/hero-book.svg"
-      alt=""
-      aria-hidden
-      className="h-[1.05em] w-auto shrink-0 cursor-pointer"
-      draggable={false}
-      whileHover={{
-        rotate: [0, -4, 4, -4, 0],
-        scale: 1.05,
-        transition: {
-          rotate: { duration: 0.6, ease: "easeInOut" },
-          scale: { duration: 0.2, ease: "easeOut" },
-        },
-      }}
-      whileTap={{ scale: 0.95 }}
-    />
-  );
-}
-
-function HeroPot() {
-  return (
-    <motion.img
-      src="/assets/hero-pot.svg"
-      alt=""
-      aria-hidden
-      className="h-[1.2em] w-auto shrink-0 cursor-pointer"
-      draggable={false}
-      whileHover={{
-        rotate: [0, -3, 3, -3, 2, -1, 0],
-        transition: { duration: 0.5, ease: "easeInOut" },
-      }}
-      whileTap={{ scale: 0.95 }}
-    />
-  );
-}
-
-function HeroHeadline() {
-  return (
-    <>
-      <span className="inline-flex items-center gap-2 whitespace-nowrap">
-        <span>Every recipe,</span>
-        <HeroBook />
-      </span>
-      <span className="inline-flex items-center gap-2 whitespace-nowrap">
-        <span>same</span>
-        <HeroPot />
-        <span>format.</span>
-      </span>
-    </>
-  );
-}
 
 const EXAMPLE_RECIPES: ParsedRecipe[] = [
   {
@@ -442,10 +386,10 @@ export default function HomePage() {
 
   if (loading) return null;
   if (user) return <HomeLibrary />;
-  return <WaitlistLanding />;
+  return <SunsetLanding />;
 }
 
-export function WaitlistLanding() {
+export function SunsetLanding() {
   const [activeSource, setActiveSource] = useState(0);
   const [displayedSource, setDisplayedSource] = useState(0);
   const [displayedPreview, setDisplayedPreview] = useState(0);
@@ -454,10 +398,6 @@ export function WaitlistLanding() {
   const [phase, setPhase] = useState<"preview" | "absorb" | "populate" | "idle" | "exit">(
     "preview"
   );
-  const [email, setEmail] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [alreadyOnList, setAlreadyOnList] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
@@ -517,41 +457,12 @@ export function WaitlistLanding() {
     [activeSource, phase]
   );
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim() || submitting) return;
-
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        if (data.message === "Already on the waitlist") {
-          setAlreadyOnList(true);
-        } else {
-          setSubmitted(true);
-        }
-        setEmail("");
-      } else {
-        toast.error(data.error || "Something went wrong");
-      }
-    } catch {
-      toast.error("Something went wrong. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   return (
     <>
       {/* lg:flex-none keeps lg:h-screen from being stretched by /homepage's min-h-screen parent. */}
       <div className="landing-scroll flex flex-col lg:flex-row min-h-screen lg:min-h-0 lg:h-screen lg:overflow-hidden flex-1 lg:flex-none">
         {/* Left panel */}
-        <div className="relative flex flex-col justify-between lg:w-[38%] px-8 lg:px-12 xl:px-16 pt-12 lg:pt-5 pb-8 lg:pb-10 bg-white dark:bg-stone-950">
+        <div className="relative flex flex-col justify-between lg:w-[38%] lg:overflow-y-auto px-8 lg:px-12 xl:px-16 pt-12 lg:pt-5 pb-8 lg:pb-10 bg-white dark:bg-stone-950">
           {/* Top: Logo */}
           <div className="flex items-center justify-between">
             <Link
@@ -573,112 +484,40 @@ export function WaitlistLanding() {
 
           {/* Center: Hero content */}
           <div className="flex-1 flex flex-col justify-center py-12 lg:py-0 lg:pb-16 lg:items-start items-center">
-            <div className="w-full text-center lg:text-left">
-              <h1 className="flex flex-col items-center gap-1 lg:items-start font-serif text-[clamp(32px,9vw,56px)] lg:text-[clamp(24px,2.6vw,44px)] xl:text-[clamp(32px,2.8vw,52px)] font-bold leading-[1.3] tracking-[-0.02em] text-stone-900 dark:text-stone-100 mb-5">
-                <HeroHeadline />
+            <div className="w-full max-w-md text-left">
+              <h1 className="font-serif text-[clamp(32px,9vw,48px)] lg:text-[clamp(28px,2.6vw,44px)] font-bold leading-[1.2] tracking-[-0.02em] text-stone-900 dark:text-stone-100 mb-6 text-balance">
+                {SUNSET_COPY.heading}
               </h1>
 
-              <p className="font-sans text-base lg:text-[17px] text-stone-500 dark:text-stone-400 leading-relaxed mb-8 max-w-[26rem] mx-auto lg:mx-0 text-balance">
-                {LANDING_COPY.sub}
-              </p>
+              {/* Gage's note — edit SUNSET_COPY.note in src/lib/sunset.ts */}
+              <div className="mb-8 rounded-xl border border-dashed border-stone-300 bg-[#FAFAF9] px-5 py-6 text-left dark:border-stone-700 dark:bg-stone-900">
+                <p className="font-sans text-sm font-semibold tracking-wide text-stone-500 dark:text-stone-400">
+                  {SUNSET_COPY.note}
+                </p>
+              </div>
 
-              {/* Email form */}
-              <form onSubmit={handleSubmit} className="max-w-md mx-auto lg:mx-0">
-                <div className="flex items-center h-[52px] rounded-xl border border-[#E7E5E4] bg-[#F5F5F4] dark:border-stone-700 dark:bg-stone-900 overflow-clip shrink-0 focus-within:border-[#18a1f7] focus-within:ring-[3px] focus-within:ring-[#18a1f7]/30 transition-[border-color,box-shadow]">
-                  {/* Input — collapses on success */}
-                  <motion.div
-                    initial={false}
-                    animate={{
-                      flex: submitted || alreadyOnList ? "0 0 0px" : "1 1 0%",
-                      opacity: submitted || alreadyOnList ? 0 : 1,
-                    }}
-                    transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-                    className="overflow-hidden min-w-0"
+              <div>
+                <h2 className="font-serif text-xl font-semibold text-stone-900 dark:text-stone-100 mb-3">
+                  {SUNSET_COPY.whatHappensNowHeading}
+                </h2>
+                <ul className="list-disc pl-5 space-y-2 font-sans text-[15px] leading-relaxed text-stone-600 dark:text-stone-400">
+                  {SUNSET_COPY.whatHappensNow.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+                {isSupabaseConfigured && (
+                  <button
+                    type="button"
+                    onClick={() => setAuthOpen(true)}
+                    className="mt-5 inline-flex h-10 items-center justify-center rounded-lg bg-[#18A1F7] px-5 font-sans text-[14px] font-semibold text-white hover:bg-[#1590de] transition-none"
                   >
-                    <input
-                      type="email"
-                      autoComplete="email"
-                      placeholder="you@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required={!(submitted || alreadyOnList)}
-                      disabled={submitted || alreadyOnList}
-                      className="w-full bg-transparent font-sans text-[15px] text-stone-700 dark:text-stone-200 placeholder:text-[#A8A29E] dark:placeholder:text-stone-500 outline-none pl-5 leading-[18px] whitespace-nowrap"
-                    />
-                  </motion.div>
-
-                  {/* Button — expands to fill, then shows success */}
-                  <motion.button
-                    type="submit"
-                    disabled={submitting || submitted || alreadyOnList}
-                    initial={false}
-                    animate={{
-                      flex: submitted || alreadyOnList ? "1 1 0%" : "0 0 auto",
-                    }}
-                    whileTap={
-                      submitted || alreadyOnList || submitting ? undefined : { scale: 0.96 }
-                    }
-                    transition={{ duration: 0.25, ease: [0.77, 0, 0.175, 1] }}
-                    className={`px-5 h-10 rounded-lg bg-[#18A1F7] font-sans text-[14px] text-[#ffffff] font-semibold leading-[18px] m-1.5 flex items-center justify-center gap-1.5 transition-[opacity] overflow-hidden ${
-                      submitted || alreadyOnList
-                        ? "!opacity-100 pointer-events-none"
-                        : "hover:bg-[#1590de] disabled:opacity-60"
-                    }`}
-                  >
-                    <AnimatePresence mode="wait" initial={false}>
-                      {submitted || alreadyOnList ? (
-                        <motion.span
-                          key="success"
-                          initial={{ opacity: 0, scale: 0.96, y: 4 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          transition={{
-                            delay: 0.1,
-                            duration: 0.2,
-                            ease: [0.23, 1, 0.32, 1],
-                          }}
-                          className="flex items-center gap-2 whitespace-nowrap"
-                        >
-                          <svg
-                            className="w-4 h-4 flex-shrink-0"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M20 6 9 17l-5-5" />
-                          </svg>
-                          <span className="font-medium">
-                            {alreadyOnList
-                              ? "You\u2019re already on the list!"
-                              : "You\u2019re on the list!"}
-                          </span>
-                        </motion.span>
-                      ) : submitting ? (
-                        <motion.span
-                          key="sending"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
-                          transition={{ duration: 0.1, ease: [0.23, 1, 0.32, 1] }}
-                        >
-                          Sending...
-                        </motion.span>
-                      ) : (
-                        <motion.span
-                          key="cta"
-                          exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
-                          transition={{ duration: 0.1, ease: [0.23, 1, 0.32, 1] }}
-                          className="flex items-center gap-1.5"
-                        >
-                          <Plain size={16} weight="Bold" className="shrink-0" /> Notify Me
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </motion.button>
-                </div>
-              </form>
+                    {SUNSET_COPY.signInLabel}
+                  </button>
+                )}
+                <p className="mt-6 font-sans text-[15px] leading-relaxed text-stone-600 dark:text-stone-400">
+                  {SUNSET_COPY.thanks}
+                </p>
+              </div>
             </div>
           </div>
 

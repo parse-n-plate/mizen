@@ -22,8 +22,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { resolveEmailAuthFeedback } from "@/lib/auth-feedback";
+import { SIGNUPS_CLOSED_MESSAGE } from "@/lib/sunset";
 import Login from "@solar-icons/react/csr/arrows-action/Login";
-import UserPlus from "@solar-icons/react/csr/users/UserPlus";
 import Letter from "@solar-icons/react/csr/messages/Letter";
 import Restart from "@solar-icons/react/csr/arrows/Restart";
 import Eye from "@solar-icons/react/csr/security/Eye";
@@ -31,7 +31,7 @@ import EyeClosed from "@solar-icons/react/csr/security/EyeClosed";
 import { Spinner } from "@/components/ui/spinner";
 
 type EmailStatus = "idle" | "checking" | "approved" | "not-found";
-type View = "form" | "link-sent" | "waitlist-joined";
+type View = "form" | "link-sent";
 
 interface BetaAuthModalProps {
   open: boolean;
@@ -315,32 +315,6 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
     setLoading(false);
   };
 
-  const handleJoinWaitlist = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!allowSubmit()) return;
-    setLoading(true);
-    setError(null);
-
-    try {
-      const res = await fetch("/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Something went wrong. Please try again.");
-      } else {
-        setView("waitlist-joined");
-      }
-    } catch {
-      setError("Something went wrong. Please try again.");
-    }
-
-    setLoading(false);
-  };
-
   const handleResend = async () => {
     if (!allowSubmit()) return;
     setLoading(true);
@@ -368,9 +342,10 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
     setLoading(false);
   };
 
+  // Mizen is sunsetting: emails that aren't already in the beta can't sign up or join a waitlist.
   const handleSubmit =
     emailStatus === "not-found"
-      ? handleJoinWaitlist
+      ? (e: React.FormEvent) => e.preventDefault()
       : usePassword && emailStatus === "approved"
         ? handlePasswordSignIn
         : handleSendLink;
@@ -382,22 +357,15 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
       : emailStatus === "approved"
         ? "signin"
         : emailStatus === "not-found"
-          ? "waitlist"
+          ? "closed"
           : "default";
 
-  const title =
-    view === "link-sent"
-      ? "Check your email"
-      : view === "waitlist-joined"
-        ? "You\u2019re on the list"
-        : "Sign in to Mizen";
+  const title = view === "link-sent" ? "Check your email" : "Sign in to Mizen";
 
   const description =
     view === "link-sent"
       ? "We sent a sign-in link to your email"
-      : view === "waitlist-joined"
-        ? "We\u2019ll let you know when your spot is ready"
-        : "Enter the email you were invited with";
+      : "Enter the email you were invited with";
 
   const Header = isMobile ? DrawerHeader : DialogHeader;
   const Title = isMobile ? DrawerTitle : DialogTitle;
@@ -482,27 +450,6 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
                 Use a different email
               </button>
             </p>
-          </motion.div>
-        ) : view === "waitlist-joined" ? (
-          <motion.div
-            key="waitlist-joined"
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={t}
-            className="space-y-4"
-          >
-            <div className="flex items-start gap-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 p-3">
-              <Letter className="h-5 w-5 mt-0.5 shrink-0 text-blue-600 dark:text-blue-400" />
-              <div>
-                <p className="font-sans text-sm text-blue-800 dark:text-blue-300">
-                  <span className="font-medium">{email}</span> has been added to the waitlist.
-                </p>
-                <p className="font-sans text-xs text-blue-600/80 dark:text-blue-400/70 mt-1">
-                  We&apos;ll send you an invite when your spot opens up.
-                </p>
-              </div>
-            </div>
           </motion.div>
         ) : (
           <motion.form
@@ -639,7 +586,7 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
                   exit={{ opacity: 0, height: 0 }}
                   className="font-sans text-sm text-muted-foreground"
                 >
-                  This email isn&apos;t part of the beta yet. Join the waitlist to get access.
+                  {SIGNUPS_CLOSED_MESSAGE} Only existing beta accounts can sign in.
                 </motion.p>
               )}
               {error && (
@@ -666,7 +613,12 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
 
             <Button
               type="submit"
-              disabled={loading || emailStatus === "checking" || emailStatus === "idle"}
+              disabled={
+                loading ||
+                emailStatus === "checking" ||
+                emailStatus === "idle" ||
+                emailStatus === "not-found"
+              }
               className="w-full relative overflow-hidden bg-mizen-blue hover:bg-mizen-blue/90 focus-visible:ring-mizen-blue/50"
               size="lg"
               style={{ color: "white" }}
@@ -688,10 +640,7 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
                       Sign in
                     </>
                   ) : emailStatus === "not-found" ? (
-                    <>
-                      <UserPlus className="h-4 w-4" />
-                      Join waitlist
-                    </>
+                    "Signups closed"
                   ) : (
                     <>
                       <Letter className="h-4 w-4" />
@@ -725,7 +674,7 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
 
       {view === "form" && emailStatus !== "approved" && (
         <p className="mt-4 font-sans text-center text-xs text-muted-foreground">
-          Mizen is in private beta. You need an invite to sign in.
+          Mizen is sunsetting. Existing beta users can still sign in to view their recipes.
         </p>
       )}
     </div>

@@ -1,11 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { toast } from "sonner";
 import AltArrowRight from "@solar-icons/react/csr/arrows/AltArrowRight";
-import Plain from "@solar-icons/react/csr/messages/Plain";
 import {
   PublicPage,
   PublicPageTitle,
@@ -15,6 +12,7 @@ import {
 } from "@/components/PublicPage";
 import { cn } from "@/lib/utils";
 import { favoriteRecipes } from "@/lib/favorite-recipes";
+import { SIGNUPS_CLOSED_MESSAGE, SUNSET_COPY } from "@/lib/sunset";
 
 const connectCards = [
   {
@@ -38,86 +36,28 @@ const connectCards = [
 ];
 
 export function LinksPageContent() {
-  const [email, setEmail] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [alreadyOnList, setAlreadyOnList] = useState(false);
-
-  const handleWaitlistSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!email.trim() || submitting || submitted || alreadyOnList) return;
-
-    setSubmitting(true);
-    try {
-      const res = await fetch("/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
-      });
-      const data = await res.json();
-
-      if (res.ok) {
-        if (data.message === "Already on the waitlist") {
-          setAlreadyOnList(true);
-        } else {
-          setSubmitted(true);
-        }
-        setEmail("");
-      } else {
-        toast.error(data.error || "Something went wrong");
-      }
-    } catch {
-      toast.error("Something went wrong. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   return (
     <>
       <PublicPage>
         <main className={cn(publicPageContainer, publicPageWidths.wide, "flex-1 py-10 sm:py-14")}>
           <section className="grid gap-5 lg:grid-cols-2 lg:items-center">
             <div>
-              <PublicPageTitle>Try Mizen early.</PublicPageTitle>
+              <PublicPageTitle>{SUNSET_COPY.heading}.</PublicPageTitle>
               <p className="mt-2 max-w-[420px] text-pretty font-sans text-[16px] leading-7 text-stone-600 dark:text-stone-300">
-                Join the waitlist for access to clean recipe imports and a calmer cooking view.
+                {SIGNUPS_CLOSED_MESSAGE} Existing beta users can still sign in to view their
+                recipes.
               </p>
             </div>
 
-            <form
-              onSubmit={handleWaitlistSubmit}
-              className="flex h-full w-full flex-col items-start justify-end"
-            >
-              <div className="flex min-h-[52px] w-full flex-col overflow-hidden rounded-[14px] border border-[#E7E5E4] bg-[#F5F5F4] focus-within:border-[#18a1f7] focus-within:ring-[3px] focus-within:ring-[#18a1f7]/30 dark:border-stone-700 dark:bg-stone-900 min-[420px]:flex-row">
-                <input
-                  type="email"
-                  autoComplete="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  required={!(submitted || alreadyOnList)}
-                  disabled={submitted || alreadyOnList}
-                  className="min-h-[50px] min-w-0 flex-1 bg-transparent py-0 pl-5 pr-4 font-sans text-[15px] leading-[18px] text-stone-700 outline-none placeholder:text-[#A8A29E] disabled:opacity-0 dark:text-stone-200 dark:placeholder:text-stone-500"
-                />
-                <button
-                  type="submit"
-                  disabled={submitting || submitted || alreadyOnList}
-                  className="m-1.5 inline-flex h-10 items-center justify-center gap-1.5 rounded-[10px] bg-[#18A1F7] px-5 font-sans text-[14px] font-semibold leading-[18px] text-white disabled:pointer-events-none disabled:opacity-80 min-[420px]:shrink-0"
-                >
-                  {submitted || alreadyOnList ? (
-                    <span>{alreadyOnList ? "Already on the list" : "You're on the list"}</span>
-                  ) : submitting ? (
-                    <span>Sending...</span>
-                  ) : (
-                    <>
-                      <Plain size={16} weight="Bold" className="shrink-0" />
-                      <span>Join waitlist</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+            <div className="flex h-full w-full flex-col items-start justify-end">
+              <Link
+                href="/homepage"
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-[10px] bg-[#18A1F7] px-5 font-sans text-[14px] font-semibold leading-[18px] text-white hover:bg-[#1590de] transition-none"
+              >
+                Read the note
+                <AltArrowRight size={16} aria-hidden className="shrink-0" />
+              </Link>
+            </div>
           </section>
 
           <div className="grid gap-8">

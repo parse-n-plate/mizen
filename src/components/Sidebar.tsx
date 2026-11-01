@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -12,7 +12,6 @@ import { detectCollectionUrl } from "@/utils/urlPatterns";
 import { SettingsModal } from "@/components/SettingsModal";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { ReleaseNotice } from "@/components/ReleaseNotice";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +23,7 @@ import {
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { createClient } from "@/lib/supabase/client";
 import { favoriteRecipes } from "@/lib/favorite-recipes";
+import { SIGNUPS_CLOSED_MESSAGE, SUNSET_COPY } from "@/lib/sunset";
 import HomeSmile from "@solar-icons/react/csr/ui/HomeSmile";
 import Settings from "@solar-icons/react/csr/settings/Settings";
 import ChatRoundDots from "@solar-icons/react/csr/messages/ChatRoundDots";
@@ -57,10 +57,6 @@ export function Sidebar({ collapsed, onToggle, onOpenSearch }: SidebarProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [recipeCount, setRecipeCount] = useState<number | null>(null);
-  const [waitlistEmail, setWaitlistEmail] = useState("");
-  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
-  const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
-  const [waitlistAlreadyJoined, setWaitlistAlreadyJoined] = useState(false);
 
   // Quick-add state
   const [quickAddOpen, setQuickAddOpen] = useState(false);
@@ -106,39 +102,6 @@ export function Sidebar({ collapsed, onToggle, onOpenSearch }: SidebarProps) {
       toast.error("Something went wrong. Please try again.");
     } finally {
       setQuickAddLoading(false);
-    }
-  };
-
-  const handleSidebarWaitlistSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!waitlistEmail.trim() || waitlistSubmitting || waitlistSubmitted || waitlistAlreadyJoined) {
-      return;
-    }
-
-    setWaitlistSubmitting(true);
-    try {
-      const res = await fetch("/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: waitlistEmail.trim(), source: "Sidebar" }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        toast.error(data.error || "Something went wrong");
-        return;
-      }
-
-      if (data.message === "Already on the waitlist") {
-        setWaitlistAlreadyJoined(true);
-      } else {
-        setWaitlistSubmitted(true);
-      }
-      setWaitlistEmail("");
-    } catch {
-      toast.error("Something went wrong. Please try again.");
-    } finally {
-      setWaitlistSubmitting(false);
     }
   };
 
@@ -526,10 +489,7 @@ export function Sidebar({ collapsed, onToggle, onOpenSearch }: SidebarProps) {
               onClick={() => setAuthOpen(true)}
               className="flex min-h-10 w-full items-center justify-between rounded-xl border border-stone-200 bg-white px-3 py-2 text-left font-sans text-sm text-stone-900 transition-colors hover:border-stone-300 hover:bg-stone-50 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:hover:border-stone-600 dark:hover:bg-stone-800"
             >
-              <span>Welcome to Beta</span>
-              <span className="rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-300">
-                New
-              </span>
+              <span>Beta sign in</span>
             </button>
           )}
 
@@ -625,10 +585,7 @@ export function Sidebar({ collapsed, onToggle, onOpenSearch }: SidebarProps) {
 
           {!authLoading && !user && (
             <div className="mt-3 flex flex-col">
-              <form
-                onSubmit={handleSidebarWaitlistSubmit}
-                className="rounded-xl border border-stone-200 bg-white p-3 dark:border-stone-700 dark:bg-stone-900"
-              >
+              <div className="rounded-xl border border-stone-200 bg-white p-3 dark:border-stone-700 dark:bg-stone-900">
                 <div className="flex items-center gap-2.5">
                   <div className="relative h-7 w-7 shrink-0 overflow-hidden rounded-full bg-[#FAFAF9] ring-1 ring-stone-200 dark:bg-stone-800 dark:ring-stone-700">
                     <Image
@@ -642,41 +599,20 @@ export function Sidebar({ collapsed, onToggle, onOpenSearch }: SidebarProps) {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate font-sans text-sm font-medium text-stone-900 dark:text-stone-100">
-                      Join waitlist
+                      {SUNSET_COPY.heading}
                     </p>
-                    <p className="truncate font-sans text-xs text-stone-500 dark:text-stone-400">
-                      Get early access
+                    <p className="font-sans text-xs text-stone-500 dark:text-stone-400">
+                      {SIGNUPS_CLOSED_MESSAGE}
                     </p>
                   </div>
                 </div>
-
-                <div className="mt-3 grid gap-2">
-                  <input
-                    type="email"
-                    autoComplete="email"
-                    placeholder="you@example.com"
-                    value={waitlistEmail}
-                    onChange={(event) => setWaitlistEmail(event.target.value)}
-                    required={!(waitlistSubmitted || waitlistAlreadyJoined)}
-                    disabled={waitlistSubmitted || waitlistAlreadyJoined}
-                    className="h-9 min-w-0 rounded-lg border border-stone-200 bg-[#FAFAF9] px-3 font-sans text-sm text-stone-800 outline-none transition-colors placeholder:text-stone-400 focus:border-[#18A1F7] focus:ring-2 focus:ring-[#18A1F7]/20 disabled:opacity-70 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100 dark:placeholder:text-stone-500"
-                  />
-                  <Button
-                    type="submit"
-                    disabled={waitlistSubmitting || waitlistSubmitted || waitlistAlreadyJoined}
-                    variant="primary-blue"
-                    className="h-9 w-full rounded-lg px-3 font-sans text-sm font-semibold"
-                  >
-                    {waitlistSubmitted || waitlistAlreadyJoined
-                      ? waitlistAlreadyJoined
-                        ? "Already joined"
-                        : "You're on the list"
-                      : waitlistSubmitting
-                        ? "Joining..."
-                        : "Join waitlist"}
-                  </Button>
-                </div>
-              </form>
+                <Link
+                  href="/homepage"
+                  className="mt-3 block font-sans text-xs font-medium text-stone-600 underline underline-offset-2 hover:text-stone-900 dark:text-stone-300 dark:hover:text-stone-100 transition-none"
+                >
+                  Read the note
+                </Link>
+              </div>
             </div>
           )}
         </div>

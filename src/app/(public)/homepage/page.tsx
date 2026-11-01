@@ -1,5 +1,5 @@
-import { WaitlistLanding } from "@/app/page";
+import { SunsetLanding } from "@/app/page";
 
 export default function HomepageAlias() {
-  return <WaitlistLanding />;
+  return <SunsetLanding />;
 }
