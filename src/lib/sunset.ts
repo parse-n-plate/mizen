@@ -1,6 +1,6 @@
 /**
  * Copy for the Mizen sunset notice on the signed-out homepage (`/`). The first screen shows the
- * hero; the note sits just below the fold. Everything it says lives here.
+ * hero and a "Read the note" cue; the note sits just below the fold. Everything it says lives here.
  */
 export const SUNSET_NOTE_ID = "note";
 export const SUNSET_NOTE_HREF = `/#${SUNSET_NOTE_ID}`;
@@ -15,6 +15,7 @@ export const SUNSET_COPY = {
     "If you’re already in the beta, you can still sign in to view your recipes.",
   ],
   thanks: "Thank you for cooking with Mizen.",
+  scrollCue: "Read the note",
   homepageSub: "One place for every recipe you find online. Clean ingredients, clear steps.",
 } as const;
 

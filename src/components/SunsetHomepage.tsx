@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
+import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { LandingAuthCta } from "@/components/LandingAuthCta";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
@@ -106,8 +107,45 @@ function ExampleRecipeCard({ className }: { className?: string }) {
 }
 
 /**
- * Signed-out homepage while Mizen is sunsetting. The first screen is the hero; it stops just
- * short of the fold so the top of the note below peeks into view.
+ * "Read the note" cue at the bottom of the first screen. It bobs gently (unless the visitor prefers
+ * reduced motion), jumps to the note, and fades away once the page is scrolled.
+ */
+function ScrollCue() {
+  const reduceMotion = useReducedMotion();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return (
+    <a
+      href={`#${SUNSET_NOTE_ID}`}
+      aria-hidden={scrolled}
+      tabIndex={scrolled ? -1 : undefined}
+      className={cn(
+        "absolute inset-x-0 bottom-6 mx-auto flex w-max flex-col items-center gap-1 rounded-md px-2 py-1 font-sans text-sm font-medium text-stone-400 hover:text-stone-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mizen-blue dark:text-stone-500 dark:hover:text-stone-300 transition-opacity duration-300",
+        scrolled && "pointer-events-none opacity-0"
+      )}
+    >
+      {SUNSET_COPY.scrollCue}
+      <motion.span
+        aria-hidden
+        animate={reduceMotion ? undefined : { y: [0, 4, 0] }}
+        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <AltArrowDown size={18} />
+      </motion.span>
+    </a>
+  );
+}
+
+/**
+ * Signed-out homepage while Mizen is sunsetting. The first screen is the hero with a "Read the
+ * note" cue at the bottom; the note sits just below the fold.
  */
 export function SunsetHomepage() {
   const [authOpen, setAuthOpen] = useState(false);
@@ -120,7 +158,7 @@ export function SunsetHomepage() {
           <LandingAuthCta onSignIn={() => setAuthOpen(true)} />
         </div>
       </div>
-      <section className="flex min-h-[calc(100svh-5.5rem)] items-center">
+      <section className="relative flex min-h-[100svh] items-center">
         <div className="mx-auto grid w-full max-w-[1120px] items-center gap-12 px-6 py-14 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16 lg:py-10">
           <div>
             <Image
@@ -157,12 +195,18 @@ export function SunsetHomepage() {
             <ExampleRecipeCard className="h-[min(600px,calc(100svh-10rem))] rotate-[1.5deg]" />
           </div>
         </div>
+
+        <ScrollCue />
       </section>
 
       <section
         id={SUNSET_NOTE_ID}
         aria-labelledby="sunset-note-heading"
-        className={cn(publicPageContainer, publicPageWidths.document, "pb-16 pt-4 sm:pb-20")}
+        className={cn(
+          publicPageContainer,
+          publicPageWidths.document,
+          "pb-16 pt-16 sm:pb-20 sm:pt-20"
+        )}
       >
         <h2
           id="sunset-note-heading"
