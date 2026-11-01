@@ -71,6 +71,35 @@ function HeroHeadline() {
   );
 }
 
+/** A live Mizen recipe view: tick ingredients, switch Prep/Cook, change servings, scroll. */
+function ExampleRecipeCard({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "relative mx-auto flex max-w-xl flex-col overflow-hidden rounded-xl border border-stone-200/60 bg-white shadow-lg dark:border-stone-700 dark:bg-stone-950",
+        className
+      )}
+    >
+      <div
+        aria-hidden
+        className="flex h-[41px] shrink-0 items-center gap-1.5 bg-white px-5 dark:bg-stone-900"
+      >
+        <div className="size-3 rounded-full bg-[#DDDDDD] dark:bg-stone-700" />
+        <div className="size-3 rounded-full bg-[#DDDDDD] dark:bg-stone-700" />
+        <div className="size-3 rounded-full bg-[#DDDDDD] dark:bg-stone-700" />
+      </div>
+      <div className="min-h-0 flex-1">
+        <WaitlistRecipePreview
+          recipe={SUNSET_EXAMPLE_RECIPE}
+          sourceType="url"
+          showSourceAttachment={false}
+        />
+      </div>
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white dark:from-stone-900" />
+    </div>
+  );
+}
+
 /**
  * Signed-out homepage while Mizen is sunsetting. The first screen is the hero; it stops just
  * short of the fold so the top of the note below peeks into view.
@@ -119,26 +148,8 @@ export function SunsetHomepage() {
             </nav>
           </div>
 
-          {/* A live Mizen recipe view: tick ingredients, switch Prep/Cook, change servings, scroll. */}
           <div className="relative hidden lg:block">
-            <div className="relative mx-auto flex h-[min(600px,calc(100svh-10rem))] max-w-xl rotate-[1.5deg] flex-col overflow-hidden rounded-xl border border-stone-200/60 bg-white shadow-lg dark:border-stone-700 dark:bg-stone-950">
-              <div
-                aria-hidden
-                className="flex h-[41px] shrink-0 items-center gap-1.5 bg-white px-5 dark:bg-stone-900"
-              >
-                <div className="size-3 rounded-full bg-[#DDDDDD] dark:bg-stone-700" />
-                <div className="size-3 rounded-full bg-[#DDDDDD] dark:bg-stone-700" />
-                <div className="size-3 rounded-full bg-[#DDDDDD] dark:bg-stone-700" />
-              </div>
-              <div className="min-h-0 flex-1">
-                <WaitlistRecipePreview
-                  recipe={SUNSET_EXAMPLE_RECIPE}
-                  sourceType="url"
-                  showSourceAttachment={false}
-                />
-              </div>
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white dark:from-stone-900" />
-            </div>
+            <ExampleRecipeCard className="h-[min(600px,calc(100svh-10rem))] rotate-[1.5deg]" />
           </div>
         </div>
       </section>
@@ -175,6 +186,11 @@ export function SunsetHomepage() {
           {SUNSET_COPY.thanks}
         </p>
       </section>
+
+      {/* On phones the example sits under the note, as on the original landing page. */}
+      <div className="bg-[#FAFAF9] px-6 py-8 dark:bg-stone-900 lg:hidden">
+        <ExampleRecipeCard className="h-[520px]" />
+      </div>
 
       <PublicFooter />
 
