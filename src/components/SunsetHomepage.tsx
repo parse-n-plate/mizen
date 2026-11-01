@@ -78,7 +78,7 @@ const NOTE_LINK =
 function ExampleRecipeCard({ className }: { className?: string }) {
   return (
     // Padding gives the shadow room inside the fade mask, so it isn't clipped at the sides.
-    <div className="-m-6 p-6 [mask-image:linear-gradient(to_bottom,black_35%,transparent_92%)]">
+    <div className="-m-6 p-6 [mask-image:linear-gradient(to_bottom,black_65%,transparent_98%)]">
       <div
         className={cn(
           "relative mx-auto flex max-w-xl flex-col overflow-hidden rounded-xl border border-stone-200/60 bg-white shadow-lg dark:border-stone-700 dark:bg-stone-950",
@@ -150,7 +150,7 @@ export function SunsetHomepage() {
         {/* A soft hint of the blue section below, rising from the bottom edge of the first screen. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-[#B2E3FE] dark:bg-[radial-gradient(ellipse_60%_100%_at_50%_100%,rgb(24_161_247/0.16),transparent_70%)]"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-b from-transparent to-[#B2E3FE] dark:bg-[radial-gradient(ellipse_60%_100%_at_50%_100%,rgb(24_161_247/0.16),transparent_70%)]"
         />
       </section>
 
@@ -216,9 +216,9 @@ export function SunsetHomepage() {
           <div className="mx-auto flex w-full min-w-0 max-w-[1120px] flex-wrap items-center justify-between gap-x-8 gap-y-4 px-5 sm:px-8">
             <WhoMadeIt
               borderColor="border-[#7CC4F9] dark:border-stone-950"
-              textClassName="font-sans text-xs text-[rgb(255_255_255/0.85)]"
+              textClassName="font-sans text-sm font-medium text-[rgb(255_255_255/0.9)]"
             />
-            <PublicFooterNav linkClassName="text-[rgb(255_255_255/0.9)] hover:text-[#fff] dark:text-[rgb(255_255_255/0.9)] dark:hover:text-[#fff]" />
+            <PublicFooterNav linkClassName="font-medium text-[rgb(255_255_255/0.9)] hover:text-[#fff] dark:text-[rgb(255_255_255/0.9)] dark:hover:text-[#fff]" />
           </div>
         </footer>
       </div>
