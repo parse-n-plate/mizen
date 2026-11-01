@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useReducedMotion } from "motion/react";
-import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
+import { motion } from "motion/react";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { LandingAuthCta } from "@/components/LandingAuthCta";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
-import { PublicFooter, publicPageContainer, publicPageWidths } from "@/components/PublicPage";
+import { PublicFooter } from "@/components/PublicPage";
 import { SUNSET_COPY, SUNSET_NOTE_ID } from "@/lib/sunset";
 import { cn } from "@/lib/utils";
 import { SUNSET_EXAMPLE_RECIPE } from "@/lib/sunset-example-recipe";
@@ -107,47 +106,10 @@ function ExampleRecipeCard({ className }: { className?: string }) {
 }
 
 /**
- * "Read the note" cue at the bottom of the first screen. It bobs gently (unless the visitor prefers
- * reduced motion), jumps to the note, and fades away once the page is scrolled.
+ * Signed-out homepage while Mizen is sunsetting. The first screen is the hero; a soft light-blue
+ * glow at its bottom edge hints at the note, which sits below the fold on a light-blue gradient.
  */
-function ScrollCue() {
-  const reduceMotion = useReducedMotion();
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  return (
-    <a
-      href={`#${SUNSET_NOTE_ID}`}
-      aria-hidden={scrolled}
-      tabIndex={scrolled ? -1 : undefined}
-      className={cn(
-        "absolute inset-x-0 bottom-6 mx-auto flex w-max flex-col items-center gap-1 rounded-md px-2 py-1 font-sans text-sm font-medium text-stone-400 hover:text-stone-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mizen-blue dark:text-stone-500 dark:hover:text-stone-300 transition-opacity duration-300",
-        scrolled && "pointer-events-none opacity-0"
-      )}
-    >
-      {SUNSET_COPY.scrollCue}
-      <motion.span
-        aria-hidden
-        animate={reduceMotion ? undefined : { y: [0, 4, 0] }}
-        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <AltArrowDown size={18} />
-      </motion.span>
-    </a>
-  );
-}
-
-/**
- * Signed-out homepage while Mizen is sunsetting. The first screen is the hero with a "Read the
- * note" cue at the bottom; the note sits just below the fold.
- */
-export function SunsetHomepage({ variant = "gradient" }: { variant?: "gradient" | "peek" }) {
+export function SunsetHomepage() {
   const [authOpen, setAuthOpen] = useState(false);
 
   return (
@@ -158,7 +120,8 @@ export function SunsetHomepage({ variant = "gradient" }: { variant?: "gradient" 
           <LandingAuthCta onSignIn={() => setAuthOpen(true)} />
         </div>
       </div>
-      <section className="relative flex min-h-[100svh] items-center">
+      {/* First screen: light-blue gradient at the top that fades to the page color by the fold. */}
+      <section className="relative flex min-h-[100svh] items-center bg-[linear-gradient(to_bottom,#7CC4F9,#B2E3FE_40%,#ffffff)] dark:bg-[linear-gradient(to_bottom,rgb(124_196_249/0.45),#0c0a09_75%)]">
         <div className="mx-auto grid w-full max-w-[1120px] items-center gap-12 px-6 py-14 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16 lg:py-10">
           <div>
             <Image
@@ -195,45 +158,14 @@ export function SunsetHomepage({ variant = "gradient" }: { variant?: "gradient" 
             <ExampleRecipeCard className="h-[min(600px,calc(100svh-10rem))] rotate-[1.5deg]" />
           </div>
         </div>
-
-        {/* Gradient variant: a soft Mizen-blue glow rising from the bottom edge of the first screen. */}
-        {variant === "gradient" && (
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-[#18a1f7]/45"
-          />
-        )}
       </section>
 
-      {/* Below the fold. The gradient variant continues the blue down into dark. */}
-      <div
-        className={cn(
-          variant === "gradient" &&
-            "dark bg-[linear-gradient(to_bottom,rgb(24_161_247/0.45),#0c0a09_380px)] text-stone-100"
-        )}
-      >
-        {/* Peek variant: the chef fish peeks up over the fold. */}
-        {variant === "peek" && (
-          <div className="relative z-10 -mt-[76px] flex justify-center">
-            <Image
-              src="/assets/icons/Fish Logo.svg"
-              alt=""
-              aria-hidden
-              width={387}
-              height={338}
-              className="h-auto w-[132px] sm:w-[156px]"
-            />
-          </div>
-        )}
-
+      {/* Below the fold: the note on a card. */}
+      <div className="px-4 pb-12 pt-4 sm:px-6 sm:pb-16">
         <section
           id={SUNSET_NOTE_ID}
           aria-labelledby="sunset-note-heading"
-          className={cn(
-            publicPageContainer,
-            publicPageWidths.document,
-            variant === "peek" ? "pb-16 pt-8 sm:pb-20 sm:pt-10" : "pb-16 pt-24 sm:pb-20 sm:pt-28"
-          )}
+          className="mx-auto w-full max-w-2xl scroll-mt-6 rounded-2xl border border-stone-200 bg-white px-6 py-10 shadow-[0_8px_30px_rgb(24_161_247/0.12)] dark:border-stone-800 dark:bg-stone-950 sm:px-10 sm:py-12"
         >
           <h2
             id="sunset-note-heading"
@@ -264,12 +196,12 @@ export function SunsetHomepage({ variant = "gradient" }: { variant?: "gradient" 
         </section>
 
         {/* On phones the example sits under the note, as on the original landing page. */}
-        <div className="bg-[#FAFAF9] px-6 py-8 dark:bg-stone-900 lg:hidden">
+        <div className="mt-8 px-2 lg:hidden">
           <ExampleRecipeCard className="h-[520px]" />
         </div>
-
-        <PublicFooter className={cn(variant === "gradient" && "bg-[#0c0a09]")} />
       </div>
+
+      <PublicFooter />
 
       {isSupabaseConfigured && <BetaAuthModal open={authOpen} onOpenChange={setAuthOpen} />}
     </div>

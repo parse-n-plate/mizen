@@ -36,8 +36,5 @@ export default function HomePage() {
 
   if (loading) return null;
   if (user) return <HomeLibrary />;
-  // PROTOTYPE ONLY (not for commit): ?proto=peek shows the peek variant.
-  const proto =
-    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("proto");
-  return <SunsetHomepage variant={proto === "peek" ? "peek" : "gradient"} />;
+  return <SunsetHomepage />;
 }
