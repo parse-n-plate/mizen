@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
+import { LandingAuthCta } from "@/components/LandingAuthCta";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { PublicFooter, publicPageContainer, publicPageWidths } from "@/components/PublicPage";
@@ -53,7 +54,13 @@ export function SunsetHomepage() {
   const [authOpen, setAuthOpen] = useState(false);
 
   return (
-    <div className="landing-scroll flex min-h-screen flex-1 flex-col bg-white dark:bg-stone-950">
+    <div className="landing-scroll relative flex min-h-screen flex-1 flex-col bg-white dark:bg-stone-950">
+      {/* Sign-in for existing beta users. Absolutely placed so it doesn't push the note below the fold. */}
+      <div className="absolute inset-x-0 top-0 z-10">
+        <div className="mx-auto flex w-full max-w-[1120px] justify-end px-6 pt-5 sm:px-8">
+          <LandingAuthCta onSignIn={() => setAuthOpen(true)} />
+        </div>
+      </div>
       <section className="flex min-h-[calc(100svh-5.5rem)] items-center">
         <div className="mx-auto grid w-full max-w-[1120px] items-center gap-12 px-6 py-14 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16 lg:py-10">
           <div>
@@ -94,11 +101,6 @@ export function SunsetHomepage() {
             </a>
 
             <nav aria-label="Footer" className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
-              {isSupabaseConfigured && (
-                <button type="button" onClick={() => setAuthOpen(true)} className={SMALL_LINK}>
-                  Sign in
-                </button>
-              )}
               <Link href="/faq" className={SMALL_LINK}>
                 FAQ
               </Link>
@@ -162,15 +164,6 @@ export function SunsetHomepage() {
             <li key={item}>{item}</li>
           ))}
         </ul>
-        {isSupabaseConfigured && (
-          <button
-            type="button"
-            onClick={() => setAuthOpen(true)}
-            className="mt-6 inline-flex h-10 items-center justify-center rounded-lg bg-[#18A1F7] px-5 font-sans text-[14px] font-semibold text-white hover:bg-[#1590de] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mizen-blue transition-none"
-          >
-            {SUNSET_COPY.signInLabel}
-          </button>
-        )}
 
         <p className="mt-10 font-sans text-base leading-7 text-stone-600 dark:text-stone-400">
           {SUNSET_COPY.thanks}

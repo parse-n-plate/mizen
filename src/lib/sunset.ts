@@ -15,7 +15,6 @@ export const SUNSET_COPY = {
     "If you’re already in the beta, you can still sign in to view your recipes.",
   ],
   thanks: "Thank you for cooking with Mizen.",
-  signInLabel: "Sign in to your recipes",
   announcementEyebrow: "Read announcement",
   homepageSub: "One place for every recipe you find online. Clean ingredients, clear steps.",
 } as const;
