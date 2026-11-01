@@ -71,31 +71,36 @@ function HeroHeadline() {
   );
 }
 
-/** A live Mizen recipe view: tick ingredients, switch Prep/Cook, change servings, scroll. */
+/**
+ * A live Mizen recipe view (tick ingredients, switch Prep/Cook, change servings, scroll). It fades
+ * out toward the bottom so it reads as a picture of Mizen rather than something to study.
+ */
 function ExampleRecipeCard({ className }: { className?: string }) {
   return (
-    <div
-      className={cn(
-        "relative mx-auto flex max-w-xl flex-col overflow-hidden rounded-xl border border-stone-200/60 bg-white shadow-lg dark:border-stone-700 dark:bg-stone-950",
-        className
-      )}
-    >
+    // Padding gives the shadow room inside the fade mask, so it isn't clipped at the sides.
+    <div className="-m-6 p-6 [mask-image:linear-gradient(to_bottom,black_35%,transparent_92%)]">
       <div
-        aria-hidden
-        className="flex h-[41px] shrink-0 items-center gap-1.5 bg-white px-5 dark:bg-stone-900"
+        className={cn(
+          "relative mx-auto flex max-w-xl flex-col overflow-hidden rounded-xl border border-stone-200/60 bg-white shadow-lg dark:border-stone-700 dark:bg-stone-950",
+          className
+        )}
       >
-        <div className="size-3 rounded-full bg-[#DDDDDD] dark:bg-stone-700" />
-        <div className="size-3 rounded-full bg-[#DDDDDD] dark:bg-stone-700" />
-        <div className="size-3 rounded-full bg-[#DDDDDD] dark:bg-stone-700" />
+        <div
+          aria-hidden
+          className="flex h-[41px] shrink-0 items-center gap-1.5 bg-white px-5 dark:bg-stone-900"
+        >
+          <div className="size-3 rounded-full bg-[#DDDDDD] dark:bg-stone-700" />
+          <div className="size-3 rounded-full bg-[#DDDDDD] dark:bg-stone-700" />
+          <div className="size-3 rounded-full bg-[#DDDDDD] dark:bg-stone-700" />
+        </div>
+        <div className="min-h-0 flex-1">
+          <WaitlistRecipePreview
+            recipe={SUNSET_EXAMPLE_RECIPE}
+            sourceType="url"
+            showSourceAttachment={false}
+          />
+        </div>
       </div>
-      <div className="min-h-0 flex-1">
-        <WaitlistRecipePreview
-          recipe={SUNSET_EXAMPLE_RECIPE}
-          sourceType="url"
-          showSourceAttachment={false}
-        />
-      </div>
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white dark:from-stone-900" />
     </div>
   );
 }
