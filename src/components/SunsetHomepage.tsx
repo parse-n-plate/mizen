@@ -1,15 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useReducedMotion } from "motion/react";
-import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
+import { motion } from "motion/react";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { LandingAuthCta } from "@/components/LandingAuthCta";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
-import { PublicFooter, publicPageContainer, publicPageWidths } from "@/components/PublicPage";
+import { PublicFooter } from "@/components/PublicPage";
 import { SUNSET_COPY, SUNSET_NOTE_ID } from "@/lib/sunset";
 import { cn } from "@/lib/utils";
 import { SUNSET_EXAMPLE_RECIPE } from "@/lib/sunset-example-recipe";
@@ -107,45 +106,8 @@ function ExampleRecipeCard({ className }: { className?: string }) {
 }
 
 /**
- * "Read the note" cue at the bottom of the first screen. It bobs gently (unless the visitor prefers
- * reduced motion), jumps to the note, and fades away once the page is scrolled.
- */
-function ScrollCue() {
-  const reduceMotion = useReducedMotion();
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  return (
-    <a
-      href={`#${SUNSET_NOTE_ID}`}
-      aria-hidden={scrolled}
-      tabIndex={scrolled ? -1 : undefined}
-      className={cn(
-        "absolute inset-x-0 bottom-6 mx-auto flex w-max flex-col items-center gap-1 rounded-md px-2 py-1 font-sans text-sm font-medium text-stone-400 hover:text-stone-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mizen-blue dark:text-stone-500 dark:hover:text-stone-300 transition-opacity duration-300",
-        scrolled && "pointer-events-none opacity-0"
-      )}
-    >
-      {SUNSET_COPY.scrollCue}
-      <motion.span
-        aria-hidden
-        animate={reduceMotion ? undefined : { y: [0, 4, 0] }}
-        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <AltArrowDown size={18} />
-      </motion.span>
-    </a>
-  );
-}
-
-/**
- * Signed-out homepage while Mizen is sunsetting. The first screen is the hero with a "Read the
- * note" cue at the bottom; the note sits just below the fold.
+ * Signed-out homepage while Mizen is sunsetting. The first screen is the hero; a soft light-blue
+ * glow at its bottom edge hints at the note, which sits below the fold on a light-blue gradient.
  */
 export function SunsetHomepage() {
   const [authOpen, setAuthOpen] = useState(false);
@@ -196,49 +158,52 @@ export function SunsetHomepage() {
           </div>
         </div>
 
-        <ScrollCue />
+        {/* A soft hint of the blue section below, rising from the bottom edge of the first screen. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-[#B2E3FE]"
+        />
       </section>
 
-      <section
-        id={SUNSET_NOTE_ID}
-        aria-labelledby="sunset-note-heading"
-        className={cn(
-          publicPageContainer,
-          publicPageWidths.document,
-          "pb-16 pt-16 sm:pb-20 sm:pt-20"
-        )}
-      >
-        <h2
-          id="sunset-note-heading"
-          className="font-serif text-3xl font-bold tracking-[-0.02em] text-stone-950 dark:text-stone-50 sm:text-4xl"
+      {/* Below the fold: the note on a white card over a light-blue gradient. */}
+      <div className="bg-gradient-to-b from-[#B2E3FE] to-[#7CC4F9] px-4 pb-12 pt-4 sm:px-6 sm:pb-16">
+        <section
+          id={SUNSET_NOTE_ID}
+          aria-labelledby="sunset-note-heading"
+          className="mx-auto w-full max-w-2xl scroll-mt-6 rounded-2xl bg-white px-6 py-10 shadow-[0_8px_30px_rgb(24_161_247/0.18)] dark:bg-stone-950 sm:px-10 sm:py-12"
         >
-          {SUNSET_COPY.heading}
-        </h2>
+          <h2
+            id="sunset-note-heading"
+            className="font-serif text-3xl font-bold tracking-[-0.02em] text-stone-950 dark:text-stone-50 sm:text-4xl"
+          >
+            {SUNSET_COPY.heading}
+          </h2>
 
-        {/* Gage's note: edit SUNSET_COPY.note in src/lib/sunset.ts */}
-        <div className="mt-6 rounded-xl border border-dashed border-stone-300 bg-[#FAFAF9] px-5 py-6 dark:border-stone-700 dark:bg-stone-900">
-          <p className="whitespace-pre-line font-sans text-base font-semibold leading-7 tracking-wide text-stone-500 dark:text-stone-400">
-            {SUNSET_COPY.note}
+          {/* Gage's note: edit SUNSET_COPY.note in src/lib/sunset.ts */}
+          <div className="mt-6 rounded-xl border border-dashed border-stone-300 bg-[#FAFAF9] px-5 py-6 dark:border-stone-700 dark:bg-stone-900">
+            <p className="whitespace-pre-line font-sans text-base font-semibold leading-7 tracking-wide text-stone-500 dark:text-stone-400">
+              {SUNSET_COPY.note}
+            </p>
+          </div>
+
+          <h3 className="mt-10 font-serif text-2xl font-semibold text-stone-950 dark:text-stone-50">
+            {SUNSET_COPY.whatHappensNowHeading}
+          </h3>
+          <ul className="mt-3 list-disc space-y-2 pl-5 font-sans text-base leading-7 text-stone-600 dark:text-stone-400">
+            {SUNSET_COPY.whatHappensNow.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+
+          <p className="mt-10 font-sans text-base leading-7 text-stone-600 dark:text-stone-400">
+            {SUNSET_COPY.thanks}
           </p>
+        </section>
+
+        {/* On phones the example sits under the note, as on the original landing page. */}
+        <div className="mt-8 px-2 lg:hidden">
+          <ExampleRecipeCard className="h-[520px]" />
         </div>
-
-        <h3 className="mt-10 font-serif text-2xl font-semibold text-stone-950 dark:text-stone-50">
-          {SUNSET_COPY.whatHappensNowHeading}
-        </h3>
-        <ul className="mt-3 list-disc space-y-2 pl-5 font-sans text-base leading-7 text-stone-600 dark:text-stone-400">
-          {SUNSET_COPY.whatHappensNow.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-
-        <p className="mt-10 font-sans text-base leading-7 text-stone-600 dark:text-stone-400">
-          {SUNSET_COPY.thanks}
-        </p>
-      </section>
-
-      {/* On phones the example sits under the note, as on the original landing page. */}
-      <div className="bg-[#FAFAF9] px-6 py-8 dark:bg-stone-900 lg:hidden">
-        <ExampleRecipeCard className="h-[520px]" />
       </div>
 
       <PublicFooter />
