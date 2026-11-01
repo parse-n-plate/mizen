@@ -2,19 +2,16 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { motion } from "motion/react";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { LandingAuthCta } from "@/components/LandingAuthCta";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
-import { PublicFooter } from "@/components/PublicPage";
+import { PublicFooterNav } from "@/components/PublicPage";
+import { WhoMadeIt } from "@/components/WhoMadeIt";
 import { SUNSET_COPY, SUNSET_NOTE_ID } from "@/lib/sunset";
 import { cn } from "@/lib/utils";
 import { SUNSET_EXAMPLE_RECIPE } from "@/lib/sunset-example-recipe";
-
-const SMALL_LINK =
-  "rounded-md font-sans text-xs text-stone-400 hover:text-stone-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mizen-blue dark:text-stone-500 dark:hover:text-stone-300 transition-none";
 
 // The book and pot wiggle on hover and squish on tap, as on the original landing page.
 function HeroBook() {
@@ -139,18 +136,6 @@ export function SunsetHomepage() {
             <p className="mt-4 max-w-[26rem] text-balance font-sans text-base leading-relaxed text-stone-500 dark:text-stone-400 lg:text-[17px]">
               {SUNSET_COPY.homepageSub}
             </p>
-
-            <nav aria-label="Footer" className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2">
-              <Link href="/faq" className={SMALL_LINK}>
-                FAQ
-              </Link>
-              <Link href="/privacy" className={SMALL_LINK}>
-                Privacy
-              </Link>
-              <Link href="/terms" className={SMALL_LINK}>
-                Terms
-              </Link>
-            </nav>
           </div>
 
           <div className="relative hidden lg:block">
@@ -166,47 +151,59 @@ export function SunsetHomepage() {
       </section>
 
       {/* Below the fold: the note on a white card over a light-blue gradient. */}
-      <div className="bg-gradient-to-b from-[#B2E3FE] to-[#7CC4F9] px-4 pb-12 pt-4 sm:px-6 sm:pb-16">
-        <section
-          id={SUNSET_NOTE_ID}
-          aria-labelledby="sunset-note-heading"
-          className="mx-auto w-full max-w-2xl scroll-mt-6 rounded-2xl bg-white px-6 py-10 shadow-[0_8px_30px_rgb(24_161_247/0.18)] dark:bg-stone-950 sm:px-10 sm:py-12"
-        >
-          <h2
-            id="sunset-note-heading"
-            className="font-serif text-3xl font-bold tracking-[-0.02em] text-stone-950 dark:text-stone-50 sm:text-4xl"
+      <div className="bg-gradient-to-b from-[#B2E3FE] to-[#7CC4F9]">
+        <div className="px-4 pb-12 pt-4 sm:px-6 sm:pb-16">
+          <section
+            id={SUNSET_NOTE_ID}
+            aria-labelledby="sunset-note-heading"
+            className="mx-auto w-full max-w-2xl scroll-mt-6 rounded-2xl bg-white px-6 py-10 shadow-[0_8px_30px_rgb(24_161_247/0.18)] dark:bg-stone-950 sm:px-10 sm:py-12"
           >
-            {SUNSET_COPY.heading}
-          </h2>
+            <h2
+              id="sunset-note-heading"
+              className="font-serif text-3xl font-bold tracking-[-0.02em] text-stone-950 dark:text-stone-50 sm:text-4xl"
+            >
+              {SUNSET_COPY.heading}
+            </h2>
 
-          {/* Gage's note: edit SUNSET_COPY.note in src/lib/sunset.ts */}
-          <div className="mt-6 rounded-xl border border-dashed border-stone-300 bg-[#FAFAF9] px-5 py-6 dark:border-stone-700 dark:bg-stone-900">
-            <p className="whitespace-pre-line font-sans text-base font-semibold leading-7 tracking-wide text-stone-500 dark:text-stone-400">
-              {SUNSET_COPY.note}
+            {/* Gage's note: edit SUNSET_COPY.note in src/lib/sunset.ts */}
+            <div className="mt-6 rounded-xl border border-dashed border-stone-300 bg-[#FAFAF9] px-5 py-6 dark:border-stone-700 dark:bg-stone-900">
+              <p className="whitespace-pre-line font-sans text-base font-semibold leading-7 tracking-wide text-stone-500 dark:text-stone-400">
+                {SUNSET_COPY.note}
+              </p>
+            </div>
+
+            <h3 className="mt-10 font-serif text-2xl font-semibold text-stone-950 dark:text-stone-50">
+              {SUNSET_COPY.whatHappensNowHeading}
+            </h3>
+            <ul className="mt-3 list-disc space-y-2 pl-5 font-sans text-base leading-7 text-stone-600 dark:text-stone-400">
+              {SUNSET_COPY.whatHappensNow.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+
+            <p className="mt-10 font-sans text-base leading-7 text-stone-600 dark:text-stone-400">
+              {SUNSET_COPY.thanks}
             </p>
+          </section>
+
+          {/* On phones the example sits under the note, as on the original landing page. */}
+          <div className="mt-8 px-2 lg:hidden">
+            <ExampleRecipeCard className="h-[520px]" />
           </div>
-
-          <h3 className="mt-10 font-serif text-2xl font-semibold text-stone-950 dark:text-stone-50">
-            {SUNSET_COPY.whatHappensNowHeading}
-          </h3>
-          <ul className="mt-3 list-disc space-y-2 pl-5 font-sans text-base leading-7 text-stone-600 dark:text-stone-400">
-            {SUNSET_COPY.whatHappensNow.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-
-          <p className="mt-10 font-sans text-base leading-7 text-stone-600 dark:text-stone-400">
-            {SUNSET_COPY.thanks}
-          </p>
-        </section>
-
-        {/* On phones the example sits under the note, as on the original landing page. */}
-        <div className="mt-8 px-2 lg:hidden">
-          <ExampleRecipeCard className="h-[520px]" />
         </div>
-      </div>
 
-      <PublicFooter />
+        {/* Footer sits on the blue: transparent, with white text. Exact white is used because the
+            theme redefines "white" as a dark color in dark mode. */}
+        <footer className="border-t border-[rgb(255_255_255/0.3)] py-6">
+          <div className="mx-auto flex w-full min-w-0 max-w-[1120px] flex-wrap items-center justify-between gap-x-8 gap-y-4 px-5 sm:px-8">
+            <WhoMadeIt
+              borderColor="border-[#7CC4F9]"
+              textClassName="font-sans text-xs text-[rgb(255_255_255/0.85)]"
+            />
+            <PublicFooterNav linkClassName="text-[rgb(255_255_255/0.9)] hover:text-[#fff] dark:text-[rgb(255_255_255/0.9)] dark:hover:text-[#fff]" />
+          </div>
+        </footer>
+      </div>
 
       {isSupabaseConfigured && <BetaAuthModal open={authOpen} onOpenChange={setAuthOpen} />}
     </div>
