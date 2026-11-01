@@ -22,8 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { createClient } from "@/lib/supabase/client";
-import { favoriteRecipes } from "@/lib/favorite-recipes";
-import { SIGNUPS_CLOSED_MESSAGE, SUNSET_COPY } from "@/lib/sunset";
+import { SIGNUPS_CLOSED_MESSAGE, SUNSET_COPY, SUNSET_NOTE_HREF } from "@/lib/sunset";
 import HomeSmile from "@solar-icons/react/csr/ui/HomeSmile";
 import Settings from "@solar-icons/react/csr/settings/Settings";
 import ChatRoundDots from "@solar-icons/react/csr/messages/ChatRoundDots";
@@ -156,7 +155,6 @@ export function Sidebar({ collapsed, onToggle, onOpenSearch }: SidebarProps) {
   }, [user]);
 
   const name = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Guest";
-  const showStaticRecipeLinks = pathname.startsWith("/recipes/");
 
   const navItems: SidebarNavItem[] = [
     {
@@ -271,45 +269,6 @@ export function Sidebar({ collapsed, onToggle, onOpenSearch }: SidebarProps) {
                 );
               })}
           </nav>
-
-          {showStaticRecipeLinks && (
-            <section aria-labelledby="static-recipes-heading" className="flex flex-col gap-2">
-              <h2
-                id="static-recipes-heading"
-                className="px-2.5 font-sans text-xs font-medium text-stone-400 dark:text-stone-500"
-              >
-                Our favorite recipes.
-              </h2>
-              <div className="flex flex-col gap-px">
-                {favoriteRecipes.map((recipe) => {
-                  const active = pathname === recipe.href;
-
-                  return (
-                    <Link
-                      key={recipe.href}
-                      href={recipe.href}
-                      className={cn(
-                        "flex items-center gap-2.5 rounded-lg px-2.5 py-2 font-sans text-sm transition-none",
-                        active
-                          ? "bg-stone-200/60 font-medium text-stone-900 dark:bg-stone-700/35 dark:text-stone-100"
-                          : "text-stone-500 hover:bg-stone-200/60 hover:text-stone-700 dark:text-stone-400 dark:hover:bg-stone-700/35 dark:hover:text-stone-300"
-                      )}
-                    >
-                      <Image
-                        src={`https://www.google.com/s2/favicons?domain=${recipe.domain}&sz=32`}
-                        alt=""
-                        width={18}
-                        height={18}
-                        unoptimized
-                        className="h-[18px] w-[18px] shrink-0 rounded-sm"
-                      />
-                      <span className="min-w-0 flex-1 truncate">{recipe.title}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </section>
-          )}
 
           {/* Quick-add recipe */}
           {user && (
@@ -607,7 +566,7 @@ export function Sidebar({ collapsed, onToggle, onOpenSearch }: SidebarProps) {
                   </div>
                 </div>
                 <Link
-                  href="/homepage"
+                  href={SUNSET_NOTE_HREF}
                   className="mt-3 block font-sans text-xs font-medium text-stone-600 underline underline-offset-2 hover:text-stone-900 dark:text-stone-300 dark:hover:text-stone-100 transition-none"
                 >
                   Read the note

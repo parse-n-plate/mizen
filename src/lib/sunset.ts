@@ -1,7 +1,10 @@
 /**
- * Copy for the Mizen sunset notice shown on the homepage (`/` and `/homepage`).
- * Everything the sunset page says lives here so it can be edited in one place.
+ * Copy for the Mizen sunset notice on the signed-out homepage (`/`). The first screen shows the
+ * hero and an announcement card; the note sits just below the fold. Everything it says lives here.
  */
+export const SUNSET_NOTE_ID = "note";
+export const SUNSET_NOTE_HREF = `/#${SUNSET_NOTE_ID}`;
+
 export const SUNSET_COPY = {
   heading: "Mizen is sunsetting",
   // TODO(gage): replace with your sunset note
@@ -13,6 +16,8 @@ export const SUNSET_COPY = {
   ],
   thanks: "Thank you for cooking with Mizen.",
   signInLabel: "Sign in to your recipes",
+  announcementEyebrow: "Read announcement",
+  homepageSub: "One place for every recipe you find online. Clean ingredients, clear steps.",
 } as const;
 
 /** Shown wherever someone tries to sign up or join the waitlist. */
