@@ -191,16 +191,7 @@ export function SunsetHomepage() {
                   )}
                 </p>
               ))}
-              <p>
-                <a
-                  href={SUNSET_NOTE_SIGNATURE.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={NOTE_LINK}
-                >
-                  {SUNSET_NOTE_SIGNATURE.text}
-                </a>
-              </p>
+              <p>{SUNSET_NOTE_SIGNATURE}</p>
             </div>
 
             <h3 className="mt-10 font-serif text-2xl font-semibold text-stone-950 dark:text-stone-50">
