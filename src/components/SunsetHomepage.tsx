@@ -99,6 +99,9 @@ export function SunsetHomepage() {
                   Sign in
                 </button>
               )}
+              <Link href="/faq" className={SMALL_LINK}>
+                FAQ
+              </Link>
               <Link href="/privacy" className={SMALL_LINK}>
                 Privacy
               </Link>
@@ -108,21 +111,25 @@ export function SunsetHomepage() {
             </nav>
           </div>
 
-          {/* Static picture of a Mizen recipe — decorative, not interactive. */}
-          <div aria-hidden inert className="relative hidden lg:block">
-            <div className="relative mx-auto max-h-[min(600px,calc(100svh-10rem))] max-w-xl rotate-[1.5deg] overflow-hidden rounded-xl border border-stone-200/60 bg-white shadow-lg dark:border-stone-700 dark:bg-stone-950">
-              <div className="flex h-[41px] items-center gap-1.5 bg-white px-5 dark:bg-stone-900">
+          {/* A live Mizen recipe view: tick ingredients, switch Prep/Cook, change servings, scroll. */}
+          <div className="relative hidden lg:block">
+            <div className="relative mx-auto flex h-[min(600px,calc(100svh-10rem))] max-w-xl rotate-[1.5deg] flex-col overflow-hidden rounded-xl border border-stone-200/60 bg-white shadow-lg dark:border-stone-700 dark:bg-stone-950">
+              <div
+                aria-hidden
+                className="flex h-[41px] shrink-0 items-center gap-1.5 bg-white px-5 dark:bg-stone-900"
+              >
                 <div className="size-3 rounded-full bg-[#DDDDDD] dark:bg-stone-700" />
                 <div className="size-3 rounded-full bg-[#DDDDDD] dark:bg-stone-700" />
                 <div className="size-3 rounded-full bg-[#DDDDDD] dark:bg-stone-700" />
               </div>
-              <WaitlistRecipePreview
-                recipe={SUNSET_EXAMPLE_RECIPE}
-                sourceType="url"
-                disableScroll
-                showSourceAttachment={false}
-              />
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white dark:from-stone-950" />
+              <div className="min-h-0 flex-1">
+                <WaitlistRecipePreview
+                  recipe={SUNSET_EXAMPLE_RECIPE}
+                  sourceType="url"
+                  showSourceAttachment={false}
+                />
+              </div>
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white dark:from-stone-900" />
             </div>
           </div>
         </div>
