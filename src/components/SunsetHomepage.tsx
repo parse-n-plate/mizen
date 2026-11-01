@@ -9,7 +9,7 @@ import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { PublicFooterNav } from "@/components/PublicPage";
 import { WhoMadeIt } from "@/components/WhoMadeIt";
-import { SUNSET_COPY, SUNSET_NOTE_ID } from "@/lib/sunset";
+import { SUNSET_COPY, SUNSET_NOTE, SUNSET_NOTE_ID, SUNSET_NOTE_SIGNATURE } from "@/lib/sunset";
 import { cn } from "@/lib/utils";
 import { SUNSET_EXAMPLE_RECIPE } from "@/lib/sunset-example-recipe";
 
@@ -68,6 +68,9 @@ function HeroHeadline() {
   );
 }
 
+const NOTE_LINK =
+  "rounded-sm font-medium text-stone-900 underline decoration-stone-300 underline-offset-4 hover:decoration-stone-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mizen-blue dark:text-stone-100 dark:decoration-stone-600 dark:hover:decoration-stone-100 transition-none";
+
 /**
  * A live Mizen recipe view (tick ingredients, switch Prep/Cook, change servings, scroll). It fades
  * out toward the bottom so it reads as a picture of Mizen rather than something to study.
@@ -117,7 +120,8 @@ export function SunsetHomepage() {
           <LandingAuthCta onSignIn={() => setAuthOpen(true)} />
         </div>
       </div>
-      <section className="relative flex min-h-[100svh] items-center">
+      {/* Dark mode: a soft Mizen-blue glow from the top center (a light wash looks washed out on dark). */}
+      <section className="relative flex min-h-[100svh] items-center dark:bg-[radial-gradient(ellipse_90%_60%_at_50%_0%,rgb(24_161_247/0.22),transparent_70%)]">
         <div className="mx-auto grid w-full max-w-[1120px] items-center gap-12 px-6 py-14 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16 lg:py-10">
           <div>
             <Image
@@ -146,17 +150,18 @@ export function SunsetHomepage() {
         {/* A soft hint of the blue section below, rising from the bottom edge of the first screen. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-[#B2E3FE]"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-b from-transparent to-[#B2E3FE] dark:bg-[radial-gradient(ellipse_60%_100%_at_50%_100%,rgb(24_161_247/0.16),transparent_70%)]"
         />
       </section>
 
       {/* Below the fold: the note on a white card over a light-blue gradient. */}
-      <div className="bg-gradient-to-b from-[#B2E3FE] to-[#7CC4F9]">
+      {/* Light mode: light-blue gradient. Dark mode: the glow continues from the fold, then dark. */}
+      <div className="bg-gradient-to-b from-[#B2E3FE] to-[#7CC4F9] dark:bg-[radial-gradient(ellipse_60%_420px_at_50%_0%,rgb(24_161_247/0.16),transparent_70%)]">
         <div className="px-4 pb-12 pt-4 sm:px-6 sm:pb-16">
           <section
             id={SUNSET_NOTE_ID}
             aria-labelledby="sunset-note-heading"
-            className="mx-auto w-full max-w-2xl scroll-mt-6 rounded-2xl bg-white px-6 py-10 shadow-[0_8px_30px_rgb(24_161_247/0.18)] dark:bg-stone-950 sm:px-10 sm:py-12"
+            className="mx-auto w-full max-w-2xl scroll-mt-6 rounded-2xl bg-white px-6 py-10 shadow-[0_8px_30px_rgb(24_161_247/0.18)] dark:border dark:border-stone-800 dark:bg-stone-900 sm:px-10 sm:py-12"
           >
             <h2
               id="sunset-note-heading"
@@ -165,10 +170,36 @@ export function SunsetHomepage() {
               {SUNSET_COPY.heading}
             </h2>
 
-            {/* Gage's note: edit SUNSET_COPY.note in src/lib/sunset.ts */}
-            <div className="mt-6 rounded-xl border border-dashed border-stone-300 bg-[#FAFAF9] px-5 py-6 dark:border-stone-700 dark:bg-stone-900">
-              <p className="whitespace-pre-line font-sans text-base font-semibold leading-7 tracking-wide text-stone-500 dark:text-stone-400">
-                {SUNSET_COPY.note}
+            {/* Gage's note: edit SUNSET_NOTE in src/lib/sunset.ts */}
+            <div className="mt-6 space-y-4 font-sans text-base leading-7 text-stone-700 dark:text-stone-300">
+              {SUNSET_NOTE.map((paragraph, i) => (
+                <p key={i}>
+                  {paragraph.map((segment, j) =>
+                    typeof segment === "string" ? (
+                      segment
+                    ) : (
+                      <a
+                        key={j}
+                        href={segment.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={NOTE_LINK}
+                      >
+                        {segment.text}
+                      </a>
+                    )
+                  )}
+                </p>
+              ))}
+              <p>
+                <a
+                  href={SUNSET_NOTE_SIGNATURE.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={NOTE_LINK}
+                >
+                  {SUNSET_NOTE_SIGNATURE.text}
+                </a>
               </p>
             </div>
 
@@ -180,10 +211,6 @@ export function SunsetHomepage() {
                 <li key={item}>{item}</li>
               ))}
             </ul>
-
-            <p className="mt-10 font-sans text-base leading-7 text-stone-600 dark:text-stone-400">
-              {SUNSET_COPY.thanks}
-            </p>
           </section>
 
           {/* On phones the example sits under the note, as on the original landing page. */}
@@ -194,10 +221,10 @@ export function SunsetHomepage() {
 
         {/* Footer sits on the blue: transparent, with white text. Exact white is used because the
             theme redefines "white" as a dark color in dark mode. */}
-        <footer className="border-t border-[rgb(255_255_255/0.3)] py-6">
+        <footer className="py-6">
           <div className="mx-auto flex w-full min-w-0 max-w-[1120px] flex-wrap items-center justify-between gap-x-8 gap-y-4 px-5 sm:px-8">
             <WhoMadeIt
-              borderColor="border-[#7CC4F9]"
+              borderColor="border-[#7CC4F9] dark:border-stone-950"
               textClassName="font-sans text-xs text-[rgb(255_255_255/0.85)]"
             />
             <PublicFooterNav linkClassName="text-[rgb(255_255_255/0.9)] hover:text-[#fff] dark:text-[rgb(255_255_255/0.9)] dark:hover:text-[#fff]" />
