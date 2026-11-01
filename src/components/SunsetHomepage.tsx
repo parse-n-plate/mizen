@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
+import { motion } from "motion/react";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { LandingAuthCta } from "@/components/LandingAuthCta";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
@@ -16,30 +16,55 @@ import { SUNSET_EXAMPLE_RECIPE } from "@/lib/sunset-example-recipe";
 const SMALL_LINK =
   "rounded-md font-sans text-xs text-stone-400 hover:text-stone-700 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mizen-blue dark:text-stone-500 dark:hover:text-stone-300 transition-none";
 
+// The book and pot wiggle on hover and squish on tap, as on the original landing page.
+function HeroBook() {
+  return (
+    <motion.img
+      src="/assets/hero-book.svg"
+      alt=""
+      aria-hidden
+      className="h-[1.05em] w-auto shrink-0 cursor-pointer"
+      draggable={false}
+      whileHover={{
+        rotate: [0, -4, 4, -4, 0],
+        scale: 1.05,
+        transition: {
+          rotate: { duration: 0.6, ease: "easeInOut" },
+          scale: { duration: 0.2, ease: "easeOut" },
+        },
+      }}
+      whileTap={{ scale: 0.95 }}
+    />
+  );
+}
+
+function HeroPot() {
+  return (
+    <motion.img
+      src="/assets/hero-pot.svg"
+      alt=""
+      aria-hidden
+      className="h-[1.2em] w-auto shrink-0 cursor-pointer"
+      draggable={false}
+      whileHover={{
+        rotate: [0, -3, 3, -3, 2, -1, 0],
+        transition: { duration: 0.5, ease: "easeInOut" },
+      }}
+      whileTap={{ scale: 0.95 }}
+    />
+  );
+}
+
 function HeroHeadline() {
   return (
     <>
       <span className="inline-flex items-center gap-2 whitespace-nowrap">
         <span>Every recipe,</span>
-        <Image
-          src="/assets/hero-book.svg"
-          alt=""
-          aria-hidden
-          width={48}
-          height={48}
-          className="h-[1.05em] w-auto shrink-0"
-        />
+        <HeroBook />
       </span>
       <span className="inline-flex items-center gap-2 whitespace-nowrap">
         <span>same</span>
-        <Image
-          src="/assets/hero-pot.svg"
-          alt=""
-          aria-hidden
-          width={56}
-          height={56}
-          className="h-[1.2em] w-auto shrink-0"
-        />
+        <HeroPot />
         <span>format.</span>
       </span>
     </>
@@ -47,8 +72,8 @@ function HeroHeadline() {
 }
 
 /**
- * Signed-out homepage while Mizen is sunsetting. The first screen is the hero with an announcement
- * card; it stops just short of the fold so the top of the note below peeks into view.
+ * Signed-out homepage while Mizen is sunsetting. The first screen is the hero; it stops just
+ * short of the fold so the top of the note below peeks into view.
  */
 export function SunsetHomepage() {
   const [authOpen, setAuthOpen] = useState(false);
@@ -81,26 +106,7 @@ export function SunsetHomepage() {
               {SUNSET_COPY.homepageSub}
             </p>
 
-            <a
-              href={`#${SUNSET_NOTE_ID}`}
-              className="group mt-8 flex w-full max-w-[22rem] items-center justify-between gap-4 rounded-xl bg-stone-100 px-4 py-3 hover:bg-stone-200/70 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mizen-blue dark:bg-stone-900 dark:hover:bg-stone-800 transition-none"
-            >
-              <span className="min-w-0">
-                <span className="block font-sans text-xs font-medium text-stone-500 dark:text-stone-400">
-                  {SUNSET_COPY.announcementEyebrow}
-                </span>
-                <span className="mt-0.5 block font-sans text-base font-semibold text-stone-900 dark:text-stone-100">
-                  {SUNSET_COPY.heading}
-                </span>
-              </span>
-              <AltArrowDown
-                size={18}
-                aria-hidden
-                className="shrink-0 text-stone-400 group-hover:text-stone-700 dark:group-hover:text-stone-200"
-              />
-            </a>
-
-            <nav aria-label="Footer" className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <nav aria-label="Footer" className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2">
               <Link href="/faq" className={SMALL_LINK}>
                 FAQ
               </Link>
