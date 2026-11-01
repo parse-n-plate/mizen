@@ -120,8 +120,8 @@ export function SunsetHomepage() {
           <LandingAuthCta onSignIn={() => setAuthOpen(true)} />
         </div>
       </div>
-      {/* First screen: light-blue gradient at the top that fades to the page color by the fold. */}
-      <section className="relative flex min-h-[100svh] items-center bg-[linear-gradient(to_bottom,#7CC4F9,#B2E3FE_40%,#ffffff)] dark:bg-[linear-gradient(to_bottom,rgb(124_196_249/0.45),#0c0a09_75%)]">
+      {/* First screen: light-blue gradient at the top that fades to white. In dark mode, a soft Mizen-blue glow from the top center instead, since a light wash looks washed out on dark. */}
+      <section className="relative flex min-h-[100svh] items-center bg-[linear-gradient(to_bottom,#7CC4F9,#B2E3FE_40%,#ffffff)] dark:bg-[radial-gradient(ellipse_90%_60%_at_50%_0%,rgb(24_161_247/0.22),transparent_70%)]">
         <div className="mx-auto grid w-full max-w-[1120px] items-center gap-12 px-6 py-14 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16 lg:py-10">
           <div>
             <Image
