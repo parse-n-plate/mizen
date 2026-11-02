@@ -44,8 +44,8 @@ export function LinksPageContent() {
             <div>
               <PublicPageTitle>{SUNSET_COPY.heading}.</PublicPageTitle>
               <p className="mt-2 max-w-[420px] text-pretty font-sans text-[16px] leading-7 text-stone-600 dark:text-stone-300">
-                {SIGNUPS_CLOSED_MESSAGE} Existing beta users can still sign in to view their
-                recipes.
+                {SIGNUPS_CLOSED_MESSAGE} Beta users can still sign in to save their recipes, but the
+                site may go offline.
               </p>
             </div>
 

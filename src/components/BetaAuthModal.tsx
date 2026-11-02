@@ -674,7 +674,7 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
 
       {view === "form" && emailStatus !== "approved" && (
         <p className="mt-4 font-sans text-center text-xs text-muted-foreground">
-          Mizen is sunsetting. Existing beta users can still sign in to view their recipes.
+          Mizen is sunsetting. Beta users can still sign in to save their recipes.
         </p>
       )}
     </div>

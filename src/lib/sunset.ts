@@ -30,7 +30,7 @@ export const SUNSET_NOTE: SunsetNoteSegment[][] = [
     "We couldn\u2019t have done it without the help of many friends and family members who tested and contributed to the build.",
   ],
   [
-    "The project and everything we built will stay up, but at ",
+    "The code will live on as open source, but at ",
     { text: "Negi Studio", href: NEGI_STUDIO_URL },
     ", we\u2019ll continue working on new projects that we hope will help people spend more time doing what they love.",
   ],
@@ -44,7 +44,8 @@ export const SUNSET_COPY = {
   whatHappensNowHeading: "What happens now",
   whatHappensNow: [
     "Mizen is no longer accepting new signups or waitlist requests.",
-    "If you\u2019re already in the beta, you can still sign in to view your recipes.",
+    "If you\u2019re in the beta, sign in and save the recipes you want to keep. Each recipe has Copy and Print buttons.",
+    "The site may go offline, and we can\u2019t promise how long it will stay up.",
   ],
   homepageSub: "One place for every recipe you find online. Clean ingredients, clear steps.",
 } as const;

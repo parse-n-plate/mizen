@@ -47,7 +47,11 @@ const questions = [
     id: "recipes",
     question: "I\u2019m in the beta. Can I still get to my recipes?",
     answer: (
-      <>Yes. Sign in with the email address on your invite to view the recipes in your cookbook.</>
+      <>
+        For now, yes. Sign in with the email address on your invite and save the recipes you want to
+        keep using the Copy or Print button on each recipe. The site may go offline, and we
+        can&rsquo;t promise how long it will stay up.
+      </>
     ),
   },
 ];
