@@ -8,7 +8,6 @@ export const SUNSET_NOTE_HREF = `/#${SUNSET_NOTE_ID}`;
 /** A piece of the note: plain text, or text that links somewhere. */
 export type SunsetNoteSegment = string | { text: string; href: string };
 
-const MICHELLE_URL = "https://www.linkedin.com/in/michelle-tran-a48a14203/";
 const NEGI_STUDIO_URL = "https://negi.studio/";
 
 /** Gage's sunset note, one array per paragraph. */
@@ -17,14 +16,14 @@ export const SUNSET_NOTE: SunsetNoteSegment[][] = [
     "Mizen started with a simple desire to work on a side project together and continue our amazing team dynamic.",
   ],
   [
-    "It didn\u2019t take long for us to uncover ",
-    { text: "Michelle", href: MICHELLE_URL },
-    "\u2019s frustration with the online recipe experience, which had devolved into reading an author\u2019s life story while being bombarded with pop-up ads.",
+    "It didn\u2019t take long for us to uncover Michelle\u2019s frustration with the online recipe experience, which had devolved into reading an author\u2019s life story while being bombarded with pop-up ads.",
   ],
   [
     "We set out to create a better cooking experience for home cooks. The name comes from ",
     { text: "mise en place", href: "https://en.wikipedia.org/wiki/Mise_en_place" },
-    " and zen, which pretty much sums up how I wanted cooking at home to feel. From prep to plate, we hope Mizen made cooking calm, organized, and playful.",
+    " and ",
+    { text: "zen", href: "https://en.wikipedia.org/wiki/Zen" },
+    ", which pretty much sums up how I wanted cooking at home to feel. From prep to plate, we hope Mizen made cooking calm, organized, and playful.",
   ],
   [
     "We couldn\u2019t have done it without the help of many friends and family members who tested and contributed to the build.",
@@ -37,7 +36,7 @@ export const SUNSET_NOTE: SunsetNoteSegment[][] = [
   ["Until then, keep cooking \u{1F9D1}\u{1F3FC}\u200D\u{1F373}!"],
 ];
 
-export const SUNSET_NOTE_SIGNATURE = "Gage and Michelle";
+export const SUNSET_NOTE_SIGNATURE = "\u2014 Gage and Michelle";
 
 /** When Mizen shuts down (end of Q1 2027). Used everywhere the date is mentioned. */
 export const SUNSET_SHUTDOWN_DATE = "the end of March 2027";
