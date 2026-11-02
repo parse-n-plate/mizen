@@ -12,7 +12,12 @@ import {
 } from "@/components/PublicPage";
 import { cn } from "@/lib/utils";
 import { favoriteRecipes } from "@/lib/favorite-recipes";
-import { SIGNUPS_CLOSED_MESSAGE, SUNSET_COPY, SUNSET_NOTE_HREF } from "@/lib/sunset";
+import {
+  SIGNUPS_CLOSED_MESSAGE,
+  SUNSET_COPY,
+  SUNSET_NOTE_HREF,
+  SUNSET_SHUTDOWN_DATE,
+} from "@/lib/sunset";
 
 const connectCards = [
   {
@@ -44,8 +49,8 @@ export function LinksPageContent() {
             <div>
               <PublicPageTitle>{SUNSET_COPY.heading}.</PublicPageTitle>
               <p className="mt-2 max-w-[420px] text-pretty font-sans text-[16px] leading-7 text-stone-600 dark:text-stone-300">
-                {SIGNUPS_CLOSED_MESSAGE} Beta users can still sign in to save their recipes, but the
-                site may go offline.
+                {SIGNUPS_CLOSED_MESSAGE} Mizen will shut down at {SUNSET_SHUTDOWN_DATE}, so beta
+                users should sign in and save their recipes before then.
               </p>
             </div>
 

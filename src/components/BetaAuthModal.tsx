@@ -22,7 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { resolveEmailAuthFeedback } from "@/lib/auth-feedback";
-import { SIGNUPS_CLOSED_MESSAGE } from "@/lib/sunset";
+import { SIGNUPS_CLOSED_MESSAGE, SUNSET_SHUTDOWN_DATE } from "@/lib/sunset";
 import Login from "@solar-icons/react/csr/arrows-action/Login";
 import Letter from "@solar-icons/react/csr/messages/Letter";
 import Restart from "@solar-icons/react/csr/arrows/Restart";
@@ -674,7 +674,8 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
 
       {view === "form" && emailStatus !== "approved" && (
         <p className="mt-4 font-sans text-center text-xs text-muted-foreground">
-          Mizen is sunsetting. Beta users can still sign in to save their recipes.
+          Mizen will shut down at {SUNSET_SHUTDOWN_DATE}. Beta users can sign in to save their
+          recipes until then.
         </p>
       )}
     </div>

@@ -1,17 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
-import { motion } from "motion/react";
+import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
 import { LandingAuthCta } from "@/components/LandingAuthCta";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
-import { PublicFooterNav } from "@/components/PublicPage";
+import { PublicBrand, PublicFooterNav } from "@/components/PublicPage";
 import { WhoMadeIt } from "@/components/WhoMadeIt";
 import { SUNSET_COPY, SUNSET_NOTE, SUNSET_NOTE_ID, SUNSET_NOTE_SIGNATURE } from "@/lib/sunset";
 import { cn } from "@/lib/utils";
-import { SUNSET_EXAMPLE_RECIPE } from "@/lib/sunset-example-recipe";
+import { SUNSET_EXAMPLE_RECIPES } from "@/lib/sunset-example-recipe";
 
 // The book and pot wiggle on hover and squish on tap, as on the original landing page.
 function HeroBook() {
@@ -73,12 +73,15 @@ const NOTE_LINK =
 
 /**
  * A live Mizen recipe view (tick ingredients, switch Prep/Cook, change servings, scroll). It fades
- * out toward the bottom so it reads as a picture of Mizen rather than something to study.
+ * out to nothing at the bottom so it reads as a picture of Mizen rather than something to study.
  */
 function ExampleRecipeCard({ className }: { className?: string }) {
+  // One of the two favorite recipes, picked at random on each load.
+  const [index] = useState(() => (Math.random() < 0.5 ? 0 : 1));
+
   return (
     // Padding gives the shadow room inside the fade mask, so it isn't clipped at the sides.
-    <div className="-m-6 p-6 [mask-image:linear-gradient(to_bottom,black_65%,transparent_98%)]">
+    <div className="-m-6 p-6 [mask-image:linear-gradient(to_bottom,black_calc(100%_-_4.5rem),transparent_calc(100%_-_1.5rem))] lg:[mask-image:linear-gradient(to_bottom,black_55%,transparent_calc(100%_-_3rem))]">
       <div
         className={cn(
           "relative mx-auto flex max-w-xl flex-col overflow-hidden rounded-xl border border-stone-200/60 bg-white shadow-lg dark:border-stone-700 dark:bg-stone-950",
@@ -95,13 +98,57 @@ function ExampleRecipeCard({ className }: { className?: string }) {
         </div>
         <div className="min-h-0 flex-1">
           <WaitlistRecipePreview
-            recipe={SUNSET_EXAMPLE_RECIPE}
+            recipe={SUNSET_EXAMPLE_RECIPES[index]}
             sourceType="url"
             showSourceAttachment={false}
           />
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Cue at the bottom of the first screen pointing to the sunset note. It bobs gently (unless the
+ * visitor prefers reduced motion), smoothly scrolls to the note, and fades once the page is scrolled.
+ */
+function ScrollCue() {
+  const reduceMotion = useReducedMotion();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return (
+    <a
+      href={`#${SUNSET_NOTE_ID}`}
+      onClick={(event) => {
+        const note = document.getElementById(SUNSET_NOTE_ID);
+        if (!note) return;
+        event.preventDefault();
+        note.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+        window.history.replaceState(null, "", `#${SUNSET_NOTE_ID}`);
+      }}
+      aria-hidden={scrolled}
+      tabIndex={scrolled ? -1 : undefined}
+      className={cn(
+        "absolute inset-x-0 bottom-6 mx-auto flex w-max flex-col items-center gap-1 rounded-md px-2 py-1 font-sans text-sm font-medium text-[#226097] mix-blend-multiply hover:text-[#163F66] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mizen-blue dark:text-[rgb(255_255_255/0.5)] dark:mix-blend-plus-lighter dark:hover:text-[#fff] transition-opacity duration-300",
+        scrolled && "pointer-events-none opacity-0"
+      )}
+    >
+      {SUNSET_COPY.scrollCue}
+      <motion.span
+        aria-hidden
+        animate={reduceMotion ? undefined : { y: [0, 4, 0] }}
+        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <AltArrowDown size={18} />
+      </motion.span>
+    </a>
   );
 }
 
@@ -114,26 +161,24 @@ export function SunsetHomepage() {
 
   return (
     <div className="landing-scroll relative flex min-h-screen flex-1 flex-col bg-white dark:bg-stone-950">
-      {/* Sign-in for existing beta users. Absolutely placed so it doesn't push the note below the fold. */}
+      {/* Light mode: one light-blue gradient behind everything, rising from the bottom of the page. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-[1380px] bg-[linear-gradient(to_bottom,transparent,#B2E3FE_33%,#7CC4F9)] dark:hidden"
+      />
+      {/* Top bar: Mizen icon + wordmark on the left, sign-in for beta users on the right. Absolutely
+          placed so it doesn't push the hero down. */}
       <div className="absolute inset-x-0 top-0 z-10">
-        <div className="mx-auto flex w-full max-w-[1120px] justify-end px-6 pt-5 sm:px-8">
+        <div className="mx-auto flex w-full max-w-[1120px] items-center justify-between gap-6 px-6 pt-5 sm:px-8">
+          <PublicBrand />
           <LandingAuthCta onSignIn={() => setAuthOpen(true)} />
         </div>
       </div>
       {/* Dark mode: a soft Mizen-blue glow from the top center (a light wash looks washed out on dark). */}
       <section className="relative flex min-h-[100svh] items-center dark:bg-[radial-gradient(ellipse_90%_60%_at_50%_0%,rgb(24_161_247/0.22),transparent_70%)]">
-        <div className="mx-auto grid w-full max-w-[1120px] items-center gap-12 px-6 py-14 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16 lg:py-10">
+        <div className="mx-auto grid w-full max-w-[1120px] grid-cols-[minmax(0,1fr)] items-center gap-8 px-6 pb-24 pt-20 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16 lg:py-10">
           <div>
-            <Image
-              src="/apple-touch-icon.png"
-              alt="Mizen"
-              width={48}
-              height={48}
-              priority
-              className="h-12 w-12"
-            />
-
-            <h1 className="mt-8 flex flex-col items-start gap-1 font-serif text-[clamp(32px,9vw,52px)] font-bold leading-[1.25] tracking-[-0.02em] text-stone-900 dark:text-stone-100">
+            <h1 className="flex flex-col items-start gap-1 font-serif text-[clamp(32px,9vw,52px)] font-bold leading-[1.25] tracking-[-0.02em] text-stone-900 dark:text-stone-100">
               <HeroHeadline />
             </h1>
 
@@ -142,21 +187,24 @@ export function SunsetHomepage() {
             </p>
           </div>
 
-          <div className="relative hidden lg:block">
-            <ExampleRecipeCard className="h-[min(600px,calc(100svh-10rem))] rotate-[1.5deg]" />
+          {/* Example recipe: under the headline on phones, beside it on desktop. */}
+          <div className="relative min-w-0">
+            <ExampleRecipeCard className="h-[clamp(320px,calc(100svh-24rem),520px)] lg:h-[min(600px,calc(100svh-10rem))] lg:rotate-[1.5deg]" />
           </div>
         </div>
 
-        {/* A soft hint of the blue section below, rising from the bottom edge of the first screen. */}
+        {/* Dark mode: a soft glow at the bottom edge of the first screen. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-b from-transparent to-[#B2E3FE] dark:bg-[radial-gradient(ellipse_60%_100%_at_50%_100%,rgb(24_161_247/0.16),transparent_70%)]"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-48 dark:bg-[radial-gradient(ellipse_60%_100%_at_50%_100%,rgb(24_161_247/0.16),transparent_70%)]"
         />
+
+        <ScrollCue />
       </section>
 
       {/* Below the fold: the note on a white card over a light-blue gradient. */}
-      {/* Light mode: light-blue gradient. Dark mode: the glow continues from the fold, then dark. */}
-      <div className="bg-gradient-to-b from-[#B2E3FE] to-[#7CC4F9] dark:bg-[radial-gradient(ellipse_60%_420px_at_50%_0%,rgb(24_161_247/0.16),transparent_70%)]">
+      {/* Below the fold. Dark mode: the glow continues from the fold, then dark. */}
+      <div className="relative dark:bg-[radial-gradient(ellipse_60%_420px_at_50%_0%,rgb(24_161_247/0.16),transparent_70%)]">
         <div className="px-4 pb-12 pt-4 sm:px-6 sm:pb-16">
           <section
             id={SUNSET_NOTE_ID}
@@ -203,22 +251,18 @@ export function SunsetHomepage() {
               ))}
             </ul>
           </section>
-
-          {/* On phones the example sits under the note, as on the original landing page. */}
-          <div className="mt-8 px-2 lg:hidden">
-            <ExampleRecipeCard className="h-[520px]" />
-          </div>
         </div>
 
-        {/* Footer sits on the blue: transparent, with white text. Exact white is used because the
-            theme redefines "white" as a dark color in dark mode. */}
+        {/* Footer sits on the blue with a transparent background. Light mode: dark-blue text that
+            multiplies into the blue. Dark mode: soft light text (exact white, since the theme
+            redefines "white" as a dark color in dark mode). */}
         <footer className="py-6">
           <div className="mx-auto flex w-full min-w-0 max-w-[1120px] flex-wrap items-center justify-between gap-x-8 gap-y-4 px-5 sm:px-8">
             <WhoMadeIt
               borderColor="border-[#7CC4F9] dark:border-stone-950"
-              textClassName="font-sans text-sm font-medium text-[rgb(255_255_255/0.5)] mix-blend-plus-lighter"
+              textClassName="font-sans text-sm font-medium text-[#226097] mix-blend-multiply dark:text-[rgb(255_255_255/0.5)] dark:mix-blend-plus-lighter"
             />
-            <PublicFooterNav linkClassName="font-medium text-[rgb(255_255_255/0.5)] mix-blend-plus-lighter hover:text-[#fff] dark:text-[rgb(255_255_255/0.5)] dark:hover:text-[#fff]" />
+            <PublicFooterNav linkClassName="font-medium text-[#226097] mix-blend-multiply hover:text-[#163F66] dark:text-[rgb(255_255_255/0.5)] dark:mix-blend-plus-lighter dark:hover:text-[#fff]" />
           </div>
         </footer>
       </div>

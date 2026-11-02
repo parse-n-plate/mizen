@@ -37,7 +37,10 @@ export const SUNSET_NOTE: SunsetNoteSegment[][] = [
   ["Until then, keep cooking \u{1F9D1}\u{1F3FC}\u200D\u{1F373}!"],
 ];
 
-export const SUNSET_NOTE_SIGNATURE = "Gage";
+export const SUNSET_NOTE_SIGNATURE = "Gage and Michelle";
+
+/** When Mizen shuts down (end of Q1 2027). Used everywhere the date is mentioned. */
+export const SUNSET_SHUTDOWN_DATE = "the end of March 2027";
 
 export const SUNSET_COPY = {
   heading: "Mizen is sunsetting",
@@ -45,8 +48,9 @@ export const SUNSET_COPY = {
   whatHappensNow: [
     "Mizen is no longer accepting new signups or waitlist requests.",
     "If you\u2019re in the beta, sign in and save the recipes you want to keep. Each recipe has Copy and Print buttons.",
-    "The site may go offline, and we can\u2019t promise how long it will stay up.",
+    `Mizen will shut down at ${SUNSET_SHUTDOWN_DATE}. Please save your recipes before then.`,
   ],
+  scrollCue: "Read Announcement",
   homepageSub: "One place for every recipe you find online. Clean ingredients, clear steps.",
 } as const;
 

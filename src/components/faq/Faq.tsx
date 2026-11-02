@@ -5,7 +5,7 @@ import Link from "next/link";
 import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
 import { Accordion } from "@base-ui/react/accordion";
 import styles from "./faq.module.css";
-import { SUNSET_NOTE_HREF } from "@/lib/sunset";
+import { SUNSET_NOTE_HREF, SUNSET_SHUTDOWN_DATE } from "@/lib/sunset";
 
 const answerLink =
   "underline underline-offset-4 hover:text-stone-900 dark:hover:text-stone-100 transition-none";
@@ -48,9 +48,9 @@ const questions = [
     question: "I\u2019m in the beta. Can I still get to my recipes?",
     answer: (
       <>
-        For now, yes. Sign in with the email address on your invite and save the recipes you want to
-        keep using the Copy or Print button on each recipe. The site may go offline, and we
-        can&rsquo;t promise how long it will stay up.
+        Yes, until Mizen shuts down at {SUNSET_SHUTDOWN_DATE}. Sign in with the email address on
+        your invite and save the recipes you want to keep using the Copy or Print button on each
+        recipe before then.
       </>
     ),
   },
