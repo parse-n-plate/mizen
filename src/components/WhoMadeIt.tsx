@@ -16,7 +16,6 @@ const team = [
 
 interface WhoMadeItProps {
   borderColor?: string;
-  /** Overrides the "Cooked with love by" text color, e.g. white on a colored background. */
   textClassName?: string;
 }
 

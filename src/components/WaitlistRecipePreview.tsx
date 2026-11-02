@@ -383,9 +383,6 @@ export function WaitlistRecipePreview({
         )}
       </div>
 
-      {/* Tab content. When it scrolls, the top edge fades so ingredients slide softly under the
-          tabs instead of being cut off. The fade sits inside the top padding, so nothing is faded
-          at rest. */}
       <div
         className={`flex-1 bg-white dark:bg-stone-900 ${
           disableScroll

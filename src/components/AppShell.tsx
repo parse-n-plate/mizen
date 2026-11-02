@@ -53,7 +53,6 @@ function SessionAppShell({ children }: { children: ReactNode }) {
   // overflow — but when a dialog opens, react-remove-scroll sets body{overflow:hidden}, which
   // clips that overflow, collapses the html scroll area, and snaps the page to the top. Letting
   // the wrapper grow with its content keeps body tall so the lock can't collapse the scroll.
-  // The signed-out homepage is the sunset notice, a plain scrolling document.
   const isScrollingLanding = isHomePage || isDesignSystemPage;
   // Treat loading state as landing on homepage so sidebar don't flash
   // before auth resolves

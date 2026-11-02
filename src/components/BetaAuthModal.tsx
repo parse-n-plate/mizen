@@ -342,7 +342,6 @@ function AuthContent({ open, onOpenChange, isMobile }: BetaAuthModalProps & { is
     setLoading(false);
   };
 
-  // Mizen is sunsetting: emails that aren't already in the beta can't sign up or join a waitlist.
   const handleSubmit =
     emailStatus === "not-found"
       ? (e: React.FormEvent) => e.preventDefault()

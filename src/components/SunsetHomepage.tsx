@@ -19,7 +19,6 @@ import {
 import { cn } from "@/lib/utils";
 import { SUNSET_EXAMPLE_RECIPES } from "@/lib/sunset-example-recipe";
 
-// The book and pot wiggle on hover and squish on tap, as on the original landing page.
 function HeroBook() {
   return (
     <motion.img
@@ -77,16 +76,10 @@ function HeroHeadline() {
 const NOTE_LINK =
   "rounded-sm font-medium text-stone-900 underline decoration-stone-300 underline-offset-4 hover:decoration-stone-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mizen-blue dark:text-stone-100 dark:decoration-stone-600 dark:hover:decoration-stone-100 transition-none";
 
-/**
- * A live Mizen recipe view (tick ingredients, switch Prep/Cook, change servings, scroll). It fades
- * out to nothing at the bottom so it reads as a picture of Mizen rather than something to study.
- */
 function ExampleRecipeCard({ className }: { className?: string }) {
-  // One of the two favorite recipes, picked at random on each load.
   const [index] = useState(() => (Math.random() < 0.5 ? 0 : 1));
 
   return (
-    // Padding gives the shadow room inside the fade mask, so it isn't clipped at the sides.
     <div className="-m-6 p-6 [mask-image:linear-gradient(to_bottom,black_calc(100%_-_4.5rem),transparent_calc(100%_-_1.5rem))] lg:[mask-image:linear-gradient(to_bottom,black_55%,transparent_calc(100%_-_3rem))]">
       <div
         className={cn(
@@ -114,10 +107,6 @@ function ExampleRecipeCard({ className }: { className?: string }) {
   );
 }
 
-/**
- * Cue at the bottom of the first screen pointing to the sunset note. It bobs gently (unless the
- * visitor prefers reduced motion), smoothly scrolls to the note, and fades once the page is scrolled.
- */
 function ScrollCue() {
   const reduceMotion = useReducedMotion();
   const [scrolled, setScrolled] = useState(false);
@@ -158,7 +147,6 @@ function ScrollCue() {
   );
 }
 
-/** Renders a line of the note: plain text, with some words linking out in a new tab. */
 function NoteSegments({ segments }: { segments: SunsetNoteSegment[] }) {
   return segments.map((segment, i) =>
     typeof segment === "string" ? (
@@ -177,29 +165,21 @@ function NoteSegments({ segments }: { segments: SunsetNoteSegment[] }) {
   );
 }
 
-/**
- * Signed-out homepage while Mizen is sunsetting. The first screen is the hero; a soft light-blue
- * glow at its bottom edge hints at the note, which sits below the fold on a light-blue gradient.
- */
 export function SunsetHomepage() {
   const [authOpen, setAuthOpen] = useState(false);
 
   return (
     <div className="landing-scroll relative flex min-h-screen flex-1 flex-col bg-white dark:bg-stone-950">
-      {/* Light mode: one light-blue gradient behind everything, rising from the bottom of the page. */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-[1380px] bg-[linear-gradient(to_bottom,transparent,#B2E3FE_33%,#7CC4F9)] dark:hidden"
       />
-      {/* Top bar: Mizen icon + wordmark on the left, sign-in for beta users on the right. Absolutely
-          placed so it doesn't push the hero down. */}
       <div className="absolute inset-x-0 top-0 z-10">
         <div className="mx-auto flex w-full max-w-[1120px] items-center justify-between gap-6 px-6 pt-5 sm:px-8">
           <PublicBrand />
           <LandingAuthCta onSignIn={() => setAuthOpen(true)} />
         </div>
       </div>
-      {/* Dark mode: a soft Mizen-blue glow from the top center (a light wash looks washed out on dark). */}
       <section className="relative flex min-h-[100svh] items-center dark:bg-[radial-gradient(ellipse_90%_60%_at_50%_0%,rgb(24_161_247/0.22),transparent_70%)]">
         <div className="mx-auto grid w-full max-w-[1120px] grid-cols-[minmax(0,1fr)] items-center gap-8 px-6 pb-24 pt-20 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16 lg:py-10">
           <div>
@@ -212,13 +192,11 @@ export function SunsetHomepage() {
             </p>
           </div>
 
-          {/* Example recipe: under the headline on phones, beside it on desktop. */}
           <div className="relative min-w-0">
             <ExampleRecipeCard className="h-[clamp(320px,calc(100svh-24rem),520px)] lg:h-[min(600px,calc(100svh-10rem))] lg:rotate-[1.5deg]" />
           </div>
         </div>
 
-        {/* Dark mode: a soft glow at the bottom edge of the first screen. */}
         <div
           aria-hidden
           className="pointer-events-none absolute inset-x-0 bottom-0 h-48 dark:bg-[radial-gradient(ellipse_60%_100%_at_50%_100%,rgb(24_161_247/0.16),transparent_70%)]"
@@ -227,8 +205,6 @@ export function SunsetHomepage() {
         <ScrollCue />
       </section>
 
-      {/* Below the fold: the note on a white card over a light-blue gradient. */}
-      {/* Below the fold. Dark mode: the glow continues from the fold, then dark. */}
       <div className="relative dark:bg-[radial-gradient(ellipse_60%_420px_at_50%_0%,rgb(24_161_247/0.16),transparent_70%)]">
         <div className="px-4 pb-12 pt-4 sm:px-6 sm:pb-16">
           <section
@@ -243,7 +219,6 @@ export function SunsetHomepage() {
               {SUNSET_COPY.heading}
             </h2>
 
-            {/* Gage's note: edit SUNSET_NOTE in src/lib/sunset.ts */}
             <div className="mt-6 space-y-4 font-sans text-base leading-7 text-stone-700 dark:text-stone-300">
               {SUNSET_NOTE.map((paragraph, i) => (
                 <p key={i}>
@@ -266,9 +241,6 @@ export function SunsetHomepage() {
           </section>
         </div>
 
-        {/* Footer sits on the blue with a transparent background. Light mode: dark-blue text that
-            multiplies into the blue. Dark mode: soft light text (exact white, since the theme
-            redefines "white" as a dark color in dark mode). */}
         <footer className="py-6">
           <div className="mx-auto flex w-full min-w-0 max-w-[1120px] flex-wrap items-center justify-between gap-x-8 gap-y-4 px-5 sm:px-8">
             <WhoMadeIt

@@ -1,9 +1,5 @@
 import type { ParsedRecipe } from "@/lib/types";
 
-/**
- * Example recipes shown on the sunset homepage: the two favorites from /links (Michelle's banana
- * bread cookies and Gage's kimchi ragu). The homepage shows one at a time.
- */
 const RECIPES: Record<"banana-bread-cookies" | "kimchi-ragu", ParsedRecipe> = {
   "banana-bread-cookies": {
     title: "Banana Bread Cookies",

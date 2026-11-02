@@ -1,16 +1,10 @@
-/**
- * Copy for the Mizen sunset notice on the signed-out homepage (`/`). The first screen shows the
- * hero; the note sits just below the fold on a light-blue gradient. Everything it says lives here.
- */
 export const SUNSET_NOTE_ID = "note";
 export const SUNSET_NOTE_HREF = `/#${SUNSET_NOTE_ID}`;
 
-/** A piece of the note: plain text, or text that links somewhere. */
 export type SunsetNoteSegment = string | { text: string; href: string };
 
 const NEGI_STUDIO_URL = "https://negi.studio/";
 
-/** Gage's sunset note, one array per paragraph. */
 export const SUNSET_NOTE: SunsetNoteSegment[][] = [
   [
     "Mizen started with a simple desire to work on a side project together and continue our amazing team dynamic.",
@@ -36,7 +30,6 @@ export const SUNSET_NOTE: SunsetNoteSegment[][] = [
   ["Until then, keep cooking \u{1F9D1}\u{1F3FC}\u200D\u{1F373}!"],
 ];
 
-/** Sign-off under the note. Each name links to that person's portfolio. */
 export const SUNSET_NOTE_SIGNATURE: SunsetNoteSegment[] = [
   "\u2014 ",
   { text: "Gage", href: "https://gageminamoto.com/" },
@@ -44,7 +37,6 @@ export const SUNSET_NOTE_SIGNATURE: SunsetNoteSegment[] = [
   { text: "Michelle", href: "https://www.michellesunnyside.com/" },
 ];
 
-/** When Mizen shuts down (end of Q1 2027). Used everywhere the date is mentioned. */
 export const SUNSET_SHUTDOWN_DATE = "the end of March 2027";
 
 export const SUNSET_COPY = {
@@ -59,5 +51,4 @@ export const SUNSET_COPY = {
   homepageSub: "One place for every recipe you find online. Clean ingredients, clear steps.",
 } as const;
 
-/** Shown wherever someone tries to sign up or join the waitlist. */
 export const SIGNUPS_CLOSED_MESSAGE = "Mizen is no longer accepting signups.";

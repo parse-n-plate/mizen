@@ -1,4 +1,3 @@
-/** Recipes we love, shown on /links. Each links to the original recipe. */
 export type FavoriteRecipe = {
   title: string;
   domain: string;
