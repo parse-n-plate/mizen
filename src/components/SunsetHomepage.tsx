@@ -216,9 +216,9 @@ export function SunsetHomepage() {
           <div className="mx-auto flex w-full min-w-0 max-w-[1120px] flex-wrap items-center justify-between gap-x-8 gap-y-4 px-5 sm:px-8">
             <WhoMadeIt
               borderColor="border-[#7CC4F9] dark:border-stone-950"
-              textClassName="font-sans text-sm font-medium text-[rgb(255_255_255/0.9)]"
+              textClassName="font-sans text-sm font-medium text-[rgb(255_255_255/0.7)] mix-blend-plus-lighter"
             />
-            <PublicFooterNav linkClassName="font-medium text-[rgb(255_255_255/0.9)] hover:text-[#fff] dark:text-[rgb(255_255_255/0.9)] dark:hover:text-[#fff]" />
+            <PublicFooterNav linkClassName="font-medium text-[rgb(255_255_255/0.7)] mix-blend-plus-lighter hover:text-[#fff] dark:text-[rgb(255_255_255/0.7)] dark:hover:text-[#fff]" />
           </div>
         </footer>
       </div>
