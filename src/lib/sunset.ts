@@ -36,7 +36,13 @@ export const SUNSET_NOTE: SunsetNoteSegment[][] = [
   ["Until then, keep cooking \u{1F9D1}\u{1F3FC}\u200D\u{1F373}!"],
 ];
 
-export const SUNSET_NOTE_SIGNATURE = "\u2014 Gage and Michelle";
+/** Sign-off under the note. Each name links to that person's portfolio. */
+export const SUNSET_NOTE_SIGNATURE: SunsetNoteSegment[] = [
+  "\u2014 ",
+  { text: "Gage", href: "https://gageminamoto.com/" },
+  " and ",
+  { text: "Michelle", href: "https://www.michellesunnyside.com/" },
+];
 
 /** When Mizen shuts down (end of Q1 2027). Used everywhere the date is mentioned. */
 export const SUNSET_SHUTDOWN_DATE = "the end of March 2027";

@@ -9,7 +9,13 @@ import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
 import { isSupabaseConfigured } from "@/lib/supabase/is-configured";
 import { PublicBrand, PublicFooterNav } from "@/components/PublicPage";
 import { WhoMadeIt } from "@/components/WhoMadeIt";
-import { SUNSET_COPY, SUNSET_NOTE, SUNSET_NOTE_ID, SUNSET_NOTE_SIGNATURE } from "@/lib/sunset";
+import {
+  SUNSET_COPY,
+  SUNSET_NOTE,
+  SUNSET_NOTE_ID,
+  SUNSET_NOTE_SIGNATURE,
+  type SunsetNoteSegment,
+} from "@/lib/sunset";
 import { cn } from "@/lib/utils";
 import { SUNSET_EXAMPLE_RECIPES } from "@/lib/sunset-example-recipe";
 
@@ -152,6 +158,25 @@ function ScrollCue() {
   );
 }
 
+/** Renders a line of the note: plain text, with some words linking out in a new tab. */
+function NoteSegments({ segments }: { segments: SunsetNoteSegment[] }) {
+  return segments.map((segment, i) =>
+    typeof segment === "string" ? (
+      segment
+    ) : (
+      <a
+        key={i}
+        href={segment.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={NOTE_LINK}
+      >
+        {segment.text}
+      </a>
+    )
+  );
+}
+
 /**
  * Signed-out homepage while Mizen is sunsetting. The first screen is the hero; a soft light-blue
  * glow at its bottom edge hints at the note, which sits below the fold on a light-blue gradient.
@@ -222,24 +247,12 @@ export function SunsetHomepage() {
             <div className="mt-6 space-y-4 font-sans text-base leading-7 text-stone-700 dark:text-stone-300">
               {SUNSET_NOTE.map((paragraph, i) => (
                 <p key={i}>
-                  {paragraph.map((segment, j) =>
-                    typeof segment === "string" ? (
-                      segment
-                    ) : (
-                      <a
-                        key={j}
-                        href={segment.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={NOTE_LINK}
-                      >
-                        {segment.text}
-                      </a>
-                    )
-                  )}
+                  <NoteSegments segments={paragraph} />
                 </p>
               ))}
-              <p>{SUNSET_NOTE_SIGNATURE}</p>
+              <p>
+                <NoteSegments segments={SUNSET_NOTE_SIGNATURE} />
+              </p>
             </div>
 
             <h3 className="mt-10 font-serif text-2xl font-semibold text-stone-950 dark:text-stone-50">
