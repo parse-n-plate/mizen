@@ -383,10 +383,11 @@ export function WaitlistRecipePreview({
         )}
       </div>
 
-      {/* Tab content */}
       <div
         className={`flex-1 bg-white dark:bg-stone-900 ${
-          disableScroll ? "overflow-hidden" : "overflow-y-auto"
+          disableScroll
+            ? "overflow-hidden"
+            : "overflow-y-auto [mask-image:linear-gradient(to_bottom,transparent,black_16px)]"
         }`}
       >
         <div className="px-5 sm:px-8 pt-5 pb-6">

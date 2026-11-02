@@ -21,7 +21,7 @@ function initialScrollState() {
 export function PublicBrand() {
   return (
     <Link
-      href="/homepage"
+      href="/"
       className="flex shrink-0 items-center gap-2 rounded-md font-serif text-lg font-semibold text-stone-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mizen-blue dark:text-stone-50 transition-none"
     >
       <Image

@@ -1,8 +1,6 @@
 import type { ParsedRecipe } from "@/lib/types";
 
-export type DemoRecipeSlug = "banana-bread-cookies" | "kimchi-ragu";
-
-export const demoRecipes: Record<DemoRecipeSlug, ParsedRecipe> = {
+const RECIPES: Record<"banana-bread-cookies" | "kimchi-ragu", ParsedRecipe> = {
   "banana-bread-cookies": {
     title: "Banana Bread Cookies",
     summary:
@@ -256,10 +254,7 @@ export const demoRecipes: Record<DemoRecipeSlug, ParsedRecipe> = {
   },
 };
 
-export function getDemoRecipe(slug: string): ParsedRecipe | null {
-  return Object.hasOwn(demoRecipes, slug) ? demoRecipes[slug as DemoRecipeSlug] : null;
-}
-
-export function getDemoRecipeSlugs(): DemoRecipeSlug[] {
-  return Object.keys(demoRecipes) as DemoRecipeSlug[];
-}
+export const SUNSET_EXAMPLE_RECIPES: ParsedRecipe[] = [
+  RECIPES["banana-bread-cookies"],
+  RECIPES["kimchi-ragu"],
+];

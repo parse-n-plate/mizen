@@ -16,14 +16,17 @@ const team = [
 
 interface WhoMadeItProps {
   borderColor?: string;
+  textClassName?: string;
 }
 
-export function WhoMadeIt({ borderColor }: WhoMadeItProps) {
+export function WhoMadeIt({ borderColor, textClassName }: WhoMadeItProps) {
   const borderClass = borderColor || "border-white dark:border-stone-950";
 
   return (
     <div className="flex items-center gap-1.5">
-      <p className="font-sans text-xs text-stone-400 dark:text-stone-500">Cooked with love by</p>
+      <p className={textClassName ?? "font-sans text-xs text-stone-400 dark:text-stone-500"}>
+        Cooked with love by
+      </p>
       <div className="flex -space-x-1.5">
         {team.map((person) => (
           <Link

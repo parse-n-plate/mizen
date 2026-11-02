@@ -15,8 +15,6 @@ const publicLink =
 export { PublicHeader, PublicBrand } from "@/components/PublicHeader";
 
 const PUBLIC_FOOTER_LINKS = [
-  { href: "/get-started", label: "Get started" },
-  { href: "/changelog", label: "What’s New" },
   { href: "/faq", label: "FAQ" },
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },

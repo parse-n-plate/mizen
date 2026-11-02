@@ -5,6 +5,7 @@ import Link from "next/link";
 import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
 import { Accordion } from "@base-ui/react/accordion";
 import styles from "./faq.module.css";
+import { SUNSET_NOTE_HREF, SUNSET_SHUTDOWN_DATE } from "@/lib/sunset";
 
 const answerLink =
   "underline underline-offset-4 hover:text-stone-900 dark:hover:text-stone-100 transition-none";
@@ -20,111 +21,36 @@ const questions = [
     ),
   },
   {
-    id: "access",
-    question: "How can I try Mizen?",
+    id: "sunset",
+    question: "Is Mizen shutting down?",
     answer: (
       <>
-        Mizen is currently in closed beta. Join the{" "}
-        <Link href="/links" className={answerLink}>
-          waitlist
+        Yes, Mizen is sunsetting.{" "}
+        <Link href={SUNSET_NOTE_HREF} className={answerLink}>
+          Read the note
         </Link>{" "}
-        to request an invite. If you have been invited, sign in with the email address on your
-        invite.
+        for the details.
       </>
     ),
   },
   {
-    id: "pricing",
-    question: "How much does Mizen cost?",
-    answer: <>Mizen is free during the beta. Pricing after the beta has not been decided yet.</>,
-  },
-  {
-    id: "beta",
-    question: "What should I expect during the beta?",
+    id: "signups",
+    question: "Can I still sign up or join the waitlist?",
     answer: (
       <>
-        The beta is an early version of Mizen with recipe imports and the mobile cooking view. Bugs
-        are to be expected, and your feedback helps us improve the app. See{" "}
-        <Link href="/changelog" className={answerLink}>
-          What’s New
-        </Link>{" "}
-        for recent changes, and send feedback to{" "}
-        <a href="mailto:hello@mizen.recipes" className={answerLink}>
-          hello@mizen.recipes
-        </a>
-        .
+        No. Mizen is no longer accepting new signups or waitlist requests, and the waitlist is
+        closed.
       </>
     ),
   },
   {
-    id: "import",
-    question: "How do I add a recipe?",
+    id: "recipes",
+    question: "I\u2019m in the beta. Can I still get to my recipes?",
     answer: (
       <>
-        Paste a recipe URL, upload a recipe photo, or paste recipe text, including a recipe from
-        ChatGPT. Review the result, then tap the heart to save it to your cookbook. The{" "}
-        <Link href="/get-started" className={answerLink}>
-          getting started guide
-        </Link>{" "}
-        walks through each step.
-      </>
-    ),
-  },
-  {
-    id: "account",
-    question: "Do I need an account?",
-    answer: (
-      <>
-        You need to sign in to save recipes to your cookbook. You can read the getting started
-        guide, updates, FAQ, privacy policy, and terms without signing in.
-      </>
-    ),
-  },
-  {
-    id: "servings",
-    question: "Can I change the number of servings?",
-    answer: (
-      <>
-        Yes. Use the servings control on a recipe to adjust the ingredient amounts. Check the
-        quantities as you cook, since some recipes do not scale evenly.
-      </>
-    ),
-  },
-  {
-    id: "sources",
-    question: "Can Mizen import every recipe website?",
-    answer: (
-      <>
-        Some websites may block access or format their recipes in ways Mizen cannot read. If a link
-        does not work, try pasting the recipe text or uploading a photo instead.
-      </>
-    ),
-  },
-  {
-    id: "accuracy",
-    question: "What if an imported recipe looks wrong?",
-    answer: (
-      <>
-        Compare the ingredients, quantities, and steps with the original recipe before cooking. If
-        something is missing or incorrect, send us the source and describe what went wrong so we can
-        investigate.
-      </>
-    ),
-  },
-  {
-    id: "feedback",
-    question: "How do I report a problem or share feedback?",
-    answer: (
-      <>
-        Join our{" "}
-        <a href="https://discord.gg/Pt4t8K8h9" className={answerLink}>
-          Discord
-        </a>{" "}
-        or email{" "}
-        <a href="mailto:hello@mizen.recipes" className={answerLink}>
-          hello@mizen.recipes
-        </a>
-        . Tell us what you were trying to do and what happened.
+        Yes, until Mizen shuts down at {SUNSET_SHUTDOWN_DATE}. Sign in with the email address on
+        your invite and save the recipes you want to keep using the Copy or Print button on each
+        recipe before then.
       </>
     ),
   },
