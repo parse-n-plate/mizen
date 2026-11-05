@@ -30,9 +30,9 @@ export type NoteEntranceConfig = {
 export const NOTE_ENTRANCE_DEFAULTS: NoteEntranceConfig = {
   distance: 16,
   duration: 280,
-  delay: 0,
+  delay: 80,
   initialOpacity: 0,
-  curve: "custom",
+  curve: "gentler",
 };
 
 /** Reduced motion: no movement, a short opacity-only reveal. */

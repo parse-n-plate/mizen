@@ -7,13 +7,13 @@ import {
 } from "@/lib/sunset-note-motion";
 
 describe("note entrance", () => {
-  it("ships the proposed defaults (16px, 280ms, no delay, from opacity 0, custom curve)", () => {
+  it("ships the tuned defaults (16px, 280ms, 80ms delay, from opacity 0, gentler curve)", () => {
     expect(NOTE_ENTRANCE_DEFAULTS).toEqual({
       distance: 16,
       duration: 280,
-      delay: 0,
+      delay: 80,
       initialOpacity: 0,
-      curve: "custom",
+      curve: "gentler",
     });
     const { keyframes, options } = buildNoteEntrance(NOTE_ENTRANCE_DEFAULTS, false);
     expect(keyframes).toEqual([
@@ -22,8 +22,8 @@ describe("note entrance", () => {
     ]);
     expect(options).toMatchObject({
       duration: 280,
-      delay: 0,
-      easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+      delay: 80,
+      easing: "cubic-bezier(0.22, 1, 0.36, 1)",
       fill: "backwards",
     });
   });
