@@ -9,10 +9,10 @@ import {
 } from "@/lib/sunset-note-motion";
 
 /**
- * Development-only tuning panel for the homepage note entrance. It is loaded
- * through a NODE_ENV-gated dynamic import in SunsetHomepage, so it is not
- * part of production bundles. Changing a value does not replay; use the
- * "Replay note" action.
+ * Tuning panel for the homepage note entrance, shown in local dev and on
+ * Vercel preview/staging builds. It is loaded through a build-time-gated
+ * dynamic import in SunsetHomepage, so it is not part of production bundles.
+ * Changing a value does not replay; use the "Replay note" action.
  */
 export default function SunsetNoteMotionDial({
   onConfigChange,

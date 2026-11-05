@@ -77,10 +77,12 @@ function HeroHeadline() {
   );
 }
 
-// Dev-only tuning controls. NODE_ENV is inlined at build time, so production
-// builds drop this import entirely and ship only NOTE_ENTRANCE_DEFAULTS.
+// Tuning controls for local dev and Vercel preview/staging builds. Both values
+// are inlined at build time, so production builds drop this import entirely
+// and ship only NOTE_ENTRANCE_DEFAULTS.
 const SunsetNoteMotionDial =
-  process.env.NODE_ENV === "development" && developerFeedbackToolsEnabled
+  (process.env.NODE_ENV === "development" || process.env.MIZEN_MOTION_TUNING === "true") &&
+  developerFeedbackToolsEnabled
     ? dynamic(() => import("@/components/SunsetNoteMotionDial"), { ssr: false })
     : null;
 

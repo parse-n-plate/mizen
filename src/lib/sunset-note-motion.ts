@@ -2,8 +2,9 @@
  * Entrance for the homepage note: the whole card slides up and fades in once,
  * as one unit. Transform and opacity only.
  *
- * These are the shipped values. In development they can be tuned with the
- * Dialkit panel ("Mizen note entrance"); production always uses these.
+ * These are the shipped values. In local dev and on preview/staging builds
+ * they can be tuned with the Dialkit panel ("Mizen note entrance");
+ * production always uses these.
  */
 
 export const NOTE_ENTRANCE_CURVES = {
