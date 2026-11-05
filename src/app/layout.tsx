@@ -116,9 +116,8 @@ export default function RootLayout({
         {process.env.NODE_ENV === "development" && developerFeedbackToolsEnabled && (
           <Agentation endpoint="http://localhost:4747" />
         )}
-        {process.env.NODE_ENV === "development" && developerFeedbackToolsEnabled && (
-          <DialRoot position="bottom-right" />
-        )}
+        {(process.env.NODE_ENV === "development" || process.env.MIZEN_MOTION_TUNING === "true") &&
+          developerFeedbackToolsEnabled && <DialRoot position="bottom-right" />}
       </body>
     </html>
   );

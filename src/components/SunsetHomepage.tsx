@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { motion, useReducedMotion } from "motion/react";
 import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
 import { BetaAuthModal } from "@/components/BetaAuthModal";
@@ -17,6 +18,9 @@ import {
   type SunsetNoteSegment,
 } from "@/lib/sunset";
 import { cn } from "@/lib/utils";
+import { developerFeedbackToolsEnabled } from "@/lib/features";
+import { useNoteEntrance } from "@/hooks/useNoteEntrance";
+import { NOTE_ENTRANCE_DEFAULTS, type NoteEntranceConfig } from "@/lib/sunset-note-motion";
 import { SUNSET_EXAMPLE_RECIPES } from "@/lib/sunset-example-recipe";
 
 function HeroBook() {
@@ -72,6 +76,15 @@ function HeroHeadline() {
     </>
   );
 }
+
+// Tuning controls for local dev and Vercel preview/staging builds. Both values
+// are inlined at build time, so production builds drop this import entirely
+// and ship only NOTE_ENTRANCE_DEFAULTS.
+const SunsetNoteMotionDial =
+  (process.env.NODE_ENV === "development" || process.env.MIZEN_MOTION_TUNING === "true") &&
+  developerFeedbackToolsEnabled
+    ? dynamic(() => import("@/components/SunsetNoteMotionDial"), { ssr: false })
+    : null;
 
 const NOTE_LINK =
   "rounded-sm font-medium text-stone-900 underline decoration-stone-300 underline-offset-4 hover:decoration-stone-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-mizen-blue dark:text-stone-100 dark:decoration-stone-600 dark:hover:decoration-stone-100 transition-none";
@@ -151,6 +164,8 @@ function NoteSegments({ segments }: { segments: SunsetNoteSegment[] }) {
   return segments.map((segment, i) =>
     typeof segment === "string" ? (
       segment
+    ) : "emphasis" in segment ? (
+      <em key={i}>{segment.text}</em>
     ) : (
       <a
         key={i}
@@ -167,6 +182,13 @@ function NoteSegments({ segments }: { segments: SunsetNoteSegment[] }) {
 
 export function SunsetHomepage() {
   const [authOpen, setAuthOpen] = useState(false);
+  const noteRef = useRef<HTMLDivElement>(null);
+  const noteConfigRef = useRef<NoteEntranceConfig>(NOTE_ENTRANCE_DEFAULTS);
+  const getNoteConfig = useCallback(() => noteConfigRef.current, []);
+  const setNoteConfig = useCallback((config: NoteEntranceConfig) => {
+    noteConfigRef.current = config;
+  }, []);
+  const { replay: replayNote } = useNoteEntrance(noteRef, getNoteConfig);
 
   return (
     <div className="landing-scroll relative flex min-h-screen flex-1 flex-col bg-white dark:bg-stone-950">
@@ -210,34 +232,40 @@ export function SunsetHomepage() {
           <section
             id={SUNSET_NOTE_ID}
             aria-labelledby="sunset-note-heading"
-            className="mx-auto w-full max-w-2xl scroll-mt-6 rounded-2xl bg-white px-6 py-10 shadow-[0_8px_30px_rgb(24_161_247/0.18)] dark:border dark:border-stone-800 dark:bg-stone-900 sm:px-10 sm:py-12"
+            className="mx-auto w-full max-w-2xl scroll-mt-6"
           >
-            <h2
-              id="sunset-note-heading"
-              className="font-serif text-3xl font-bold tracking-[-0.02em] text-stone-950 dark:text-stone-50 sm:text-4xl"
+            {/* The card is the animated unit; the section (and its #note anchor) never moves. */}
+            <div
+              ref={noteRef}
+              className="rounded-2xl bg-white px-6 py-10 shadow-[0_8px_30px_rgb(24_161_247/0.18)] dark:border dark:border-stone-800 dark:bg-stone-900 sm:px-10 sm:py-12"
             >
-              {SUNSET_COPY.heading}
-            </h2>
+              <h2
+                id="sunset-note-heading"
+                className="font-serif text-3xl font-bold tracking-[-0.02em] text-stone-950 dark:text-stone-50 sm:text-4xl"
+              >
+                {SUNSET_COPY.heading}
+              </h2>
 
-            <div className="mt-6 space-y-4 font-sans text-base leading-7 text-stone-700 dark:text-stone-300">
-              {SUNSET_NOTE.map((paragraph, i) => (
-                <p key={i}>
-                  <NoteSegments segments={paragraph} />
+              <div className="mt-6 space-y-4 font-sans text-base leading-7 text-stone-700 dark:text-stone-300">
+                {SUNSET_NOTE.map((paragraph, i) => (
+                  <p key={i}>
+                    <NoteSegments segments={paragraph} />
+                  </p>
+                ))}
+                <p>
+                  <NoteSegments segments={SUNSET_NOTE_SIGNATURE} />
                 </p>
-              ))}
-              <p>
-                <NoteSegments segments={SUNSET_NOTE_SIGNATURE} />
-              </p>
-            </div>
+              </div>
 
-            <h3 className="mt-10 font-serif text-2xl font-semibold text-stone-950 dark:text-stone-50">
-              {SUNSET_COPY.whatHappensNowHeading}
-            </h3>
-            <ul className="mt-3 list-disc space-y-2 pl-5 font-sans text-base leading-7 text-stone-600 dark:text-stone-400">
-              {SUNSET_COPY.whatHappensNow.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
+              <h3 className="mt-10 font-serif text-2xl font-semibold text-stone-950 dark:text-stone-50">
+                {SUNSET_COPY.whatHappensNowHeading}
+              </h3>
+              <ul className="mt-3 list-disc space-y-2 pl-5 font-sans text-base leading-7 text-stone-600 dark:text-stone-400">
+                {SUNSET_COPY.whatHappensNow.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
           </section>
         </div>
 
@@ -252,6 +280,9 @@ export function SunsetHomepage() {
         </footer>
       </div>
 
+      {SunsetNoteMotionDial && (
+        <SunsetNoteMotionDial onConfigChange={setNoteConfig} onReplay={replayNote} />
+      )}
       {isSupabaseConfigured && <BetaAuthModal open={authOpen} onOpenChange={setAuthOpen} />}
     </div>
   );
