@@ -93,6 +93,74 @@ html:has(.landing-scroll) {
   overflow: auto;
 }
 
+/*
+ * Mobile Safari edge strips (SafariEdgeColors, logged-out homepage only).
+ * Safari tints its status bar and bottom toolbar from fixed elements touching
+ * the viewport edges, and needs at least ~5px of them visible. JS sets
+ * --edge-top-background / --edge-bottom-background to the page background
+ * that currently sits behind each edge. ::before repaints the same background
+ * a little further in and fades it out, so content softens instead of being
+ * cut off; the fade only exists where there is a real safe-area inset.
+ */
+.edge-top,
+.edge-bottom {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.edge-top {
+  top: 0;
+  height: max(12px, env(safe-area-inset-top));
+  --edge-fade: min(16px, env(safe-area-inset-top, 0px));
+}
+
+.edge-bottom {
+  bottom: 0;
+  height: max(12px, env(safe-area-inset-bottom));
+  --edge-fade: min(16px, env(safe-area-inset-bottom, 0px));
+}
+
+.edge-top::before,
+.edge-top::after,
+.edge-bottom::before,
+.edge-bottom::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+.edge-top::after,
+.edge-bottom::after {
+  top: 0;
+  bottom: 0;
+}
+
+.edge-top::before,
+.edge-top::after {
+  background: var(--edge-top-background);
+}
+
+.edge-bottom::before,
+.edge-bottom::after {
+  background: var(--edge-bottom-background);
+}
+
+.edge-top::before {
+  top: 0;
+  height: calc(100% + var(--edge-fade));
+  mask-image: linear-gradient(to bottom, #000 calc(100% - var(--edge-fade)), transparent);
+}
+
+.edge-bottom::before {
+  bottom: 0;
+  height: calc(100% + var(--edge-fade));
+  mask-image: linear-gradient(to top, #000 calc(100% - var(--edge-fade)), transparent);
+}
+
 .copy-link-confirm {
   animation: copy-link-confirm 140ms cubic-bezier(0.23, 1, 0.32, 1);
 }

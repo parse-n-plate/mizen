@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import dynamic from "next/dynamic";
 import { motion, useReducedMotion } from "motion/react";
 import AltArrowDown from "@solar-icons/react/csr/arrows/AltArrowDown";
@@ -22,6 +22,26 @@ import { developerFeedbackToolsEnabled } from "@/lib/features";
 import { useNoteEntrance } from "@/hooks/useNoteEntrance";
 import { NOTE_ENTRANCE_DEFAULTS, type NoteEntranceConfig } from "@/lib/sunset-note-motion";
 import { SUNSET_EXAMPLE_RECIPES } from "@/lib/sunset-example-recipe";
+import { SafariEdgeColors, type EdgeLayerSource } from "@/components/SafariEdgeColors";
+import {
+  SUNSET_BASE,
+  SUNSET_DARK_HERO,
+  SUNSET_DARK_HERO_FLOOR,
+  SUNSET_DARK_NOTE,
+  SUNSET_LIGHT_SKY,
+  edgeLayerCss,
+  type EdgeLayer,
+} from "@/lib/sunset-edges";
+
+/** Feeds a shared background layer to `bg-(image:--sunset-wash)`. */
+function wash(layer: EdgeLayer) {
+  return { "--sunset-wash": edgeLayerCss(layer) } as CSSProperties;
+}
+
+const PAGE_BASE = {
+  "--sunset-base-light": SUNSET_BASE.light,
+  "--sunset-base-dark": SUNSET_BASE.dark,
+} as CSSProperties;
 
 function HeroBook() {
   return (
@@ -144,7 +164,7 @@ function ScrollCue() {
       aria-hidden={scrolled}
       tabIndex={scrolled ? -1 : undefined}
       className={cn(
-        "absolute inset-x-0 bottom-6 mx-auto flex w-max flex-col items-center gap-1 rounded-md px-2 py-1 font-sans text-sm font-medium text-[#226097] mix-blend-multiply hover:text-[#163F66] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mizen-blue dark:text-[rgb(255_255_255/0.5)] dark:mix-blend-plus-lighter dark:hover:text-[#fff] transition-opacity duration-300",
+        "absolute inset-x-0 bottom-[calc(1.5rem+env(safe-area-inset-bottom))] mx-auto flex w-max flex-col items-center gap-1 rounded-md px-2 py-1 font-sans text-sm font-medium text-[#226097] mix-blend-multiply hover:text-[#163F66] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mizen-blue dark:text-[rgb(255_255_255/0.5)] dark:mix-blend-plus-lighter dark:hover:text-[#fff] transition-opacity duration-300",
         scrolled && "pointer-events-none opacity-0"
       )}
     >
@@ -190,20 +210,44 @@ export function SunsetHomepage() {
   }, []);
   const { replay: replayNote } = useNoteEntrance(noteRef, getNoteConfig);
 
+  const lightSkyRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLElement>(null);
+  const heroFloorRef = useRef<HTMLDivElement>(null);
+  const noteAreaRef = useRef<HTMLDivElement>(null);
+  const edgeLayers = useMemo<EdgeLayerSource[]>(
+    () => [
+      { ref: lightSkyRef, theme: "light", layer: SUNSET_LIGHT_SKY },
+      { ref: heroRef, theme: "dark", layer: SUNSET_DARK_HERO },
+      { ref: heroFloorRef, theme: "dark", layer: SUNSET_DARK_HERO_FLOOR },
+      { ref: noteAreaRef, theme: "dark", layer: SUNSET_DARK_NOTE },
+    ],
+    []
+  );
+
   return (
-    <div className="landing-scroll relative flex min-h-screen flex-1 flex-col bg-white dark:bg-stone-950">
+    <div
+      className="landing-scroll relative flex min-h-screen flex-1 flex-col bg-(--sunset-base-light) dark:bg-(--sunset-base-dark)"
+      style={PAGE_BASE}
+    >
+      <SafariEdgeColors layers={edgeLayers} base={SUNSET_BASE} />
       <div
+        ref={lightSkyRef}
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-[1380px] bg-[linear-gradient(to_bottom,transparent,#B2E3FE_33%,#7CC4F9)] dark:hidden"
+        className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-[1380px] bg-(image:--sunset-wash) dark:hidden"
+        style={wash(SUNSET_LIGHT_SKY)}
       />
       <div className="absolute inset-x-0 top-0 z-10">
-        <div className="mx-auto flex w-full max-w-[1120px] items-center justify-between gap-6 px-6 pt-5 sm:px-8">
+        <div className="mx-auto flex w-full max-w-[1120px] items-center justify-between gap-6 pl-[max(1.5rem,env(safe-area-inset-left))] pr-[max(1.5rem,env(safe-area-inset-right))] pt-[calc(1.25rem+env(safe-area-inset-top))] sm:pl-[max(2rem,env(safe-area-inset-left))] sm:pr-[max(2rem,env(safe-area-inset-right))]">
           <PublicBrand />
           <LandingAuthCta onSignIn={() => setAuthOpen(true)} />
         </div>
       </div>
-      <section className="relative flex min-h-[100svh] items-center dark:bg-[radial-gradient(ellipse_90%_60%_at_50%_0%,rgb(24_161_247/0.22),transparent_70%)]">
-        <div className="mx-auto grid w-full max-w-[1120px] grid-cols-[minmax(0,1fr)] items-center gap-8 px-6 pb-24 pt-20 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16 lg:py-10">
+      <section
+        ref={heroRef}
+        className="relative flex min-h-[100svh] items-center dark:bg-(image:--sunset-wash)"
+        style={wash(SUNSET_DARK_HERO)}
+      >
+        <div className="mx-auto grid w-full max-w-[1120px] grid-cols-[minmax(0,1fr)] items-center gap-8 pl-[max(1.5rem,env(safe-area-inset-left))] pr-[max(1.5rem,env(safe-area-inset-right))] pb-[calc(6rem+env(safe-area-inset-bottom))] pt-[calc(5rem+env(safe-area-inset-top))] sm:pl-[max(2rem,env(safe-area-inset-left))] sm:pr-[max(2rem,env(safe-area-inset-right))] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16 lg:py-10">
           <div>
             <h1 className="flex flex-col items-start gap-1 font-serif text-[clamp(32px,9vw,52px)] font-bold leading-[1.25] tracking-[-0.02em] text-stone-900 dark:text-stone-100">
               <HeroHeadline />
@@ -220,15 +264,21 @@ export function SunsetHomepage() {
         </div>
 
         <div
+          ref={heroFloorRef}
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-48 dark:bg-[radial-gradient(ellipse_60%_100%_at_50%_100%,rgb(24_161_247/0.16),transparent_70%)]"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-48 dark:bg-(image:--sunset-wash)"
+          style={wash(SUNSET_DARK_HERO_FLOOR)}
         />
 
         <ScrollCue />
       </section>
 
-      <div className="relative dark:bg-[radial-gradient(ellipse_60%_420px_at_50%_0%,rgb(24_161_247/0.16),transparent_70%)]">
-        <div className="px-4 pb-12 pt-4 sm:px-6 sm:pb-16">
+      <div
+        ref={noteAreaRef}
+        className="relative dark:bg-(image:--sunset-wash)"
+        style={wash(SUNSET_DARK_NOTE)}
+      >
+        <div className="pb-12 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-4 sm:pb-16 sm:pl-[max(1.5rem,env(safe-area-inset-left))] sm:pr-[max(1.5rem,env(safe-area-inset-right))]">
           <section
             id={SUNSET_NOTE_ID}
             aria-labelledby="sunset-note-heading"
@@ -269,8 +319,8 @@ export function SunsetHomepage() {
           </section>
         </div>
 
-        <footer className="py-6">
-          <div className="mx-auto flex w-full min-w-0 max-w-[1120px] flex-wrap items-center justify-between gap-x-8 gap-y-4 px-5 sm:px-8">
+        <footer className="pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-6">
+          <div className="mx-auto flex w-full min-w-0 max-w-[1120px] flex-wrap items-center justify-between gap-x-8 gap-y-4 pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] sm:pl-[max(2rem,env(safe-area-inset-left))] sm:pr-[max(2rem,env(safe-area-inset-right))]">
             <WhoMadeIt
               borderColor="border-[#7CC4F9] dark:border-stone-950"
               textClassName="font-sans text-sm font-medium text-[#226097] mix-blend-multiply dark:text-[rgb(255_255_255/0.5)] dark:mix-blend-plus-lighter"
