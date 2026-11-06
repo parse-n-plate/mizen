@@ -202,7 +202,7 @@ export function SunsetHomepage() {
           <LandingAuthCta onSignIn={() => setAuthOpen(true)} />
         </div>
       </div>
-      <section className="relative flex min-h-[100svh] items-center md:dark:bg-[radial-gradient(ellipse_90%_60%_at_50%_0%,rgb(24_161_247/0.22),transparent_70%)]">
+      <section className="relative flex min-h-[100svh] items-center">
         <div className="mx-auto grid w-full max-w-[1120px] grid-cols-[minmax(0,1fr)] items-center gap-8 px-6 pb-24 pt-20 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16 lg:py-10">
           <div>
             <h1 className="flex flex-col items-start gap-1 font-serif text-[clamp(32px,9vw,52px)] font-bold leading-[1.25] tracking-[-0.02em] text-stone-900 dark:text-stone-100">
@@ -219,15 +219,10 @@ export function SunsetHomepage() {
           </div>
         </div>
 
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-48 md:dark:bg-[radial-gradient(ellipse_60%_100%_at_50%_100%,rgb(24_161_247/0.16),transparent_70%)]"
-        />
-
         <ScrollCue />
       </section>
 
-      <div className="relative md:dark:bg-[radial-gradient(ellipse_60%_420px_at_50%_0%,rgb(24_161_247/0.16),transparent_70%)]">
+      <div className="relative">
         <div className="px-4 pb-12 pt-4 sm:px-6 sm:pb-16">
           <section
             id={SUNSET_NOTE_ID}
@@ -237,7 +232,7 @@ export function SunsetHomepage() {
             {/* The card is the animated unit; the section (and its #note anchor) never moves. */}
             <div
               ref={noteRef}
-              className="rounded-2xl bg-white px-6 py-10 md:shadow-[0_8px_30px_rgb(24_161_247/0.18)] dark:border dark:border-stone-800 dark:bg-stone-900 sm:px-10 sm:py-12"
+              className="rounded-2xl bg-white px-6 py-10 md:shadow-[0_8px_30px_rgb(24_161_247/0.18)] dark:shadow-none dark:border dark:border-stone-800 dark:bg-stone-900 sm:px-10 sm:py-12"
             >
               <h2
                 id="sunset-note-heading"
