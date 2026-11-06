@@ -21,7 +21,7 @@ export const SUNSET_NOTE: SunsetNoteSegment[][] = [
     "We couldn\u2019t have done it without the help of many friends and family who tested and contributed to the build, as well as Negi\u2019s first-ever project.",
   ],
   [
-    "The project is sunsetting. Now, Negi will continue building projects that we hope will help people to continue doing what they love.",
+    "Now, Negi will continue building projects that we hope will help people to continue doing what they love.",
   ],
   ["Until then, keep cooking \u{1F9D1}\u{1F3FC}\u200D\u{1F373}!"],
 ];
