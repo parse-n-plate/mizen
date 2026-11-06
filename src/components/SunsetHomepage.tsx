@@ -237,7 +237,7 @@ export function SunsetHomepage() {
             {/* The card is the animated unit; the section (and its #note anchor) never moves. */}
             <div
               ref={noteRef}
-              className="rounded-2xl bg-white px-6 py-10 shadow-[0_8px_30px_rgb(24_161_247/0.18)] dark:border dark:border-stone-800 dark:bg-stone-900 sm:px-10 sm:py-12"
+              className="rounded-2xl bg-white px-6 py-10 md:shadow-[0_8px_30px_rgb(24_161_247/0.18)] dark:border dark:border-stone-800 dark:bg-stone-900 sm:px-10 sm:py-12"
             >
               <h2
                 id="sunset-note-heading"
