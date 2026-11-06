@@ -94,30 +94,55 @@ html:has(.landing-scroll) {
 }
 
 /*
- * Mobile Safari edge colors (sunset homepage only).
+ * Mobile Safari edge colors (logged-out sunset homepage only).
  * Safari tints its status bar and bottom toolbar from fixed elements at the
- * screen edges. These strips are painted with the same colors as the page's
- * visible top/bottom edges; useSunsetEdgeColors keeps the variables current.
+ * screen edges and from the document backgrounds. The strips live directly in
+ * <body> (root layout) so no transformed ancestor affects them, and they only
+ * show while <html data-sunset-edges> is set: by the head script before first
+ * paint, then by useSunsetEdgeColors, which keeps the variables current.
  * Safari needs at least ~5px of visible strip, so never go below 12px.
  * https://joshpuckett.me/seamless-mobile-safari
  */
+html[data-sunset-edges] {
+  background-color: var(--edge-top-background);
+}
+
+html[data-sunset-edges] body {
+  background-color: var(--edge-bottom-background);
+}
+
 .edge-top,
 .edge-bottom {
+  display: none;
+}
+
+html[data-sunset-edges] .edge-top,
+html[data-sunset-edges] .edge-bottom {
+  display: block;
   position: fixed;
   left: 0;
   right: 0;
-  z-index: 40;
+  /* Above page chrome and floating buttons so Safari sees them first. */
+  z-index: 9000;
   pointer-events: none;
 }
 
-.edge-top {
-  top: 0;
-  height: max(12px, env(safe-area-inset-top));
+/* Tuck under an open dialog's dimmed backdrop instead of glowing through it. */
+html[data-sunset-edges] body[data-scroll-locked] > .edge-top,
+html[data-sunset-edges] body[data-scroll-locked] > .edge-bottom {
+  z-index: 40;
 }
 
-.edge-bottom {
+html[data-sunset-edges] .edge-top {
+  top: 0;
+  height: max(12px, env(safe-area-inset-top));
+  background-color: var(--edge-top-background);
+}
+
+html[data-sunset-edges] .edge-bottom {
   bottom: 0;
   height: max(12px, env(safe-area-inset-bottom));
+  background-color: var(--edge-bottom-background);
 }
 
 .edge-top::after,

@@ -3,6 +3,7 @@
 import { useEffect, type RefObject } from "react";
 import {
   computeSunsetEdgeColors,
+  SUNSET_EDGES_ATTRIBUTE,
   type Box,
   type EdgeColors,
   type SunsetWashKey,
@@ -13,8 +14,6 @@ export type SunsetEdgeRefs = {
   sky: RefObject<HTMLElement | null>;
   washes: Record<SunsetWashKey, RefObject<HTMLElement | null>>;
 };
-
-const VIEWPORT_FIT_COVER = "viewport-fit=cover";
 
 function box(element: HTMLElement | null): Box | null {
   if (!element) return null;
@@ -31,66 +30,54 @@ function visibleViewport() {
   };
 }
 
+/** Remember a meta tag's value once, so it can be put back later. */
+function rememberOriginal(meta: HTMLMetaElement) {
+  if (meta.dataset.originalContent == null) meta.dataset.originalContent = meta.content;
+}
+
+function restoreOriginal(meta: HTMLMetaElement) {
+  if (meta.dataset.originalContent == null) return;
+  meta.content = meta.dataset.originalContent;
+  delete meta.dataset.originalContent;
+}
+
 /**
  * Keeps mobile Safari's status bar and bottom toolbar tinted to match the
  * visible top and bottom edges of the sunset homepage.
  *
- * While mounted it owns a few shared document settings: the edge-strip CSS
- * variables, the html/body background colors, the theme-color meta tags and
- * `viewport-fit=cover`. Everything is restored on unmount so none of it leaks
- * into the signed-in app or other routes.
+ * The head script in the root layout usually turns the edge system on before
+ * first paint; this hook turns it on too (in case it didn't run), keeps the
+ * colors current, and turns everything off on unmount so none of it leaks into
+ * the signed-in app or other routes.
  */
 export function useSunsetEdgeColors(refs: SunsetEdgeRefs) {
   useEffect(() => {
     const html = document.documentElement;
-    const body = document.body;
 
-    // --- Save shared document state so it can be restored on unmount.
-    const original = {
-      htmlBackground: html.style.backgroundColor,
-      bodyBackground: body.style.backgroundColor,
-      edgeTop: html.style.getPropertyValue("--edge-top-background"),
-      edgeBottom: html.style.getPropertyValue("--edge-bottom-background"),
-    };
+    html.setAttribute(SUNSET_EDGES_ATTRIBUTE, "true");
 
-    let themeMetas = Array.from(
+    const themeMetas = Array.from(
       document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')
     );
-    const originalThemeContents = themeMetas.map((meta) => meta.content);
-    let createdThemeMeta: HTMLMetaElement | null = null;
-    if (themeMetas.length === 0) {
-      createdThemeMeta = document.createElement("meta");
-      createdThemeMeta.name = "theme-color";
-      document.head.appendChild(createdThemeMeta);
-      themeMetas = [createdThemeMeta];
+    themeMetas.forEach(rememberOriginal);
+
+    // Let the page draw behind the status bar and home indicator.
+    const viewportMeta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
+    if (viewportMeta && !viewportMeta.content.includes("viewport-fit")) {
+      rememberOriginal(viewportMeta);
+      viewportMeta.content = `${viewportMeta.content}, viewport-fit=cover`;
     }
 
-    // --- Let the page draw behind the status bar and home indicator.
-    let viewportMeta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
-    const originalViewport = viewportMeta?.content ?? null;
-    let createdViewportMeta = false;
-    if (!viewportMeta) {
-      viewportMeta = document.createElement("meta");
-      viewportMeta.name = "viewport";
-      viewportMeta.content = "width=device-width, initial-scale=1";
-      document.head.appendChild(viewportMeta);
-      createdViewportMeta = true;
-    }
-    if (!viewportMeta.content.includes("viewport-fit")) {
-      viewportMeta.content = `${viewportMeta.content}, ${VIEWPORT_FIT_COVER}`;
-    }
-
-    // --- Calculate once, apply everywhere.
+    // Calculate once, apply everywhere: both strips and the html/body
+    // backgrounds read these variables (see globals.css), plus theme-color.
     let last: EdgeColors | null = null;
-
     const apply = ({ top, bottom }: EdgeColors) => {
       html.style.setProperty("--edge-top-background", top);
       html.style.setProperty("--edge-bottom-background", bottom);
-      html.style.backgroundColor = top;
-      body.style.backgroundColor = bottom;
       for (const meta of themeMetas) meta.content = top;
     };
 
+    let frame = 0;
     const update = () => {
       frame = 0;
       const page = box(refs.page.current);
@@ -112,8 +99,6 @@ export function useSunsetEdgeColors(refs: SunsetEdgeRefs) {
       last = next;
       apply(next);
     };
-
-    let frame = 0;
     const schedule = () => {
       if (!frame) frame = requestAnimationFrame(update);
     };
@@ -154,21 +139,12 @@ export function useSunsetEdgeColors(refs: SunsetEdgeRefs) {
       resizeObserver?.disconnect();
       themeObserver.disconnect();
 
-      html.style.backgroundColor = original.htmlBackground;
-      body.style.backgroundColor = original.bodyBackground;
-      if (original.edgeTop) html.style.setProperty("--edge-top-background", original.edgeTop);
-      else html.style.removeProperty("--edge-top-background");
-      if (original.edgeBottom) {
-        html.style.setProperty("--edge-bottom-background", original.edgeBottom);
-      } else {
-        html.style.removeProperty("--edge-bottom-background");
-      }
-
-      if (createdThemeMeta) createdThemeMeta.remove();
-      else themeMetas.forEach((meta, i) => (meta.content = originalThemeContents[i]));
-
-      if (createdViewportMeta) viewportMeta?.remove();
-      else if (viewportMeta && originalViewport !== null) viewportMeta.content = originalViewport;
+      html.removeAttribute(SUNSET_EDGES_ATTRIBUTE);
+      html.style.removeProperty("--edge-top-background");
+      html.style.removeProperty("--edge-bottom-background");
+      document
+        .querySelectorAll<HTMLMetaElement>('meta[name="theme-color"], meta[name="viewport"]')
+        .forEach(restoreOriginal);
     };
     // Refs are stable objects; the effect runs once per mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps

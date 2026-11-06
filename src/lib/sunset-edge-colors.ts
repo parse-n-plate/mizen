@@ -211,3 +211,56 @@ export function defaultSunsetEdgeColors(theme: "light" | "dark"): EdgeColors {
   const base = SUNSET_PALETTE[theme].base;
   return { top: base, bottom: base };
 }
+
+/**
+ * Edge colors for a typical phone at the top of the page, used before the
+ * page has been measured (first paint), so Safari picks the right bar colors
+ * as soon as it loads. The hook refines them once the page is on screen.
+ */
+function firstPaintColors(theme: "light" | "dark"): EdgeColors {
+  const width = 390;
+  const height = 844;
+  const page = { top: 0, height: height * 4, width };
+  return computeSunsetEdgeColors({
+    theme,
+    viewportHeight: height,
+    viewportWidth: width,
+    page,
+    sky: { top: page.height - 1380, height: 1380, width },
+    washes: {
+      heroTop: { top: 0, height, width },
+      heroBottom: { top: height - 192, height: 192, width },
+      note: { top: height, height: page.height - height, width },
+    },
+  });
+}
+
+export const SUNSET_FIRST_PAINT_COLORS = {
+  light: firstPaintColors("light"),
+  dark: firstPaintColors("dark"),
+} as const;
+
+/** Attribute on <html> that turns on the edge strips and edge backgrounds. */
+export const SUNSET_EDGES_ATTRIBUTE = "data-sunset-edges";
+
+/**
+ * Inline <head> script. On `/` with no Supabase session cookie (signed out),
+ * it turns the edge system on before first paint: edge strips visible,
+ * html/body backgrounds, theme-color and viewport-fit=cover. Original meta
+ * values are kept in `data-original-content` so leaving the page can restore
+ * them. Signed-in visitors are untouched; if the session turns out to be
+ * stale, the hook turns the system on once the sunset page mounts.
+ */
+export const sunsetEdgesHeadScript = `(function(){try{
+if(location.pathname!=="/")return;
+if(/(?:^|;\\s*)sb-[^=]*-auth-token/.test(document.cookie))return;
+var d=document.documentElement,dark=d.classList.contains("dark");
+var c=dark?${JSON.stringify(SUNSET_FIRST_PAINT_COLORS.dark)}:${JSON.stringify(SUNSET_FIRST_PAINT_COLORS.light)};
+d.setAttribute("${SUNSET_EDGES_ATTRIBUTE}","true");
+d.style.setProperty("--edge-top-background",c.top);
+d.style.setProperty("--edge-bottom-background",c.bottom);
+var m=document.querySelectorAll('meta[name="theme-color"]');
+for(var i=0;i<m.length;i++){if(m[i].dataset.originalContent==null)m[i].dataset.originalContent=m[i].content;m[i].content=c.top}
+var v=document.querySelector('meta[name="viewport"]');
+if(v&&v.content.indexOf("viewport-fit")<0){v.dataset.originalContent=v.content;v.content+=", viewport-fit=cover"}
+}catch(e){}})()`;

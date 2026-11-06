@@ -24,7 +24,6 @@ import { NOTE_ENTRANCE_DEFAULTS, type NoteEntranceConfig } from "@/lib/sunset-no
 import { SUNSET_EXAMPLE_RECIPES } from "@/lib/sunset-example-recipe";
 import { sunsetPaletteStyle } from "@/lib/sunset-edge-colors";
 import { useSunsetEdgeColors } from "@/hooks/useSunsetEdgeColors";
-import { SafariEdgeStrips } from "@/components/SafariEdgeStrips";
 
 function HeroBook() {
   return (
@@ -210,7 +209,6 @@ export function SunsetHomepage() {
       style={sunsetPaletteStyle}
       className="landing-scroll relative flex min-h-screen flex-1 flex-col bg-[var(--sunset-base-light)] dark:bg-[var(--sunset-base-dark)]"
     >
-      <SafariEdgeStrips />
       <div
         ref={skyRef}
         aria-hidden
