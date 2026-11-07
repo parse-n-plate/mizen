@@ -133,7 +133,7 @@ export function XPostStudio() {
   );
   const [showFooter, setShowFooter] = useState(false);
   const [showSunsetBrand, setShowSunsetBrand] = useState(false);
-  const [showSky, setShowSky] = useState(false);
+  const [showSky, setShowSky] = useState(true);
   const [background, setBackground] = useState<StageBackgroundId>("sky");
   const [showBrand, setShowBrand] = useState(false);
   const [busy, setBusy] = useState(false);

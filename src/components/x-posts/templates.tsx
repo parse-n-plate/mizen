@@ -38,6 +38,9 @@ export const STAGE_BACKGROUNDS: Record<StageBackgroundId, { label: string; css: 
   night: { label: "Night", css: "linear-gradient(to bottom, #1c1917, #0c0a09)" },
 };
 
+/** A lighter take on the landing page sky, for behind the sunset copy. */
+const SUBTLE_SKY = `linear-gradient(to bottom, transparent, ${SUNSET_PALETTE.light.skyMid}66 55%, ${SUNSET_PALETTE.light.skyMid}b3)`;
+
 /** Fades a mockup's contents out toward its bottom edge. */
 const FADE_BOTTOM =
   "[mask-image:linear-gradient(to_bottom,black_62%,transparent_96%)] [-webkit-mask-image:linear-gradient(to_bottom,black_62%,transparent_96%)]";
@@ -195,8 +198,8 @@ export function SunsetTemplate({
       {showSky && (
         <div
           aria-hidden
-          className="absolute inset-x-0 bottom-0 bg-[image:var(--sunset-sky)] dark:hidden"
-          style={{ height: isSquare ? "54%" : "30%" }}
+          className="absolute inset-x-0 bottom-0 dark:hidden"
+          style={{ height: isSquare ? "54%" : "40%", background: SUBTLE_SKY }}
         />
       )}
 
