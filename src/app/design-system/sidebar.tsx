@@ -9,6 +9,7 @@ import Tuning2 from "@solar-icons/react/csr/settings/Tuning2";
 import { cn } from "@/lib/utils";
 import {
   BRAND_GUIDELINES_GROUPS,
+  BRAND_TOOLS,
   type BrandGuidelinesSlug,
   getBrandGuidelinesPath,
 } from "./brand-nav";
@@ -21,6 +22,7 @@ function getGroupIcon(title: string) {
       return Tuning2;
     case "UI primitives":
     case "Resources":
+    case "Tools":
       return AddCircle;
     case "Product components":
       return ChefHat;
@@ -35,11 +37,18 @@ function getGroupIcon(title: string) {
 export function DesignSystemSidebar() {
   const pathname = usePathname();
   const isBrandRoute = pathname.startsWith("/design-system/brand");
-  const groups = isBrandRoute ? BRAND_GUIDELINES_GROUPS : DESIGN_SYSTEM_GROUPS;
   const getPath = (slug: string) =>
     isBrandRoute
       ? getBrandGuidelinesPath(slug as BrandGuidelinesSlug)
       : getDesignSystemPath(slug as DesignSystemSlug);
+  const docGroups = isBrandRoute ? BRAND_GUIDELINES_GROUPS : DESIGN_SYSTEM_GROUPS;
+  const groups: { title: string; items: { title: string; href: string }[] }[] = [
+    ...docGroups.map((group) => ({
+      title: group.title,
+      items: group.items.map((item) => ({ title: item.title, href: getPath(item.slug) })),
+    })),
+    ...(isBrandRoute ? [{ title: "Tools", items: [...BRAND_TOOLS] }] : []),
+  ];
 
   return (
     <aside className="sticky top-16 hidden h-[calc(100vh-4rem)] lg:block">
@@ -56,12 +65,12 @@ export function DesignSystemSidebar() {
                 </h2>
                 <div className="space-y-px">
                   {group.items.map((item) => {
-                    const href = getPath(item.slug);
+                    const href = item.href;
                     const isActive = pathname === href;
 
                     return (
                       <Link
-                        key={item.slug}
+                        key={item.href}
                         href={href}
                         aria-current={isActive ? "page" : undefined}
                         className={cn(

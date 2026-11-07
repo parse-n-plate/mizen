@@ -18,6 +18,9 @@ export const BRAND_GUIDELINES_GROUPS = [
   },
 ] as const;
 
+/** Interactive brand tools, listed after the guideline docs in the sidebar. */
+export const BRAND_TOOLS = [{ title: "X posts", href: "/design-system/brand/x-posts" }] as const;
+
 export type BrandGuidelinesSlug = (typeof BRAND_GUIDELINES_GROUPS)[number]["items"][number]["slug"];
 
 export const BRAND_GUIDELINES_SLUGS = BRAND_GUIDELINES_GROUPS.flatMap((group) =>
