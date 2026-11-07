@@ -1,11 +1,25 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import { useEffect, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import type { ParsedRecipe } from "@/lib/types";
 import { IngredientList } from "@/components/IngredientList";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
 import { SUNSET_PALETTE, sunsetPaletteStyle } from "@/lib/sunset-edge-colors";
 import { cn } from "@/lib/utils";
+import { BRAND_ICONS_BY_ID, type BrandIconId } from "@/lib/brand-icons";
+import {
+  cardFrame,
+  frameTransform,
+  stickerFrame,
+  type StickerMotionConfig,
+} from "@/lib/x-post-motion";
+import {
+  peekStickerArt,
+  requestStickerArt,
+  stickerArtKey,
+  stickerArtPadding,
+  subscribeStickerArt,
+} from "./sticker-art";
 
 /**
  * Social image templates for X posts. Each template renders at a logical size
@@ -314,6 +328,181 @@ export function StageshowTemplate({ size, recipe, background, showBrand }: Stage
           />
         </>
       )}
+    </Frame>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Stickers: the recipe page centered, brand icons floating around it like
+   die-cut stickers. Animated; `time` drives every frame.
+───────────────────────────────────────────────────────────────────────────── */
+
+type StickerPlacement = {
+  icon: BrandIconId;
+  /** Center point in px within the frame */
+  x: number;
+  y: number;
+  /** Artwork height in px */
+  size: number;
+  rotate: number;
+};
+
+const STICKER_LAYOUTS: Record<
+  XPostSizeId,
+  {
+    card: { left: number; top: number; width: number; height: number };
+    stickers: StickerPlacement[];
+  }
+> = {
+  landscape: {
+    card: { left: 150, top: 64, width: 500, height: 420 },
+    stickers: [
+      { icon: "book", x: 82, y: 108, size: 56, rotate: -10 },
+      { icon: "pot", x: 718, y: 110, size: 62, rotate: 6 },
+      { icon: "knife", x: 84, y: 340, size: 60, rotate: 14 },
+      { icon: "skillet-eggs", x: 712, y: 350, size: 60, rotate: -8 },
+      { icon: "fish", x: 212, y: 40, size: 40, rotate: -8 },
+      { icon: "tomato", x: 592, y: 38, size: 42, rotate: 8 },
+      { icon: "whisk", x: 50, y: 226, size: 50, rotate: -18 },
+      { icon: "rolling-pin", x: 752, y: 232, size: 50, rotate: 18 },
+      { icon: "egg", x: 150, y: 418, size: 44, rotate: -8 },
+      { icon: "egg-timer", x: 652, y: 416, size: 46, rotate: 10 },
+    ],
+  },
+  square: {
+    card: { left: 80, top: 116, width: 440, height: 520 },
+    stickers: [
+      { icon: "book", x: 88, y: 84, size: 56, rotate: -10 },
+      { icon: "pot", x: 520, y: 90, size: 62, rotate: 6 },
+      { icon: "knife", x: 56, y: 392, size: 58, rotate: 14 },
+      { icon: "skillet-eggs", x: 546, y: 400, size: 60, rotate: -8 },
+      { icon: "fish", x: 220, y: 50, size: 42, rotate: -8 },
+      { icon: "tomato", x: 386, y: 50, size: 46, rotate: 8 },
+      { icon: "whisk", x: 46, y: 236, size: 50, rotate: -18 },
+      { icon: "rolling-pin", x: 556, y: 240, size: 50, rotate: 18 },
+      { icon: "egg", x: 110, y: 548, size: 48, rotate: -8 },
+      { icon: "egg-timer", x: 492, y: 550, size: 48, rotate: 10 },
+    ],
+  },
+};
+
+function Sticker({
+  placement,
+  index,
+  time,
+  motion,
+}: {
+  placement: StickerPlacement;
+  index: number;
+  time: number;
+  motion: StickerMotionConfig;
+}) {
+  const icon = BRAND_ICONS_BY_ID[placement.icon];
+  const frame = stickerFrame(time, index, placement.rotate, motion);
+  const height = placement.size * motion.stickerScale;
+  const width = height * icon.aspect;
+  const stroke = Math.max(0, motion.strokeWidth);
+  const strokeRatio = stroke / height;
+
+  const key = stickerArtKey(icon.src, strokeRatio);
+  const art = useSyncExternalStore(
+    subscribeStickerArt,
+    () => peekStickerArt(key),
+    () => undefined
+  );
+  useEffect(() => {
+    requestStickerArt(icon.src, strokeRatio);
+  }, [icon.src, strokeRatio]);
+
+  // The baked art carries its outline as padding around the artwork.
+  const pad = art ? stickerArtPadding(strokeRatio, height) : 0;
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      aria-hidden
+      alt=""
+      src={art ?? icon.src}
+      draggable={false}
+      className="absolute max-w-none"
+      style={{
+        left: placement.x - width / 2 - pad,
+        top: placement.y - height / 2 - pad,
+        width: width + pad * 2,
+        height: height + pad * 2,
+        opacity: frame.opacity,
+        transform: frameTransform(frame),
+        filter: "drop-shadow(0 3px 6px rgb(12 74 120 / 0.2))",
+      }}
+    />
+  );
+}
+
+export type StickersTemplateProps = {
+  size: XPostSizeId;
+  recipe: ParsedRecipe;
+  showSky: boolean;
+  time: number;
+  motion: StickerMotionConfig;
+  /**
+   * A pre-rendered image of the recipe card. Video export swaps it in so each
+   * frame doesn't re-serialize the whole recipe page.
+   */
+  cardSnapshot?: string | null;
+};
+
+export function StickersTemplate({
+  size,
+  recipe,
+  showSky,
+  time,
+  motion,
+  cardSnapshot,
+}: StickersTemplateProps) {
+  const { width, height } = X_POST_SIZES[size];
+  const layout = STICKER_LAYOUTS[size];
+  const card = cardFrame(time, motion);
+
+  return (
+    <Frame width={width} height={height} className="bg-white dark:bg-stone-950">
+      {showSky && (
+        <div
+          aria-hidden
+          className="absolute inset-x-0 bottom-0 h-[55%] dark:hidden"
+          style={{ background: SUBTLE_SKY }}
+        />
+      )}
+
+      <div
+        data-x-post-card
+        className="absolute"
+        style={{
+          ...layout.card,
+          opacity: card.opacity,
+          transform: frameTransform(card),
+        }}
+      >
+        {cardSnapshot ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={cardSnapshot}
+            alt=""
+            className="h-full w-full max-w-none rounded-xl shadow-lg"
+          />
+        ) : (
+          <BrowserCard recipe={recipe} className="h-full w-full" />
+        )}
+      </div>
+
+      {layout.stickers.map((placement, index) => (
+        <Sticker
+          key={placement.icon}
+          placement={placement}
+          index={index}
+          time={time}
+          motion={motion}
+        />
+      ))}
     </Frame>
   );
 }

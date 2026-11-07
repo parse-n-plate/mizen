@@ -1,10 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
+import { flushSync } from "react-dom";
+import dynamic from "next/dynamic";
+import { useReducedMotion } from "motion/react";
 import { toBlob, toPng } from "html-to-image";
 import { toast } from "sonner";
 import DownloadMinimalistic from "@solar-icons/react/csr/arrows-action/DownloadMinimalistic";
 import Copy from "@solar-icons/react/csr/ui/Copy";
+import Play from "@solar-icons/react/csr/video/Play";
+import Pause from "@solar-icons/react/csr/video/Pause";
+import Restart from "@solar-icons/react/csr/arrows/Restart";
+import Videocamera from "@solar-icons/react/csr/video/VideocameraRecord";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -12,16 +26,28 @@ import { Textarea } from "@/components/ui/textarea";
 import { SUNSET_EXAMPLE_RECIPES } from "@/lib/sunset-example-recipe";
 import { SUNSET_SHUTDOWN_DATE } from "@/lib/sunset";
 import { cn } from "@/lib/utils";
+import { developerFeedbackToolsEnabled } from "@/lib/features";
+import { STICKER_MOTION_DEFAULTS, type StickerMotionConfig } from "@/lib/x-post-motion";
+import { canEncodeMp4, exportMp4 } from "./export-video";
 import {
   STAGE_BACKGROUNDS,
   StageshowTemplate,
+  StickersTemplate,
   SunsetTemplate,
   X_POST_SIZES,
   type StageBackgroundId,
   type XPostSizeId,
 } from "./templates";
 
-type TemplateId = "sunset" | "stageshow";
+// Tuning panel for local dev and Vercel preview/staging builds; production
+// builds drop the import (same gate as the homepage note dial).
+const XPostMotionDial =
+  (process.env.NODE_ENV === "development" || process.env.MIZEN_MOTION_TUNING === "true") &&
+  developerFeedbackToolsEnabled
+    ? dynamic(() => import("./XPostMotionDial"), { ssr: false })
+    : null;
+
+type TemplateId = "sunset" | "stageshow" | "stickers";
 
 const TEMPLATES: { id: TemplateId; label: string; description: string }[] = [
   {
@@ -34,7 +60,24 @@ const TEMPLATES: { id: TemplateId; label: string; description: string }[] = [
     label: "Recipe stageshow",
     description: "The recipe page on mobile and desktop, staged and cropped at the edges.",
   },
+  {
+    id: "stickers",
+    label: "Floating stickers",
+    description:
+      "The recipe page centered with Mizen\u2019s brand icons floating around it. Exports as an MP4.",
+  },
 ];
+
+const noopSubscribe = () => () => {};
+const STICKER_COUNT = 10;
+
+/** When every entrance has finished, used for still exports of an animation. */
+function settledTime(motion: StickerMotionConfig) {
+  return Math.max(
+    motion.cardDuration,
+    motion.stickerDelay + STICKER_COUNT * motion.stickerStagger + motion.stickerDuration
+  );
+}
 
 function Segmented<T extends string>({
   value,
@@ -123,7 +166,7 @@ function ScaledPreview({
 }
 
 export function XPostStudio() {
-  const [template, setTemplate] = useState<TemplateId>("sunset");
+  const [template, setTemplate] = useState<TemplateId>("stickers");
   const [size, setSize] = useState<XPostSizeId>("landscape");
   const [recipeIndex, setRecipeIndex] = useState(0);
   const [headlineTop, setHeadlineTop] = useState("Sunsetting");
@@ -137,15 +180,50 @@ export function XPostStudio() {
   const [background, setBackground] = useState<StageBackgroundId>("sky");
   const [showBrand, setShowBrand] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [videoProgress, setVideoProgress] = useState<number | null>(null);
+  const [cardSnapshot, setCardSnapshot] = useState<string | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  // Animation clock for the stickers template.
+  const reduceMotion = useReducedMotion();
+  const mp4Supported = useSyncExternalStore(noopSubscribe, canEncodeMp4, () => false);
+  const [motion, setMotionState] = useState<StickerMotionConfig>(STICKER_MOTION_DEFAULTS);
+  const [time, setTime] = useState(0);
+  const [playing, setPlaying] = useState(true);
+  const isAnimated = template === "stickers";
+  const isPlaying = isAnimated && playing && !busy && !reduceMotion;
+  const shownTime = isAnimated && reduceMotion && !busy ? settledTime(motion) : time;
+
+  const setMotion = useCallback((next: StickerMotionConfig) => {
+    setMotionState((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
+  }, []);
+  const replay = useCallback(() => {
+    setTime(0);
+    setPlaying(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isPlaying) return;
+    let frame = 0;
+    let last = performance.now();
+    const tick = (now: number) => {
+      const delta = (now - last) / 1000;
+      last = now;
+      setTime((t) => (t + delta) % motion.videoLength);
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [isPlaying, motion.videoLength]);
 
   const dims = X_POST_SIZES[size];
   const recipe = SUNSET_EXAMPLE_RECIPES[recipeIndex];
-  const fileName = `mizen-x-${template}-${size}.png`;
+  const fileName = `mizen-x-${template}-${size}`;
 
   async function render<T>(fn: typeof toPng | typeof toBlob): Promise<T | null> {
     const node = canvasRef.current;
     if (!node) return null;
+    if (isAnimated) flushSync(() => setTime(settledTime(motion)));
     await document.fonts.ready;
     return (await fn(node, {
       pixelRatio: dims.exportScale,
@@ -161,7 +239,7 @@ export function XPostStudio() {
       const dataUrl = await render<string>(toPng);
       if (!dataUrl) return;
       const link = document.createElement("a");
-      link.download = fileName;
+      link.download = `${fileName}.png`;
       link.href = dataUrl;
       link.click();
     } catch {
@@ -182,6 +260,48 @@ export function XPostStudio() {
       toast.error("Couldn’t copy the image. Try downloading it instead.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handleVideo() {
+    const node = canvasRef.current;
+    if (!node) return;
+    setBusy(true);
+    setVideoProgress(0);
+    try {
+      // Snapshot the static recipe card once; only its wrapper animates.
+      const cardNode = node.querySelector<HTMLElement>("[data-x-post-card] > *");
+      if (cardNode) {
+        await document.fonts.ready;
+        const snapshot = await toPng(cardNode, { pixelRatio: dims.exportScale });
+        const img = new Image();
+        img.src = snapshot;
+        await img.decode();
+        flushSync(() => setCardSnapshot(snapshot));
+      }
+      const blob = await exportMp4({
+        node,
+        width: dims.width,
+        height: dims.height,
+        pixelRatio: dims.exportScale,
+        fps: motion.fps,
+        duration: motion.videoLength,
+        renderFrame: (t) => flushSync(() => setTime(t)),
+        onProgress: setVideoProgress,
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.download = `${fileName}.mp4`;
+      link.href = url;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Couldn\u2019t export the video.");
+    } finally {
+      setVideoProgress(null);
+      setCardSnapshot(null);
+      setBusy(false);
+      setTime(0);
     }
   }
 
@@ -223,6 +343,15 @@ export function XPostStudio() {
               showBrand={showSunsetBrand}
               showSky={showSky}
             />
+          ) : template === "stickers" ? (
+            <StickersTemplate
+              size={size}
+              recipe={recipe}
+              showSky={showSky}
+              time={shownTime}
+              motion={motion}
+              cardSnapshot={cardSnapshot}
+            />
           ) : (
             <StageshowTemplate
               size={size}
@@ -235,7 +364,32 @@ export function XPostStudio() {
       </ScaledPreview>
 
       <div className="flex flex-wrap gap-2">
-        <Button onClick={handleDownload} disabled={busy}>
+        {isAnimated && (
+          <>
+            <Button onClick={handleVideo} disabled={busy || !mp4Supported}>
+              <Videocamera size={16} />
+              {videoProgress === null
+                ? "Download MP4"
+                : `Rendering ${Math.round(videoProgress * 100)}%`}
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => setPlaying((p) => !p)}
+              disabled={busy || !!reduceMotion}
+              aria-label={playing ? "Pause" : "Play"}
+            >
+              {playing ? <Pause size={16} /> : <Play size={16} />}
+            </Button>
+            <Button variant="secondary" onClick={replay} disabled={busy} aria-label="Replay">
+              <Restart size={16} />
+            </Button>
+          </>
+        )}
+        <Button
+          variant={isAnimated ? "secondary" : "default"}
+          onClick={handleDownload}
+          disabled={busy}
+        >
           <DownloadMinimalistic size={16} />
           Download PNG
         </Button>
@@ -279,6 +433,17 @@ export function XPostStudio() {
               Show sky gradient
             </label>
           </>
+        ) : template === "stickers" ? (
+          <>
+            <label className="flex items-center gap-3 font-sans text-sm text-stone-700 dark:text-stone-300">
+              <Switch checked={showSky} onCheckedChange={setShowSky} />
+              Show sky gradient
+            </label>
+            <p className="font-sans text-sm text-stone-500 dark:text-stone-400 sm:col-span-2">
+              Tune the motion, sticker size, and outline in the DialKit panel (bottom right, in
+              local dev and preview builds). Stills export the settled final frame.
+            </p>
+          </>
         ) : (
           <>
             <Field label="Background">
@@ -299,6 +464,10 @@ export function XPostStudio() {
           </>
         )}
       </div>
+
+      {isAnimated && XPostMotionDial && (
+        <XPostMotionDial onConfigChange={setMotion} onReplay={replay} />
+      )}
     </div>
   );
 }

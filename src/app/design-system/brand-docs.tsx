@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { BRAND_ICONS } from "@/lib/brand-icons";
 import { CopyPageButton } from "./copy-page-button";
 import {
   BRAND_GUIDELINES_GROUPS,
@@ -336,24 +337,12 @@ const BRAND_DOCS: Record<BrandGuidelinesSlug, BrandGuidelinesDoc> = {
                 className="h-8 w-8 rounded"
               />
             </AssetRow>
-            <AssetRow name="Prep tab icon" path="/assets/icon-prep.png">
-              <Image
-                src="/assets/icon-prep.png"
-                alt=""
-                width={28}
-                height={28}
-                className="h-7 w-7"
-              />
-            </AssetRow>
-            <AssetRow name="Cook tab icon" path="/assets/icon-cook.svg">
-              <Image
-                src="/assets/icon-cook.svg"
-                alt=""
-                width={28}
-                height={28}
-                className="h-7 w-7"
-              />
-            </AssetRow>
+            {BRAND_ICONS.map((icon) => (
+              <AssetRow key={icon.id} name={`${icon.name} \u00b7 ${icon.usage}`} path={icon.src}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={icon.src} alt="" className="h-7 w-7 object-contain" />
+              </AssetRow>
+            ))}
           </div>
         ),
       },
@@ -362,7 +351,7 @@ const BRAND_DOCS: Record<BrandGuidelinesSlug, BrandGuidelinesDoc> = {
         body: (
           <GuidanceList
             items={[
-              "Use existing assets before creating new brand art.",
+              "Use existing assets before creating new brand art. The illustrated icons live in src/lib/brand-icons.ts.",
               "Keep custom icons reserved for product concepts that need distinct identity.",
               "Use empty alt text for decorative assets when nearby text names the concept.",
               "Document new assets here before using them across brand surfaces.",
