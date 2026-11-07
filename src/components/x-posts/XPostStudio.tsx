@@ -27,6 +27,7 @@ import { SUNSET_EXAMPLE_RECIPES } from "@/lib/sunset-example-recipe";
 import { SUNSET_SHUTDOWN_DATE } from "@/lib/sunset";
 import { cn } from "@/lib/utils";
 import { developerFeedbackToolsEnabled } from "@/lib/features";
+import type { BrandIconId } from "@/lib/brand-icons";
 import { STICKER_MOTION_DEFAULTS, type StickerMotionConfig } from "@/lib/x-post-motion";
 import { canEncodeMp4, exportMp4 } from "./export-video";
 import {
@@ -36,6 +37,8 @@ import {
   SunsetTemplate,
   X_POST_SIZES,
   type StageBackgroundId,
+  type StickerEdit,
+  type StickerEdits,
   type XPostSizeId,
 } from "./templates";
 
@@ -182,6 +185,20 @@ export function XPostStudio() {
   const [busy, setBusy] = useState(false);
   const [videoProgress, setVideoProgress] = useState<number | null>(null);
   const [cardSnapshot, setCardSnapshot] = useState<string | null>(null);
+  // Sticker moves and removals, kept per size since layouts differ.
+  const [stickerEdits, setStickerEdits] = useState<Record<XPostSizeId, StickerEdits>>({
+    landscape: {},
+    square: {},
+  });
+  const editSticker = useCallback(
+    (icon: BrandIconId, edit: StickerEdit) =>
+      setStickerEdits((prev) => ({
+        ...prev,
+        [size]: { ...prev[size], [icon]: { ...prev[size][icon], ...edit } },
+      })),
+    [size]
+  );
+  const hasStickerEdits = Object.keys(stickerEdits[size]).length > 0;
   const canvasRef = useRef<HTMLDivElement>(null);
 
   // Animation clock for the stickers template.
@@ -351,6 +368,8 @@ export function XPostStudio() {
               time={shownTime}
               motion={motion}
               cardSnapshot={cardSnapshot}
+              edits={stickerEdits[size]}
+              onEditSticker={busy ? undefined : editSticker}
             />
           ) : (
             <StageshowTemplate
@@ -439,9 +458,20 @@ export function XPostStudio() {
               <Switch checked={showSky} onCheckedChange={setShowSky} />
               Show sky gradient
             </label>
+            <div>
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={!hasStickerEdits || busy}
+                onClick={() => setStickerEdits((prev) => ({ ...prev, [size]: {} }))}
+              >
+                Reset stickers
+              </Button>
+            </div>
             <p className="font-sans text-sm text-stone-500 dark:text-stone-400 sm:col-span-2">
-              Tune the motion, sticker size, and outline in the DialKit panel (bottom right, in
-              local dev and preview builds). Stills export the settled final frame.
+              Drag stickers to move them, or hover one and press × to remove it. Tune the motion,
+              sticker size, and outline in the DialKit panel (bottom right, in local dev and preview
+              builds). Stills export the settled final frame.
             </p>
           </>
         ) : (

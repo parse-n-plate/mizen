@@ -1,6 +1,15 @@
 "use client";
 
-import { useEffect, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from "react";
+import CloseIcon from "@solar-icons/react/csr/ui/CloseCircle";
 import type { ParsedRecipe } from "@/lib/types";
 import { IngredientList } from "@/components/IngredientList";
 import { WaitlistRecipePreview } from "@/components/WaitlistRecipePreview";
@@ -76,6 +85,7 @@ function Frame({
 }) {
   return (
     <div
+      data-x-post-frame
       className={cn("relative overflow-hidden", className)}
       style={{ width, height, background, ...style }}
     >
@@ -386,16 +396,23 @@ const STICKER_LAYOUTS: Record<
   },
 };
 
+/** Per-sticker changes made by dragging or removing in the preview. */
+export type StickerEdit = { x?: number; y?: number; removed?: boolean };
+export type StickerEdits = Partial<Record<BrandIconId, StickerEdit>>;
+
 function Sticker({
   placement,
   index,
   time,
   motion,
+  onEdit,
 }: {
   placement: StickerPlacement;
   index: number;
   time: number;
   motion: StickerMotionConfig;
+  /** Present only in the interactive preview, never during export. */
+  onEdit?: (edit: StickerEdit) => void;
 }) {
   const icon = BRAND_ICONS_BY_ID[placement.icon];
   const frame = stickerFrame(time, index, placement.rotate, motion);
@@ -403,6 +420,16 @@ function Sticker({
   const width = height * icon.aspect;
   const stroke = Math.max(0, motion.strokeWidth);
   const strokeRatio = stroke / height;
+  const [dragging, setDragging] = useState(false);
+  const dragStart = useRef<{
+    pointerX: number;
+    pointerY: number;
+    x: number;
+    y: number;
+    scale: number;
+    frameWidth: number;
+    frameHeight: number;
+  } | null>(null);
 
   const key = stickerArtKey(icon.src, strokeRatio);
   const art = useSyncExternalStore(
@@ -416,15 +443,49 @@ function Sticker({
 
   // The baked art carries its outline as padding around the artwork.
   const pad = art ? stickerArtPadding(strokeRatio, height) : 0;
+  const interactive = !!onEdit;
+
+  function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    if (!onEdit || event.button !== 0) return;
+    const frameEl = event.currentTarget.closest<HTMLElement>("[data-x-post-frame]");
+    if (!frameEl) return;
+    // The preview is scaled down to fit, so convert screen px to frame px.
+    const scale = frameEl.getBoundingClientRect().width / frameEl.offsetWidth || 1;
+    dragStart.current = {
+      pointerX: event.clientX,
+      pointerY: event.clientY,
+      x: placement.x,
+      y: placement.y,
+      scale,
+      frameWidth: frameEl.offsetWidth,
+      frameHeight: frameEl.offsetHeight,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setDragging(true);
+  }
+
+  function handlePointerMove(event: ReactPointerEvent<HTMLDivElement>) {
+    const start = dragStart.current;
+    if (!start || !onEdit) return;
+    const clamp = (value: number, max: number) => Math.min(max, Math.max(0, value));
+    onEdit({
+      x: clamp(start.x + (event.clientX - start.pointerX) / start.scale, start.frameWidth),
+      y: clamp(start.y + (event.clientY - start.pointerY) / start.scale, start.frameHeight),
+    });
+  }
+
+  function endDrag() {
+    dragStart.current = null;
+    setDragging(false);
+  }
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      aria-hidden
-      alt=""
-      src={art ?? icon.src}
-      draggable={false}
-      className="absolute max-w-none"
+    <div
+      aria-hidden={!interactive}
+      className={cn(
+        "group/sticker absolute touch-none select-none",
+        interactive && (dragging ? "z-20 cursor-grabbing" : "cursor-grab")
+      )}
       style={{
         left: placement.x - width / 2 - pad,
         top: placement.y - height / 2 - pad,
@@ -432,9 +493,37 @@ function Sticker({
         height: height + pad * 2,
         opacity: frame.opacity,
         transform: frameTransform(frame),
-        filter: "drop-shadow(0 3px 6px rgb(12 74 120 / 0.2))",
       }}
-    />
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        alt=""
+        src={art ?? icon.src}
+        draggable={false}
+        className="pointer-events-none h-full w-full max-w-none"
+        style={{ filter: "drop-shadow(0 3px 6px rgb(12 74 120 / 0.2))" }}
+      />
+      {interactive && (
+        <button
+          type="button"
+          aria-label={`Remove ${icon.name.toLowerCase()} sticker`}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={() => onEdit({ removed: true })}
+          className={cn(
+            "absolute -right-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full bg-white text-stone-900 opacity-0 shadow-sm focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-mizen-blue group-hover/sticker:opacity-100 [@media(hover:none)]:opacity-100 transition-none",
+            dragging && "!opacity-0"
+          )}
+          // Keep the × upright while the sticker wobbles.
+          style={{ transform: `rotate(${(-frame.rotate).toFixed(2)}deg)` }}
+        >
+          <CloseIcon size={20} weight="Bold" />
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -449,6 +538,9 @@ export type StickersTemplateProps = {
    * frame doesn't re-serialize the whole recipe page.
    */
   cardSnapshot?: string | null;
+  edits?: StickerEdits;
+  /** Enables drag and remove; omitted during export. */
+  onEditSticker?: (icon: BrandIconId, edit: StickerEdit) => void;
 };
 
 export function StickersTemplate({
@@ -458,6 +550,8 @@ export function StickersTemplate({
   time,
   motion,
   cardSnapshot,
+  edits,
+  onEditSticker,
 }: StickersTemplateProps) {
   const { width, height } = X_POST_SIZES[size];
   const layout = STICKER_LAYOUTS[size];
@@ -494,15 +588,20 @@ export function StickersTemplate({
         )}
       </div>
 
-      {layout.stickers.map((placement, index) => (
-        <Sticker
-          key={placement.icon}
-          placement={placement}
-          index={index}
-          time={time}
-          motion={motion}
-        />
-      ))}
+      {layout.stickers.map((placement, index) => {
+        const edit = edits?.[placement.icon];
+        if (edit?.removed) return null;
+        return (
+          <Sticker
+            key={placement.icon}
+            placement={{ ...placement, x: edit?.x ?? placement.x, y: edit?.y ?? placement.y }}
+            index={index}
+            time={time}
+            motion={motion}
+            onEdit={onEditSticker && ((next) => onEditSticker(placement.icon, next))}
+          />
+        );
+      })}
     </Frame>
   );
 }
