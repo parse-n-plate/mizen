@@ -3,8 +3,10 @@ export const SUNSET_NOTE_HREF = `/#${SUNSET_NOTE_ID}`;
 
 export type SunsetNoteSegment =
   | string
-  | { text: string; href: string }
+  | { text: string; href: string; emphasis?: true }
   | { text: string; emphasis: true };
+
+const NEGI_STUDIO_URL = "https://negi.studio/";
 
 export const SUNSET_NOTE: SunsetNoteSegment[][] = [
   [
@@ -12,16 +14,18 @@ export const SUNSET_NOTE: SunsetNoteSegment[][] = [
   ],
   [
     "We set out to create a better cooking experience for home cooks. The name comes from ",
-    { text: "mise en place", emphasis: true },
+    { text: "mise en place", href: "https://en.wikipedia.org/wiki/Mise_en_place", emphasis: true },
     " and ",
-    { text: "zen", emphasis: true },
+    { text: "zen", href: "https://en.wikipedia.org/wiki/Zen", emphasis: true },
     ", which pretty much sums up how we wanted cooking at home to feel. From prep to plate, we hope Mizen made cooking calm, organized, and playful.",
   ],
   [
     "We couldn\u2019t have done it without the help of many friends and family who tested and contributed to the build, as well as Negi\u2019s first-ever project.",
   ],
   [
-    "The project is sunsetting. Now, Negi will continue building projects that we hope will help people to continue doing what they love.",
+    "The project is sunsetting. Now, ",
+    { text: "Negi", href: NEGI_STUDIO_URL },
+    " will continue building projects that we hope will help people to continue doing what they love.",
   ],
   ["Until then, keep cooking \u{1F9D1}\u{1F3FC}\u200D\u{1F373}!"],
 ];
