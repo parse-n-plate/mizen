@@ -19,9 +19,12 @@ import Play from "@solar-icons/react/csr/video/Play";
 import Pause from "@solar-icons/react/csr/video/Pause";
 import Restart from "@solar-icons/react/csr/arrows/Restart";
 import Videocamera from "@solar-icons/react/csr/video/VideocameraRecord";
+import Maximize from "@solar-icons/react/csr/arrows-action/Maximize";
+import Minimize from "@solar-icons/react/csr/arrows-action/Minimize";
+import Pen2 from "@solar-icons/react/csr/messages/Pen2";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { SUNSET_EXAMPLE_RECIPES } from "@/lib/sunset-example-recipe";
 import { SUNSET_SHUTDOWN_DATE } from "@/lib/sunset";
@@ -52,23 +55,10 @@ const XPostMotionDial =
 
 type TemplateId = "sunset" | "stageshow" | "stickers";
 
-const TEMPLATES: { id: TemplateId; label: string; description: string }[] = [
-  {
-    id: "sunset",
-    label: "Sunset announcement",
-    description: "The landing page hero, reframed for X with the sunsetting headline.",
-  },
-  {
-    id: "stageshow",
-    label: "Recipe stageshow",
-    description: "The recipe page on mobile and desktop, staged and cropped at the edges.",
-  },
-  {
-    id: "stickers",
-    label: "Floating stickers",
-    description:
-      "The recipe page centered with Mizen\u2019s brand icons floating around it. Exports as an MP4.",
-  },
+const TEMPLATES: { id: TemplateId; label: string }[] = [
+  { id: "stickers", label: "Stickers" },
+  { id: "sunset", label: "Sunset" },
+  { id: "stageshow", label: "Stageshow" },
 ];
 
 const noopSubscribe = () => () => {};
@@ -82,7 +72,8 @@ function settledTime(motion: StickerMotionConfig) {
   );
 }
 
-function Segmented<T extends string>({
+/** Compact pill group used across the toolbar. */
+function Pills<T extends string>({
   value,
   options,
   onChange,
@@ -94,11 +85,7 @@ function Segmented<T extends string>({
   label: string;
 }) {
   return (
-    <div
-      role="radiogroup"
-      aria-label={label}
-      className="inline-flex flex-wrap gap-1 rounded-lg bg-stone-100 p-1 dark:bg-stone-800"
-    >
+    <div role="radiogroup" aria-label={label} className="flex items-center gap-0.5">
       {options.map((option) => (
         <button
           key={option.value}
@@ -107,10 +94,10 @@ function Segmented<T extends string>({
           aria-checked={value === option.value}
           onClick={() => onChange(option.value)}
           className={cn(
-            "rounded-md px-3 py-1.5 font-sans text-sm font-medium transition-none",
+            "h-7 whitespace-nowrap rounded-md px-2.5 font-sans text-[13px] font-medium transition-none focus-visible:outline-2 focus-visible:outline-mizen-blue",
             value === option.value
-              ? "bg-white text-stone-900 shadow-sm dark:bg-stone-950 dark:text-stone-100"
-              : "text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200"
+              ? "bg-white text-stone-900 shadow-sm dark:bg-stone-800 dark:text-stone-100"
+              : "text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-stone-100"
           )}
         >
           {option.label}
@@ -120,44 +107,101 @@ function Segmented<T extends string>({
   );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+/** A small on/off chip, for options that would otherwise need a labelled switch. */
+function Chip({
+  pressed,
+  onPressedChange,
+  children,
+}: {
+  pressed: boolean;
+  onPressedChange: (pressed: boolean) => void;
+  children: ReactNode;
+}) {
   return (
-    <label className="flex flex-col gap-1.5">
-      <span className="font-sans text-xs font-semibold uppercase tracking-wider text-stone-400 dark:text-stone-500">
-        {label}
-      </span>
+    <button
+      type="button"
+      aria-pressed={pressed}
+      onClick={() => onPressedChange(!pressed)}
+      className={cn(
+        "h-7 whitespace-nowrap rounded-md px-2.5 font-sans text-[13px] font-medium transition-none focus-visible:outline-2 focus-visible:outline-mizen-blue",
+        pressed
+          ? "bg-white text-stone-900 shadow-sm dark:bg-stone-800 dark:text-stone-100"
+          : "text-stone-400 line-through decoration-stone-300 hover:text-stone-700 dark:text-stone-500 dark:decoration-stone-600 dark:hover:text-stone-300"
+      )}
+    >
       {children}
-    </label>
+    </button>
   );
 }
 
-/** Scales a fixed-size canvas down to fit its container's width. */
+function IconButton({
+  label,
+  onClick,
+  disabled,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      disabled={disabled}
+      className="flex size-7 items-center justify-center rounded-md text-stone-500 hover:bg-white hover:text-stone-900 disabled:pointer-events-none disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-mizen-blue dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100 transition-none"
+    >
+      {children}
+    </button>
+  );
+}
+
+function Divider() {
+  return <span aria-hidden className="mx-1 h-4 w-px shrink-0 bg-stone-200 dark:bg-stone-800" />;
+}
+
+/**
+ * Scales a fixed-size canvas to fit its container: by width inline, or by
+ * width and height when the container has a size of its own (fullscreen).
+ */
 function ScaledPreview({
   width,
   height,
+  fill,
   children,
 }: {
   width: number;
   height: number;
+  fill: boolean;
   children: ReactNode;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState(width);
+  const [box, setBox] = useState({ width, height });
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const observer = new ResizeObserver(([entry]) => setContainerWidth(entry.contentRect.width));
+    const observer = new ResizeObserver(([entry]) =>
+      setBox({ width: entry.contentRect.width, height: entry.contentRect.height })
+    );
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
-  const scale = Math.min(1, containerWidth / width);
+  const scale = fill
+    ? Math.min(2, box.width / width, box.height / height)
+    : Math.min(1, box.width / width);
 
   return (
-    <div ref={containerRef} className="w-full">
+    <div
+      ref={containerRef}
+      className={cn("flex w-full items-center justify-center", fill && "min-h-0 flex-1")}
+    >
       <div
-        className="mx-auto overflow-hidden rounded-xl ring-1 ring-stone-200 dark:ring-stone-800"
+        className="overflow-hidden rounded-lg shadow-[0_1px_2px_rgb(0_0_0/0.06),0_8px_24px_rgb(0_0_0/0.06)] ring-1 ring-stone-900/5 dark:ring-white/10"
         style={{ width: width * scale, height: height * scale }}
       >
         <div style={{ width, height, transform: `scale(${scale})`, transformOrigin: "top left" }}>
@@ -200,6 +244,16 @@ export function XPostStudio() {
   );
   const hasStickerEdits = Object.keys(stickerEdits[size]).length > 0;
   const canvasRef = useRef<HTMLDivElement>(null);
+  const [fullscreen, setFullscreen] = useState(false);
+
+  useEffect(() => {
+    if (!fullscreen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setFullscreen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [fullscreen]);
 
   // Animation clock for the stickers template.
   const reduceMotion = useReducedMotion();
@@ -322,177 +376,208 @@ export function XPostStudio() {
     }
   }
 
+  const preview = (
+    <div ref={canvasRef} style={{ width: dims.width, height: dims.height }}>
+      {template === "sunset" ? (
+        <SunsetTemplate
+          size={size}
+          recipe={recipe}
+          headlineTop={headlineTop}
+          headlineBottom={headlineBottom}
+          subhead={subhead}
+          showFooter={showFooter}
+          showBrand={showSunsetBrand}
+          showSky={showSky}
+        />
+      ) : template === "stickers" ? (
+        <StickersTemplate
+          size={size}
+          recipe={recipe}
+          showSky={showSky}
+          time={shownTime}
+          motion={motion}
+          cardSnapshot={cardSnapshot}
+          edits={stickerEdits[size]}
+          onEditSticker={busy ? undefined : editSticker}
+        />
+      ) : (
+        <StageshowTemplate
+          size={size}
+          recipe={recipe}
+          background={background}
+          showBrand={showBrand}
+        />
+      )}
+    </div>
+  );
+
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-center gap-3">
-        <Segmented
+    <div
+      className={cn(
+        "flex flex-col bg-stone-100 dark:bg-stone-900",
+        fullscreen ? "fixed inset-0 z-50" : "rounded-2xl",
+        // Leave room for the DialKit panel, which sits over the right edge.
+        fullscreen && isAnimated && XPostMotionDial && "lg:pr-[300px]"
+      )}
+    >
+      {/* Top bar: what to make */}
+      <div className="flex items-center gap-1 overflow-x-auto px-2 py-2 [scrollbar-width:none]">
+        <Pills
           label="Template"
           value={template}
           onChange={setTemplate}
           options={TEMPLATES.map((t) => ({ value: t.id, label: t.label }))}
         />
-        <Segmented
-          label="Size"
-          value={size}
-          onChange={setSize}
-          options={(Object.keys(X_POST_SIZES) as XPostSizeId[]).map((id) => ({
-            value: id,
-            label: X_POST_SIZES[id].label,
+        <div className="ml-auto flex items-center gap-1">
+          <Pills
+            label="Size"
+            value={size}
+            onChange={setSize}
+            options={(Object.keys(X_POST_SIZES) as XPostSizeId[]).map((id) => ({
+              value: id,
+              label: X_POST_SIZES[id].shortLabel,
+            }))}
+          />
+          <Divider />
+          <IconButton
+            label={fullscreen ? "Exit fullscreen (Esc)" : "Fullscreen"}
+            onClick={() => setFullscreen((f) => !f)}
+          >
+            {fullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
+          </IconButton>
+        </div>
+      </div>
+
+      {/* Stage */}
+      <div className={cn("flex px-4", fullscreen ? "min-h-0 flex-1 py-6" : "py-4")}>
+        <ScaledPreview width={dims.width} height={dims.height} fill={fullscreen}>
+          {preview}
+        </ScaledPreview>
+      </div>
+
+      {/* Bottom bar: edits on the left, playback and export on the right */}
+      <div
+        className={cn(
+          "flex flex-wrap items-center gap-1 px-2 py-2",
+          // Clear DialKit's collapsed toggle in the bottom-right corner.
+          fullscreen && XPostMotionDial && "pr-16"
+        )}
+      >
+        <Pills
+          label="Recipe"
+          value={String(recipeIndex)}
+          onChange={(value) => setRecipeIndex(Number(value))}
+          options={SUNSET_EXAMPLE_RECIPES.map((r, i) => ({
+            value: String(i),
+            label: r.title.split(" ").slice(0, 2).join(" "),
           }))}
         />
-      </div>
-
-      <p className="font-sans text-sm text-stone-500 dark:text-stone-400">
-        {TEMPLATES.find((t) => t.id === template)?.description} The image follows the site theme, so
-        use the moon/sun toggle above for a dark version.
-      </p>
-
-      <ScaledPreview width={dims.width} height={dims.height}>
-        <div ref={canvasRef} style={{ width: dims.width, height: dims.height }}>
-          {template === "sunset" ? (
-            <SunsetTemplate
-              size={size}
-              recipe={recipe}
-              headlineTop={headlineTop}
-              headlineBottom={headlineBottom}
-              subhead={subhead}
-              showFooter={showFooter}
-              showBrand={showSunsetBrand}
-              showSky={showSky}
-            />
-          ) : template === "stickers" ? (
-            <StickersTemplate
-              size={size}
-              recipe={recipe}
-              showSky={showSky}
-              time={shownTime}
-              motion={motion}
-              cardSnapshot={cardSnapshot}
-              edits={stickerEdits[size]}
-              onEditSticker={busy ? undefined : editSticker}
-            />
-          ) : (
-            <StageshowTemplate
-              size={size}
-              recipe={recipe}
-              background={background}
-              showBrand={showBrand}
-            />
-          )}
-        </div>
-      </ScaledPreview>
-
-      <div className="flex flex-wrap gap-2">
-        {isAnimated && (
+        <Divider />
+        {template === "sunset" && (
           <>
-            <Button onClick={handleVideo} disabled={busy || !mp4Supported}>
-              <Videocamera size={16} />
-              {videoProgress === null
-                ? "Download MP4"
-                : `Rendering ${Math.round(videoProgress * 100)}%`}
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => setPlaying((p) => !p)}
-              disabled={busy || !!reduceMotion}
-              aria-label={playing ? "Pause" : "Play"}
-            >
-              {playing ? <Pause size={16} /> : <Play size={16} />}
-            </Button>
-            <Button variant="secondary" onClick={replay} disabled={busy} aria-label="Replay">
-              <Restart size={16} />
-            </Button>
+            <Popover>
+              <PopoverTrigger className="flex h-7 items-center gap-1.5 rounded-md px-2.5 font-sans text-[13px] font-medium text-stone-500 hover:bg-white hover:text-stone-900 focus-visible:outline-2 focus-visible:outline-mizen-blue dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100 transition-none">
+                <Pen2 size={14} />
+                Text
+              </PopoverTrigger>
+              <PopoverContent align="start" side="top" className="w-80 space-y-2 p-3">
+                <Input
+                  aria-label="Headline line 1"
+                  value={headlineTop}
+                  onChange={(e) => setHeadlineTop(e.target.value)}
+                />
+                <Input
+                  aria-label="Headline line 2"
+                  value={headlineBottom}
+                  onChange={(e) => setHeadlineBottom(e.target.value)}
+                />
+                <Textarea
+                  aria-label="Subhead"
+                  rows={3}
+                  value={subhead}
+                  onChange={(e) => setSubhead(e.target.value)}
+                />
+              </PopoverContent>
+            </Popover>
+            <Chip pressed={showSky} onPressedChange={setShowSky}>
+              Sky
+            </Chip>
+            <Chip pressed={showSunsetBrand} onPressedChange={setShowSunsetBrand}>
+              Logo
+            </Chip>
+            <Chip pressed={showFooter} onPressedChange={setShowFooter}>
+              Credits
+            </Chip>
           </>
         )}
-        <Button
-          variant={isAnimated ? "secondary" : "default"}
-          onClick={handleDownload}
-          disabled={busy}
-        >
-          <DownloadMinimalistic size={16} />
-          Download PNG
-        </Button>
-        <Button variant="secondary" onClick={handleCopy} disabled={busy}>
-          <Copy size={16} />
-          Copy image
-        </Button>
-      </div>
-
-      <div className="grid gap-5 rounded-xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900 sm:grid-cols-2">
-        <Field label="Recipe">
-          <Segmented
-            label="Recipe"
-            value={String(recipeIndex)}
-            onChange={(value) => setRecipeIndex(Number(value))}
-            options={SUNSET_EXAMPLE_RECIPES.map((r, i) => ({ value: String(i), label: r.title }))}
-          />
-        </Field>
-
-        {template === "sunset" ? (
+        {template === "stickers" && (
           <>
-            <Field label="Headline line 1">
-              <Input value={headlineTop} onChange={(e) => setHeadlineTop(e.target.value)} />
-            </Field>
-            <Field label="Headline line 2">
-              <Input value={headlineBottom} onChange={(e) => setHeadlineBottom(e.target.value)} />
-            </Field>
-            <Field label="Subhead">
-              <Textarea rows={2} value={subhead} onChange={(e) => setSubhead(e.target.value)} />
-            </Field>
-            <label className="flex items-center gap-3 font-sans text-sm text-stone-700 dark:text-stone-300">
-              <Switch checked={showFooter} onCheckedChange={setShowFooter} />
-              Show &ldquo;Cooked with love by&rdquo;
-            </label>
-            <label className="flex items-center gap-3 font-sans text-sm text-stone-700 dark:text-stone-300">
-              <Switch checked={showSunsetBrand} onCheckedChange={setShowSunsetBrand} />
-              Show Mizen logo
-            </label>
-            <label className="flex items-center gap-3 font-sans text-sm text-stone-700 dark:text-stone-300">
-              <Switch checked={showSky} onCheckedChange={setShowSky} />
-              Show sky gradient
-            </label>
-          </>
-        ) : template === "stickers" ? (
-          <>
-            <label className="flex items-center gap-3 font-sans text-sm text-stone-700 dark:text-stone-300">
-              <Switch checked={showSky} onCheckedChange={setShowSky} />
-              Show sky gradient
-            </label>
-            <div>
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={!hasStickerEdits || busy}
+            <Chip pressed={showSky} onPressedChange={setShowSky}>
+              Sky
+            </Chip>
+            {hasStickerEdits && (
+              <button
+                type="button"
                 onClick={() => setStickerEdits((prev) => ({ ...prev, [size]: {} }))}
+                disabled={busy}
+                className="h-7 rounded-md px-2.5 font-sans text-[13px] font-medium text-stone-500 hover:bg-white hover:text-stone-900 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100 transition-none"
               >
                 Reset stickers
-              </Button>
-            </div>
-            <p className="font-sans text-sm text-stone-500 dark:text-stone-400 sm:col-span-2">
-              Drag stickers to move them, or hover one and press × to remove it. Tune the motion,
-              sticker size, and outline in the DialKit panel (bottom right, in local dev and preview
-              builds). Stills export the settled final frame.
-            </p>
-          </>
-        ) : (
-          <>
-            <Field label="Background">
-              <Segmented
-                label="Background"
-                value={background}
-                onChange={setBackground}
-                options={(Object.keys(STAGE_BACKGROUNDS) as StageBackgroundId[]).map((id) => ({
-                  value: id,
-                  label: STAGE_BACKGROUNDS[id].label,
-                }))}
-              />
-            </Field>
-            <label className="flex items-center gap-3 font-sans text-sm text-stone-700 dark:text-stone-300">
-              <Switch checked={showBrand} onCheckedChange={setShowBrand} />
-              Show Mizen logo
-            </label>
+              </button>
+            )}
           </>
         )}
+        {template === "stageshow" && (
+          <>
+            <Pills
+              label="Background"
+              value={background}
+              onChange={setBackground}
+              options={(Object.keys(STAGE_BACKGROUNDS) as StageBackgroundId[]).map((id) => ({
+                value: id,
+                label: STAGE_BACKGROUNDS[id].label,
+              }))}
+            />
+            <Chip pressed={showBrand} onPressedChange={setShowBrand}>
+              Logo
+            </Chip>
+          </>
+        )}
+
+        <div className="ml-auto flex items-center gap-1">
+          {isAnimated && (
+            <>
+              <IconButton
+                label={playing ? "Pause" : "Play"}
+                onClick={() => setPlaying((p) => !p)}
+                disabled={busy || !!reduceMotion}
+              >
+                {playing ? <Pause size={16} /> : <Play size={16} />}
+              </IconButton>
+              <IconButton label="Replay" onClick={replay} disabled={busy}>
+                <Restart size={16} />
+              </IconButton>
+              <Divider />
+            </>
+          )}
+          <IconButton label="Copy image" onClick={handleCopy} disabled={busy}>
+            <Copy size={16} />
+          </IconButton>
+          <IconButton label="Download PNG" onClick={handleDownload} disabled={busy}>
+            <DownloadMinimalistic size={16} />
+          </IconButton>
+          {isAnimated && (
+            <Button
+              size="sm"
+              className="ml-1 h-7 rounded-md px-2.5 text-[13px]"
+              onClick={handleVideo}
+              disabled={busy || !mp4Supported}
+            >
+              <Videocamera size={14} />
+              {videoProgress === null ? "MP4" : `${Math.round(videoProgress * 100)}%`}
+            </Button>
+          )}
+        </div>
       </div>
 
       {isAnimated && XPostMotionDial && (

@@ -40,10 +40,22 @@ export type XPostSizeId = "landscape" | "square";
 
 export const X_POST_SIZES: Record<
   XPostSizeId,
-  { label: string; width: number; height: number; exportScale: number }
+  { label: string; shortLabel: string; width: number; height: number; exportScale: number }
 > = {
-  landscape: { label: "16:9 (1600 × 900)", width: 800, height: 450, exportScale: 2 },
-  square: { label: "1:1 (1200 × 1200)", width: 600, height: 600, exportScale: 2 },
+  landscape: {
+    label: "16:9 (1600 × 900)",
+    shortLabel: "16:9",
+    width: 800,
+    height: 450,
+    exportScale: 2,
+  },
+  square: {
+    label: "1:1 (1200 × 1200)",
+    shortLabel: "1:1",
+    width: 600,
+    height: 600,
+    exportScale: 2,
+  },
 };
 
 export type StageBackgroundId = "sky" | "sunset" | "cream" | "night";
