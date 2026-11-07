@@ -204,7 +204,7 @@ export function SunsetHomepage() {
       </div>
       <section className="relative flex min-h-[100svh] items-center">
         <div className="mx-auto grid w-full max-w-[1120px] grid-cols-[minmax(0,1fr)] items-center gap-8 px-6 pb-24 pt-20 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16 lg:py-10">
-          <div>
+          <div className="mx-auto w-full max-w-xl lg:mx-0 lg:max-w-none">
             <h1 className="flex flex-col items-start gap-1 font-serif text-[clamp(32px,9vw,52px)] font-bold leading-[1.25] tracking-[-0.02em] text-stone-900 dark:text-stone-100">
               <HeroHeadline />
             </h1>
