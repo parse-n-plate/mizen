@@ -166,7 +166,7 @@ function NoteSegments({ segments }: { segments: SunsetNoteSegment[] }) {
   return segments.map((segment, i) =>
     typeof segment === "string" ? (
       segment
-    ) : "href" in segment ? (
+    ) : (
       <a
         key={i}
         href={segment.href}
@@ -174,10 +174,8 @@ function NoteSegments({ segments }: { segments: SunsetNoteSegment[] }) {
         rel="noopener noreferrer"
         className={NOTE_LINK}
       >
-        {segment.emphasis ? <em>{segment.text}</em> : segment.text}
+        {segment.text}
       </a>
-    ) : (
-      <em key={i}>{segment.text}</em>
     )
   );
 }
