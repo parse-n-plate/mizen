@@ -130,6 +130,8 @@ export type SunsetTemplateProps = {
   headlineBottom: string;
   subhead: string;
   showFooter: boolean;
+  showBrand: boolean;
+  showSky: boolean;
 };
 
 function SunsetHeadline({ top, bottom }: { top: string; bottom: string }) {
@@ -177,6 +179,8 @@ export function SunsetTemplate({
   headlineBottom,
   subhead,
   showFooter,
+  showBrand,
+  showSky,
 }: SunsetTemplateProps) {
   const { width, height } = X_POST_SIZES[size];
   const isSquare = size === "square";
@@ -188,13 +192,15 @@ export function SunsetTemplate({
       style={sunsetPaletteStyle}
       className="bg-[var(--sunset-base-light)] dark:bg-[var(--sunset-base-dark)]"
     >
-      <div
-        aria-hidden
-        className="absolute inset-x-0 bottom-0 bg-[image:var(--sunset-sky)] dark:hidden"
-        style={{ height: isSquare ? "54%" : "30%" }}
-      />
+      {showSky && (
+        <div
+          aria-hidden
+          className="absolute inset-x-0 bottom-0 bg-[image:var(--sunset-sky)] dark:hidden"
+          style={{ height: isSquare ? "54%" : "30%" }}
+        />
+      )}
 
-      <BrandMark className="absolute left-8 top-6 z-10" />
+      {showBrand && <BrandMark className="absolute left-8 top-6 z-10" />}
 
       {isSquare ? (
         <>

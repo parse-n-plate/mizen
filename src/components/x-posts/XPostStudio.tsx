@@ -132,6 +132,8 @@ export function XPostStudio() {
     `Thanks for cooking with us. Save your recipes before ${SUNSET_SHUTDOWN_DATE}.`
   );
   const [showFooter, setShowFooter] = useState(false);
+  const [showSunsetBrand, setShowSunsetBrand] = useState(false);
+  const [showSky, setShowSky] = useState(false);
   const [background, setBackground] = useState<StageBackgroundId>("sky");
   const [showBrand, setShowBrand] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -218,6 +220,8 @@ export function XPostStudio() {
               headlineBottom={headlineBottom}
               subhead={subhead}
               showFooter={showFooter}
+              showBrand={showSunsetBrand}
+              showSky={showSky}
             />
           ) : (
             <StageshowTemplate
@@ -265,6 +269,14 @@ export function XPostStudio() {
             <label className="flex items-center gap-3 font-sans text-sm text-stone-700 dark:text-stone-300">
               <Switch checked={showFooter} onCheckedChange={setShowFooter} />
               Show &ldquo;Cooked with love by&rdquo;
+            </label>
+            <label className="flex items-center gap-3 font-sans text-sm text-stone-700 dark:text-stone-300">
+              <Switch checked={showSunsetBrand} onCheckedChange={setShowSunsetBrand} />
+              Show Mizen logo
+            </label>
+            <label className="flex items-center gap-3 font-sans text-sm text-stone-700 dark:text-stone-300">
+              <Switch checked={showSky} onCheckedChange={setShowSky} />
+              Show sky gradient
             </label>
           </>
         ) : (
