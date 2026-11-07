@@ -10,6 +10,7 @@ import { developerFeedbackToolsEnabled } from "@/lib/features";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeSync } from "@/components/ThemeSync";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { sunsetEdgesHeadScript } from "@/lib/sunset-edge-colors";
 import "./globals.css";
 import "dialkit/styles.css";
 
@@ -55,6 +56,8 @@ export default function RootLayout({
             __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`,
           }}
         />
+        {/* Runs after the theme script so it can read the dark class. */}
+        <script dangerouslySetInnerHTML={{ __html: sunsetEdgesHeadScript }} />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){try{if(${JSON.stringify(PUBLIC_PAGE_PATHS)}.includes(location.pathname))return;if(localStorage.getItem('mizen:core-app-seen')==='true'&&sessionStorage.getItem('mizen:splash-seen')!=='true'){document.documentElement.dataset.earlySplash='true'}}catch(e){}})()`,
@@ -62,6 +65,9 @@ export default function RootLayout({
         />
       </head>
       <body className={`${domine.variable} ${albertSans.variable} antialiased`}>
+        {/* Mobile Safari edge strips for the signed-out homepage (hidden elsewhere). */}
+        <div aria-hidden="true" className="edge-top" />
+        <div aria-hidden="true" className="edge-bottom" />
         <div id="mizen-early-splash" aria-hidden="true">
           <div className="mizen-early-splash-scale">
             <div className="mizen-early-splash-icons">
