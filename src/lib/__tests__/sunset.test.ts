@@ -15,11 +15,15 @@ describe("SUNSET_NOTE", () => {
     ]);
   });
 
-  it("italicizes only mise en place and zen", () => {
-    const emphasized = SUNSET_NOTE.flat()
-      .filter((s) => typeof s !== "string" && "emphasis" in s)
-      .map((s) => (s as { text: string }).text);
-    expect(emphasized).toEqual(["mise en place", "zen"]);
+  it("links mise en place and zen to Wikipedia and Negi to its site", () => {
+    const links = SUNSET_NOTE.flat()
+      .filter((s) => typeof s !== "string")
+      .map(({ text, href }) => [text, href]);
+    expect(links).toEqual([
+      ["mise en place", "https://en.wikipedia.org/wiki/Mise_en_place"],
+      ["zen", "https://en.wikipedia.org/wiki/Zen"],
+      ["Negi", "https://negi.studio/"],
+    ]);
   });
 
   it("signs as Gage & Michelle without the old em dash", () => {

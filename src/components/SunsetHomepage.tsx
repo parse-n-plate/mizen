@@ -166,8 +166,6 @@ function NoteSegments({ segments }: { segments: SunsetNoteSegment[] }) {
   return segments.map((segment, i) =>
     typeof segment === "string" ? (
       segment
-    ) : "emphasis" in segment ? (
-      <em key={i}>{segment.text}</em>
     ) : (
       <a
         key={i}
