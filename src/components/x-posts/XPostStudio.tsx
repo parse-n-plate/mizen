@@ -22,6 +22,7 @@ import Videocamera from "@solar-icons/react/csr/video/VideocameraRecord";
 import Maximize from "@solar-icons/react/csr/arrows-action/Maximize";
 import Minimize from "@solar-icons/react/csr/arrows-action/Minimize";
 import Pen2 from "@solar-icons/react/csr/messages/Pen2";
+import AddCircle from "@solar-icons/react/csr/ui/AddCircle";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +31,7 @@ import { SUNSET_EXAMPLE_RECIPES } from "@/lib/sunset-example-recipe";
 import { SUNSET_SHUTDOWN_DATE } from "@/lib/sunset";
 import { cn } from "@/lib/utils";
 import { developerFeedbackToolsEnabled } from "@/lib/features";
-import type { BrandIconId } from "@/lib/brand-icons";
+import { BRAND_ICONS_BY_ID, type BrandIconId } from "@/lib/brand-icons";
 import { STICKER_MOTION_DEFAULTS, type StickerMotionConfig } from "@/lib/x-post-motion";
 import { canEncodeMp4, exportMp4 } from "./export-video";
 import {
@@ -243,6 +244,9 @@ export function XPostStudio() {
     [size]
   );
   const hasStickerEdits = Object.keys(stickerEdits[size]).length > 0;
+  const removedStickers = (Object.keys(stickerEdits[size]) as BrandIconId[]).filter(
+    (icon) => stickerEdits[size][icon]?.removed
+  );
   const canvasRef = useRef<HTMLDivElement>(null);
   const [fullscreen, setFullscreen] = useState(false);
 
@@ -515,6 +519,37 @@ export function XPostStudio() {
             <Chip pressed={showSky} onPressedChange={setShowSky}>
               Sky
             </Chip>
+            {removedStickers.length > 0 && (
+              <Popover>
+                <PopoverTrigger
+                  disabled={busy}
+                  className="flex h-7 items-center gap-1.5 rounded-md px-2.5 font-sans text-[13px] font-medium text-stone-500 hover:bg-white hover:text-stone-900 focus-visible:outline-2 focus-visible:outline-mizen-blue dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100 transition-none"
+                >
+                  <AddCircle size={14} />
+                  Sticker
+                </PopoverTrigger>
+                <PopoverContent align="start" side="top" className="w-auto p-1.5">
+                  <div className="flex max-w-72 flex-wrap gap-1">
+                    {removedStickers.map((id) => {
+                      const icon = BRAND_ICONS_BY_ID[id];
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          aria-label={`Add ${icon.name.toLowerCase()} sticker back`}
+                          title={icon.name}
+                          onClick={() => editSticker(id, { removed: false })}
+                          className="flex size-11 items-center justify-center rounded-md hover:bg-stone-100 focus-visible:outline-2 focus-visible:outline-mizen-blue dark:hover:bg-stone-800 transition-none"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={icon.src} alt="" className="size-8 object-contain" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            )}
             {hasStickerEdits && (
               <button
                 type="button"
