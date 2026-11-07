@@ -131,7 +131,7 @@ export function XPostStudio() {
   const [subhead, setSubhead] = useState(
     `Thanks for cooking with us. Save your recipes before ${SUNSET_SHUTDOWN_DATE}.`
   );
-  const [showFooter, setShowFooter] = useState(true);
+  const [showFooter, setShowFooter] = useState(false);
   const [background, setBackground] = useState<StageBackgroundId>("sky");
   const [showBrand, setShowBrand] = useState(false);
   const [busy, setBusy] = useState(false);

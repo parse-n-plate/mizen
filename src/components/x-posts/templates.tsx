@@ -182,7 +182,7 @@ export function SunsetTemplate({
       <div
         aria-hidden
         className="absolute inset-x-0 bottom-0 bg-[image:var(--sunset-sky)] dark:hidden"
-        style={{ height: isSquare ? "75%" : "100%" }}
+        style={{ height: isSquare ? "54%" : "30%" }}
       />
 
       <BrandMark className="absolute left-8 top-6 z-10" />
