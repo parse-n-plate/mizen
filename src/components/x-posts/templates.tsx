@@ -82,7 +82,16 @@ function BrandMark({ className }: { className?: string }) {
   );
 }
 
-function BrowserCard({ recipe, className }: { recipe: ParsedRecipe; className?: string }) {
+function BrowserCard({
+  recipe,
+  className,
+  contentClassName,
+}: {
+  recipe: ParsedRecipe;
+  className?: string;
+  /** Extra padding around the page, e.g. to clear an overlapping phone. */
+  contentClassName?: string;
+}) {
   return (
     <div
       className={cn(
@@ -98,7 +107,7 @@ function BrowserCard({ recipe, className }: { recipe: ParsedRecipe; className?: 
         <div className="size-3 rounded-full bg-[#DDDDDD] dark:bg-stone-700" />
         <div className="size-3 rounded-full bg-[#DDDDDD] dark:bg-stone-700" />
       </div>
-      <div className={cn("min-h-0 flex-1", FADE_BOTTOM)}>
+      <div className={cn("min-h-0 flex-1", FADE_BOTTOM, contentClassName)}>
         <WaitlistRecipePreview
           recipe={recipe}
           sourceType="url"
@@ -275,7 +284,8 @@ export function StageshowTemplate({ size, recipe, background, showBrand }: Stage
         <>
           <BrowserCard
             recipe={recipe}
-            className="absolute left-[300px] top-[56px] h-[620px] w-[560px]"
+            className="absolute left-[266px] top-[56px] h-[620px] w-[580px]"
+            contentClassName="pl-7"
           />
           <PhoneCard
             recipe={recipe}
@@ -286,7 +296,8 @@ export function StageshowTemplate({ size, recipe, background, showBrand }: Stage
         <>
           <BrowserCard
             recipe={recipe}
-            className="absolute left-[344px] top-[48px] h-[480px] w-[580px]"
+            className="absolute left-[306px] top-[48px] h-[480px] w-[600px]"
+            contentClassName="pl-7"
           />
           <PhoneCard
             recipe={recipe}
