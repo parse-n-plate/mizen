@@ -6,13 +6,11 @@ import {
   SUNSET_EDGES_ATTRIBUTE,
   type Box,
   type EdgeColors,
-  type SunsetWashKey,
 } from "@/lib/sunset-edge-colors";
 
 export type SunsetEdgeRefs = {
   page: RefObject<HTMLElement | null>;
   sky: RefObject<HTMLElement | null>;
-  washes: Record<SunsetWashKey, RefObject<HTMLElement | null>>;
 };
 
 function box(element: HTMLElement | null): Box | null {
@@ -21,13 +19,10 @@ function box(element: HTMLElement | null): Box | null {
   return { top: rect.top, height: rect.height, width: rect.width };
 }
 
-function visibleViewport() {
+function visibleViewportHeight() {
+  // Safari's toolbar grows and shrinks the visual viewport as you scroll.
   const vv = window.visualViewport;
-  return {
-    // Safari's toolbar grows and shrinks the visual viewport as you scroll.
-    height: vv ? vv.offsetTop + vv.height : window.innerHeight,
-    width: vv ? vv.width : window.innerWidth,
-  };
+  return vv ? vv.offsetTop + vv.height : window.innerHeight;
 }
 
 /** Remember a meta tag's value once, so it can be put back later. */
@@ -82,18 +77,11 @@ export function useSunsetEdgeColors(refs: SunsetEdgeRefs) {
       frame = 0;
       const page = box(refs.page.current);
       if (!page) return;
-      const viewport = visibleViewport();
       const next = computeSunsetEdgeColors({
         theme: html.classList.contains("dark") ? "dark" : "light",
-        viewportHeight: viewport.height,
-        viewportWidth: viewport.width,
+        viewportHeight: visibleViewportHeight(),
         page,
         sky: box(refs.sky.current),
-        washes: {
-          heroTop: box(refs.washes.heroTop.current),
-          heroBottom: box(refs.washes.heroBottom.current),
-          note: box(refs.washes.note.current),
-        },
       });
       if (last && last.top === next.top && last.bottom === next.bottom) return;
       last = next;

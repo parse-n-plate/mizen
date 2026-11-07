@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { computeSunsetEdgeColors, SUNSET_PALETTE } from "../sunset-edge-colors";
 
-const viewport = { viewportHeight: 800, viewportWidth: 390 };
+const viewport = { viewportHeight: 800 };
 
 describe("computeSunsetEdgeColors", () => {
   it("returns the plain page color when the sky is below the viewport (light)", () => {
@@ -38,31 +38,14 @@ describe("computeSunsetEdgeColors", () => {
     expect(colors.bottom).toBe(SUNSET_PALETTE.light.skyEnd);
   });
 
-  it("tints the dark top edge with the hero wash and leaves plain areas alone", () => {
-    const atTop = computeSunsetEdgeColors({
-      theme: "dark",
-      ...viewport,
-      page: { top: 0, height: 4000, width: 390 },
-      washes: {
-        heroTop: { top: 0, height: 800, width: 390 },
-        heroBottom: { top: 608, height: 192, width: 390 },
-        note: { top: 800, height: 3200, width: 390 },
-      },
-    });
-    expect(atTop.top).not.toBe(SUNSET_PALETTE.dark.base);
-    // Bottom of the hero carries a softer wash.
-    expect(atTop.bottom).not.toBe(SUNSET_PALETTE.dark.base);
-
-    const midNote = computeSunsetEdgeColors({
-      theme: "dark",
-      ...viewport,
-      page: { top: -2000, height: 4000, width: 390 },
-      washes: {
-        heroTop: { top: -2000, height: 800, width: 390 },
-        heroBottom: { top: -1392, height: 192, width: 390 },
-        note: { top: -1200, height: 3200, width: 390 },
-      },
-    });
-    expect(midNote).toEqual({ top: SUNSET_PALETTE.dark.base, bottom: SUNSET_PALETTE.dark.base });
+  it("uses the flat dark page color at both edges (dark)", () => {
+    expect(
+      computeSunsetEdgeColors({
+        theme: "dark",
+        ...viewport,
+        page: { top: -3200, height: 4000, width: 390 },
+        sky: { top: -580, height: 1380, width: 390 },
+      })
+    ).toEqual({ top: SUNSET_PALETTE.dark.base, bottom: SUNSET_PALETTE.dark.base });
   });
 });

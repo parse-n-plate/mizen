@@ -194,14 +194,7 @@ export function SunsetHomepage() {
 
   const pageRef = useRef<HTMLDivElement>(null);
   const skyRef = useRef<HTMLDivElement>(null);
-  const heroRef = useRef<HTMLElement>(null);
-  const heroBottomWashRef = useRef<HTMLDivElement>(null);
-  const noteWashRef = useRef<HTMLDivElement>(null);
-  useSunsetEdgeColors({
-    page: pageRef,
-    sky: skyRef,
-    washes: { heroTop: heroRef, heroBottom: heroBottomWashRef, note: noteWashRef },
-  });
+  useSunsetEdgeColors({ page: pageRef, sky: skyRef });
 
   return (
     <div
@@ -220,10 +213,7 @@ export function SunsetHomepage() {
           <LandingAuthCta onSignIn={() => setAuthOpen(true)} />
         </div>
       </div>
-      <section
-        ref={heroRef}
-        className="relative flex min-h-[100svh] items-center dark:bg-[image:var(--sunset-wash-hero-top)]"
-      >
+      <section className="relative flex min-h-[100svh] items-center">
         <div className="mx-auto grid w-full max-w-[1120px] grid-cols-[minmax(0,1fr)] items-center gap-8 pb-[calc(6rem+env(safe-area-inset-bottom))] pl-[max(1.5rem,env(safe-area-inset-left))] pr-[max(1.5rem,env(safe-area-inset-right))] pt-[calc(5rem+env(safe-area-inset-top))] sm:pl-[max(2rem,env(safe-area-inset-left))] sm:pr-[max(2rem,env(safe-area-inset-right))] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-16 lg:py-10">
           <div>
             <h1 className="flex flex-col items-start gap-1 font-serif text-[clamp(32px,9vw,52px)] font-bold leading-[1.25] tracking-[-0.02em] text-stone-900 dark:text-stone-100">
@@ -240,16 +230,10 @@ export function SunsetHomepage() {
           </div>
         </div>
 
-        <div
-          ref={heroBottomWashRef}
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-48 dark:bg-[image:var(--sunset-wash-hero-bottom)]"
-        />
-
         <ScrollCue />
       </section>
 
-      <div ref={noteWashRef} className="relative dark:bg-[image:var(--sunset-wash-note)]">
+      <div className="relative">
         <div className="pb-12 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pt-4 sm:pb-16 sm:pl-[max(1.5rem,env(safe-area-inset-left))] sm:pr-[max(1.5rem,env(safe-area-inset-right))]">
           <section
             id={SUNSET_NOTE_ID}
@@ -259,7 +243,7 @@ export function SunsetHomepage() {
             {/* The card is the animated unit; the section (and its #note anchor) never moves. */}
             <div
               ref={noteRef}
-              className="rounded-2xl bg-white px-6 py-10 shadow-[0_8px_30px_rgb(24_161_247/0.18)] dark:border dark:border-stone-800 dark:bg-stone-900 sm:px-10 sm:py-12"
+              className="rounded-2xl bg-white px-6 py-10 md:shadow-[0_8px_30px_rgb(24_161_247/0.18)] dark:shadow-none dark:border dark:border-stone-800 dark:bg-stone-900 sm:px-10 sm:py-12"
             >
               <h2
                 id="sunset-note-heading"
