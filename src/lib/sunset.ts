@@ -14,15 +14,15 @@ export const SUNSET_NOTE: SunsetNoteSegment[][] = [
     { text: "mise en place", href: "https://en.wikipedia.org/wiki/Mise_en_place" },
     " and ",
     { text: "zen", href: "https://en.wikipedia.org/wiki/Zen" },
-    ", which pretty much sums up how we wanted cooking at home to feel. From prep to plate, we hope Mizen made cooking calm, organized, and playful.",
+    ", which pretty much sums up how we wanted cooking at home to feel.",
   ],
   [
-    "We couldn\u2019t have done it without the help of many friends and family who tested and contributed to the build, as well as Negi\u2019s first-ever project.",
+    "From prep to plate, we hope Mizen made cooking calm, organized, and playful! We couldn\u2019t have done it without the help of many friends and family who tested and contributed to the build, as well as Negi\u2019s first-ever project.",
   ],
   [
-    "The project is sunsetting. Now, ",
+    "We've decided to sunset Mizen. Thank you to everyone who used it. ",
     { text: "Negi", href: NEGI_STUDIO_URL },
-    " will continue building projects that we hope will help people to continue doing what they love.",
+    " will keep building projects that help people keep doing what they love.",
   ],
   ["Until then, keep cooking \u{1F9D1}\u{1F3FC}\u200D\u{1F373}!"],
 ];
