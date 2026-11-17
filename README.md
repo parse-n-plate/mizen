@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mizen
 
-## Getting Started
+One place for every recipe you find online. Clean ingredients, clear steps.
 
-First, run the development server:
+Mizen is sunsetting, and the hosted version at [mizen.recipes](https://www.mizen.recipes/) shuts down at the end of March 2027. The code stays public so you can keep using Mizen by hosting your own copy for personal, noncommercial use. See [License](#license).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Host your own copy
+
+You need:
+
+- Node.js 20.9 or later
+- A [Supabase](https://supabase.com) project (the free plan works)
+- A [Groq](https://console.groq.com) API key
+
+### 1. Set up the database
+
+In your Supabase project, open **SQL Editor**, paste in [`supabase/self-host-schema.sql`](supabase/self-host-schema.sql), and run it.
+
+Then open **Authentication → URL Configuration**. Set **Site URL** to where you'll host Mizen (for example `https://recipes.example.com`) and add these redirect URLs:
+
+```
+https://recipes.example.com/auth/callback
+https://recipes.example.com/auth/confirm
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Add `http://localhost:3000/auth/callback` and `http://localhost:3000/auth/confirm` too if you'll run it on your computer.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 2. Add environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a `.env.local` file in the project folder:
 
-## Learn More
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+GROQ_API_KEY=your-groq-key
+```
 
-To learn more about Next.js, take a look at the following resources:
+| Variable                                           | Required | What it's for                                                                                                                   |
+| -------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`                         | Yes      | Your Supabase project URL (**Project Settings → API**)                                                                          |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`                    | Yes      | Your Supabase anon key (same page)                                                                                              |
+| `GROQ_API_KEY`                                     | Yes      | Reads recipes from pages that don't include recipe data, and groups ingredients and titles steps                                |
+| `SUPABASE_SERVICE_ROLE_KEY`                        | No       | Checks an email is on your user list before sending a sign-in code, and removes Google sign-ins you didn't add. Keep it secret. |
+| `ALLOWED_HOSTS`                                    | No       | Comma-separated hostnames to trust in `x-forwarded-host` when Mizen runs behind a proxy                                         |
+| `NOTION_FEEDBACK_API_KEY`, `NOTION_FEEDBACK_DB_ID` | No       | Sends in-app feedback to a Notion database                                                                                      |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 3. Run it
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm install
+npm run build
+npm start
+```
 
-## Deploy on Vercel
+Or deploy to [Vercel](https://vercel.com/new) and add the same environment variables there.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 4. Add people
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Mizen doesn't accept new signups, so only people you add can sign in. In Supabase, open **Authentication → Users → Add user** and add their email. They can then sign in from the homepage with an email code.
+
+To let people sign in with Google too, turn on the Google provider under **Authentication → Sign In / Providers**. They still need to be added as a user first.
+
+## Development
+
+```bash
+npm run dev        # http://localhost:3000
+npm run test:run
+npm run lint
+npm run typecheck
+```
+
+## License
+
+Mizen is licensed under the [PolyForm Noncommercial License 1.0.0](LICENSE.md). You can use, change, and share it for personal or other noncommercial purposes. You can't use it to make money, including charging for a hosted copy, running ads on it, or using it in a business.

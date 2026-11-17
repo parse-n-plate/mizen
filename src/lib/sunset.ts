@@ -46,7 +46,7 @@ export const SUNSET_COPY = {
     ],
     [`Mizen will shut down at ${SUNSET_SHUTDOWN_DATE}. Please save your recipes before then.`],
     [
-      "Mizen is open source, so you can keep using it by hosting your own copy. The code is on ",
+      "Mizen\u2019s code is public, so you can keep using it by hosting your own copy for personal, noncommercial use. The code is on ",
       { text: "GitHub", href: MIZEN_REPO_URL },
       ".",
     ],
