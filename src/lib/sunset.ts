@@ -4,6 +4,7 @@ export const SUNSET_NOTE_HREF = `/#${SUNSET_NOTE_ID}`;
 export type SunsetNoteSegment = string | { text: string; href: string };
 
 const NEGI_STUDIO_URL = "https://negi.studio/";
+export const MIZEN_REPO_URL = "https://github.com/parse-n-plate/mizen";
 
 export const SUNSET_NOTE: SunsetNoteSegment[][] = [
   [
@@ -39,10 +40,17 @@ export const SUNSET_COPY = {
   heading: "Mizen is sunsetting",
   whatHappensNowHeading: "What happens now",
   whatHappensNow: [
-    "Mizen is no longer accepting new signups or waitlist requests.",
-    "If you\u2019re in the beta, sign in and save the recipes you want to keep. Each recipe has Copy and Print buttons.",
-    `Mizen will shut down at ${SUNSET_SHUTDOWN_DATE}. Please save your recipes before then.`,
-  ],
+    ["Mizen is no longer accepting new signups or waitlist requests."],
+    [
+      "If you\u2019re in the beta, sign in and save the recipes you want to keep. Each recipe has Copy and Print buttons.",
+    ],
+    [`Mizen will shut down at ${SUNSET_SHUTDOWN_DATE}. Please save your recipes before then.`],
+    [
+      "Mizen\u2019s code is public, so you can keep using it by hosting your own copy for personal, noncommercial use. The code is on ",
+      { text: "GitHub", href: MIZEN_REPO_URL },
+      ".",
+    ],
+  ] satisfies SunsetNoteSegment[][],
   scrollCue: "Read Announcement",
   homepageSub: "One place for every recipe you find online. Clean ingredients, clear steps.",
 } as const;
