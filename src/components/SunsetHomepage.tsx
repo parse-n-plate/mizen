@@ -265,8 +265,10 @@ export function SunsetHomepage() {
                 {SUNSET_COPY.whatHappensNowHeading}
               </h3>
               <ul className="mt-3 list-disc space-y-2 pl-5 font-sans text-base leading-7 text-stone-600 dark:text-stone-400">
-                {SUNSET_COPY.whatHappensNow.map((item) => (
-                  <li key={item}>{item}</li>
+                {SUNSET_COPY.whatHappensNow.map((item, i) => (
+                  <li key={i}>
+                    <NoteSegments segments={item} />
+                  </li>
                 ))}
               </ul>
             </div>
