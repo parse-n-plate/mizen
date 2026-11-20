@@ -13,6 +13,10 @@ Mizen is a Next.js cooking app for saving, organizing, and extracting recipes (S
 
 Run lint, typecheck, and build (and tests when relevant) before finishing changes that touch app code, styling, config, or dependencies.
 
+## ui-sdk
+
+Before using ui-sdk (`@ui-sdk/react`, `@ui-sdk/core`), follow the ui-sdk skill if it's installed (it also ships at `node_modules/@ui-sdk/core/skills/ui-sdk/SKILL.md`), and read `node_modules/@ui-sdk/react/docs/llms.txt`. To build a new component, also search `node_modules/@ui-sdk/react/docs/core.md` by heading, and read `rendering.md` next to it.
+
 ## Pull requests
 
 When opening a PR, follow `.github/PULL_REQUEST_TEMPLATE.md` for titles and bodies. Remove the HTML comment and placeholder line from the template before submitting.
